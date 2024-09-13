@@ -1,5 +1,4 @@
-Support-Email: polarion-opensource@sbb.ch
-Bundle-Name: Extension for Polarion ALM
+Bundle-Name: Diff Tool extension for Polarion ALM
 Require-Bundle: com.polarion.portal.tomcat,
  com.polarion.alm.ui,
  com.polarion.platform.guice,
@@ -8,7 +7,13 @@ Require-Bundle: com.polarion.portal.tomcat,
  com.fasterxml.jackson,
  com.fasterxml.jackson.jaxrs,
  io.swagger,
- org.apache.commons.logging,
- slf4j.api,
+ org.apache.commons.commons-collections4,
  org.springframework.spring-core,
- org.springframework.spring-web
+ org.springframework.spring-web,
+ org.apache.commons.lang3,
+ org.ehcache,
+ org.jsoup,
+ ch.sbb.polarion.extension.pdf-exporter;resolution:=optional
+Import-Package: org.eclipse.core.runtime
+Guice-Modules: ch.sbb.polarion.extension.diff_tool.DiffToolModule
+Export-Package: ch.sbb.polarion.extension.diff_tool

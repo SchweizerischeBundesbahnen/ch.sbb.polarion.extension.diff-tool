@@ -1,0 +1,75 @@
+<link href='/polarion/diff-tool/ui/css/diff-tool.css' rel='stylesheet' onload='$.getScript("/polarion/diff-tool/ui/js/diff-tool.js").done(function() {
+            DiffTool.init({SOURCE_DOC_PARAMS});
+        })'>
+
+<div class="comparison form-wrapper">
+    <div class="in-progress-overlay"><img src='/polarion/ria/images/progress.gif'/><span id="in-progress-message"></span></div>
+
+    <p>
+        Please select <strong>target</strong> document and its revision below preliminary selecting its project and space, to compare current document in selected revision with it.
+        Additionally select which link role should be taken into account when determining counterpart WorkItems, as well as diffing configuration.
+    </p>
+    <div class='property-wrapper'>
+        <input type='checkbox' id='compare-with-same-checkbox' onclick='DiffTool.toggleCompareSameDocument()'/>
+        <label for='compare-with-same-checkbox'>Compare with another revision of the same document</label>
+    </div>
+
+    <div class='property-wrapper hide-when-comparing-same'>
+        <label for='project-selector' class="fixed-width w-1">Project:</label>
+        <select id='project-selector' onchange='DiffTool.projectChanged()'>
+            {PROJECT_OPTIONS}
+        </select>
+    </div>
+    <div class='property-wrapper hide-when-comparing-same'>
+        <label for='space-selector' class="fixed-width w-1">Space:</label>
+        <select id='space-selector' onchange='DiffTool.spaceChanged()'>
+        </select>
+    </div>
+    <div class='property-wrapper hide-when-comparing-same'>
+        <label for='document-selector' class="fixed-width w-1">Document:</label>
+        <select id='document-selector' onchange='DiffTool.documentChanged()'>
+        </select>
+    </div>
+    <div class='property-wrapper'>
+        <label for="select-revision-panel" class="fixed-width w-1">Revision:</label>
+        <div id="select-revision-panel">
+            <div id="select-revision-radios">
+                <input type="radio" id="revision-enter-manually" name="select-revision-type" value="manually" checked="checked" onclick="DiffTool.toggleManualRevision()">
+                <label for="revision-enter-manually">Enter manually</label><br>
+                <input type="radio" id="revision-select-from-list" name="select-revision-type" value="list" onclick="DiffTool.toggleListRevision()">
+                <label for="revision-select-from-list">Select from list</label><br>
+            </div>
+
+            <div id ="select-revision-manual-container">
+                <input id="select-revision-manual-input" placeholder="leave empty to use latest revision" type="number"/>
+            </div>
+
+            <div id="select-revision-list-container" style="display: none;">
+                <select id='revision-selector'></select>
+                <div>
+                    <input type="checkbox" id="baseline-checkbox" onclick='DiffTool.baselineSelected()'/>
+                    <label for="baseline-checkbox">show only baselines</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class='property-wrapper hide-when-comparing-same'>
+        <label for='link-role-selector' class="fixed-width w-1">Link role:</label>
+        <select id='link-role-selector'>
+            {LINK_ROLE_OPTIONS}
+        </select>
+    </div>
+    <div class='property-wrapper'>
+        <label for='config-selector' class="fixed-width w-1">Configuration:</label>
+        <select id='config-selector'>
+            {CONFIG_OPTIONS}
+        </select>
+    </div>
+    <div class='buttons-wrapper'>
+        <button type='button' id="compare-documents" disabled onclick='DiffTool.showResult()'>
+            <img src='/polarion/ria/images/dle/operations/compare.png'/>Compare
+        </button>
+    </div>
+    <div id='comparison-error' class="alert alert-error"></div>
+    <div id='comparison-warning' class="alert alert-warning"></div>
+</div>
