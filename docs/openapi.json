@@ -16,7 +16,7 @@
                 }
               }
             },
-            "description": "default response"
+            "description": "Context information"
           }
         },
         "summary": "Returns basic context information of Polarion's extension",
@@ -436,14 +436,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array"
+                  "type": "string"
                 }
               }
             },
-            "description": "default response"
+            "description": "List of supported features"
           }
         },
         "summary": "Returns the complete list of all supported features",
@@ -474,7 +471,7 @@
                 }
               }
             },
-            "description": "default response"
+            "description": "Default values"
           }
         },
         "summary": "Returns default values of specified setting",
@@ -501,14 +498,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/SettingName"
-                  },
-                  "type": "array"
+                  "$ref": "#/components/schemas/SettingName"
                 }
               }
             },
-            "description": "default response"
+            "description": "List of setting names"
           }
         },
         "summary": "Returns names of specified setting",
@@ -539,11 +533,8 @@
           }
         ],
         "responses": {
-          "default": {
-            "content": {
-              "application/json": {}
-            },
-            "description": "default response"
+          "204": {
+            "description": "Setting deleted successfully"
           }
         },
         "summary": "Deletes specified setting by id",
@@ -581,11 +572,8 @@
           }
         },
         "responses": {
-          "default": {
-            "content": {
-              "*/*": {}
-            },
-            "description": "default response"
+          "204": {
+            "description": "Setting name updated successfully"
           }
         },
         "summary": "Updates name of specified named setting",
@@ -631,7 +619,7 @@
                 }
               }
             },
-            "description": "default response"
+            "description": "Setting content"
           }
         },
         "summary": "Returns values (content) of specified setting by its id and revision",
@@ -669,11 +657,8 @@
           }
         },
         "responses": {
-          "default": {
-            "content": {
-              "*/*": {}
-            },
-            "description": "default response"
+          "204": {
+            "description": "Setting created/updated successfully"
           }
         },
         "summary": "Creates or updates named setting. Creation scenario will use default setting value if no body specified in the request.",
@@ -708,14 +693,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/Revision"
-                  },
-                  "type": "array"
+                  "$ref": "#/components/schemas/Revision"
                 }
               }
             },
-            "description": "default response"
+            "description": "List of revisions"
           }
         },
         "summary": "Returns revisions history of specified setting with specified id",
@@ -736,7 +718,7 @@
                 }
               }
             },
-            "description": "default response"
+            "description": "Version information"
           }
         },
         "summary": "Returns version of Polarion's extension",
@@ -749,17 +731,25 @@
   "components": {
     "schemas": {
       "Context": {
+        "description": "Represents the context for building URLs related to Polarion services",
         "properties": {
           "baseUrl": {
+            "description": "Returns the base URL constructed with the extension context",
+            "example": "/polarion/pdf-exporter",
             "type": "string"
           },
           "extensionContext": {
+            "description": "The extension context used as a base for URL construction",
+            "example": "pdf-exporter",
             "type": "string"
           },
           "restUrl": {
+            "description": "Returns the REST API URL constructed with the extension context",
+            "example": "/polarion/pdf-exporter/rest",
             "type": "string"
           },
           "swaggerUiUrl": {
+            "description": "Returns the Swagger UI URL for the REST API",
             "type": "string"
           }
         },
@@ -1105,20 +1095,26 @@
         "type": "object"
       },
       "Revision": {
+        "description": "Revision details",
         "properties": {
           "author": {
+            "description": "The author of the revision",
             "type": "string"
           },
           "baseline": {
+            "description": "The baseline of the revision",
             "type": "string"
           },
           "date": {
+            "description": "The date of the revision",
             "type": "string"
           },
           "description": {
+            "description": "The description of the revision",
             "type": "string"
           },
           "name": {
+            "description": "The name of the revision",
             "type": "string"
           }
         },
@@ -1127,17 +1123,21 @@
       "SettingName": {
         "properties": {
           "name": {
+            "description": "The name of the setting",
             "type": "string"
           },
           "scope": {
+            "description": "The scope of the setting",
             "type": "string"
           }
         },
         "type": "object"
       },
       "SettingsModel": {
+        "description": "Settings model",
         "properties": {
           "bundleTimestamp": {
+            "description": "The bundle timestamp of the setting",
             "type": "string"
           }
         },
@@ -1172,29 +1172,34 @@
         "type": "object"
       },
       "Version": {
+        "description": "Details about the software version",
         "properties": {
           "automaticModuleName": {
+            "description": "The automatic module name",
             "type": "string"
           },
           "bundleBuildTimestamp": {
-            "type": "string"
-          },
-          "bundleBuildTimestampDigitsOnly": {
+            "description": "The build timestamp of the bundle",
             "type": "string"
           },
           "bundleName": {
+            "description": "The name of the bundle",
             "type": "string"
           },
           "bundleVendor": {
+            "description": "The vendor of the bundle",
             "type": "string"
           },
           "bundleVersion": {
+            "description": "The version of the bundle",
             "type": "string"
           },
           "projectURL": {
+            "description": "The project URL",
             "type": "string"
           },
           "supportEmail": {
+            "description": "Support email for the bundle",
             "type": "string"
           }
         },
