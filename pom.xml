@@ -24,7 +24,7 @@
         <html5diff.version>1.4.4</html5diff.version>
         <ehcache.version>3.8.0</ehcache.version>
 
-        <pdf-exporter.version>6.2.0</pdf-exporter.version>
+        <pdf-exporter.version>6.2.1</pdf-exporter.version>
 
         <swagger-maven-plugin.version>2.2.22</swagger-maven-plugin.version>
 
