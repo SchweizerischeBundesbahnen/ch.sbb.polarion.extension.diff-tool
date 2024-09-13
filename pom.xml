@@ -5,49 +5,31 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>7.1.0</version>
+        <version>7.0.2</version>
     </parent>
 
-    <artifactId>ch.sbb.polarion.extension.extension-name</artifactId>
-    <version>0.0.0-SNAPSHOT</version>
+    <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
+    <version>3.6.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>... extension of Polarion ALM</name>
-    <description>This is a Polarion extension which provides ...</description>
-    <url>https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.extension-name</url>
-
-    <licenses>
-        <license>
-            <name>The SBB License, Version 1.0</name>
-            <url>https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.extension-name/blob/main/LICENSES/SBB.txt</url>
-        </license>
-    </licenses>
-
-    <developers>
-        <developer>
-            <name>SBB Polarion Team</name>
-            <email>polarion-opensource@sbb.ch</email>
-            <organization>SBB AG</organization>
-            <organizationUrl>https://www.sbb.ch</organizationUrl>
-        </developer>
-    </developers>
-
-    <scm>
-        <connection>scm:git:git://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.extension-name.git</connection>
-        <developerConnection>scm:git:ssh://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.extension-name.git</developerConnection>
-        <url>https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.extension-name/tree/main</url>
-    </scm>
-
-    <issueManagement>
-        <system>GitHub</system>
-        <url>https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.extension-name/issues</url>
-    </issueManagement>
-
     <properties>
-        <maven-jar-plugin.Extension-Context>extension-name</maven-jar-plugin.Extension-Context>
-        <maven-jar-plugin.Automatic-Module-Name>ch.sbb.polarion.extension.extension_name</maven-jar-plugin.Automatic-Module-Name>
+        <node.version>v20.11.0</node.version>
+        <frontend-maven-plugin.version>1.15.0</frontend-maven-plugin.version>
+
+        <maven-jar-plugin.Extension-Context>diff-tool</maven-jar-plugin.Extension-Context>
+        <maven-jar-plugin.Automatic-Module-Name>ch.sbb.polarion.extension.diff_tool</maven-jar-plugin.Automatic-Module-Name>
 
         <web.app.name>${maven-jar-plugin.Extension-Context}</web.app.name>
+
+        <html5diff.version>1.4.4</html5diff.version>
+        <ehcache.version>3.8.0</ehcache.version>
+
+        <pdf-exporter.version>6.2.0</pdf-exporter.version>
+
+        <swagger-maven-plugin.version>2.2.22</swagger-maven-plugin.version>
+
+        <!--suppress UnresolvedMavenProperty -->
+        <markdown2html-maven-plugin.failOnError>${env.MARKDOWN2HTML_MAVEN_PLUGIN_FAIL_ON_ERROR}</markdown2html-maven-plugin.failOnError>
     </properties>
 
     <dependencies>
@@ -56,6 +38,54 @@
             <artifactId>ch.sbb.polarion.extension.generic.app</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.polarion.thirdparty</groupId>
+            <artifactId>commons-collections4-4.4</artifactId>
+            <version>${polarion.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.polarion.thirdparty</groupId>
+            <artifactId>commons-lang3-3.12.0</artifactId>
+            <version>${polarion.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.sbb.polarion.extensions</groupId>
+            <artifactId>ch.sbb.polarion.extension.pdf-exporter</artifactId>
+            <version>${pdf-exporter.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.sbb.html5diff</groupId>
+            <artifactId>html5diff</artifactId>
+            <version>${html5diff.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>xml-apis</groupId>
+                    <artifactId>xml-apis</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.ehcache</groupId>
+            <artifactId>ehcache</artifactId>
+            <version>${ehcache.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.polarion.thirdparty</groupId>
+            <artifactId>org.jsoup-1.15.2</artifactId>
+            <version>${polarion.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -91,14 +121,55 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-maven-plugin</artifactId>
+                <configuration>
+                    <outputFormat>JSON</outputFormat>
+                    <resourcePackages>
+                        <package>ch.sbb.polarion.extension.generic.rest.controller</package>
+                        <package>ch.sbb.polarion.extension.generic.rest.model</package>
+                        <package>ch.sbb.polarion.extension.diff_tool.rest.controller</package>
+                        <package>ch.sbb.polarion.extension.diff_tool.rest.model</package>
+                    </resourcePackages>
+                </configuration>
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${frontend-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                    </execution>
+                    <execution>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                    </execution>
+                    <execution>
+                        <id>npm build</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <nodeVersion>${node.version}</nodeVersion>
+                    <workingDirectory>ui</workingDirectory>
+                </configuration>
             </plugin>
         </plugins>
     </build>
+
 </project>

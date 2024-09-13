@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module id="ch.sbb.polarion.extension.diff_tool" version="1.0.0">
+    <contribution configuration-id="com.polarion.xray.webui.administrationPageExtenders">
+        <extender name="About"
+                  parentNodeName="Diff Tool"
+                  parentNodeIconUrl="/polarion/icons/default/topicIcons/documentsAndWiki.svg"
+                  iconUrl="/polarion/icons/default/topicIconsSmall/documentsAndWiki.svg"
+                  pageUrl="/polarion/diff-tool-admin/pages/about.jsp"
+                  projectScope="true"
+                  repositoryScope="true"/>
+
+        <extender name="REST API"
+                  parentNodeName="Diff Tool"
+                  parentNodeIconUrl="/polarion/icons/default/topicIcons/documentsAndWiki.svg"
+                  iconUrl="/polarion/icons/default/topicIconsSmall/documentsAndWiki.svg"
+                  pageUrl="/polarion/diff-tool/rest/swagger"
+                  projectScope="true"
+                  repositoryScope="true"/>
+
+        <extender name="Diff Configurations"
+                  parentNodeName="Diff Tool"
+                  parentNodeIconUrl="/polarion/icons/default/topicIcons/documentsAndWiki.svg"
+                  iconUrl="/polarion/icons/default/topicIconsSmall/documentsAndWiki.svg"
+                  pageUrl="/polarion/diff-tool-admin/pages/diff.jsp?scope=$scope$"
+                  projectScope="true"
+                  repositoryScope="false"/>
+
+        <extender name="Merge Authorization"
+                  parentNodeName="Diff Tool"
+                  parentNodeIconUrl="/polarion/icons/default/topicIcons/documentsAndWiki.svg"
+                  iconUrl="/polarion/icons/default/topicIconsSmall/documentsAndWiki.svg"
+                  pageUrl="/polarion/diff-tool-admin/pages/authorization.jsp?scope=$scope$"
+                  projectScope="true"
+                  repositoryScope="false"/>
+
+    </contribution>
+
+    <contribution configuration-id="com.polarion.alm.wiki.renderingContext">
+        <item key="diffTool" value="instance:ch.sbb.polarion.extension.diff_tool.velocity.VelocityDiffTool" />
+    </contribution>
+    <contribution configuration-id="com.polarion.alm.richpages.velocityContext">
+        <item key="diffTool" value="instance:ch.sbb.polarion.extension.diff_tool.velocity.VelocityDiffTool" />
+    </contribution>
+</module>
