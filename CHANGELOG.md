@@ -1,4 +1,22 @@
-# Changelog before migration to conventional commits
+# Changelog
+
+## 3.6.1 (2024-09-13)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v7.1.0 ([57370fd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/57370fd29bb468b040740b5bdd4dfa8a30bad3e6))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v6.2.1 ([6cb2d8b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/6cb2d8b5da17f77b648765d24ca17e90a39ea719))
+* **deps:** update dependency uuid to v10 ([#10](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/10)) ([11341d4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/11341d42188e85ccbce67e1f02b2fb25edc09337))
+* **deps:** update font awesome ([#9](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/9)) ([b537f07](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/b537f07f199fa47e1202682a3a9aaae8aba3b5fa))
+* json sorter only for OpenAPI Spec ([#6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/6)) ([36bd6ae](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/36bd6aed07437dc5dc964fba7ca9bb3b700acb1b))
+
+
+### Miscellaneous Chores
+
+* update OpenAPI Spec ([#8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/8)) ([eace048](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/eace048ef2ca8376adbecd1ce057964f5cb81f62))
+
+## Changelog before migration to conventional commits
 
 | Version | Changes                                                                                                                                                                                                                                                                            |
 |---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
