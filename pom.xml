@@ -21,7 +21,7 @@
 
         <web.app.name>${maven-jar-plugin.Extension-Context}</web.app.name>
 
-        <html5diff.version>1.4.1</html5diff.version>
+        <html5diff.version>1.4.4</html5diff.version>
         <ehcache.version>3.8.0</ehcache.version>
 
         <pdf-exporter.version>6.2.0</pdf-exporter.version>
