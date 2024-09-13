@@ -8,7 +8,7 @@ import static ch.sbb.polarion.extension.diff_tool.service.ModifiedHtmlSaxDiffOut
 import static ch.sbb.polarion.extension.diff_tool.service.ModifiedHtmlSaxDiffOutput.CLASS_HTML_REMOVED;
 
 /**
- * Swaps added & removed styles to properly show reversed diff results.
+ * Swaps added and removed styles to properly show reversed diff results.
  */
 public class ReverseStylesHandler implements DiffLifecycleHandler {
 
