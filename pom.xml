@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
-    <version>3.6.2-SNAPSHOT</version>
+    <version>3.6.2</version>
     <packaging>jar</packaging>
 
     <properties>

@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.6.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v3.6.1...v3.6.2) (2024-09-13)
+
+
+### Bug Fixes
+
+* publish javadocs and sources ([#13](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/13)) ([9e2de9b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9e2de9b6fb13feef18f8807f7061484070d6fa98))
+
 ## 3.6.1 (2024-09-13)
 
 
