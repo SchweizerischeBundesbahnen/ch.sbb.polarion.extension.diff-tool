@@ -4,7 +4,7 @@
 <%! String bundleTimestamp = ch.sbb.polarion.extension.generic.util.VersionUtils.getVersion().getBundleBuildTimestampDigitsOnly(); %>
 
 <head>
-    <title>Documents diff/merge: Configurations</title>
+    <title>Diff Configurations</title>
     <link rel="stylesheet" href="../ui/generic/css/common.css?bundle=<%= bundleTimestamp %>">
     <link rel="stylesheet" href="../ui/generic/css/custom-select.css?bundle=<%= bundleTimestamp %>">
     <link rel="stylesheet" href="../ui/generic/css/configurations.css?bundle=<%= bundleTimestamp %>">
@@ -63,7 +63,7 @@
 
 <body>
 <div class="standard-admin-page">
-    <h1>Documents diff/merge: Configurations</h1>
+    <h1>Diff Configurations</h1>
 
     <jsp:include page='/common/jsp/notifications.jsp' />
 
