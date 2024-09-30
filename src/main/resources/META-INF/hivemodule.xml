@@ -1,38 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module id="ch.sbb.polarion.extension.diff_tool" version="1.0.0">
     <contribution configuration-id="com.polarion.xray.webui.administrationPageExtenders">
-        <extender name="About"
+        <extender id="about"
+                  name="About"
+                  parentNodeId="diff-tool"
                   parentNodeName="Diff Tool"
-                  parentNodeIconUrl="/polarion/icons/default/topicIcons/documentsAndWiki.svg"
-                  iconUrl="/polarion/icons/default/topicIconsSmall/documentsAndWiki.svg"
-                  pageUrl="/polarion/diff-tool-admin/pages/about.jsp"
+                  parentNodeIconUrl="/polarion/diff-tool-admin/ui/images/menu/30x30/_parent.svg"
+                  iconUrl="/polarion/diff-tool-admin/ui/images/menu/16x16/about.svg"
+                  pageUrl="/polarion/diff-tool-admin/pages/about.jsp?scope=$scope$"
                   projectScope="true"
+                  projectGroupScope="false"
                   repositoryScope="true"/>
 
-        <extender name="REST API"
-                  parentNodeName="Diff Tool"
-                  parentNodeIconUrl="/polarion/icons/default/topicIcons/documentsAndWiki.svg"
-                  iconUrl="/polarion/icons/default/topicIconsSmall/documentsAndWiki.svg"
+        <extender id="rest-api"
+                  name="REST API"
+                  parentNodeId="diff-tool"
+                  iconUrl="/polarion/diff-tool-admin/ui/images/menu/16x16/rest_api.svg"
                   pageUrl="/polarion/diff-tool/rest/swagger"
                   projectScope="true"
+                  projectGroupScope="false"
                   repositoryScope="true"/>
 
-        <extender name="Diff Configurations"
-                  parentNodeName="Diff Tool"
-                  parentNodeIconUrl="/polarion/icons/default/topicIcons/documentsAndWiki.svg"
-                  iconUrl="/polarion/icons/default/topicIconsSmall/documentsAndWiki.svg"
-                  pageUrl="/polarion/diff-tool-admin/pages/diff.jsp?scope=$scope$"
+        <extender id="diff-configurations"
+                  name="Diff Configurations"
+                  parentNodeId="diff-tool"
+                  iconUrl="/polarion/diff-tool-admin/ui/images/menu/16x16/settings.svg"
+                  pageUrl="/polarion/diff-tool-admin/pages/configuration.jsp?scope=$scope$"
                   projectScope="true"
+                  projectGroupScope="false"
                   repositoryScope="false"/>
 
-        <extender name="Merge Authorization"
-                  parentNodeName="Diff Tool"
-                  parentNodeIconUrl="/polarion/icons/default/topicIcons/documentsAndWiki.svg"
-                  iconUrl="/polarion/icons/default/topicIconsSmall/documentsAndWiki.svg"
+        <extender id="merge-authorization"
+                  name="Merge Authorization"
+                  parentNodeId="diff-tool"
+                  iconUrl="/polarion/diff-tool-admin/ui/images/menu/16x16/authorization.svg"
                   pageUrl="/polarion/diff-tool-admin/pages/authorization.jsp?scope=$scope$"
                   projectScope="true"
+                  projectGroupScope="false"
                   repositoryScope="false"/>
-
     </contribution>
 
     <contribution configuration-id="com.polarion.alm.wiki.renderingContext">

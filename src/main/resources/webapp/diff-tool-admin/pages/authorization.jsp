@@ -8,7 +8,7 @@
 <%! Version version = ExtensionInfo.getInstance().getVersion();%>
 
 <head>
-    <title>Hooks: Settings</title>
+    <title>Merge Authorization</title>
     <link rel="stylesheet" href="../ui/generic/css/common.css?bundle=<%= version.getBundleBuildTimestampDigitsOnly() %>">
     <script type="text/javascript" src="../ui/generic/js/common.js?bundle=<%= version.getBundleBuildTimestampDigitsOnly() %>"></script>
 
@@ -86,9 +86,10 @@
 
     <div class="quick-help-text">
         <h3>Permissions</h3>
-        <p>Diffing functionality is not restricted and available to all users.</p>
-        <p>In contrary merging functionality can be allowed or disallowed for certain global and/or project roles.</p>
-        <p>By default, only global admin role is allowed.</p>
+        <p>The diffing functionality is unrestricted and available to all users.</p>
+        <p>On the other hand, the merging functionality can be restricted or permitted for specific global or project roles.</p>
+        <p>By default, only users with the global admin role have permission to merge.</p>
+        <p>Additionally, project administrators can configure merging permissions based on the needs of their specific project, allowing for more granular control.</p>
     </div>
 </div>
 
