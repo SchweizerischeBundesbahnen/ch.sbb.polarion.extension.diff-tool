@@ -2,9 +2,9 @@ package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.conversion.PrintOrientation;
 import ch.sbb.polarion.extension.diff_tool.rest.model.conversion.PrintPaperSize;
-import ch.sbb.polarion.extension.pdf.exporter.converter.HtmlToPdfConverter;
-import ch.sbb.polarion.extension.pdf.exporter.rest.model.conversion.Orientation;
-import ch.sbb.polarion.extension.pdf.exporter.rest.model.conversion.PaperSize;
+import ch.sbb.polarion.extension.pdf_exporter.converter.HtmlToPdfConverter;
+import ch.sbb.polarion.extension.pdf_exporter.rest.model.conversion.Orientation;
+import ch.sbb.polarion.extension.pdf_exporter.rest.model.conversion.PaperSize;
 import com.polarion.core.util.exceptions.UserFriendlyRuntimeException;
 
 public class HtmlToPdfConverterService {
