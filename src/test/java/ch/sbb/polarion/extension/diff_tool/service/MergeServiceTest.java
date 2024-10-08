@@ -4,6 +4,8 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.settings.DiffSettings;
+import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
+import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
 import com.polarion.alm.tracker.model.IModule;
@@ -22,7 +24,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, CurrentContextExtension.class})
+@CurrentContextConfig("diff-tool")
 public class MergeServiceTest {
     @Mock
     private PolarionService polarionService;
