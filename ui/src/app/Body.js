@@ -14,6 +14,7 @@ export default function Body({ children }) {
   const [counterpartWorkItemsDiffer, setCounterpartWorkItemsDiffer] = useState(false);
   const [hideChaptersIfNoDifference, setHideChaptersIfNoDifference] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [diffsExist, setDiffsExist] = useState(false);
   const [extensionInfo, setExtensionInfo] = useState(false);
 
   const handleScroll = event => {
@@ -43,6 +44,8 @@ export default function Body({ children }) {
           setHideChaptersIfNoDifference: setHideChaptersIfNoDifference,
           dataLoaded: dataLoaded,
           setDataLoaded: setDataLoaded,
+          diffsExist: diffsExist,
+          setDiffsExist: setDiffsExist,
           extensionInfo: extensionInfo,
           setExtensionInfo: setExtensionInfo
         }

@@ -147,9 +147,15 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
     setSelected(!!mergingContext.selectionRegistry.get(currentIndex));
   }, [mergingContext.selectionRegistry]);
 
-  const pairSelected = (selected) => {
+  useEffect(() => {
+    if (mergingContext.selectAll !== selected) {
+      pairSelected(mergingContext.selectAll, true);
+    }
+  }, [mergingContext.selectAll]);
+
+  const pairSelected = (selected, forceAndSuppressWarnings) => {
     if (workItemsPair) {
-      if (selected || unSelectionAllowedCallback(workItemsPair)) {
+      if (selected || unSelectionAllowedCallback(workItemsPair) || forceAndSuppressWarnings) {
         mergingContext.setPairSelected(currentIndex, workItemsPair, selected);
         if (workItemsPair.leftWorkItem && workItemsPair.rightWorkItem) {
           // In case of moved items UI contains them twice, once to show moved sign for left work item, another time - for right work item.
@@ -159,7 +165,7 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
         if (selected && workItemsPair.leftWorkItem && workItemsPair.rightWorkItem
             && (workItemsPair.leftWorkItem.movedOutlineNumber || workItemsPair.rightWorkItem.movedOutlineNumber)) {
           // Automatically select all children items of selected heading item
-          if (selectChildrenCallback(workItemsPair) && !asHeaderInDocument) {
+          if (selectChildrenCallback(workItemsPair) && !asHeaderInDocument && !forceAndSuppressWarnings) {
             setChildrenSelectionModalVisible(true); // Additionally inform user about automatically selected inline child items, as it's not obvious on UI
           }
         }
@@ -261,13 +267,12 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
             display: isChapterVisible(leftChapter, true) || isChapterVisible(rightChapter, false) || !context.state.hideChaptersIfNoDifference || error ? 'flex' : 'none'
           }} className="header row g-0">
             <MergeTicker selected={selected} pairSelectedCallback={pairSelected} diffs={diffs}
-                         moved={(workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.movedOutlineNumber)
-                             || (workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber)}
+                         moved={workItemsPair.leftWorkItem?.movedOutlineNumber || workItemsPair.rightWorkItem?.movedOutlineNumber}
                          createdOrDeleted={!workItemsPair.leftWorkItem || !workItemsPair.rightWorkItem} />
 
             <WorkItemHeader workItem={workItemsPair.leftWorkItem} asHeaderInDocument={asHeaderInDocument}
-                            movedOutlineNumber={workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber}
-                            moveDirection={workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.moveDirection}
+                            movedOutlineNumber={workItemsPair.rightWorkItem?.movedOutlineNumber}
+                            moveDirection={workItemsPair.rightWorkItem?.moveDirection}
                             side={LEFT} selected={selected}/>
 
             {diffs && diffs.length > 0
@@ -277,8 +282,8 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
             {(!diffs || diffs.length === 0) && error && <FloatingButton fontAwesomeIcon={faQuestion} disabled={true}/>}
 
             <WorkItemHeader workItem={workItemsPair.rightWorkItem} asHeaderInDocument={asHeaderInDocument}
-                            movedOutlineNumber={workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.movedOutlineNumber}
-                            moveDirection={workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.moveDirection}
+                            movedOutlineNumber={workItemsPair.leftWorkItem?.movedOutlineNumber}
+                            moveDirection={workItemsPair.leftWorkItem?.moveDirection}
                             side={RIGHT} selected={selected}/>
           </div>
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}

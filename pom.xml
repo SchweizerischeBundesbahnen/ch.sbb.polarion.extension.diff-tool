@@ -12,6 +12,37 @@
     <version>3.6.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
+    <name>Polarion ALM extension to diff/merge Documents</name>
+    <description>This Polarion extension provides functionality to diff Polarion Documents with further possibility to merge selected diffs. This is an alternative to native Polarion's solution.</description>
+    <url>https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool</url>
+
+    <licenses>
+        <license>
+            <name>The SBB License, Version 1.0</name>
+            <url>https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/blob/main/LICENSES/SBB.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>SBB Polarion Team</name>
+            <email>polarion-opensource@sbb.ch</email>
+            <organization>SBB AG</organization>
+            <organizationUrl>https://www.sbb.ch</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com:SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool.git</connection>
+        <developerConnection>scm:git:ssh://github.com:SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool.git</developerConnection>
+        <url>https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/tree/main</url>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues</url>
+    </issueManagement>
+
     <properties>
         <node.version>v20.11.0</node.version>
         <frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
