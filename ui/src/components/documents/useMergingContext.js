@@ -6,6 +6,7 @@ export const RIGHT_TO_LEFT = 1;
 export function useMergingContext() {
   const [selectionRegistry, setSelectionRegistry] = useState(new Map());
   const [selectionCount, setSelectionCount] = useState(0);
+  const [selectAll, setSelectAll] = useState(false);
 
   useEffect(() => {
     let count = 0;
@@ -32,19 +33,19 @@ export function useMergingContext() {
       }
     }
     return false;
-  }
+  };
 
   const pairsEqual = (pair1, pair2) => {
     return itemsEqual(pair1.leftWorkItem, pair2.leftWorkItem) && itemsEqual(pair1.rightWorkItem, pair2.rightWorkItem);
-  }
+  };
 
   const itemsEqual = (item1, item2) => {
     return (!item1 && !item2) || (item1 && item2 && item1.outlineNumber === item2.outlineNumber && item2.movedOutlineNumber === item2.movedOutlineNumber);
-  }
+  };
 
   const resetSelection = () => {
     setSelectionRegistry(new Map());
-  }
+  };
 
-  return { selectionRegistry, selectionCount, setPairSelected, isPairSelected, resetSelection };
+  return { selectionRegistry, selectionCount, setPairSelected, isPairSelected, resetSelection, selectAll, setSelectAll };
 }

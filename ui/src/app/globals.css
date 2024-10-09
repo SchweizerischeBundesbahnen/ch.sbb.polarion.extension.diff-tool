@@ -175,6 +175,18 @@ a:hover {
   background-color: #c9cccf;
 }
 
+.merge-pane label.select-all {
+  margin-left: -7px;
+  font-size: .7em;
+  color: #666666;
+}
+
+.merge-pane label.select-all input[type="checkbox"] {
+  font-size: 1.2em;
+  margin-top: 0.1em;
+  margin-right: 5px;
+}
+
 .merge-button-container {
   display: flex;
   padding: .6rem;

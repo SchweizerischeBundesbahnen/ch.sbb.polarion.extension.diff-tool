@@ -10,6 +10,7 @@ export default function MergePane({leftDocument, rightDocument, mergingContext, 
 
   const [display, setDisplay] = useState('none');
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectAllVisible, setSelectAllVisible] = useState(false);
   const [direction, setDirection] = useState(-1);
   const [structuralChanges, setStructuralChanges] = useState(false);
 
@@ -24,6 +25,10 @@ export default function MergePane({leftDocument, rightDocument, mergingContext, 
   useEffect(() => {
     context.state.setControlPaneAccessible(!modalVisible);
   }, [modalVisible]);
+
+  useEffect(() => {
+    setSelectAllVisible(context.state.diffsExist);
+  }, [context.state.diffsExist]);
 
   const confirmMerge = (direction) => {
     setDirection(direction);
@@ -51,15 +56,28 @@ export default function MergePane({leftDocument, rightDocument, mergingContext, 
   return (
       <>
         <div className="row g-0 merge-pane" style={{ display: display }}>
-          <div className="col collapsed-border merge-button-container" style={{ justifyContent: "right" }}>
+          <div className="col collapsed-border merge-button-container" style={{justifyContent: "right"}}>
+            <div style={{
+              flexGrow: "1",
+              textWrap: "nowrap"
+            }}>
+              <label className="select-all" style={{
+                display: selectAllVisible ? "inline-block" : "none"
+              }}>
+                <input className="form-check-input" type="checkbox" checked={mergingContext.selectAll} onChange={() => {
+                  mergingContext.setSelectAll(!mergingContext.selectAll)
+                }}/>
+                select all
+              </label>
+            </div>
             {!rightDocument || rightDocument.revision && <span>Target document not in HEAD, which locks merging into it</span>}
             {rightDocument && !rightDocument.authorizedForMerge && <span>You are not authorized to merge into target document</span>}
             <MergeButton fontAwesomeIcon={faArrowRightLong} clickHandler={() => confirmMerge(LEFT_TO_RIGHT)}
-                         style={{justifyContent: "right"}} disabled={!rightDocument || rightDocument.revision || !rightDocument.authorizedForMerge || mergingContext.selectionCount === 0} />
+                         style={{justifyContent: "right"}} disabled={!rightDocument || rightDocument.revision || !rightDocument.authorizedForMerge || mergingContext.selectionCount === 0}/>
           </div>
           <div className="col collapsed-border merge-button-container">
             <MergeButton fontAwesomeIcon={faArrowLeftLong} clickHandler={() => confirmMerge(RIGHT_TO_LEFT)}
-                         style={{justifyContent: "left"}} disabled={!leftDocument || leftDocument.revision || !leftDocument.authorizedForMerge || mergingContext.selectionCount === 0} />
+                         style={{justifyContent: "left"}} disabled={!leftDocument || leftDocument.revision || !leftDocument.authorizedForMerge || mergingContext.selectionCount === 0}/>
             {!leftDocument || leftDocument.revision && <span>Source document not in HEAD, which locks merging into it</span>}
             {leftDocument && !leftDocument.authorizedForMerge && <span>You are not authorized to merge into source document</span>}
           </div>

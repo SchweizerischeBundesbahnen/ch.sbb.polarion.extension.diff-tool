@@ -71,6 +71,7 @@ export default function DocumentsDiff() {
   }, [context.state.counterpartWorkItemsDiffer]); // Reload diff of all work item pairs if specified property changed
 
   const dataLoadedCallback = (index, error, diffExists, resetDiffMarker, leftChapter, rightChapter, leftWiId, rightWiId) => {
+    diffExists && context.state.setDiffsExist(true);
     loadingContext.diffLoadingFinished(index, error);
 
     markDiffInChaptersTree(leftChapter, leftWiId, leftChaptersDiffMarkers, diffExists, resetDiffMarker);
