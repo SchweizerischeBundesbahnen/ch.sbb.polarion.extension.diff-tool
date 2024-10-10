@@ -13,7 +13,7 @@ The extension should be copied to `<polarion_home>/polarion/extensions/ch.sbb.po
 
 This extension is compatible with Polarion 2310 and 2404.
 This extension is compatible with Java 17.
-This extension is compatible with PDF-Exporter v7.x.x. If you are using PDF-Exporter v6.x.x, please use version 3.x.x of this extension.
+This extension is compatible with [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v7.x.x. (If you are using PDF-Exporter v6.x.x, please use version 3.x.x of this extension.)
 
 ## Build
 

@@ -49,6 +49,8 @@
 
         <maven-jar-plugin.Extension-Context>diff-tool</maven-jar-plugin.Extension-Context>
         <maven-jar-plugin.Automatic-Module-Name>ch.sbb.polarion.extension.diff_tool</maven-jar-plugin.Automatic-Module-Name>
+        <maven-jar-plugin.Discover-Base-Package>ch.sbb.polarion.extension.diff_tool</maven-jar-plugin.Discover-Base-Package>
+        <maven-jar-plugin.Configuration-Properties-Prefix>ch.sbb.polarion.extension.diff-tool.</maven-jar-plugin.Configuration-Properties-Prefix>
 
         <web.app.name>${maven-jar-plugin.Extension-Context}</web.app.name>
 
