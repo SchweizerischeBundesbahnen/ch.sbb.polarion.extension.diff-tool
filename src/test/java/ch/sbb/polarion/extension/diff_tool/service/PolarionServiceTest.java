@@ -192,68 +192,80 @@ class PolarionServiceTest {
 
     @Test
     void testUserNotAuthorizedForMerge() {
-        AuthorizationSettings settingsMock = mock(AuthorizationSettings.class);
-        when(settingsMock.getFeatureName()).thenReturn(AuthorizationSettings.FEATURE_NAME);
-        AuthorizationModel authorizationModel = new AuthorizationModel();
-        authorizationModel.setGlobalRoles("merger");
-        authorizationModel.setProjectRoles("project_merger");
-        when(settingsMock.read(ScopeUtils.getScopeFromProject("projectId"), SettingId.fromName(NamedSettings.DEFAULT_NAME), null)).thenReturn(authorizationModel);
-        NamedSettingsRegistry.INSTANCE.register(List.of(settingsMock));
+        try {
+            AuthorizationSettings settingsMock = mock(AuthorizationSettings.class);
+            when(settingsMock.getFeatureName()).thenReturn(AuthorizationSettings.FEATURE_NAME);
+            AuthorizationModel authorizationModel = new AuthorizationModel();
+            authorizationModel.setGlobalRoles("merger");
+            authorizationModel.setProjectRoles("project_merger");
+            when(settingsMock.read(ScopeUtils.getScopeFromProject("projectId"), SettingId.fromName(NamedSettings.DEFAULT_NAME), null)).thenReturn(authorizationModel);
+            NamedSettingsRegistry.INSTANCE.register(List.of(settingsMock));
 
-        when(securityService.getCurrentUser()).thenReturn("user");
-        when(securityService.getRolesForUser("user")).thenReturn(List.of("role1", "role2"));
+            when(securityService.getCurrentUser()).thenReturn("user");
+            when(securityService.getRolesForUser("user")).thenReturn(List.of("role1", "role2"));
 
-        IProject projectMock = mock(IProject.class);
-        when(projectService.getProject("projectId")).thenReturn(projectMock);
+            IProject projectMock = mock(IProject.class);
+            when(projectService.getProject("projectId")).thenReturn(projectMock);
 
-        ITrackerProject trackerProjectMock = mock(ITrackerProject.class);
-        when(trackerService.getTrackerProject((IProject) any())).thenReturn(trackerProjectMock);
-        IContextId contextIdMock = mock(IContextId.class);
-        when(trackerProjectMock.getContextId()).thenReturn(contextIdMock);
-        when(securityService.getRolesForUser("user", contextIdMock)).thenReturn(List.of("role3", "role4"));
+            ITrackerProject trackerProjectMock = mock(ITrackerProject.class);
+            when(trackerService.getTrackerProject((IProject) any())).thenReturn(trackerProjectMock);
+            IContextId contextIdMock = mock(IContextId.class);
+            when(trackerProjectMock.getContextId()).thenReturn(contextIdMock);
+            when(securityService.getRolesForUser("user", contextIdMock)).thenReturn(List.of("role3", "role4"));
 
-        assertFalse(polarionService.userAuthorizedForMerge("projectId"));
+            assertFalse(polarionService.userAuthorizedForMerge("projectId"));
+        } finally {
+            NamedSettingsRegistry.INSTANCE.getAll().clear();
+        }
     }
 
     @Test
     void testUserAuthorizedForMergeByGlobalRole() {
-        AuthorizationSettings settingsMock = mock(AuthorizationSettings.class);
-        when(settingsMock.getFeatureName()).thenReturn(AuthorizationSettings.FEATURE_NAME);
-        AuthorizationModel authorizationModel = new AuthorizationModel();
-        authorizationModel.setGlobalRoles("merger");
-        authorizationModel.setProjectRoles("project_merger");
-        when(settingsMock.read(ScopeUtils.getScopeFromProject("projectId"), SettingId.fromName(NamedSettings.DEFAULT_NAME), null)).thenReturn(authorizationModel);
-        NamedSettingsRegistry.INSTANCE.register(List.of(settingsMock));
+        try {
+            AuthorizationSettings settingsMock = mock(AuthorizationSettings.class);
+            when(settingsMock.getFeatureName()).thenReturn(AuthorizationSettings.FEATURE_NAME);
+            AuthorizationModel authorizationModel = new AuthorizationModel();
+            authorizationModel.setGlobalRoles("merger");
+            authorizationModel.setProjectRoles("project_merger");
+            when(settingsMock.read(ScopeUtils.getScopeFromProject("projectId"), SettingId.fromName(NamedSettings.DEFAULT_NAME), null)).thenReturn(authorizationModel);
+            NamedSettingsRegistry.INSTANCE.register(List.of(settingsMock));
 
-        when(securityService.getCurrentUser()).thenReturn("user");
-        when(securityService.getRolesForUser("user")).thenReturn(List.of("merger", "role2"));
+            when(securityService.getCurrentUser()).thenReturn("user");
+            when(securityService.getRolesForUser("user")).thenReturn(List.of("merger", "role2"));
 
-        assertTrue(polarionService.userAuthorizedForMerge("projectId"));
+            assertTrue(polarionService.userAuthorizedForMerge("projectId"));
+        } finally {
+            NamedSettingsRegistry.INSTANCE.getAll().clear();
+        }
     }
 
     @Test
     void testUserAuthorizedForMergeByProjectRole() {
-        AuthorizationSettings settingsMock = mock(AuthorizationSettings.class);
-        when(settingsMock.getFeatureName()).thenReturn(AuthorizationSettings.FEATURE_NAME);
-        AuthorizationModel authorizationModel = new AuthorizationModel();
-        authorizationModel.setGlobalRoles("merger");
-        authorizationModel.setProjectRoles("project_merger");
-        when(settingsMock.read(ScopeUtils.getScopeFromProject("projectId"), SettingId.fromName(NamedSettings.DEFAULT_NAME), null)).thenReturn(authorizationModel);
-        NamedSettingsRegistry.INSTANCE.register(List.of(settingsMock));
+        try {
+            AuthorizationSettings settingsMock = mock(AuthorizationSettings.class);
+            when(settingsMock.getFeatureName()).thenReturn(AuthorizationSettings.FEATURE_NAME);
+            AuthorizationModel authorizationModel = new AuthorizationModel();
+            authorizationModel.setGlobalRoles("merger");
+            authorizationModel.setProjectRoles("project_merger");
+            when(settingsMock.read(ScopeUtils.getScopeFromProject("projectId"), SettingId.fromName(NamedSettings.DEFAULT_NAME), null)).thenReturn(authorizationModel);
+            NamedSettingsRegistry.INSTANCE.register(List.of(settingsMock));
 
-        when(securityService.getCurrentUser()).thenReturn("user");
-        when(securityService.getRolesForUser("user")).thenReturn(List.of("role1", "role2"));
+            when(securityService.getCurrentUser()).thenReturn("user");
+            when(securityService.getRolesForUser("user")).thenReturn(List.of("role1", "role2"));
 
-        IProject projectMock = mock(IProject.class);
-        when(projectService.getProject("projectId")).thenReturn(projectMock);
+            IProject projectMock = mock(IProject.class);
+            when(projectService.getProject("projectId")).thenReturn(projectMock);
 
-        ITrackerProject trackerProjectMock = mock(ITrackerProject.class);
-        when(trackerService.getTrackerProject((IProject) any())).thenReturn(trackerProjectMock);
-        IContextId contextIdMock = mock(IContextId.class);
-        when(trackerProjectMock.getContextId()).thenReturn(contextIdMock);
-        when(securityService.getRolesForUser("user", contextIdMock)).thenReturn(List.of("role3", "project_merger"));
+            ITrackerProject trackerProjectMock = mock(ITrackerProject.class);
+            when(trackerService.getTrackerProject((IProject) any())).thenReturn(trackerProjectMock);
+            IContextId contextIdMock = mock(IContextId.class);
+            when(trackerProjectMock.getContextId()).thenReturn(contextIdMock);
+            when(securityService.getRolesForUser("user", contextIdMock)).thenReturn(List.of("role3", "project_merger"));
 
-        assertTrue(polarionService.userAuthorizedForMerge("projectId"));
+            assertTrue(polarionService.userAuthorizedForMerge("projectId"));
+        } finally {
+            NamedSettingsRegistry.INSTANCE.getAll().clear();
+        }
     }
 
     private IModule mockDocument(String name, Date created) {
