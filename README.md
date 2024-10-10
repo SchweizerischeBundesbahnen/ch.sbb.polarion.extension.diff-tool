@@ -2,9 +2,23 @@
 
 This Polarion extension provides functionality of diffing content of 2 documents (either different or the same in different revisions) and later to merge selected diffs in both directions.
 
+## Quick start
+
+The latest version of the extension can be downloaded from the [releases page](../../releases/latest) and installed to Polarion instance without needs to be compiled from the sources.
+The extension should be copied to `<polarion_home>/polarion/extensions/ch.sbb.polarion.extension.diff-tool/eclipse/plugins` and changes will take effect after Polarion restart.
+> [!IMPORTANT]
+> Don't forget to clear `<polarion_home>/data/workspace/.config` folder after extension installation/update to make it work properly.
+
+## Compatibility
+
+This extension is compatible with Polarion 2310 and 2404.
+This extension is compatible with Java 17.
+This extension is compatible with [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v7. (If you are using [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v6, please use version 3.x.x of this extension.)
+
 ## Build
 
 This extension can be produced using maven:
+
 ```bash
 mvn clean package
 ```
@@ -14,9 +28,11 @@ mvn clean package
 To install the extension to Polarion `ch.sbb.polarion.extension.diff-tool-<version>.jar`
 should be copied to `<polarion_home>/polarion/extensions/ch.sbb.polarion.extension.diff-tool/eclipse/plugins`
 It can be done manually or automated using maven build:
+
 ```bash
 mvn clean install -P install-to-local-polarion
 ```
+
 For automated installation with maven env variable `POLARION_HOME` should be defined and point to folder where Polarion is installed.
 
 Changes only take effect after restart of Polarion.
@@ -59,8 +75,8 @@ Changes only take effect after restart of Polarion.
 3. Choose another document and desired options in the `Diff Tool` block and click `Compare`.
 4. Another tab will be opened in browser listing documents differences. Later you can select certain differences and merge them in any direction.
 
-
 ## REST API
+
 This extension provides REST API. OpenAPI Specification can be obtained [here](docs/openapi.json).
 
 ## Calling REST endpoints from a Live Report Page
@@ -107,14 +123,19 @@ function compare() {
 
 `diffText` and `diffHtml` functions are available in Velocity context referenced by `$diffTool` variable.
 Example:
+
 ```velocity
 $diffTool.diffText("Some text", "Some another text").getResult()
 ```
+
 or
+
 ```velocity
 $diffTool.diffHtml("<html><body><div>Some text</div></body></html>", "<html><body><div>Some another text</div></body></html>").getResult()
 ```
+
 Also, `isDifferent` can be used if you need to show something specific for cases when the values are the same:
+
 ```velocity
 #set($diffResult = $diffTool.diffText("Some text", "Some text"))
 #if($diffResult.isDifferent())
