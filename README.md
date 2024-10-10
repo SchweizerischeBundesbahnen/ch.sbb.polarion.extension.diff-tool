@@ -2,6 +2,19 @@
 
 This Polarion extension provides functionality of diffing content of 2 documents (either different or the same in different revisions) and later to merge selected diffs in both directions.
 
+## Quick start (deployment only - no compilation needed!)
+
+The latest version of the extension can be downloaded from the [releases page](../../releases/latest) and installed to Polarion instance without needs to be compiled from the sources.
+The extension should be copied to `<polarion_home>/polarion/extensions/ch.sbb.polarion.extension.diff-tool/eclipse/plugins` and changes will take effect after Polarion restart.
+> [!IMPORTANT]
+> Don't forget to clear `<polarion_home>/data/workspace/.config` folder after extension installation to make it work properly.
+
+## Compatibility
+
+This extension is compatible with Polarion 2310 and 2404.
+This extension is compatible with Java 17.
+This extension is compatible with PDF-Exporter v7.x.x. If you are using PDF-Exporter v6.x.x, please use version 3.x.x of this extension.
+
 ## Build
 
 This extension can be produced using maven:
