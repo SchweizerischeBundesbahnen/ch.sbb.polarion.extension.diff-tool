@@ -415,18 +415,20 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     }
 
     public boolean userAuthorizedForMerge(@NotNull String projectId) {
-        String currentUser = securityService.getCurrentUser();
-        Collection<String> userRoles = securityService.getRolesForUser(currentUser);
-
         AuthorizationModel projectCustomFieldsSettingsModel = (AuthorizationModel)
                 NamedSettingsRegistry.INSTANCE.getByFeatureName(AuthorizationSettings.FEATURE_NAME).read(
                         ScopeUtils.getScopeFromProject(projectId), SettingId.fromName(NamedSettings.DEFAULT_NAME), null);
-
         List<String> allowedRoles = projectCustomFieldsSettingsModel.getAllRoles();
 
-        return userRoles.stream()
-                .anyMatch(allowedRoles::contains);
+        String currentUser = securityService.getCurrentUser();
+        Collection<String> globalRoles = securityService.getRolesForUser(currentUser);
+        if (globalRoles.stream().anyMatch(allowedRoles::contains)) {
+            return true;
+        } else {
+            IContextId projectContext = getTrackerProject(projectId).getContextId();
+            Collection<String> projectRoles = securityService.getRolesForUser(currentUser, projectContext);
+            return projectRoles.stream().anyMatch(allowedRoles::contains);
+        }
     }
-
 
 }
