@@ -19,6 +19,18 @@ public class WorkItemField implements Comparable<WorkItemField> {
     @Schema(description = "Name of the field")
     private String name;
 
+    @Schema(description = "If field is required")
+    private boolean required;
+
+    @Schema(description = "If field is read only")
+    private boolean readOnly;
+
+    @Schema(description = "If field is custom")
+    private boolean customField;
+
+    @Schema(description = "Field's default value")
+    private Object defaultValue;
+
     @Schema(description = "WorkItem type ID")
     private String wiTypeId;
 

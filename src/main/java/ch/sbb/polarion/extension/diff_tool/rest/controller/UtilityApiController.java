@@ -1,5 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentDuplicateParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Document;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
@@ -37,5 +39,9 @@ public class UtilityApiController extends UtilityInternalController {
     @Override
     public Collection<IStatusOpt> getAllWorkItemStatuses(String projectId) {
         return polarionService.callPrivileged(() -> super.getAllWorkItemStatuses(projectId));
+    }
+
+    public DocumentIdentifier createDocumentDuplicate(String projectId, String spaceId, String documentName, String revision, DocumentDuplicateParams documentDuplicateParams) {
+        return polarionService.callPrivileged(() -> super.createDocumentDuplicate(projectId, spaceId, documentName, revision, documentDuplicateParams));
     }
 }

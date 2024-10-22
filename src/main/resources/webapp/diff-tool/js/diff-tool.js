@@ -1,9 +1,12 @@
+const DIFF_TOOL_NEW_DOCUMENT_VALUE = "-1";
+
 DiffTool = {
 
-  init: function (sourceProjectId, sourceSpace, sourceDocument, sourceRevision) {
+  init: function (sourceProjectId, sourceSpace, sourceDocument, sourceDocumentTitle, sourceRevision) {
     this.sourceProjectId = sourceProjectId;
     this.sourceSpace = sourceSpace;
     this.sourceDocument = sourceDocument;
+    this.sourceDocumentTitle = sourceDocumentTitle;
     this.sourceRevision = sourceRevision;
   },
 
@@ -18,7 +21,7 @@ DiffTool = {
     document.getElementById("compare-documents").disabled = true; // Disable "Compare" button
 
     if (selectedProject) {
-      this.getAsync({
+      this.callAsync({
         url: `/polarion/diff-tool/rest/internal/projects/${selectedProject}/spaces`
       }).then((response) => {
         this.actionInProgress({inProgress: false});
@@ -41,13 +44,13 @@ DiffTool = {
 
     this.actionInProgress({inProgress: true, message: "Loading documents"});
     const documentSelector = document.getElementById("document-selector");
-    documentSelector.innerHTML = "<option disabled selected value> --- select document --- </option>"; // Clear previously loaded content
+    documentSelector.innerHTML = `<option disabled selected value> --- select document --- </option><option value='${DIFF_TOOL_NEW_DOCUMENT_VALUE}'>&lt;&lt; new document &gt;&gt;</option>`;
 
     document.getElementById("revision-selector").innerHTML = ""; // Clear previously loaded content
     document.getElementById("compare-documents").disabled = true; // Disable "Compare" button
 
     if (selectedSpace) {
-      this.getAsync({
+      this.callAsync({
         url: `/polarion/diff-tool/rest/internal/projects/${selectedProject}/spaces/${selectedSpace}/documents`
       }).then((response) => {
         this.actionInProgress({inProgress: false});
@@ -70,7 +73,12 @@ DiffTool = {
     const selectedSpace = sameDoc ? this.sourceSpace : document.getElementById("space-selector").value;
     const selectedDocument = sameDoc ? this.sourceDocument : document.getElementById("document-selector").value;
 
-    this.loadRevisions(selectedProject, selectedSpace, selectedDocument)
+    if (selectedDocument === DIFF_TOOL_NEW_DOCUMENT_VALUE) {
+      this.newDocumentSelected(true);
+    } else {
+      this.newDocumentSelected(false);
+      this.loadRevisions(selectedProject, selectedSpace, selectedDocument)
+    }
   },
 
   loadRevisions: function (selectedProject, selectedSpace, selectedDocument) {
@@ -87,7 +95,7 @@ DiffTool = {
 
     if (selectedDocument) {
       this.actionInProgress({inProgress: true, message: "Loading revisions"});
-      this.getAsync({
+      this.callAsync({
         url: `/polarion/diff-tool/rest/internal/projects/${selectedProject}/spaces/${selectedSpace}/documents/${selectedDocument}/revisions`
       }).then((response) => {
         this.actionInProgress({inProgress: false});
@@ -137,7 +145,56 @@ DiffTool = {
     options[selectionIndex].selected = 'selected'; // Select latest baseline option or (when no baselines found) latest revision
   },
 
-  showResult: function () {
+  newDocumentSelected: function (selected) {
+    if (selected) {
+      document.querySelectorAll(".comparison.form-wrapper .hide-when-new-document").forEach(element => element.classList.add("hide"));
+      document.querySelectorAll(".comparison.form-wrapper .hide-when-comparing").forEach(element => element.classList.remove("hide"));
+    } else {
+      document.querySelectorAll(".comparison.form-wrapper .hide-when-new-document").forEach(element => element.classList.remove("hide"));
+      document.querySelectorAll(".comparison.form-wrapper .hide-when-comparing").forEach(element => element.classList.add("hide"));
+    }
+  },
+
+  createNewDocument: function () {
+    const selectedProject = document.getElementById("project-selector").value;
+    const selectedSpace = document.getElementById("space-selector").value;
+    const linkRole = document.getElementById("link-role-selector").value;
+    const config = document.getElementById("config-selector").value;
+
+    const requestBody = {
+      targetDocumentIdentifier: {
+        projectId: selectedProject,
+        spaceId: selectedSpace,
+        name: this.sourceDocument,
+      },
+      targetDocumentTitle: this.sourceDocumentTitle,
+      linkRoleId: linkRole,
+      configName: config
+    }
+    const revisionUrlPart = this.sourceRevision ? `?revision=${this.sourceRevision}` : '';
+
+    this.actionInProgress({inProgress: true, message: "Creating a document"});
+    this.callAsync({
+      method: "POST",
+      url: `/polarion/diff-tool/rest/internal/projects/${this.sourceProjectId}/spaces/${this.sourceSpace}/documents/${this.sourceDocument}/duplicate${revisionUrlPart}`,
+      body: JSON.stringify(requestBody)
+    }).then((response) => {
+      this.actionInProgress({inProgress: false});
+
+      const alert = document.getElementById(`creation-success`);
+      const basePath = `//${window.location.host}${window.location.pathname}`;
+      const anchor = alert.querySelector("a");
+      anchor.innerText = `${basePath}#/project/${response.projectId}/wiki/${response.spaceId}/${response.name}`;
+      anchor.href = `${basePath}#/project/${encodeURIComponent(response.projectId)}/wiki/${encodeURIComponent(response.spaceId)}/${encodeURIComponent(response.name)}`;
+      anchor.target = "_blank";
+      alert.style.display = "block";
+    }).catch(() => {
+      this.actionInProgress({inProgress: false});
+      this.showAlert({alertType: "error", message: "Error creating document"});
+    });
+  },
+
+  showDiffResult: function () {
     const sameDoc = this.compareSameDocument();
     const targetProjectId = sameDoc ? this.sourceProjectId : document.getElementById("project-selector").value;
     const targetSpace = sameDoc ? this.sourceSpace : document.getElementById("space-selector").value;
@@ -160,14 +217,14 @@ DiffTool = {
     window.open(path, '_blank');
   },
 
-  getAsync: function ({url}) {
+  callAsync: function ({method = "GET", url, body = null}) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open("GET", url, true);
+      xhr.open(method, url, true);
       xhr.setRequestHeader('Content-Type', 'application/json')
       xhr.responseType = "json";
 
-      xhr.send();
+      xhr.send(body);
 
       xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) {

@@ -30,7 +30,7 @@
         <select id='document-selector' onchange='DiffTool.documentChanged()'>
         </select>
     </div>
-    <div class='property-wrapper'>
+    <div class='property-wrapper hide-when-new-document'>
         <label for="select-revision-panel" class="fixed-width w-1">Revision:</label>
         <div id="select-revision-panel">
             <div id="select-revision-radios">
@@ -65,11 +65,19 @@
             {CONFIG_OPTIONS}
         </select>
     </div>
-    <div class='buttons-wrapper'>
-        <button type='button' id="compare-documents" disabled onclick='DiffTool.showResult()'>
+    <div class='buttons-wrapper hide-when-new-document'>
+        <button type='button' id="compare-documents" disabled onclick='DiffTool.showDiffResult()'>
             <img src='/polarion/ria/images/dle/operations/compare.png'/>Compare
+        </button>
+    </div>
+    <div class='buttons-wrapper hide-when-comparing hide'>
+        <button type='button' id="create-document" onclick='DiffTool.createNewDocument()'>
+            <img src='/polarion/ria/images/control/tablePlus.png'/>Create Document
         </button>
     </div>
     <div id='comparison-error' class="alert alert-error"></div>
     <div id='comparison-warning' class="alert alert-warning"></div>
+    <div id='creation-success' class="alert">
+        <span class="alert-success">Document created:</span> <a href="" style="font-weight: normal"></a>
+    </div>
 </div>
