@@ -131,7 +131,7 @@ public class UtilityInternalController {
                                                       @Parameter(description = "Optional revision of source document") @QueryParam("revision") String revision,
                                                       DocumentDuplicateParams documentDuplicateParams) {
         if (StringUtils.isBlank(sourceProjectId) || StringUtils.isBlank(sourceSpaceId) || StringUtils.isBlank(sourceDocumentName) || documentDuplicateParams == null) {
-            throw new BadRequestException("'projectId', 'spaceId', 'documentName' and 'documentDuplicateParams' should be provided");
+            throw new BadRequestException("'projectId', 'spaceId', 'documentName' and request body should be provided");
         }
         return polarionService.createDocumentDuplicate(sourceProjectId, sourceSpaceId, sourceDocumentName, revision, documentDuplicateParams);
     }
