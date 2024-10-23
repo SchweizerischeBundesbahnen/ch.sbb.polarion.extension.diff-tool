@@ -1,7 +1,11 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentDuplicateParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.conversion.PrintPaperSize;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Document;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
@@ -9,17 +13,22 @@ import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.tracker.model.IStatusOpt;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.util.Collection;
 import java.util.List;
@@ -98,6 +107,33 @@ public class UtilityInternalController {
             throw new BadRequestException("'projectId', 'spaceId' and 'docName' should be provided");
         }
         return polarionService.getDocumentRevisions(polarionService.getModule(projectId, spaceId, docName));
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/projects/{projectId}/spaces/{spaceId}/documents/{documentName}/duplicate")
+    @Operation(summary = "Creates a new document as a duplicate of specified one",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = DocumentDuplicateParams.class)
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Document created successfully"),
+                    @ApiResponse(responseCode = "409", description = "Target document already exists")
+            }
+    )
+    public DocumentIdentifier createDocumentDuplicate(@Parameter(description = "Project ID of source document") @PathParam("projectId") String sourceProjectId,
+                                                      @Parameter(description = "Space ID of source document") @PathParam("spaceId") String sourceSpaceId,
+                                                      @Parameter(description = "Source document name") @PathParam("documentName") String sourceDocumentName,
+                                                      @Parameter(description = "Optional revision of source document") @QueryParam("revision") String revision,
+                                                      DocumentDuplicateParams documentDuplicateParams) {
+        if (StringUtils.isBlank(sourceProjectId) || StringUtils.isBlank(sourceSpaceId) || StringUtils.isBlank(sourceDocumentName) || documentDuplicateParams == null) {
+            throw new BadRequestException("'projectId', 'spaceId', 'documentName' and request body should be provided");
+        }
+        return polarionService.createDocumentDuplicate(sourceProjectId, sourceSpaceId, sourceDocumentName, revision, documentDuplicateParams);
     }
 
     @GET

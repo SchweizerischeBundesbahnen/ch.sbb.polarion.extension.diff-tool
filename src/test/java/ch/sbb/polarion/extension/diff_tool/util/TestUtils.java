@@ -25,7 +25,6 @@ public class TestUtils {
                 mock(IPlatformService.class),
                 mock(IRepositoryService.class)
         ));
-        lenient().when(polarionService.getGeneralFields(any())).thenCallRealMethod();
         lenient().when(polarionService.getWorkItem(any(), any())).thenCallRealMethod();
         lenient().when(polarionService.getAttachment(any())).thenCallRealMethod();
         lenient().when(polarionService.getProjectService()).thenCallRealMethod();

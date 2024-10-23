@@ -22,7 +22,7 @@
     column-gap: 5px;
 }
 
-.property-wrapper.hide {
+.property-wrapper.hide, .buttons-wrapper.hide {
     display: none !important;
 }
 
@@ -132,4 +132,8 @@
 
 .alert-warning {
     color: orange;
+}
+
+.alert-success {
+    color: green;
 }

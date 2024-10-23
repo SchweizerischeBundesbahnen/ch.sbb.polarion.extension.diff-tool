@@ -1,14 +1,18 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentDuplicateParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.WorkItemAttachmentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
 import ch.sbb.polarion.extension.diff_tool.settings.AuthorizationSettings;
+import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache;
 import ch.sbb.polarion.extension.diff_tool.util.RequestContextUtil;
+import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
@@ -28,7 +32,7 @@ import com.polarion.alm.shared.rt.RichTextRenderingContext;
 import com.polarion.alm.shared.rt.parts.FieldRichTextRenderer;
 import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.internal.baseline.BaseObjectBaselinesSearch;
-import com.polarion.alm.tracker.internal.diff.RichTextDiffGenerator;
+import com.polarion.alm.tracker.internal.model.WorkItem;
 import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.IBaseline;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
@@ -42,7 +46,8 @@ import com.polarion.alm.ui.shared.FieldRenderType;
 import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.platform.IPlatformService;
-import com.polarion.platform.persistence.IDataService;
+import com.polarion.platform.persistence.IEnumOption;
+import com.polarion.platform.persistence.IEnumeration;
 import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.platform.persistence.model.IPrototype;
@@ -51,6 +56,10 @@ import com.polarion.platform.security.ISecurityService;
 import com.polarion.platform.service.repository.IRepositoryService;
 import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.ICustomField;
+import com.polarion.subterra.base.data.model.IEnumType;
+import com.polarion.subterra.base.data.model.IListType;
+import com.polarion.subterra.base.data.model.IType;
+import com.polarion.subterra.base.location.ILocation;
 import com.polarion.subterra.base.location.Location;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -60,6 +69,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import javax.security.auth.Subject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -73,6 +83,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -80,6 +91,14 @@ import java.util.stream.Stream;
 public class PolarionService extends ch.sbb.polarion.extension.generic.service.PolarionService {
 
     private static final Logger logger = Logger.getLogger(PolarionService.class);
+    private static final Predicate<WorkItemField> deletableFieldsFilter = field -> !field.isReadOnly();
+    private static final Set<String> fieldsNotToCleanUp = new HashSet<>(Arrays.asList(
+            IWorkItem.KEY_PROJECT,
+            IWorkItem.KEY_MODULE,
+            IWorkItem.KEY_TYPE,
+            IWorkItem.KEY_OUTLINE_NUMBER,
+            IWorkItem.KEY_RESOLUTION
+    ));
 
     @Getter
     private final DocumentWorkItemsCache documentWorkItemsCache = new DocumentWorkItemsCache();
@@ -103,13 +122,6 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     @NotNull
     public List<IFolder> getSpaces(@NotNull String projectId) {
         return getTrackerService().getFolderManager().getFolders(projectId);
-    }
-
-    @NotNull
-    @SuppressWarnings("unchecked")
-    public IPObjectList<IModule> getDocuments(@NotNull String projectId) {
-        IDataService dataService = getTrackerService().getDataService();
-        return dataService.searchInstances(dataService.getPrototype("Module"), String.format("project.id:%s", projectId), "title");
     }
 
     @NotNull
@@ -150,6 +162,173 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     public @NotNull IModule getDocumentWithFilledRevision(@NotNull String projectId, @NotNull String spaceId, @NotNull String documentName, @Nullable String revision) {
         IModule module = super.getModule(projectId, spaceId, documentName, revision);
         return (revision == null || module.getRevision() != null) ? module : getModule(projectId, spaceId, documentName, getDocumentRevisions(module).get(0).getName());
+    }
+
+    /**
+     * Creates a new document as a duplicate of source document
+     */
+    public DocumentIdentifier createDocumentDuplicate(@NotNull String sourceProjectId, @NotNull String sourceSpaceId, @NotNull String sourceDocumentName,
+                                                      @Nullable String revision, @NotNull DocumentDuplicateParams documentDuplicateParams) {
+        try {
+            if (getModule(new DocumentIdentifier(documentDuplicateParams.getTargetDocumentIdentifier())) != null) {
+                throw new IllegalStateException(String.format("Document '%s' already exists in project '%s' and space '%s'",
+                        documentDuplicateParams.getTargetDocumentIdentifier().getName(), documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(),
+                        documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId()));
+            }
+        } catch (ObjectNotFoundException ex) {
+            // Normal case, just swallow
+        }
+
+        IProject targetProject = getProject(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId());
+        ITrackerProject targetTrackerProject = trackerService.getTrackerProject(targetProject);
+        IContextId targetProjectContextId = targetTrackerProject.getContextId();
+        if (StringUtils.isEmptyTrimmed(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId())) {
+            throw new IllegalArgumentException("Target 'spaceId' should be provided");
+        }
+        if (StringUtils.isEmptyTrimmed(documentDuplicateParams.getTargetDocumentTitle())) {
+            throw new IllegalArgumentException("Target 'documentName' should be provided");
+        }
+
+        ILocation targetLocation = Location.getLocation(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId());
+
+        IModule sourceModule = getModule(sourceProjectId, sourceSpaceId, sourceDocumentName, revision);
+        ILinkRoleOpt linkRole = getLinkRoleById(documentDuplicateParams.getLinkRoleId(), targetTrackerProject);
+        if (linkRole == null) {
+            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", documentDuplicateParams.getLinkRoleId()));
+        }
+
+        List<DiffField> allowedFields = DiffModelCachedResource.get(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(),
+                documentDuplicateParams.getConfigName(), null).getDiffFields();
+
+        // ---------
+        // Following 2 calls are intentionally split into 2 calls in separate transactions as list fields during documents duplication
+        // are becoming visible "outside" only as soon as duplication transaction is closed, meaning that cleaning them up should be done
+        // in new additional transaction
+        IModule module = TransactionalExecutor.executeInWriteTransaction(transaction -> {
+            IModule createdModule = trackerService.getModuleManager().duplicate(sourceModule, targetProject, targetLocation,
+                    documentDuplicateParams.getTargetDocumentIdentifier().getName(), linkRole, null, null, null, null);
+            createdModule.setTitle(documentDuplicateParams.getTargetDocumentTitle());
+            createdModule.updateTitleHeading(documentDuplicateParams.getTargetDocumentTitle());
+            createdModule.save();
+
+            cleanUpNonListFields(createdModule, targetProjectContextId, allowedFields);
+
+            return createdModule;
+        });
+
+        TransactionalExecutor.executeInWriteTransaction(transaction -> {
+            cleanUpListFields(module, targetProjectContextId, allowedFields);
+            return null;
+        });
+        // ----------
+
+        return DocumentIdentifier.builder()
+                .projectId(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())
+                .spaceId(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId())
+                .name(Objects.requireNonNull(module).getModuleName())
+                .moduleXmlRevision(module.getLastRevision())
+                .build();
+    }
+
+    /**
+     * Cleans up non-list fields of work items in specified module (document), leaving only either allowed fields (not to clean up) or read-only ones.
+     * Method should be called in write transaction context.
+     *
+     * @param module Module which work items to clean up
+     * @param projectContextId ID of project's context where module is located
+     * @param allowedFields List of allowed fields (not to clean up)
+     */
+    void cleanUpNonListFields(@NotNull IModule module, @NotNull IContextId projectContextId, @NotNull List<DiffField> allowedFields) {
+        List<WorkItemField> standardFieldsDeletable = getStandardFields().stream().filter(deletableFieldsFilter).toList();
+        for (IWorkItem workItem : getWorkItemsForCleanUp(module)) {
+            for (WorkItemField field : getDeletableFields(workItem, projectContextId, standardFieldsDeletable)) {
+                if (isFieldToCleanUp(allowedFields, field, workItem.getType())) {
+                    if (field.isRequired()) {
+                        if (field.isCustomField()) {
+                            workItem.setValue(field.getKey(), field.getDefaultValue());
+                        } else {
+                            fillStandardFieldDefaultValue(workItem, field);
+                        }
+                    } else {
+                        if (!(workItem.getFieldType(field.getKey()) instanceof IListType)) {
+                            workItem.setValue(field.getKey(), null);
+                        }
+                    }
+                }
+            }
+            workItem.save();
+        }
+    }
+
+    /**
+     * Cleans up list fields of work items in specified module (document), leaving only either allowed fields (not to clean up) or read-only ones.
+     * Method should be called in write transaction context.
+     *
+     * @param module Module which work items to clean up
+     * @param projectContextId ID of project's context where module is located
+     * @param allowedFields List of allowed fields (not to clean up)
+     */
+    void cleanUpListFields(IModule module, IContextId projectContextId, List<DiffField> allowedFields) {
+        List<WorkItemField> standardFieldsDeletable = getStandardFields().stream().filter(deletableFieldsFilter).toList();
+        for (IWorkItem workItem : getWorkItemsForCleanUp(module)) {
+            for (WorkItemField field : getDeletableFields(workItem, projectContextId, standardFieldsDeletable)) {
+                if (isFieldToCleanUp(allowedFields, field, workItem.getType())) {
+                    if (workItem.getFieldType(field.getKey()) instanceof IListType) {
+                        ListFieldCleaner cleaner = ListFieldCleanerProvider.getInstance(field.getKey());
+                        if (!field.isRequired() && cleaner != null) {
+                            cleaner.clean(workItem);
+                        }
+                    }
+                }
+            }
+            workItem.save();
+        }
+    }
+
+    private List<IWorkItem> getWorkItemsForCleanUp(@NotNull IModule module) {
+        return module.getAllWorkItems().stream().filter(item -> {
+            if (item.isUnresolvable()) {
+                return false;
+            }
+            if (item instanceof WorkItem workItem) {
+                return !workItem.isHeading();
+            } else {
+                return true;
+            }
+        }).toList();
+    }
+
+    List<WorkItemField> getDeletableFields(@NotNull IWorkItem workItem, @NotNull IContextId projectContextId, @NotNull List<WorkItemField> standardFieldsDeletable) {
+        List<WorkItemField> deletableFields = new ArrayList<>(standardFieldsDeletable);
+        if (workItem.getType() != null) {
+            deletableFields.addAll(getCustomFields(projectContextId, workItem.getType()).stream().filter(deletableFieldsFilter).toList());
+        }
+        return deletableFields;
+    }
+
+    void fillStandardFieldDefaultValue(@NotNull IWorkItem workItem, @NotNull WorkItemField standardField) {
+        IType keyType = workItem.getPrototype().getKeyType(standardField.getKey());
+        if (keyType instanceof IEnumType) {
+            IEnumeration<?> enumeration = workItem.getDataSvc().getEnumerationForKey(workItem.getPrototype().getName(), standardField.getKey(), workItem.getContextId());
+            IEnumOption defaultOption = enumeration.getDefaultOption(null);
+            if (defaultOption != null) {
+                workItem.setValue(standardField.getKey(), defaultOption);
+            }
+        }
+    }
+
+    boolean isFieldToCleanUp(List<DiffField> allowedFields, WorkItemField fieldToCheck, @Nullable ITypeOpt workItemType) {
+        if (fieldsNotToCleanUp.contains(fieldToCheck.getKey())) {
+            return false; // Certain fields should never be cleaned up, eg. project, module, outline number etc.
+        }
+        for (DiffField allowedField : allowedFields) {
+            if (allowedField.getWiTypeId() == null || (workItemType != null && workItemType.getId().equals(allowedField.getWiTypeId()))) {
+                if (fieldToCheck.getKey().equals(allowedField.getKey())) {
+                    return false; // If field is configured to be copied then it shouldn't be cleaned up
+                }
+            }
+        }
+        return true;
     }
 
     @NotNull
@@ -364,41 +543,47 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         });
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public List<WorkItemField> getAllWorkItemFields(@NotNull String projectId) {
-        IPrototype workItemPrototype = getTrackerService().getDataService().getPrototype(IWorkItem.PROTO);
-        IPObject workItemInstance = getTrackerService().getDataService().createInstance(IWorkItem.PROTO);
-
-        List<WorkItemField> fields = new ArrayList<>();
-
-        List<String> keyNames = new ArrayList<>(workItemPrototype.getKeyNames());
-        keyNames.stream().filter(workItemPrototype::isKeyDefined).forEach(keyName -> fields.add(WorkItemField.builder().key(keyName).name(workItemInstance.getFieldLabel(keyName)).build()));
+        List<WorkItemField> fields = new ArrayList<>(getStandardFields());
 
         ITrackerProject trackerProject = getTrackerProject(projectId);
         IContextId contextId = trackerProject.getContextId();
         List<ITypeOpt> wiTypes = trackerProject.getWorkItemTypeEnum().getAllOptions();
         for (ITypeOpt wiType : wiTypes) {
-            Collection<ICustomField> customFields = getTrackerService().getDataService().getCustomFieldsService().getCustomFields(IWorkItem.PROTO, contextId, wiType.getId());
-            customFields.forEach(customField -> fields.add(WorkItemField.builder().key(customField.getId()).name(customField.getName()).wiTypeId(wiType.getId()).wiTypeName(wiType.getName()).build()));
+            fields.addAll(getCustomFields(contextId, wiType));
         }
 
         Collections.sort(fields);
         return fields;
     }
 
-    @SuppressWarnings("unchecked")
-    public List<String> getGeneralFields(String proto) {
-        return getTrackerService().getDataService().getPrototype(proto).getKeyNames().stream().toList();
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    List<WorkItemField> getStandardFields() {
+        IPrototype workItemPrototype = getTrackerService().getDataService().getPrototype(IWorkItem.PROTO);
+        IPObject workItemInstance = getTrackerService().getDataService().createInstance(IWorkItem.PROTO);
+
+        List<String> keyNames = new ArrayList<>(workItemPrototype.getKeyNames());
+        return keyNames.stream().filter(workItemPrototype::isKeyDefined).map(
+                keyName -> WorkItemField.builder()
+                        .key(keyName)
+                        .name(workItemInstance.getFieldLabel(keyName)) // Field label can be obtained only via work item instance, attempt to obtain it via prototype throws UnsupportedOperationException
+                        .required(workItemPrototype.isKeyRequired(keyName))
+                        .readOnly(workItemPrototype.isKeyReadOnly(keyName))
+                        .build()).toList();
     }
 
-    public List<String> getCustomFields(@NotNull String projectId, @NotNull String proto, @Nullable String subType) {
-        final IContextId contextId = getTrackerProject(projectId).getContextId();
-        final Collection<ICustomField> customFields = getTrackerService().getDataService().getCustomFieldsService().getCustomFields(proto, contextId, subType);
-        return customFields.stream().map(ICustomField::getId).toList();
-    }
-
-    public RichTextDiffGenerator getRichTextDiffGenerator() {
-        return new RichTextDiffGenerator(getTrackerService());
+    List<WorkItemField> getCustomFields(@NotNull IContextId contextId, @NotNull ITypeOpt workItemType) {
+        Collection<ICustomField> customFields = getTrackerService().getDataService().getCustomFieldsService().getCustomFields(IWorkItem.PROTO, contextId, workItemType.getId());
+        return customFields.stream().map(
+                customField -> WorkItemField.builder()
+                        .key(customField.getId())
+                        .name(customField.getName())
+                        .required(customField.isRequired())
+                        .customField(true)
+                        .defaultValue(customField.getDefaultValue())
+                        .wiTypeId(workItemType.getId())
+                        .wiTypeName(workItemType.getName())
+                        .build()).toList();
     }
 
     public void evictDocumentsCache(DocumentIdentifier... documents) {

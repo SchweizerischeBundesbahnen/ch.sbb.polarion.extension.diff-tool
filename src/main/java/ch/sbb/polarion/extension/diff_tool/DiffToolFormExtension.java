@@ -51,7 +51,8 @@ public class DiffToolFormExtension implements IFormExtension {
             String form = ScopeUtils.getFileContent("webapp/diff-tool/html/diff-tool.html");
 
             List<IProject> allProjects = polarionService.getAuthorizedProjects();
-            form = form.replace(PROJECT_OPTIONS_PLACEHOLDER, "<option disabled selected value> --- select project --- </option>" + allProjects.stream().map(this::getProjectOption).collect(Collectors.joining()));
+            form = form.replace(PROJECT_OPTIONS_PLACEHOLDER, "<option disabled selected value> --- select project --- </option>"
+                    + allProjects.stream().map(this::getProjectOption).collect(Collectors.joining()));
 
             Collection<ILinkRoleOpt> linkRoles = polarionService.getLinkRoles(module.getProjectId());
             form = form.replace(LINK_ROLE_OPTIONS_PLACEHOLDER, linkRoles.stream().map(this::getLinkRoleOption).collect(Collectors.joining()));
@@ -59,7 +60,7 @@ public class DiffToolFormExtension implements IFormExtension {
             Collection<SettingName> settingNames = getSettingNames(DiffSettings.FEATURE_NAME, ScopeUtils.getScopeFromProject(module.getProjectId()));
             form = form.replace(CONFIG_OPTIONS_PLACEHOLDER, generateSettingOptions(settingNames));
 
-            String params = fillParams(module.getProjectId(), module.getModuleFolder(), module.getModuleName(), Objects.requireNonNullElse(module.getRevision(), ""));
+            String params = fillParams(module.getProjectId(), module.getModuleFolder(), module.getModuleName(), module.getTitleOrName(), Objects.requireNonNullElse(module.getRevision(), ""));
             // replace with the string like "e-library","specification","Product Specification",null
             form = form.replace(SOURCE_DOC_PARAMS_PLACEHOLDER, params);
 
