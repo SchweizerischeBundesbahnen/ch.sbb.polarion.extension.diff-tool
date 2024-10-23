@@ -188,9 +188,9 @@ DiffTool = {
       anchor.href = `${basePath}#/project/${encodeURIComponent(response.projectId)}/wiki/${encodeURIComponent(response.spaceId)}/${encodeURIComponent(response.name)}`;
       anchor.target = "_blank";
       alert.style.display = "block";
-    }).catch(() => {
+    }).catch((error) => {
       this.actionInProgress({inProgress: false});
-      this.showAlert({alertType: "error", message: "Error creating document"});
+      this.showAlert({alertType: "error", message: error?.response?.message ? error.response.message : "Error creating document"});
     });
   },
 

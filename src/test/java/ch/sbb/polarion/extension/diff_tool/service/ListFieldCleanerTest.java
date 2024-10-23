@@ -31,7 +31,7 @@ public class ListFieldCleanerTest {
         when(approvalStruct.getUser()).thenReturn(user);
         when(workItem.getApprovals()).thenReturn(List.of(approvalStruct));
 
-        ListFieldCleaner.INSTANCES.get(IWorkItem.KEY_APPROVALS).accept(workItem);
+        ListFieldCleanerProvider.getInstance(IWorkItem.KEY_APPROVALS).clean(workItem);
 
         verify(workItem, times(1)).removeApprovee(user);
     }
@@ -43,7 +43,7 @@ public class ListFieldCleanerTest {
         IUser user = mock(IUser.class);
         when(workItem.getAssignees()).thenReturn(new PObjectList(mock(IDataService.class), List.of(user)));
 
-        ListFieldCleaner.INSTANCES.get(IWorkItem.KEY_ASSIGNEE).accept(workItem);
+        ListFieldCleanerProvider.getInstance(IWorkItem.KEY_ASSIGNEE).clean(workItem);
 
         verify(workItem, times(1)).removeAssignee(user);
     }
@@ -59,7 +59,7 @@ public class ListFieldCleanerTest {
         IPObjectList comments = new PObjectList(mock(IDataService.class), List.of(comment));
         when(workItem.getComments()).thenReturn(comments);
 
-        ListFieldCleaner.INSTANCES.get(IWorkItem.KEY_COMMENTS).accept(workItem);
+        ListFieldCleanerProvider.getInstance(IWorkItem.KEY_COMMENTS).clean(workItem);
 
         verify(dataService, times(1)).delete(comments);
     }
@@ -76,7 +76,7 @@ public class ListFieldCleanerTest {
         IWorkflowSignaturesManager workflowSignaturesManager = mock(IWorkflowSignaturesManager.class);
         when(workItem.getWorkflowSignaturesManager()).thenReturn(workflowSignaturesManager);
 
-        ListFieldCleaner.INSTANCES.get(IWorkItem.KEY_WORKFLOW_SIGNATURES).accept(workItem);
+        ListFieldCleanerProvider.getInstance(IWorkItem.KEY_WORKFLOW_SIGNATURES).clean(workItem);
 
         verify(workflowSignaturesManager, times(1)).removeWorkflowSignature(status);
     }
@@ -88,7 +88,7 @@ public class ListFieldCleanerTest {
         IWorkRecord workRecord = mock(IWorkRecord.class);
         when(workItem.getWorkRecords()).thenReturn(new PObjectList(mock(IDataService.class), List.of(workRecord)));
 
-        ListFieldCleaner.INSTANCES.get(IWorkItem.KEY_WORK_RECORDS).accept(workItem);
+        ListFieldCleanerProvider.getInstance(IWorkItem.KEY_WORK_RECORDS).clean(workItem);
 
         verify(workItem, times(1)).deleteWorkRecord(workRecord);
     }

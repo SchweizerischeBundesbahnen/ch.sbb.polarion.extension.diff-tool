@@ -12,6 +12,7 @@ import ch.sbb.polarion.extension.diff_tool.settings.AuthorizationSettings;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache;
 import ch.sbb.polarion.extension.diff_tool.util.RequestContextUtil;
+import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
@@ -166,8 +167,18 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     /**
      * Creates a new document as a duplicate of source document
      */
-    public DocumentIdentifier createDocument(@NotNull String sourceProjectId, @NotNull String sourceSpaceId, @NotNull String sourceDocumentName,
-                                             @Nullable String revision, @NotNull DocumentDuplicateParams documentDuplicateParams) {
+    public DocumentIdentifier createDocumentDuplicate(@NotNull String sourceProjectId, @NotNull String sourceSpaceId, @NotNull String sourceDocumentName,
+                                                      @Nullable String revision, @NotNull DocumentDuplicateParams documentDuplicateParams) {
+        try {
+            if (getModule(new DocumentIdentifier(documentDuplicateParams.getTargetDocumentIdentifier())) != null) {
+                throw new IllegalStateException(String.format("Document '%s' already exists in project '%s' and space '%s'",
+                        documentDuplicateParams.getTargetDocumentIdentifier().getName(), documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(),
+                        documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId()));
+            }
+        } catch (ObjectNotFoundException ex) {
+            // Normal case, just swallow
+        }
+
         IProject targetProject = getProject(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId());
         ITrackerProject targetTrackerProject = trackerService.getTrackerProject(targetProject);
         IContextId targetProjectContextId = targetTrackerProject.getContextId();
@@ -263,8 +274,9 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             for (WorkItemField field : getDeletableFields(workItem, projectContextId, standardFieldsDeletable)) {
                 if (isFieldToCleanUp(allowedFields, field, workItem.getType())) {
                     if (workItem.getFieldType(field.getKey()) instanceof IListType) {
-                        if (!field.isRequired() && ListFieldCleaner.INSTANCES.containsKey(field.getKey())) {
-                            ListFieldCleaner.INSTANCES.get(field.getKey()).accept(workItem);
+                        ListFieldCleaner cleaner = ListFieldCleanerProvider.getInstance(field.getKey());
+                        if (!field.isRequired() && cleaner != null) {
+                            cleaner.clean(workItem);
                         }
                     }
                 }

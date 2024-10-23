@@ -130,7 +130,7 @@ public class UtilityInternalController {
         if (StringUtils.isBlank(sourceProjectId) || StringUtils.isBlank(sourceSpaceId) || StringUtils.isBlank(sourceDocumentName) || documentDuplicateParams == null) {
             throw new BadRequestException("'projectId', 'spaceId', 'documentName' and 'documentDuplicateParams' should be provided");
         }
-        return polarionService.createDocument(sourceProjectId, sourceSpaceId, sourceDocumentName, revision, documentDuplicateParams);
+        return polarionService.createDocumentDuplicate(sourceProjectId, sourceSpaceId, sourceDocumentName, revision, documentDuplicateParams);
     }
 
     @GET

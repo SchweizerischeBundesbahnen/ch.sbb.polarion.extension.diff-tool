@@ -25,5 +25,9 @@ public class DocumentIdentifier extends BaseDocumentIdentifier{
         this.revision = revision;
         this.moduleXmlRevision = moduleXmlRevision;
     }
+
+    public DocumentIdentifier(BaseDocumentIdentifier baseDocumentIdentifier) {
+        super(baseDocumentIdentifier.getProjectId(), baseDocumentIdentifier.getSpaceId(), baseDocumentIdentifier.getName());
+    }
 }
 
