@@ -120,7 +120,10 @@ public class UtilityInternalController {
                             schema = @Schema(implementation = DocumentDuplicateParams.class)
                     )
             ),
-            responses = @ApiResponse(responseCode = "200", description = "Document created successfully")
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Document created successfully"),
+                    @ApiResponse(responseCode = "409", description = "Target document already exists")
+            }
     )
     public DocumentIdentifier createDocumentDuplicate(@Parameter(description = "Project ID of source document") @PathParam("projectId") String sourceProjectId,
                                                       @Parameter(description = "Space ID of source document") @PathParam("spaceId") String sourceSpaceId,
