@@ -1,5 +1,25 @@
 # Changelog
 
+## [4.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.0.0...v4.1.0) (2024-10-23)
+
+
+### Features
+
+* Add possibility to create a duplicate document from current one ([#40](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/40)) ([f7cb7de](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/f7cb7def53bf745b5f65c3d38e28445fe04ae745)), closes [#33](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/33)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v7.4.1 ([e04e848](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/e04e8487cea8ddb024f1a82f55e8d949ace52491))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v7.5.0 ([0876489](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/0876489c7a0ec35cf440970f79e5ef06d31f6fd8))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v7.3.0 ([247533f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/247533f28283052c36b37c4752caa77a952734e2))
+* slf4j and apache logging added to manifest ([#35](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/35)) ([f27dcae](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/f27dcaee695ae0c8422a22a55d982146d0341167))
+
+
+### Documentation
+
+* compatibility updated ([#39](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/39)) ([ae79126](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ae79126a9d87ff598a80b20b1156b149ca429044))
+
 ## [4.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v3.6.2...v4.0.0) (2024-10-10)
 
 
