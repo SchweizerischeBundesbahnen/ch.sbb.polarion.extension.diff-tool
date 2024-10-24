@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,7 @@ public class WorkItemField implements Comparable<WorkItemField> {
     private boolean customField;
 
     @Schema(description = "Field's default value")
+    @JsonIgnore
     private Object defaultValue;
 
     @Schema(description = "WorkItem type ID")
