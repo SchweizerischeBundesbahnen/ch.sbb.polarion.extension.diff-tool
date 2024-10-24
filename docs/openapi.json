@@ -420,6 +420,9 @@
         "responses": {
           "200": {
             "description": "Document created successfully"
+          },
+          "409": {
+            "description": "Target document already exists"
           }
         },
         "summary": "Creates a new document as a duplicate of specified one",
@@ -1364,10 +1367,6 @@
           "customField": {
             "description": "If field is custom",
             "type": "boolean"
-          },
-          "defaultValue": {
-            "description": "Field's default value",
-            "type": "object"
           },
           "key": {
             "description": "Unique key for the field",
