@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.1.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.1.0...v4.1.1) (2024-10-24)
+
+
+### Bug Fixes
+
+* add additional checks for error object on client side and more logging ([#47](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/47)) ([a0f55d6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/a0f55d60e743a35ddf59a334bc2084446b1f55b2)), closes [#46](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/46)
+* fix getting WI fields list ([#44](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/44)) ([246067f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/246067faa351c5de8f706a51e9fee4a610a3022a)), closes [#43](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/43)
+
 ## [4.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.0.0...v4.1.0) (2024-10-23)
 
 
