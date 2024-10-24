@@ -113,7 +113,9 @@ export default function DocumentsDiff() {
               || (data.conflictedPairs && data.conflictedPairs.length > 0) || (data.notMovedPairs && data.notMovedPairs.length > 0));
         })
         .catch((error) => {
-          setMergeError(error && !error.includes("<html") ? error : "Error occurred merging selected work items, please contact system administrator to diagnose the problem");
+          console.log(error);
+          setMergeError(error && (typeof error === 'string' || error instanceof String) && !error.includes("<html")
+              ? error : "Error occurred merging selected work items, please contact system administrator to diagnose the problem");
           setMergeErrorModalVisible(true);
         }).finally(() => setMergeInProgress(false));
   };

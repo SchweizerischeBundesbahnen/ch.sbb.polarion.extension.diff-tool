@@ -18,6 +18,7 @@ import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.StringUtils;
+import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.spi.EnumOption;
 import com.polarion.subterra.base.data.model.IEnumType;
@@ -36,6 +37,7 @@ import java.util.regex.Pattern;
 public class MergeService {
 
     private static final CompareOptions MERGE_OPTION = CompareOptions.create().forMerge(true).build();
+    private static final Logger log = Logger.getLogger(MergeService.class);
     private final PolarionService polarionService;
 
     public MergeService(PolarionService polarionService) {
@@ -61,45 +63,50 @@ public class MergeService {
         List<WorkItemsPair> moved = new ArrayList<>();
         List<WorkItemsPair> notMoved = new ArrayList<>();
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            for (WorkItemsPair pair : pairs) {
-                IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
-                IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+            try {
+                for (WorkItemsPair pair : pairs) {
+                    IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
+                    IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
 
-                if (source != null && target != null) {
-                    if (moveAction(pair)) { // Intentionally handled at first place. We first move items, and only then as an additional step merge content if needed
-                        if (move(source, target, context)) {
-                            moved.add(pair);
+                    if (source != null && target != null) {
+                        if (moveAction(pair)) { // Intentionally handled at first place. We first move items, and only then as an additional step merge content if needed
+                            if (move(source, target, context)) {
+                                moved.add(pair);
+                            } else {
+                                notMoved.add(pair);
+                            }
+                        } else if (context.getTargetModule().getExternalWorkItems().contains(target)) { // merge into external work item
+                            if (!Objects.equals(source.getId(), target.getId())) {
+                                // is it okay to prevent merge process completely or we must create a separate notification for this case?
+                                throw new IllegalArgumentException("Cannot merge referenced work item (%s) with the completely different one (%s)".formatted(target.getId(), source.getId()));
+                            }
+                            String freezeRevision = ObjectUtils.firstNonNull(source.getRevision(), source.getLastRevision());
+                            copyWorkItemToDocument(source, freezeRevision, (InternalWriteTransaction) transaction, context);
+                            context.getTargetWorkItem(pair).setRevision(freezeRevision);
+                            context.getTargetWorkItem(pair).setReferenced(true);
+                            modified.add(pair);
                         } else {
-                            notMoved.add(pair);
+                            // Allow merging only if work item's revision wasn't modified meanwhile
+                            if (context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
+                                merge(source, target, diffModel.getDiffFields());
+                            } else {
+                                conflicted.add(pair);
+                            }
                         }
-                    } else if (context.getTargetModule().getExternalWorkItems().contains(target)) { // merge into external work item
-                        if (!Objects.equals(source.getId(), target.getId())) {
-                            // is it okay to prevent merge process completely or we must create a separate notification for this case?
-                            throw new IllegalArgumentException("Cannot merge referenced work item (%s) with the completely different one (%s)".formatted(target.getId(), source.getId()));
-                        }
-                        String freezeRevision = ObjectUtils.firstNonNull(source.getRevision(), source.getLastRevision());
-                        copyWorkItemToDocument(source, freezeRevision, (InternalWriteTransaction) transaction, context);
-                        context.getTargetWorkItem(pair).setRevision(freezeRevision);
-                        context.getTargetWorkItem(pair).setReferenced(true);
-                        modified.add(pair);
-                    } else {
-                        // Allow merging only if work item's revision wasn't modified meanwhile
-                        if (context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
-                            merge(source, target, diffModel.getDiffFields());
-                        } else {
-                            conflicted.add(pair);
-                        }
+                    } else if (source != null) { // "target" is null in this case, so new item out of "source" to be created
+                        IWorkItem newWorkItem = copyWorkItemToDocument(source, null, (InternalWriteTransaction) transaction, context);
+                        context.bindCounterpartItem(pair, WorkItem.of(newWorkItem, context.getTargetModule().getOutlineNumberOfWorkitem(newWorkItem), source.getId().equals(newWorkItem.getId())));
+                        created.add(pair);
+                    } else { // "source" is null in this case, so "target" to be deleted
+                        deleteWorkItemFromDocument(context.getTargetDocumentIdentifier(), target);
                     }
-                } else if (source != null) { // "target" is null in this case, so new item out of "source" to be created
-                    IWorkItem newWorkItem = copyWorkItemToDocument(source, null, (InternalWriteTransaction) transaction, context);
-                    context.bindCounterpartItem(pair, WorkItem.of(newWorkItem, context.getTargetModule().getOutlineNumberOfWorkitem(newWorkItem), source.getId().equals(newWorkItem.getId())));
-                    created.add(pair);
-                } else { // "source" is null in this case, so "target" to be deleted
-                    deleteWorkItemFromDocument(context.getTargetDocumentIdentifier(), target);
                 }
+                reloadModule(context.getTargetModule());
+                return null;
+            } catch (Exception ex) {
+                log.info("Merge failed", ex);
+                throw ex;
             }
-            reloadModule(context.getTargetModule());
-            return null;
         });
         return MergeResult.builder().success(true)
                 .createdPairs(created).modifiedPairs(modified).conflictedPairs(conflicted).movedPairs(moved).notMovedPairs(notMoved)
