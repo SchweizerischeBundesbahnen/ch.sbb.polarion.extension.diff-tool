@@ -174,9 +174,11 @@ export default function DocumentsDiff() {
   };
 
   const subordinate = (parentPair, pairToCheck) => {
-    return (pairToCheck.leftWorkItem.outlineNumber !== parentPair.leftWorkItem.outlineNumber
+    return (pairToCheck.leftWorkItem && parentPair.leftWorkItem
+            && pairToCheck.leftWorkItem.outlineNumber !== parentPair.leftWorkItem.outlineNumber
             && pairToCheck.leftWorkItem.outlineNumber.startsWith(parentPair.leftWorkItem.outlineNumber))
-        || (pairToCheck.rightWorkItem.outlineNumber !== parentPair.rightWorkItem.outlineNumber
+        || (pairToCheck.rightWorkItem && parentPair.rightWorkItem
+            && pairToCheck.rightWorkItem.outlineNumber !== parentPair.rightWorkItem.outlineNumber
             && pairToCheck.rightWorkItem.outlineNumber.startsWith(parentPair.rightWorkItem.outlineNumber))
   };
 
