@@ -50,7 +50,7 @@ public class DiffToolFormExtension implements IFormExtension {
         if (object instanceof IModule module) {
             String form = ScopeUtils.getFileContent("webapp/diff-tool/html/diff-tool.html");
 
-            List<IProject> allProjects = polarionService.getAuthorizedProjects();
+            List<IProject> allProjects = polarionService.getProjects();
             form = form.replace(PROJECT_OPTIONS_PLACEHOLDER, "<option disabled selected value> --- select project --- </option>"
                     + allProjects.stream().map(this::getProjectOption).collect(Collectors.joining()));
 
