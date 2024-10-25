@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.1.3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.1.2...v4.1.3) (2024-10-25)
+
+
+### Bug Fixes
+
+* Add missing check if left work item present on filtered pair ([2462ecd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2462ecd0e6bb9e829809cc8fd15498fac67f19b8))
+* merge fails without any error messages in some cases ([#56](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/56)) ([2462ecd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2462ecd0e6bb9e829809cc8fd15498fac67f19b8)), closes [#46](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/46)
+
 ## [4.1.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.1.1...v4.1.2) (2024-10-24)
 
 
