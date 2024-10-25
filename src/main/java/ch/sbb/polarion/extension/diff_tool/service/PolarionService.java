@@ -51,7 +51,6 @@ import com.polarion.platform.persistence.IEnumeration;
 import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.platform.persistence.model.IPrototype;
-import com.polarion.platform.security.IPermission;
 import com.polarion.platform.security.ISecurityService;
 import com.polarion.platform.service.repository.IRepositoryService;
 import com.polarion.subterra.base.data.identification.IContextId;
@@ -112,21 +111,24 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     }
 
     @NotNull
-    public List<IProject> getAuthorizedProjects() {
-        final IPermission projectReadPermission = getSecurityService().constructPermission("com.polarion.persistence.object.Project.read");
+    public List<IProject> getProjects() {
         return getProjectService().searchProjects("", "name").stream()
-                .filter(project -> getSecurityService().hasPermission(getSecurityService().getCurrentUser(), projectReadPermission, project.getContextId()))
+                .filter(project -> project.can().read())
                 .toList();
     }
 
     @NotNull
     public List<IFolder> getSpaces(@NotNull String projectId) {
-        return getTrackerService().getFolderManager().getFolders(projectId);
+        return getTrackerService().getFolderManager().getFolders(projectId).stream()
+                .filter(folder -> folder.can().read())
+                .toList();
     }
 
     @NotNull
     public List<IModule> getDocuments(@NotNull String projectId, @NotNull String spaceId) {
-        return getTrackerService().getModuleManager().getModules(getProject(projectId), Location.getLocation(spaceId));
+        return getTrackerService().getModuleManager().getModules(getProject(projectId), Location.getLocation(spaceId)).stream()
+                .filter(module -> module.can().read())
+                .toList();
     }
 
     public List<DocumentRevision> getDocumentRevisions(IModule module) {
