@@ -2,10 +2,10 @@ package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentDuplicateParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.WorkItemAttachmentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
-import ch.sbb.polarion.extension.diff_tool.rest.model.WorkItemAttachmentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
 import ch.sbb.polarion.extension.diff_tool.settings.AuthorizationSettings;
@@ -46,6 +46,7 @@ import com.polarion.alm.ui.shared.FieldRenderType;
 import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.platform.IPlatformService;
+import com.polarion.platform.persistence.ICustomFieldsService;
 import com.polarion.platform.persistence.IEnumOption;
 import com.polarion.platform.persistence.IEnumeration;
 import com.polarion.platform.persistence.model.IPObject;
@@ -236,9 +237,9 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
      * Cleans up non-list fields of work items in specified module (document), leaving only either allowed fields (not to clean up) or read-only ones.
      * Method should be called in write transaction context.
      *
-     * @param module Module which work items to clean up
+     * @param module           Module which work items to clean up
      * @param projectContextId ID of project's context where module is located
-     * @param allowedFields List of allowed fields (not to clean up)
+     * @param allowedFields    List of allowed fields (not to clean up)
      */
     void cleanUpNonListFields(@NotNull IModule module, @NotNull IContextId projectContextId, @NotNull List<DiffField> allowedFields) {
         List<WorkItemField> standardFieldsDeletable = getStandardFields().stream().filter(deletableFieldsFilter).toList();
@@ -266,9 +267,9 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
      * Cleans up list fields of work items in specified module (document), leaving only either allowed fields (not to clean up) or read-only ones.
      * Method should be called in write transaction context.
      *
-     * @param module Module which work items to clean up
+     * @param module           Module which work items to clean up
      * @param projectContextId ID of project's context where module is located
-     * @param allowedFields List of allowed fields (not to clean up)
+     * @param allowedFields    List of allowed fields (not to clean up)
      */
     void cleanUpListFields(IModule module, IContextId projectContextId, List<DiffField> allowedFields) {
         List<WorkItemField> standardFieldsDeletable = getStandardFields().stream().filter(deletableFieldsFilter).toList();
@@ -565,19 +566,22 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         IPObject workItemInstance = getTrackerService().getDataService().createInstance(IWorkItem.PROTO);
 
         List<String> keyNames = new ArrayList<>(workItemPrototype.getKeyNames());
-        return keyNames.stream().filter(workItemPrototype::isKeyDefined).map(
-                keyName -> WorkItemField.builder()
+        return keyNames.stream()
+                .filter(workItemPrototype::isKeyDefined)
+                .map(keyName -> WorkItemField.builder()
                         .key(keyName)
                         .name(workItemInstance.getFieldLabel(keyName)) // Field label can be obtained only via work item instance, attempt to obtain it via prototype throws UnsupportedOperationException
                         .required(workItemPrototype.isKeyRequired(keyName))
                         .readOnly(workItemPrototype.isKeyReadOnly(keyName))
-                        .build()).toList();
+                        .build())
+                .toList();
     }
 
     List<WorkItemField> getCustomFields(@NotNull IContextId contextId, @NotNull ITypeOpt workItemType) {
-        Collection<ICustomField> customFields = getTrackerService().getDataService().getCustomFieldsService().getCustomFields(IWorkItem.PROTO, contextId, workItemType.getId());
-        return customFields.stream().map(
-                customField -> WorkItemField.builder()
+        List<ICustomField> customFields = getCustomFieldsForType(contextId, workItemType);
+
+        return customFields.stream()
+                .map(customField -> WorkItemField.builder()
                         .key(customField.getId())
                         .name(customField.getName())
                         .required(customField.isRequired())
@@ -585,7 +589,16 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                         .defaultValue(customField.getDefaultValue())
                         .wiTypeId(workItemType.getId())
                         .wiTypeName(workItemType.getName())
-                        .build()).toList();
+                        .build())
+                .toList();
+    }
+
+    private @NotNull List<ICustomField> getCustomFieldsForType(@NotNull IContextId contextId, @NotNull ITypeOpt workItemType) {
+        ICustomFieldsService customFieldsService = trackerService.getDataService().getCustomFieldsService();
+        final Collection<ICustomField> customFieldsForAllTypes = customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, null); // get custom fields for WorkItem with any type in the project (-- All Types --)
+        final Collection<ICustomField> customFieldsForTypeId = customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, workItemType.getId()); // get custom fields for WorkItem with specific type in the project
+
+        return Stream.concat(customFieldsForAllTypes.stream(), customFieldsForTypeId.stream()).toList();
     }
 
     public void evictDocumentsCache(DocumentIdentifier... documents) {
