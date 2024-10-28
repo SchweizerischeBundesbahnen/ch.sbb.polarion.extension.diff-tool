@@ -111,5 +111,17 @@ export default function useDiffService() {
     };
   };
 
-  return { sendDocumentsDiffRequest, sendMergeRequest };
+  const diffsExist = (workItemsPair, diffs) => {
+    if (diffs && (diffs.length > 1 || (diffs.length === 1 && diffs[0].id !== 'outlineNumber'))) {
+      return true; // Content differs. Outline number difference shouldn't be taken into account, cause this means moved item, not content difference
+    } else if (workItemsPair.leftWorkItem?.movedOutlineNumber || workItemsPair.rightWorkItem?.movedOutlineNumber) {
+      return true; // Work item was moved, so there's a difference
+    } else if (!workItemsPair.leftWorkItem || !workItemsPair.rightWorkItem) {
+      return true; // Work item was deleted/created, so there's a difference
+    } else {
+      return false; // If no conditions above were met - no difference
+    }
+  };
+
+  return { sendDocumentsDiffRequest, sendMergeRequest, diffsExist };
 }

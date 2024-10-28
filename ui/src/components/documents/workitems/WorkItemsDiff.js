@@ -8,6 +8,7 @@ import AppContext from "@/components/AppContext";
 import {useSearchParams} from "next/navigation";
 import MergeTicker from "@/components/documents/workitems/MergeTicker";
 import Modal from "@/components/Modal";
+import useDiffService from "@/services/useDiffService";
 
 const CODES_TO_RETRY = [500, 502, 503, 504]; // 500 - Internal Server Error, 502 - Bad Gateway, 503 - Service Unavailable, 504 - Gateway Timeout
 const RETRY_MARKER = "RETRY";
@@ -18,6 +19,7 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
   const context = useContext(AppContext);
   const searchParams = useSearchParams();
   const remote = useRemote();
+  const diffService = useDiffService();
   const [asHeaderInDocument] = useState(workItemsPair.leftWorkItem ?
       workItemsPair.leftWorkItem.outlineNumber && !workItemsPair.leftWorkItem.outlineNumber.includes('-') :
       workItemsPair.rightWorkItem.outlineNumber && !workItemsPair.rightWorkItem.outlineNumber.includes('-'));
@@ -148,7 +150,7 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
   }, [mergingContext.selectionRegistry]);
 
   useEffect(() => {
-    if (mergingContext.selectAll !== selected) {
+    if (mergingContext.selectAll !== selected && diffService.diffsExist(workItemsPair, diffs)) {
       pairSelected(mergingContext.selectAll, true);
     }
   }, [mergingContext.selectAll]);
@@ -266,9 +268,7 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
             backgroundColor: asHeaderInDocument ? "#eeeeee" : "#f6f6f6",
             display: isChapterVisible(leftChapter, true) || isChapterVisible(rightChapter, false) || !context.state.hideChaptersIfNoDifference || error ? 'flex' : 'none'
           }} className="header row g-0">
-            <MergeTicker selected={selected} pairSelectedCallback={pairSelected} diffs={diffs}
-                         moved={workItemsPair.leftWorkItem?.movedOutlineNumber || workItemsPair.rightWorkItem?.movedOutlineNumber}
-                         createdOrDeleted={!workItemsPair.leftWorkItem || !workItemsPair.rightWorkItem} />
+            <MergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />
 
             <WorkItemHeader workItem={workItemsPair.leftWorkItem} asHeaderInDocument={asHeaderInDocument}
                             movedOutlineNumber={workItemsPair.rightWorkItem?.movedOutlineNumber}

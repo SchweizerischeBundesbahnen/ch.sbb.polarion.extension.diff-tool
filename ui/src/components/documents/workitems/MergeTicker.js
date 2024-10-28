@@ -1,4 +1,8 @@
-export default function MergeTicker({selected, pairSelectedCallback, diffs, moved, createdOrDeleted}) {
+import useDiffService from "@/services/useDiffService";
+
+export default function MergeTicker({workItemsPair, diffs, selected, pairSelectedCallback}) {
+  const diffService = useDiffService();
+
   const changeSelected = (event) => {
     event.stopPropagation();
     if (diffs && diffs.length > 0) {
@@ -8,7 +12,7 @@ export default function MergeTicker({selected, pairSelectedCallback, diffs, move
 
   return (
       <div className="merge-ticker" onClick={changeSelected}>
-        {((diffs && (diffs.length > 1 || (diffs.length === 1 && diffs[0].id !== 'outlineNumber'))) || moved || createdOrDeleted) && <div className="form-check" onClick={changeSelected}>
+        {diffService.diffsExist(workItemsPair, diffs) && <div className="form-check" onClick={changeSelected}>
           <input className="form-check-input" type="checkbox" checked={selected} id="flexCheckChecked" onChange={changeSelected} />
         </div>}
       </div>
