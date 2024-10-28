@@ -79,16 +79,6 @@
             </properties>
         </profile>
 
-        <!-- deprecated profile: polarion2310 -->
-        <profile>
-            <id>polarion2310</id>
-            <properties>
-                <commons-collections4.artifactId>commons-collections4-4.4</commons-collections4.artifactId>
-                <commons-lang3.artifactId>commons-lang3-3.12.0</commons-lang3.artifactId>
-                <org.jsoup.artifactId>org.jsoup-1.15.2</org.jsoup.artifactId>
-            </properties>
-        </profile>
-
         <profile>
             <id>polarion2410</id>
             <properties>
