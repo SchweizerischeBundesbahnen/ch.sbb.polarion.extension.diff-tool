@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.1.4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.1.3...v4.1.4) (2024-10-28)
+
+
+### Bug Fixes
+
+* getting custom fields for "all types" workitems ([#64](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/64)) ([4148383](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/414838317e73bdc53cc86aa7dedc4f7fa01f08ad)), closes [#61](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/61)
+* validate read permissions for getting list of objects ([#59](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/59)) ([8df4d84](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/8df4d842e9bd625d0f70efb014776facbe1449c4)), closes [#52](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/52)
+* When moving sub-tree of items merge sometimes fails with "targetNode is null" ([#66](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/66)) ([56744d5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/56744d5f9bae2c8eb8b8586cfa02f4cb89a3b55d)), closes [#65](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/65)
+
 ## [4.1.3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.1.2...v4.1.3) (2024-10-25)
 
 
