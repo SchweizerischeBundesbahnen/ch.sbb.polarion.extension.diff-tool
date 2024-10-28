@@ -89,6 +89,7 @@ public class MergeService {
                         // Allow merging only if work item's revision wasn't modified meanwhile
                         if (context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
                             merge(source, target, diffModel.getDiffFields());
+                            modified.add(pair);
                         } else {
                             conflicted.add(pair);
                         }
@@ -238,11 +239,6 @@ public class MergeService {
         }
     }
 
-    private void reloadModule(IModule module) {
-        module.save();
-        module.update();
-    }
-
     private void modifyHeaderTag(MergeContext context, IWorkItem sourceWorkItem, IWorkItem createdWorkItem) {
         String sourceContent = context.getSourceModule().getHomePageContent().getContent();
         String headingLevel = "2";
@@ -270,7 +266,7 @@ public class MergeService {
     private void deleteWorkItemFromDocument(DocumentIdentifier documentIdentifier, IWorkItem workItem) {
         IModule module = polarionService.getModule(documentIdentifier.getProjectId(), documentIdentifier.getSpaceId(), documentIdentifier.getName());
         module.unreference(workItem);
-        module.save();
+        reloadModule(module);
     }
 
     private void merge(IWorkItem source, IWorkItem target, List<DiffField> fields) {
@@ -282,6 +278,11 @@ public class MergeService {
 
     private IWorkItem getWorkItem(@Nullable WorkItem workItem) {
         return workItem != null ? polarionService.getWorkItem(workItem.getProjectId(), workItem.getId(), workItem.getRevision()) : null;
+    }
+
+    private void reloadModule(IModule module) {
+        module.save();
+        module.update();
     }
 
 }
