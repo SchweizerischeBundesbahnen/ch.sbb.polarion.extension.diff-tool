@@ -251,7 +251,8 @@ class PolarionServiceTest {
         when(workItemType.getId()).thenReturn("type");
         when(workItemType.getName()).thenReturn("Type");
 
-        when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, workItemType.getId())).thenReturn(customFields);
+        when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, null)).thenReturn(customFields);
+        when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, workItemType.getId())).thenReturn(List.of());
 
         IModule module = mock(IModule.class);
         IWorkItem workItem = mock(IWorkItem.class);
@@ -287,6 +288,7 @@ class PolarionServiceTest {
         ITypeOpt workItemType = mock(ITypeOpt.class);
         when(workItemType.getId()).thenReturn("type");
 
+        when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, null)).thenReturn(Collections.emptyList());
         when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, workItemType.getId())).thenReturn(Collections.emptyList());
 
         IModule module = mock(IModule.class);
@@ -335,6 +337,7 @@ class PolarionServiceTest {
         when(workItemType.getId()).thenReturn("type");
         when(workItemType.getName()).thenReturn("Type");
 
+        when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, null)).thenReturn(List.of());
         when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, workItemType.getId())).thenReturn(customFields);
 
         IWorkItem workItem2 = mock(IWorkItem.class);
@@ -494,6 +497,7 @@ class PolarionServiceTest {
         when(workItemType.getId()).thenReturn("type");
         when(workItemType.getName()).thenReturn("Type");
 
+        when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, null)).thenReturn(List.of());
         when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, workItemType.getId())).thenReturn(customFields);
 
         List<WorkItemField> returnedFields = new ArrayList<>(polarionService.getCustomFields(contextId, workItemType));
