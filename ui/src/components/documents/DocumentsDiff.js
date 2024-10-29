@@ -33,6 +33,7 @@ export default function DocumentsDiff() {
   const [mergeError, setMergeError] = useState("");
   const [mergeErrorModalVisible, setMergeErrorModalVisible] = useState(false);
   const [conflictedPairs, setConflictedPairs] = useState([]);
+  const [prohibitedPairs, setProhibitedPairs] = useState([]);
   const [createdPairs, setCreatedPairs] = useState([]);
   const [modifiedPairs, setModifiedPairs] = useState([]);
   const [notMovedPairs, setNotMovedPairs] = useState([]);
@@ -105,12 +106,15 @@ export default function DocumentsDiff() {
           setCreatedPairs(data.createdPairs);
           setModifiedPairs(data.modifiedPairs);
           setConflictedPairs(data.conflictedPairs);
+          setProhibitedPairs(data.prohibitedPairs);
           setNotMovedPairs(data.notMovedPairs);
           setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);
           setMergeNotAuthorizedWarning(!data.success && data.mergeNotAuthorized);
           setStructuralChangesWarning(data.success && data.targetModuleHasStructuralChanges);
           setWarningModalVisible(data.mergeNotAuthorized || data.targetModuleHasStructuralChanges
-              || (data.conflictedPairs && data.conflictedPairs.length > 0) || (data.notMovedPairs && data.notMovedPairs.length > 0));
+              || (data.conflictedPairs && data.conflictedPairs.length > 0)
+              || (data.prohibitedPairs && data.prohibitedPairs.length > 0)
+              || (data.notMovedPairs && data.notMovedPairs.length > 0));
         })
         .catch((error) => {
           console.log(error);
@@ -230,6 +234,14 @@ export default function DocumentsDiff() {
         <p>Following pairs of work items were not merged because of concurrent modifications:</p>
         <ul>
           {conflictedPairs && conflictedPairs.map((pair, index) => {
+            return <li key={index}>{pair.leftWorkItem.id} - {pair.rightWorkItem.id}</li>;
+          })}
+        </ul>
+      </div>
+      <div style={{display: prohibitedPairs.length > 0 ? 'block' : 'none'}}>
+        <p>Following pairs of work items were not merged because such operation is logically prohibited:</p>
+        <ul>
+          {prohibitedPairs && prohibitedPairs.map((pair, index) => {
             return <li key={index}>{pair.leftWorkItem.id} - {pair.rightWorkItem.id}</li>;
           })}
         </ul>
