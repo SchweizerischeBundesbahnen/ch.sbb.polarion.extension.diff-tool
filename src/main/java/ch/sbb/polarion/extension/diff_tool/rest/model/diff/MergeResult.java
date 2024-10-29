@@ -38,6 +38,10 @@ public class MergeResult {
     private List<WorkItemsPair> conflictedPairs = new ArrayList<>();
 
     @Builder.Default
+    @Schema(description = "List of WorkItem pairs which logically are prohibited to be merged", implementation = WorkItemsPair.class)
+    private List<WorkItemsPair> prohibitedPairs = new ArrayList<>();
+
+    @Builder.Default
     @Schema(description = "List of WorkItem pairs that were moved during the merge operation", implementation = WorkItemsPair.class)
     private List<WorkItemsPair> movedPairs = new ArrayList<>();
 

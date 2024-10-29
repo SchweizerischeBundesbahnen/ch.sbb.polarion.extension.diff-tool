@@ -58,6 +58,7 @@ public class MergeService {
             return MergeResult.builder().success(false).mergeNotAuthorized(true).build();
         }
         List<WorkItemsPair> conflicted = new ArrayList<>();
+        List<WorkItemsPair> prohibited = new ArrayList<>();
         List<WorkItemsPair> created = new ArrayList<>();
         List<WorkItemsPair> modified = new ArrayList<>();
         List<WorkItemsPair> moved = new ArrayList<>();
@@ -86,11 +87,12 @@ public class MergeService {
                         context.getTargetWorkItem(pair).setReferenced(true);
                         modified.add(pair);
                     } else {
-                        // Allow merging only if work item's revision wasn't modified meanwhile
-                        if (context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
-                            merge(source, target, diffModel.getDiffFields());
+                        if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
+                            conflicted.add(pair); // Don't allow merging if work item's revision was modified meanwhile
+                        } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
+                            prohibited.add(pair); // Don't allow merging referenced work item into included one
                         } else {
-                            conflicted.add(pair);
+                            merge(source, target, diffModel.getDiffFields());
                         }
                     }
                 } else if (source != null) { // "target" is null in this case, so new item out of "source" to be created
@@ -105,7 +107,7 @@ public class MergeService {
             return null;
         });
         return MergeResult.builder().success(true)
-                .createdPairs(created).modifiedPairs(modified).conflictedPairs(conflicted).movedPairs(moved).notMovedPairs(notMoved)
+                .createdPairs(created).modifiedPairs(modified).conflictedPairs(conflicted).prohibitedPairs(prohibited).movedPairs(moved).notMovedPairs(notMoved)
                 .targetModuleHasStructuralChanges(!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision()))
                 .build();
     }
