@@ -64,6 +64,11 @@ export default function useDiffService() {
         contentType: "application/json"
       })
           .then(response => {
+            if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
+              Promise.resolve().then(() => {
+                return reject("Your session has expired. Please refresh the page to log in. Note that any unsaved changes will be lost.");
+              });
+            }
             if (response.ok) {
               return response.json();
             } else {
