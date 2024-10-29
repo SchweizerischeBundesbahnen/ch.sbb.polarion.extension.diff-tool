@@ -150,7 +150,7 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
   }, [mergingContext.selectionRegistry]);
 
   useEffect(() => {
-    if (mergingContext.selectAll !== selected && diffService.diffsExist(workItemsPair, diffs)) {
+    if (mergingContext.selectAll === true && mergingContext.selectAll !== selected && diffService.diffsExist(workItemsPair, diffs)) {
       pairSelected(mergingContext.selectAll, true);
     }
   }, [mergingContext.selectAll]);
@@ -171,6 +171,12 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
             setChildrenSelectionModalVisible(true); // Additionally inform user about automatically selected inline child items, as it's not obvious on UI
           }
         }
+      }
+      if (!selected && mergingContext.selectAll) {
+        mergingContext.setSelectAll(false);
+      }
+      if (mergingContext.isAllChecked() && !mergingContext.selectAll) {
+        mergingContext.setSelectAll(true);
       }
     }
   };
