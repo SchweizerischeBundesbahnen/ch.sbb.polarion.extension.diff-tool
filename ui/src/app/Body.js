@@ -3,6 +3,7 @@
 import {useEffect, useState} from "react";
 import {Inter} from "next/font/google";
 import AppContext from "../components/AppContext";
+import useSessionRenewal from './SessionRenewal';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,6 +28,8 @@ export default function Body({ children }) {
       setTimeout(() => setHideChaptersIfNoDifference(true), 200);
     }
   }, [dataLoaded]);
+
+  useSessionRenewal();
 
   return <AppContext.Provider
       value={{

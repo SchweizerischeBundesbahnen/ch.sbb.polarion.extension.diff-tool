@@ -64,12 +64,17 @@ export default function ControlPane() {
       body: `<html lang='en'>${body}</html>`,
       contentType: "text/html"
     }).then(response => {
+      if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
+        alert("Your session has expired. Please refresh the page to log in. Note that any unsaved changes will be lost.");
+        return Promise.resolve();
+      }
       if (response.ok) {
         return response.blob();
       } else {
         throw response.json();
       }
     }).then(data => {
+      if (!data) return;
       const objectURL = (window.URL ? window.URL : window.webkitURL).createObjectURL(data);
       const anchorElement = document.createElement("a");
       anchorElement.href = objectURL;
