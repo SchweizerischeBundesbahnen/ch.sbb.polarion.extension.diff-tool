@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.1.4...v4.2.0) (2024-10-29)
+
+
+### Features
+
+* Polarion 2410 support ([#70](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/70)) ([539defd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/539defd02243c84ba5db8c276ea11d0390544f7f)), closes [#69](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/69)
+* Polarion 2410 support ([#71](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/71)) ([2b78142](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2b78142144619ed1561584cb0411a06b5b7174b2)), closes [#69](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/69)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v7.6.0 ([abd7939](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/abd79391b8f7dbcb330f618d2a2ee771e6d5b1a3))
+* Referenced WIs shouldn't replace contained WIs ([#79](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/79)) ([5a68e3c](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/5a68e3c080e8465a54a6c8683a18ba9fd89ef238)), closes [#74](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/74)
+* user's session expires when working in diff-tool and then reques… ([#78](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/78)) ([deebcfa](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/deebcfa0fb93e3dca2f700dc5eb7c9161e67040f)), closes [#77](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/77)
+* user's session expires when working in diff-tool and then requests to server fails ([deebcfa](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/deebcfa0fb93e3dca2f700dc5eb7c9161e67040f))
+
 ## [4.1.4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.1.3...v4.1.4) (2024-10-28)
 
 
