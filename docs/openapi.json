@@ -1187,6 +1187,9 @@
           "notMovedPairs": {
             "$ref": "#/components/schemas/WorkItemsPair"
           },
+          "prohibitedPairs": {
+            "$ref": "#/components/schemas/WorkItemsPair"
+          },
           "success": {
             "description": "Indicates whether the merge operation was successful",
             "type": "boolean"
