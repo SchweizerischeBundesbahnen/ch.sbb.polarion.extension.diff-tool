@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.0...v4.2.1) (2024-10-31)
+
+
+### Bug Fixes
+
+* When new document created in different project referenced WIs should be replaced by their counterparts or removed ([#89](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/89)) ([d29b0ec](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d29b0ecd7149ffac51ddef29e370e6ee04357218)), closes [#73](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/73)
+
 ## [4.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.1.4...v4.2.0) (2024-10-29)
 
 
