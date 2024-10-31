@@ -2,10 +2,8 @@ package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentDuplicateParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
-import ch.sbb.polarion.extension.diff_tool.rest.model.conversion.PrintPaperSize;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Document;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;

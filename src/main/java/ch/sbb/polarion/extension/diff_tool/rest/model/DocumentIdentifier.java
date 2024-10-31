@@ -1,7 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,4 +29,3 @@ public class DocumentIdentifier extends BaseDocumentIdentifier{
         super(baseDocumentIdentifier.getProjectId(), baseDocumentIdentifier.getSpaceId(), baseDocumentIdentifier.getName());
     }
 }
-

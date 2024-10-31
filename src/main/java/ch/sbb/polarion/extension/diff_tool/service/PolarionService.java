@@ -36,6 +36,7 @@ import com.polarion.alm.tracker.internal.model.WorkItem;
 import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.IBaseline;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
+import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IStatusOpt;
 import com.polarion.alm.tracker.model.ITrackerProject;
@@ -207,7 +208,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         // Following 2 calls are intentionally split into 2 calls in separate transactions as list fields during documents duplication
         // are becoming visible "outside" only as soon as duplication transaction is closed, meaning that cleaning them up should be done
         // in new additional transaction
-        IModule module = TransactionalExecutor.executeInWriteTransaction(transaction -> {
+        IModule targetModule = Objects.requireNonNull(TransactionalExecutor.executeInWriteTransaction(transaction -> {
             IModule createdModule = trackerService.getModuleManager().duplicate(sourceModule, targetProject, targetLocation,
                     documentDuplicateParams.getTargetDocumentIdentifier().getName(), linkRole, null, null, null, null);
             createdModule.setTitle(documentDuplicateParams.getTargetDocumentTitle());
@@ -217,19 +218,22 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             cleanUpNonListFields(createdModule, targetProjectContextId, allowedFields);
 
             return createdModule;
-        });
+        }));
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            cleanUpListFields(module, targetProjectContextId, allowedFields);
+            cleanUpListFields(targetModule, targetProjectContextId, allowedFields);
             return null;
         });
+
+        fixReferencedWorkItems(targetModule, linkRole);
+
         // ----------
 
         return DocumentIdentifier.builder()
                 .projectId(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())
                 .spaceId(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId())
-                .name(Objects.requireNonNull(module).getModuleName())
-                .moduleXmlRevision(module.getLastRevision())
+                .name(Objects.requireNonNull(targetModule).getModuleName())
+                .moduleXmlRevision(targetModule.getLastRevision())
                 .build();
     }
 
@@ -286,6 +290,37 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             }
             workItem.save();
         }
+    }
+
+    private void fixReferencedWorkItems(@NotNull IModule targetModule, @NotNull ILinkRoleOpt linkRole) {
+        TransactionalExecutor.executeInWriteTransaction(transaction -> {
+            for (IWorkItem workItem : getWorkItemsForCleanUp(targetModule)) {
+                // If a document contains a work item which is referenced (external) and belongs to a different project,
+                // we are trying here to replace it by a reference of its counterpart item belonging to document's project, if possible.
+                // If counterpart work item wasn't found such reference will be just removed
+                if (targetModule.getExternalWorkItems().contains(workItem) && !workItem.getProjectId().equals(targetModule.getProjectId())) {
+                    IWorkItem pairedWorkItem = Streams.concat(workItem.getLinkedWorkItemsStructsDirect().stream(), workItem.getLinkedWorkItemsStructsBack().stream())
+                            .filter(linkedWorkItemStruct -> Objects.equals(linkRole.getId(), linkedWorkItemStruct.getLinkRole().getId())
+                                    && targetModule.getProjectId().equals(linkedWorkItemStruct.getLinkedItem().getProjectId()))
+                            .map(ILinkedWorkItemStruct::getLinkedItem)
+                            .findFirst().orElse(null);
+
+                    if (pairedWorkItem != null) {
+                        targetModule.addExternalWorkItem(pairedWorkItem);
+
+                        // Line of code above inserts new reference to the end of the document, then we are trying to move it to the appropriate position
+                        IModule.IStructureNode nodeToBeRemoved = targetModule.getStructureNodeOfWI(workItem);
+                        IModule.IStructureNode parent = nodeToBeRemoved.getParent();
+                        int destinationIndex = parent.getChildren().indexOf(nodeToBeRemoved);
+                        IModule.IStructureNode insertedNode = targetModule.getStructureNodeOfWI(pairedWorkItem);
+                        parent.addChild(insertedNode, destinationIndex);
+                    }
+                    targetModule.unreference(workItem);
+                }
+            }
+            targetModule.save();
+            return null;
+        });
     }
 
     private List<IWorkItem> getWorkItemsForCleanUp(@NotNull IModule module) {
