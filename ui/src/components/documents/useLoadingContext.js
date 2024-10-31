@@ -67,6 +67,7 @@ export default function useLoadingContext() {
     for (let i = 1; i <= pairsCount; i++) {
       if (loadingRegistry.get(i) === PAUSED) {
         loadingRegistry.set(i, READY);
+        break;
       }
     }
   };
