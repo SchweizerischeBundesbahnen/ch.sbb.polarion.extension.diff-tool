@@ -294,12 +294,14 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
 
     private void fixReferencedWorkItems(@NotNull IModule targetModule, @NotNull ILinkRoleOpt linkRole) {
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            for (IWorkItem workItem : getWorkItemsForCleanUp(targetModule)) {
+            for (IWorkItem workItem : targetModule.getExternalWorkItems()) {
                 // If a document contains a work item which is referenced (external) and belongs to a different project,
                 // we are trying here to replace it by a reference of its counterpart item belonging to document's project, if possible.
                 // If counterpart work item wasn't found such reference will be just removed
-                if (targetModule.getExternalWorkItems().contains(workItem) && !workItem.getProjectId().equals(targetModule.getProjectId())) {
-                    IWorkItem pairedWorkItem = Streams.concat(workItem.getLinkedWorkItemsStructsDirect().stream(), workItem.getLinkedWorkItemsStructsBack().stream())
+                if (!workItem.getProjectId().equals(targetModule.getProjectId())) {
+                    IWorkItem workItemInHead = workItem.getRevision() == null ? workItem : getWorkItem(workItem.getProjectId(), workItem.getId());
+
+                    IWorkItem pairedWorkItem = Streams.concat(workItemInHead.getLinkedWorkItemsStructsDirect().stream(), workItemInHead.getLinkedWorkItemsStructsBack().stream())
                             .filter(linkedWorkItemStruct -> Objects.equals(linkRole.getId(), linkedWorkItemStruct.getLinkRole().getId())
                                     && targetModule.getProjectId().equals(linkedWorkItemStruct.getLinkedItem().getProjectId()))
                             .map(ILinkedWorkItemStruct::getLinkedItem)
@@ -309,13 +311,11 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                         targetModule.addExternalWorkItem(pairedWorkItem);
 
                         // Line of code above inserts new reference to the end of the document, then we are trying to move it to the appropriate position
-                        /*  Temporally commented
                         IModule.IStructureNode nodeToBeRemoved = targetModule.getStructureNodeOfWI(workItem);
                         IModule.IStructureNode parent = nodeToBeRemoved.getParent();
                         int destinationIndex = parent.getChildren().indexOf(nodeToBeRemoved);
                         IModule.IStructureNode insertedNode = targetModule.getStructureNodeOfWI(pairedWorkItem);
                         parent.addChild(insertedNode, destinationIndex);
-                         */
                     }
                     targetModule.unreference(workItem);
                 }
@@ -326,8 +326,9 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     }
 
     private List<IWorkItem> getWorkItemsForCleanUp(@NotNull IModule module) {
+        List<IWorkItem> externalWorkItems = module.getExternalWorkItems();
         return module.getAllWorkItems().stream().filter(item -> {
-            if (item.isUnresolvable()) {
+            if (item.isUnresolvable() || externalWorkItems.contains(item)) {
                 return false;
             }
             if (item instanceof WorkItem workItem) {
