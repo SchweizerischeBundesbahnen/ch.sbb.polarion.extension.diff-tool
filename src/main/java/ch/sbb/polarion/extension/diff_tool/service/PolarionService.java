@@ -292,39 +292,43 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         }
     }
 
-    private void fixReferencedWorkItems(@NotNull IModule targetModule, @NotNull ILinkRoleOpt linkRole) {
+    public void fixReferencedWorkItems(@NotNull IModule targetModule, @NotNull ILinkRoleOpt linkRole) {
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
             for (IWorkItem workItem : targetModule.getExternalWorkItems()) {
-                // If a document contains a work item which is referenced (external) and belongs to a different project,
-                // we are trying here to replace it by a reference of its counterpart item belonging to document's project, if possible.
-                // If counterpart work item wasn't found such reference will be just removed
-                if (!workItem.getProjectId().equals(targetModule.getProjectId())) {
-                    IWorkItem workItemInHead = workItem.getRevision() == null ? workItem : getWorkItem(workItem.getProjectId(), workItem.getId());
-
-                    IWorkItem pairedWorkItem = Streams.concat(workItemInHead.getLinkedWorkItemsStructsDirect().stream(), workItemInHead.getLinkedWorkItemsStructsBack().stream())
-                            .filter(linkedWorkItemStruct -> Objects.equals(linkRole.getId(), linkedWorkItemStruct.getLinkRole().getId())
-                                    && targetModule.getProjectId().equals(linkedWorkItemStruct.getLinkedItem().getProjectId()))
-                            .map(ILinkedWorkItemStruct::getLinkedItem)
-                            .findFirst().orElse(null);
-
-                    if (pairedWorkItem != null) {
-                        targetModule.addExternalWorkItem(pairedWorkItem);
-
-                        // Line of code above inserts new reference to the end of the document, then we are trying to move it to the appropriate position
-                        /* Temporally commented
-                        IModule.IStructureNode nodeToBeRemoved = targetModule.getStructureNodeOfWI(workItem);
-                        IModule.IStructureNode parent = nodeToBeRemoved.getParent();
-                        int destinationIndex = parent.getChildren().indexOf(nodeToBeRemoved);
-                        IModule.IStructureNode insertedNode = targetModule.getStructureNodeOfWI(pairedWorkItem);
-                        parent.addChild(insertedNode, destinationIndex);
-                         */
-                    }
-                    targetModule.unreference(workItem);
-                }
+                fixReferencedWorkItem(workItem, targetModule, linkRole);
             }
             targetModule.save();
             return null;
         });
+    }
+
+    /**
+     * WARNING: this method just references/un-references work items in module, but does not persist module, which should be done in caller code which should run in write transaction!
+     */
+    public void fixReferencedWorkItem(@NotNull IWorkItem referencedWorkItem, @NotNull IModule targetModule, @NotNull ILinkRoleOpt linkRole) {
+        // If a document contains a work item which is referenced (external) and belongs to a different project,
+        // we are trying here to replace it by a reference of its counterpart item belonging to document's project, if possible.
+        // If counterpart work item wasn't found such reference will be just removed
+        if (!referencedWorkItem.getProjectId().equals(targetModule.getProjectId())) {
+            IWorkItem workItemInHead = referencedWorkItem.getRevision() == null ? referencedWorkItem : getWorkItem(referencedWorkItem.getProjectId(), referencedWorkItem.getId());
+            IWorkItem pairedWorkItem = getPairedWorkItems(workItemInHead, targetModule.getProjectId(), linkRole.getId()).stream().findFirst().orElse(null);
+            if (pairedWorkItem != null) {
+                IModule.IStructureNode nodeToBeRemoved = targetModule.getStructureNodeOfWI(referencedWorkItem);
+                IModule.IStructureNode parentNode = nodeToBeRemoved.getParent();
+                int destinationIndex = parentNode.getChildren().indexOf(nodeToBeRemoved);
+
+                insertReferencedWorkItem(pairedWorkItem, targetModule, parentNode, destinationIndex);
+            }
+            targetModule.unreference(referencedWorkItem);
+        }
+    }
+
+    public void insertReferencedWorkItem(@NotNull IWorkItem workItemToReference, @NotNull IModule targetModule, @Nullable IModule.IStructureNode parentNode, int destinationIndex) {
+        targetModule.addExternalWorkItem(workItemToReference);
+        if (parentNode != null) {
+            IModule.IStructureNode referencedWorkItemNode = targetModule.getStructureNodeOfWI(workItemToReference);
+            parentNode.addChild(referencedWorkItemNode, destinationIndex); // Placing inserted referenced work item at required position in document
+        }
     }
 
     private List<IWorkItem> getWorkItemsForCleanUp(@NotNull IModule module) {
@@ -545,7 +549,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     @SuppressWarnings("squid:S1166") // Initial exception swallowed intentionally
     public List<IWorkItem> getPairedWorkItems(@NotNull IWorkItem toWorkItem, @NotNull String targetProjectId, @NotNull String linkRoleId) {
         return Streams.concat(toWorkItem.getLinkedWorkItemsStructsDirect().stream(), toWorkItem.getLinkedWorkItemsStructsBack().stream())
-                .filter(linkedWorkItemStruct -> linkedWorkItemStruct.getLinkRole().getId().equals(linkRoleId))
+                .filter(linkedWorkItemStruct -> linkedWorkItemStruct.getLinkRole() != null && linkedWorkItemStruct.getLinkRole().getId().equals(linkRoleId))
                 .map(linkedWorkItemStruct -> {
                     Optional<IWorkItem> optionalLinkedWorkItem = Optional.empty();
 
