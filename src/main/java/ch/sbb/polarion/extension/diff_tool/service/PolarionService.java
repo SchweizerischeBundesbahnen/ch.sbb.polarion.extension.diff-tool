@@ -311,11 +311,13 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                         targetModule.addExternalWorkItem(pairedWorkItem);
 
                         // Line of code above inserts new reference to the end of the document, then we are trying to move it to the appropriate position
+                        /* Temporally commented
                         IModule.IStructureNode nodeToBeRemoved = targetModule.getStructureNodeOfWI(workItem);
                         IModule.IStructureNode parent = nodeToBeRemoved.getParent();
                         int destinationIndex = parent.getChildren().indexOf(nodeToBeRemoved);
                         IModule.IStructureNode insertedNode = targetModule.getStructureNodeOfWI(pairedWorkItem);
                         parent.addChild(insertedNode, destinationIndex);
+                         */
                     }
                     targetModule.unreference(workItem);
                 }
