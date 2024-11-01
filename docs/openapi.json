@@ -1187,6 +1187,9 @@
           "notMovedPairs": {
             "$ref": "#/components/schemas/WorkItemsPair"
           },
+          "notPaired": {
+            "$ref": "#/components/schemas/WorkItemsPair"
+          },
           "prohibitedPairs": {
             "$ref": "#/components/schemas/WorkItemsPair"
           },

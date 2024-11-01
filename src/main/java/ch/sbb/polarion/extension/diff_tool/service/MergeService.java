@@ -11,20 +11,16 @@ import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.internal.InternalWriteTransaction;
 import com.polarion.alm.shared.dle.compare.*;
 import com.polarion.alm.shared.dle.compare.merge.DuplicateWorkItemAction;
-import com.polarion.alm.shared.dle.compare.merge.FreezeReferenceAction;
-import com.polarion.alm.shared.dle.compare.merge.InsertReferenceAction;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
-import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.spi.EnumOption;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IStructType;
-import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,6 +55,7 @@ public class MergeService {
         }
         List<WorkItemsPair> conflicted = new ArrayList<>();
         List<WorkItemsPair> prohibited = new ArrayList<>();
+        List<WorkItemsPair> notPaired = new ArrayList<>();
         List<WorkItemsPair> created = new ArrayList<>();
         List<WorkItemsPair> modified = new ArrayList<>();
         List<WorkItemsPair> moved = new ArrayList<>();
@@ -77,15 +74,8 @@ public class MergeService {
                             notMoved.add(pair);
                         }
                     } else if (context.getTargetModule().getExternalWorkItems().contains(target)) { // merge into external work item
-                        if (!Objects.equals(source.getId(), target.getId())) {
-                            // is it okay to prevent merge process completely or we must create a separate notification for this case?
-                            throw new IllegalArgumentException("Cannot merge referenced work item (%s) with the completely different one (%s)".formatted(target.getId(), source.getId()));
-                        }
-                        String freezeRevision = ObjectUtils.firstNonNull(source.getRevision(), source.getLastRevision());
-                        copyWorkItemToDocument(source, freezeRevision, (InternalWriteTransaction) transaction, context);
-                        context.getTargetWorkItem(pair).setRevision(freezeRevision);
-                        context.getTargetWorkItem(pair).setReferenced(true);
-                        modified.add(pair);
+                        // TODO: insert a check if referenced WI in target project to be fixed in this case
+                        throw new IllegalArgumentException("Cannot merge into referenced work item: (%s) -> (%s)".formatted(source.getId(), target.getId()));
                     } else {
                         if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
                             conflicted.add(pair); // Don't allow merging if work item's revision was modified meanwhile
@@ -93,12 +83,21 @@ public class MergeService {
                             prohibited.add(pair); // Don't allow merging referenced work item into included one
                         } else {
                             merge(source, target, diffModel.getDiffFields());
+                            modified.add(pair);
                         }
                     }
                 } else if (source != null) { // "target" is null in this case, so new item out of "source" to be created
-                    IWorkItem newWorkItem = copyWorkItemToDocument(source, null, (InternalWriteTransaction) transaction, context);
-                    context.bindCounterpartItem(pair, WorkItem.of(newWorkItem, context.getTargetModule().getOutlineNumberOfWorkitem(newWorkItem), source.getId().equals(newWorkItem.getId())));
-                    created.add(pair);
+                    if (context.getSourceModule().getExternalWorkItems().contains(source)) {
+                        if (insertReferencedWorkItem(source, context) != null) {
+                            created.add(pair);
+                        } else {
+                            notPaired.add(pair);
+                        }
+                    } else {
+                        IWorkItem newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context);
+                        context.bindCounterpartItem(pair, WorkItem.of(newWorkItem, context.getTargetModule().getOutlineNumberOfWorkitem(newWorkItem), source.getId().equals(newWorkItem.getId())));
+                        created.add(pair);
+                    }
                 } else { // "source" is null in this case, so "target" to be deleted
                     deleteWorkItemFromDocument(context.getTargetDocumentIdentifier(), target);
                 }
@@ -107,7 +106,7 @@ public class MergeService {
             return null;
         });
         return MergeResult.builder().success(true)
-                .createdPairs(created).modifiedPairs(modified).conflictedPairs(conflicted).prohibitedPairs(prohibited).movedPairs(moved).notMovedPairs(notMoved)
+                .createdPairs(created).modifiedPairs(modified).conflictedPairs(conflicted).prohibitedPairs(prohibited).notPaired(notPaired).movedPairs(moved).notMovedPairs(notMoved)
                 .targetModuleHasStructuralChanges(!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision()))
                 .build();
     }
@@ -180,9 +179,7 @@ public class MergeService {
     /**
      * Solution based on internal Polarion classes usage.
      */
-    private IWorkItem copyWorkItemToDocument(IWorkItem sourceWorkItem, String freezeRevision, @NotNull InternalWriteTransaction transaction, MergeContext context) {
-        boolean fromExternal = context.getSourceModule().getExternalWorkItems().contains(sourceWorkItem);
-
+    private IWorkItem copyWorkItemToDocument(IWorkItem sourceWorkItem, @NotNull InternalWriteTransaction transaction, MergeContext context) {
         // taken from DleWorkItemsCompareOther#initializeOutside
         InternalDocument leftDocument = (InternalDocument) context.getSourceDocumentReference().get(transaction);
         InternalDocument rightDocument = (InternalDocument) context.getTargetDocumentReference().get(transaction);
@@ -196,14 +193,7 @@ public class MergeService {
         DleWIsMergeActionExecuter executer = new DleWIsMergeActionExecuter(targetDocument, comparator.getLeftMergedPartsOrder(), comparator.getRightMergedPartsOrder());
 
         WorkItemReference workItemReference = new WorkItemReference(sourceWorkItem.getProjectId(), sourceWorkItem.getId(), sourceWorkItem.getRevision(), null);
-        DleWIsMergeAction action;
-        if (freezeRevision != null) {
-            action = new FreezeReferenceAction(workItemReference, ObjectUtils.firstNonNull(sourceWorkItem.getRevision(), sourceWorkItem.getLastRevision()));
-        } else if (fromExternal) {
-            action = new InsertReferenceAction(workItemReference, !StringUtils.isEmpty(sourceWorkItem.getRevision()), 0);
-        } else {
-            action = new DuplicateWorkItemAction(workItemReference);
-        }
+        DleWIsMergeAction action = new DuplicateWorkItemAction(workItemReference);
         action.execute(executer);
         executer.finish();
         // end of internal polarion code
@@ -238,6 +228,27 @@ public class MergeService {
         } else {
             return sourceWorkItem; // return the same WI coz there is no simple way to get created WI when copying references
         }
+    }
+
+    private IWorkItem insertReferencedWorkItem(IWorkItem sourceWorkItem, MergeContext context) {
+        final IWorkItem workItemToReference;
+        if (sourceWorkItem.getProjectId().equals(context.getTargetModule().getProjectId())) {
+            workItemToReference = sourceWorkItem;
+        } else {
+            workItemToReference = polarionService.getPairedWorkItems(sourceWorkItem, context.getTargetModule().getProjectId(), context.linkRole).stream().findFirst().orElse(null);
+        }
+        if (workItemToReference != null) {
+            IModule.IStructureNode sourceNode = context.getSourceModule().getStructureNodeOfWI(sourceWorkItem);
+            IModule.IStructureNode sourceParentNode = sourceNode.getParent();
+
+            IWorkItem destinationParentWorkItem = polarionService.getPairedWorkItems(sourceParentNode.getWorkItem(), context.getTargetModule().getProjectId(), context.linkRole)
+                    .stream().findFirst().orElse(null);
+            IModule.IStructureNode destinationParentNode = context.getTargetModule().getStructureNodeOfWI(destinationParentWorkItem);
+            int destinationIndex = sourceParentNode.getChildren().indexOf(sourceNode);
+
+            polarionService.insertReferencedWorkItem(workItemToReference, context.getTargetModule(), destinationParentNode, destinationIndex);
+        }
+        return workItemToReference;
     }
 
     private void reloadModule(IModule module) {

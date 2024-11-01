@@ -42,6 +42,10 @@ public class MergeResult {
     private List<WorkItemsPair> prohibitedPairs = new ArrayList<>();
 
     @Builder.Default
+    @Schema(description = "List of WorkItems from source document in one project which do not have counterparts in another project of target document", implementation = WorkItemsPair.class)
+    private List<WorkItemsPair> notPaired = new ArrayList<>();
+
+    @Builder.Default
     @Schema(description = "List of WorkItem pairs that were moved during the merge operation", implementation = WorkItemsPair.class)
     private List<WorkItemsPair> movedPairs = new ArrayList<>();
 
