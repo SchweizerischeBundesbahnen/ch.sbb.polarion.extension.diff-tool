@@ -1,7 +1,11 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.*;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import com.polarion.alm.shared.api.model.document.internal.InternalDocument;
@@ -9,10 +13,15 @@ import com.polarion.alm.shared.api.model.document.internal.InternalUpdatableDocu
 import com.polarion.alm.shared.api.model.wi.WorkItemReference;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.internal.InternalWriteTransaction;
-import com.polarion.alm.shared.dle.compare.*;
+import com.polarion.alm.shared.dle.compare.CompareOptions;
+import com.polarion.alm.shared.dle.compare.DleWIsMergeAction;
+import com.polarion.alm.shared.dle.compare.DleWIsMergeActionExecuter;
+import com.polarion.alm.shared.dle.compare.DleWorkItemsComparator;
+import com.polarion.alm.shared.dle.compare.DleWorkitemsMatcher;
 import com.polarion.alm.shared.dle.compare.merge.DuplicateWorkItemAction;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
+import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.logging.Logger;
@@ -60,6 +69,12 @@ public class MergeService {
         List<WorkItemsPair> modified = new ArrayList<>();
         List<WorkItemsPair> moved = new ArrayList<>();
         List<WorkItemsPair> notMoved = new ArrayList<>();
+
+        ILinkRoleOpt iLinkRole = polarionService.getLinkRoleById(linkRole, context.getTargetModule().getProject());
+        if (iLinkRole == null) {
+            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", linkRole));
+        }
+
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
             for (WorkItemsPair pair : pairs) {
                 IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
@@ -74,8 +89,11 @@ public class MergeService {
                             notMoved.add(pair);
                         }
                     } else if (context.getTargetModule().getExternalWorkItems().contains(target)) { // merge into external work item
-                        // TODO: insert a check if referenced WI in target project to be fixed in this case
-                        throw new IllegalArgumentException("Cannot merge into referenced work item: (%s) -> (%s)".formatted(source.getId(), target.getId()));
+                        if (!target.getProjectId().equals(context.getTargetModule().getProjectId())) {
+                            polarionService.fixReferencedWorkItem(target, context.getTargetModule(), iLinkRole);
+                        } else {
+                            throw new IllegalArgumentException("Cannot merge into referenced work item: (%s) -> (%s)".formatted(source.getId(), target.getId()));
+                        }
                     } else {
                         if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
                             conflicted.add(pair); // Don't allow merging if work item's revision was modified meanwhile
@@ -86,7 +104,7 @@ public class MergeService {
                             modified.add(pair);
                         }
                     }
-                } else if (source != null) { // "target" is null in this case, so new item out of "source" to be created
+                } else if (source != null) {// "target" is null in this case, so new item out of "source" to be created
                     if (context.getSourceModule().getExternalWorkItems().contains(source)) {
                         if (insertReferencedWorkItem(source, context) != null) {
                             created.add(pair);
@@ -95,7 +113,13 @@ public class MergeService {
                         }
                     } else {
                         IWorkItem newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context);
-                        context.bindCounterpartItem(pair, WorkItem.of(newWorkItem, context.getTargetModule().getOutlineNumberOfWorkitem(newWorkItem), source.getId().equals(newWorkItem.getId())));
+                        context.bindCounterpartItem(pair,
+                                WorkItem.of(newWorkItem,
+                                        context.getTargetModule().getOutlineNumberOfWorkitem(newWorkItem),
+                                        source.getId().equals(newWorkItem.getId()),
+                                        newWorkItem.getProjectId().equals(context.getTargetModule().getProjectId())
+                                )
+                        );
                         created.add(pair);
                     }
                 } else { // "source" is null in this case, so "target" to be deleted
@@ -163,7 +187,7 @@ public class MergeService {
     private String getTargetDestinationNumber(IModule.IStructureNode sourceNode, IModule.IStructureNode targetDestinationParentNode) {
         String sourceNumberWithinParent = (sourceNode.getParent() == null || sourceNode.getParent().getOutlineNumber() == null)
                 ? sourceNode.getOutlineNumber() : sourceNode.getOutlineNumber().substring(sourceNode.getParent().getOutlineNumber().length());
-        return  (targetDestinationParentNode == null || targetDestinationParentNode.getOutlineNumber() == null)
+        return (targetDestinationParentNode == null || targetDestinationParentNode.getOutlineNumber() == null)
                 ? sourceNumberWithinParent : targetDestinationParentNode.getOutlineNumber() + sourceNumberWithinParent;
     }
 

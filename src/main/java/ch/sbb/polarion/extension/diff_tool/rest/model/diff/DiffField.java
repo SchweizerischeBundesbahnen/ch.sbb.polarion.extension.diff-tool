@@ -20,6 +20,7 @@ import lombok.ToString;
 public class DiffField {
     public static final DiffField TITLE = DiffField.builder().key("title").build();
     public static final DiffField OUTLINE_NUMBER = DiffField.builder().key("outlineNumber").build();
+    public static final DiffField EXTERNAL_PROJECT_WORK_ITEM = DiffField.builder().key("externalProjectWorkItem").build();
 
     @Schema(description = "The key associated with the diff field")
     private String key;

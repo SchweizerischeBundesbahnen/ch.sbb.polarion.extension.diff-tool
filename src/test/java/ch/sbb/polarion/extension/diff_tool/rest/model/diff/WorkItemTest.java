@@ -26,7 +26,7 @@ class WorkItemTest {
         IModule moduleMock = mock(IModule.class);
         when(wiMock.getModule()).thenReturn(moduleMock);
 
-        WorkItem workItem = WorkItem.of(wiMock, "wi_outline_number", false);
+        WorkItem workItem = WorkItem.of(wiMock, "wi_outline_number", false, false);
 
         assertEquals("wi_id", workItem.getId());
         assertEquals("wi_title", workItem.getTitle());
@@ -39,7 +39,7 @@ class WorkItemTest {
     @Test
     void testFields() {
         IWorkItem wiMock = mock(IWorkItem.class);
-        WorkItem workItem = WorkItem.of(wiMock, "wi_outline_number", false);
+        WorkItem workItem = WorkItem.of(wiMock, "wi_outline_number", false, false);
 
         workItem.addField(WorkItem.Field.builder().id("field_id").name("field_name").build());
 
