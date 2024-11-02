@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.5...v4.2.6) (2024-11-02)
+
+
+### Bug Fixes
+
+* referenced WorkItems in rich text fields ([#106](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/106)) ([f91d9cd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/f91d9cdf33b154499268fe112c1bbdfa239d64ed)), closes [#87](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/87)
+
 ## [4.2.5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.4...v4.2.5) (2024-11-01)
 
 
