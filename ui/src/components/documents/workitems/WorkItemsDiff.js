@@ -288,7 +288,9 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
           </div>
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
           {loading && <div className="loader wi-loader"></div>}
-          {!loading && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber) && <DiffContent diffs={diffs} expanded={expanded}/>}
+          {!loading && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber)
+              && !(workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.externalProjectWorkItem)
+              && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.externalProjectWorkItem) && <DiffContent diffs={diffs} expanded={expanded}/>}
         </div>
         <Modal title="Information" cancelButtonTitle="OK" visible={childrenSelectionModalVisible}
                setVisible={setChildrenSelectionModalVisible} className="modal-md">

@@ -27,12 +27,14 @@ public class WorkItemsPair {
         WorkItem left = WorkItem.of(
                 pair.getLeft(),
                 context.getOutlineNumber(pair.getLeft(), true),
-                context.isReferenced(pair.getLeft(), true)
+                context.isReferenced(pair.getLeft(), true),
+                pair.getLeft() != null && !context.getLeftDocument().getProjectId().equals(pair.getLeft().getProjectId())
         );
         WorkItem right = WorkItem.of(
                 pair.getRight(),
                 context.getOutlineNumber(pair.getRight(), false),
-                context.isReferenced(pair.getRight(), false)
+                context.isReferenced(pair.getRight(), false),
+                pair.getRight() != null && !context.getRightDocument().getProjectId().equals(pair.getRight().getProjectId())
         );
         return WorkItemsPair.builder().leftWorkItem(left).rightWorkItem(right).build();
     }

@@ -40,10 +40,10 @@ export function WorkItemHeader({workItem, asHeaderInDocument, movedOutlineNumber
     );
   };
 
-  const referencedMarker = () => {
+  const referencedMarker = (externalProjectWorkItem) => {
     return (
         <span className="referenced-wi" title="Referenced WorkItem">
-          R
+          R {externalProjectWorkItem ? <span className="external-project-wi">(references different project)</span> : null}
         </span>
     );
   };
@@ -68,7 +68,7 @@ export function WorkItemHeader({workItem, asHeaderInDocument, movedOutlineNumber
         backgroundColor: backgroundColor
       }} id={id} className={`wi-header col collapsed-border ${workItem && movedOutlineNumber ? "moved" : ""} ${side}`}>
         {workItem && !movedOutlineNumber && asHeaderInDocument && (workItem.outlineNumber + " " + workItem.title)} {workItem && !movedOutlineNumber && badgeContent()}
-        {workItem && !movedOutlineNumber && workItem.referenced && referencedMarker()}
+        {workItem && !movedOutlineNumber && workItem.referenced && referencedMarker(workItem.externalProjectWorkItem)}
         {workItem && !movedOutlineNumber && workItem.referenced && workItem.revision && !asHeaderInDocument && revisionLabel(workItem.revision)}
         {workItem && movedOutlineNumber && <MovedItem side={side} movedOutlineNumber={movedOutlineNumber} moveDirection={moveDirection} /> }
         {!workItem && <span style={{fontSize: ".75em"}}>&ndash;</span>}

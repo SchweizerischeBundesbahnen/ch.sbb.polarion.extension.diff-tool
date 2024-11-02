@@ -227,7 +227,7 @@ class DiffServiceTest {
 
     private WorkItem createWorkItem(String outlineNumber, String movedOutlineNumber, MergeMoveDirection moveDirection) {
         IWorkItem underlyingObject = mock(IWorkItem.class);
-        WorkItem workItem = WorkItem.of(underlyingObject, outlineNumber, false);
+        WorkItem workItem = WorkItem.of(underlyingObject, outlineNumber, false, false);
         workItem.setMovedOutlineNumber(movedOutlineNumber);
         workItem.setMoveDirection(moveDirection);
         return workItem;
