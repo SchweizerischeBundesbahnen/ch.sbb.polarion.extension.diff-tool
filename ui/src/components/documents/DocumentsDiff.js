@@ -250,7 +250,7 @@ export default function DocumentsDiff() {
         </ul>
       </div>
       <div style={{display: notPaired.length > 0 ? 'block' : 'none'}}>
-        <p>Following work items referenced in source document do not have counterparts in target project and therefor were not referenced in target document:</p>
+        <p>Following work items referenced in source document do not have counterparts in target project and therefore were not referenced in target document:</p>
         <ul>
           {notPaired && notPaired.map((pair, index) => {
             return <li key={index}>{pair.leftWorkItem?.id}{pair.rightWorkItem?.id}</li>;

@@ -131,6 +131,78 @@ class PolarionServiceTest {
     }
 
     @Test
+    void testReplaceLinksToPairedWorkItems() {
+        PolarionService service = mock(PolarionService.class);
+        when(service.replaceLinksToPairedWorkItems(any(IWorkItem.class), any(IWorkItem.class), anyString(), anyString())).thenCallRealMethod();
+
+        IWorkItem a1 = mock(IWorkItem.class);
+        when(service.getWorkItem(eq("projectIdA"), eq("A-1"), isNull())).thenReturn(a1);
+        IWorkItem a2 = mock(IWorkItem.class);
+        when(service.getWorkItem(eq("projectIdA"), eq("A-2"), isNull())).thenReturn(a2);
+        IWorkItem a2r = mock(IWorkItem.class);
+        when(service.getWorkItem(eq("projectIdA"), eq("A-2"), eq("42"))).thenReturn(a2r);
+        IWorkItem c3 = mock(IWorkItem.class);
+        when(service.getWorkItem(eq("projectIdC"), eq("C-3"), isNull())).thenReturn(c3);
+
+        when(service.getPairedWorkItems(any(), anyString(), anyString())).thenReturn(List.of());
+        IWorkItem b1 = mock(IWorkItem.class);
+        when(b1.getId()).thenReturn("B-1");
+        when(b1.getProjectId()).thenReturn("projectIdB");
+        when(service.getPairedWorkItems(eq(a1), eq("projectIdB"), eq("expectedLinkRole"))).thenReturn(List.of(b1));
+        IWorkItem b2 = mock(IWorkItem.class);
+        when(b2.getId()).thenReturn("B-2");
+        when(b2.getProjectId()).thenReturn("projectIdB");
+        when(service.getPairedWorkItems(eq(a2), eq("projectIdB"), eq("expectedLinkRole"))).thenReturn(List.of(b2));
+        IWorkItem b2r = mock(IWorkItem.class);
+        when(b2r.getId()).thenReturn("B-2r");
+        when(b2r.getProjectId()).thenReturn("projectIdB");
+        when(service.getPairedWorkItems(eq(a2r), eq("projectIdB"), eq("expectedLinkRole"))).thenReturn(List.of(b2r));
+        IWorkItem b3 = mock(IWorkItem.class);
+        when(b3.getId()).thenReturn("B-3");
+        when(b3.getProjectId()).thenReturn("projectIdB");
+        when(service.getPairedWorkItems(eq(c3), eq("projectIdB"), eq("expectedLinkRole"))).thenReturn(List.of(b3));
+
+        IWorkItem from = mock(IWorkItem.class);
+        when(from.getProjectId()).thenReturn("projectIdA");
+        IWorkItem to = mock(IWorkItem.class);
+        when(to.getProjectId()).thenReturn("projectIdB");
+
+        String result = service.replaceLinksToPairedWorkItems(from, to, "expectedLinkRole", """
+                item to replace
+                <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="A-1" data-option-id="short"></span>
+                <span>some random span and one more to replace</span>
+                <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="A-2" data-option-id="short"></span>
+                one more but this time with revision which must be cleaned after merge
+                <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="A-2" data-revision="42" data-option-id="short"></span>
+                this has projectId explicitly
+                <span class="polarion-rte-link" data-type="workItem" id="fake" data-scope="projectIdC" data-item-id="C-3" data-option-id="short"></span>
+                item below has no pair
+                <span class="polarion-rte-link" data-type="workItem" id="fake" data-custom-label="Some custom label" data-item-id="A-3" data-option-id="custom"></span>
+                item below isn't wi link
+                <span class="polarion-rte-link" data-type="nonWorkItem" id="fake" data-item-id="A-1" data-option-id="short"></span>
+                item below isn't rte link
+                <span class="polarion-non-rte-link" data-type="nonWorkItem" id="fake" data-item-id="A-1" data-option-id="short"></span>
+                """);
+
+        assertEquals("""
+                item to replace
+                <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="B-1" data-option-id="short"></span>
+                <span>some random span and one more to replace</span>
+                <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="B-2" data-option-id="short"></span>
+                one more but this time with revision which must be cleaned after merge
+                <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="B-2r" data-option-id="short"></span>
+                this has projectId explicitly
+                <span class="polarion-rte-link" data-type="workItem" id="fake" data-scope="projectIdB" data-item-id="B-3" data-option-id="short"></span>
+                item below has no pair
+                <span class="polarion-rte-link" data-type="workItem" id="fake" data-custom-label="Some custom label" data-item-id="A-3" data-option-id="custom"></span>
+                item below isn't wi link
+                <span class="polarion-rte-link" data-type="nonWorkItem" id="fake" data-item-id="A-1" data-option-id="short"></span>
+                item below isn't rte link
+                <span class="polarion-non-rte-link" data-type="nonWorkItem" id="fake" data-item-id="A-1" data-option-id="short"></span>
+                """, result);
+    }
+
+    @Test
     void testGetPairedWorkItems() {
 
         IProject project = mock(IProject.class);

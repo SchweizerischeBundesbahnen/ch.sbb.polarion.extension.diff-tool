@@ -82,7 +82,7 @@ public class MergeService {
                         } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
                             prohibited.add(pair); // Don't allow merging referenced work item into included one
                         } else {
-                            merge(source, target, diffModel.getDiffFields());
+                            merge(source, target, diffModel.getDiffFields(), linkRole);
                             modified.add(pair);
                         }
                     }
@@ -286,9 +286,13 @@ public class MergeService {
         module.save();
     }
 
-    private void merge(IWorkItem source, IWorkItem target, List<DiffField> fields) {
+    private void merge(IWorkItem source, IWorkItem target, List<DiffField> fields, String linkRole) {
         for (DiffField field : fields) {
-            polarionService.setFieldValue(target, field.getKey(), polarionService.getFieldValue(source, field.getKey()));
+            Object fieldValue = polarionService.getFieldValue(source, field.getKey());
+            if (fieldValue instanceof Text text) {
+                fieldValue = new Text(text.getType(), polarionService.replaceLinksToPairedWorkItems(source, target, linkRole, text.getContent()));
+            }
+            polarionService.setFieldValue(target, field.getKey(), fieldValue);
         }
         target.save();
     }

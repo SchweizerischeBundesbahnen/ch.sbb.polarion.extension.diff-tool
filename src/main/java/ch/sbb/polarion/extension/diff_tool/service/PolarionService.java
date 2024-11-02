@@ -36,7 +36,6 @@ import com.polarion.alm.tracker.internal.model.WorkItem;
 import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.IBaseline;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
-import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IStatusOpt;
 import com.polarion.alm.tracker.model.ITrackerProject;
@@ -64,6 +63,7 @@ import com.polarion.subterra.base.location.ILocation;
 import com.polarion.subterra.base.location.Location;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
@@ -85,6 +85,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -544,6 +546,46 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
 
     private boolean notDiffRelated(@NotNull IWorkItem workItem, boolean inversePair, @NotNull CalculatePairsContext context) {
         return workItem.isUnresolvable() || context.getOutlineNumber(workItem, !inversePair) == null || (!inversePair && context.hasStatusToIgnore(workItem));
+    }
+
+    @NotNull
+    public String replaceLinksToPairedWorkItems(@NotNull IWorkItem from, @NotNull IWorkItem to, @NotNull String linkRole, @NotNull String html) {
+        if (Objects.equals(from.getProjectId(), to.getProjectId())) {
+            return html; // do not modify links when copying data between same project work items
+        }
+
+        Pattern pattern = Pattern.compile("(?<match><span[^>]+?class=\"polarion-rte-link\"[^>]+?data-type=\"workItem\"([^>]+?data-scope=\"(?<workItemProjectId>[^\"]+?)\")*[^>]+?data-item-id=\"(?<workItemId>[^\"]+?)\"" +
+                                          "([^>]+?data-revision=\"(?<workItemRevision>[^\"]+?)\")*)");
+        Matcher matcher = pattern.matcher(html);
+
+        StringBuilder buf = new StringBuilder();
+        while (matcher.find()) {
+            String match = matcher.group("match");
+            String workItemProjectId = ObjectUtils.firstNonNull(matcher.group("workItemProjectId"), from.getProjectId()); //data-scope is rendered in case of another project reference
+            String workItemId = matcher.group("workItemId");
+            String revision = matcher.group("workItemRevision");
+            IWorkItem workItem;
+            try {
+                workItem = getWorkItem(workItemProjectId, workItemId, revision);
+            } catch (Exception e) {
+                logger.error("Cannot get work item %s/%s/%s".formatted(workItemProjectId, workItemId, revision), e);
+                continue;
+            }
+            IWorkItem pairedWorkItem = getPairedWorkItems(workItem, to.getProjectId(), linkRole).stream().findFirst().orElse(null);
+            if (pairedWorkItem != null) {
+                String scopeEntry = "data-scope=\"%s\"".formatted(pairedWorkItem.getProjectId());
+                String idEntry = "data-item-id=\"%s\"".formatted(pairedWorkItem.getId());
+                if (!StringUtils.isEmpty(pairedWorkItem.getRevision())) {
+                    idEntry = idEntry + " data-revision=\"%s\"".formatted(pairedWorkItem.getRevision());
+                }
+                matcher.appendReplacement(buf, match
+                        .replaceAll("\\sdata-revision=\"[^\"]+?\"", "") // cleanup revision if exists
+                        .replaceAll("data-scope=\"[^\"]+?\"", scopeEntry)
+                        .replaceAll("data-item-id=\"[^\"]+?\"", idEntry));
+            }
+        }
+        matcher.appendTail(buf);
+        return buf.toString();
     }
 
     @SuppressWarnings("squid:S1166") // Initial exception swallowed intentionally
