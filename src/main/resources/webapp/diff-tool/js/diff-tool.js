@@ -4,6 +4,7 @@ DiffTool = {
 
   init: function (sourceProjectId, sourceSpace, sourceDocument, sourceDocumentTitle, sourceRevision) {
     this.sourceProjectId = sourceProjectId;
+    this.settingsProjectId = sourceProjectId;
     this.sourceSpace = sourceSpace;
     this.sourceDocument = sourceDocument;
     this.sourceDocumentTitle = sourceDocumentTitle;
@@ -146,13 +147,43 @@ DiffTool = {
   },
 
   newDocumentSelected: function (selected) {
+    const selectedProject = this.compareSameDocument() ? this.sourceProjectId : document.getElementById("project-selector").value;
+
     if (selected) {
       document.querySelectorAll(".comparison.form-wrapper .hide-when-new-document").forEach(element => element.classList.add("hide"));
       document.querySelectorAll(".comparison.form-wrapper .hide-when-comparing").forEach(element => element.classList.remove("hide"));
+      if (this.settingsProjectId !== selectedProject) {
+        this.reloadSettings(selectedProject);
+      }
     } else {
       document.querySelectorAll(".comparison.form-wrapper .hide-when-new-document").forEach(element => element.classList.remove("hide"));
       document.querySelectorAll(".comparison.form-wrapper .hide-when-comparing").forEach(element => element.classList.add("hide"));
+      if (this.settingsProjectId !== this.sourceProjectId) {
+        this.reloadSettings(this.sourceProjectId);
+      }
     }
+  },
+
+  reloadSettings: function (projectId) {
+    this.actionInProgress({inProgress: true});
+    this.callAsync({
+      url: `/polarion/diff-tool/rest/internal/settings/diff/names?scope=project/${projectId}/`
+    }).then((response) => {
+      this.actionInProgress({inProgress: false});
+      const configSelector = document.getElementById("config-selector");
+      configSelector.innerHTML = ""; // Clear previously loaded content
+      for (let {name} of response) {
+        const option = document.createElement('option');
+        option.value = name;
+        option.text = name;
+        configSelector.appendChild(option);
+      }
+      this.settingsProjectId = projectId;
+    }).catch(() => {
+      this.actionInProgress({inProgress: false});
+      this.showAlert({alertType: "error", message: `Error occurred loading project [${projectId}] diff configuration`});
+    });
+
   },
 
   createNewDocument: function () {
