@@ -76,38 +76,34 @@ public class MergeService {
         }
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            for (WorkItemsPair pair : pairs) {
+
+            // Here we separate operations based on their type to reduce merge steps to achieve desired document state.
+            // It's impossible to reduce the process to 1 step even theoretically because of the following requirement:
+            // "If the checked pair simultaneously:
+            // 1) moved to another position
+            // 2) has changes in the content
+            // then it must be ONLY moved to the desired position leaving modified content unchanged"
+            // So this means that some cases require 2 steps by their nature.
+
+            // create & delete + fix refs
+            pairs.removeIf(pair -> {
                 IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
                 IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
 
-                if (source != null && target != null) {
-                    if (moveAction(pair)) { // Intentionally handled at first place. We first move items, and only then as an additional step merge content if needed
-                        if (move(source, target, context)) {
-                            target.save();
-                            moved.add(pair);
-                        } else {
-                            notMoved.add(pair);
-                        }
-                    } else if (context.getTargetModule().getExternalWorkItems().contains(target)) { // merge into external work item
-                        if (!target.getProjectId().equals(context.getTargetModule().getProjectId())) {
-                            polarionService.fixReferencedWorkItem(target, context.getTargetModule(), iLinkRole);
-                        } else {
-                            throw new IllegalArgumentException("Cannot merge into referenced work item: (%s) -> (%s)".formatted(source.getId(), target.getId()));
-                        }
+                if (context.getTargetModule().getExternalWorkItems().contains(target)) { // merge into external work item
+                    if (!target.getProjectId().equals(context.getTargetModule().getProjectId())) {
+                        polarionService.fixReferencedWorkItem(target, context.getTargetModule(), iLinkRole);
+                        reloadModule(context.getTargetModule());
                     } else {
-                        if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
-                            conflicted.add(pair); // Don't allow merging if work item's revision was modified meanwhile
-                        } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
-                            prohibited.add(pair); // Don't allow merging referenced work item into included one
-                        } else {
-                            merge(source, target, diffModel.getDiffFields(), linkRole);
-                            modified.add(pair);
-                        }
+                        throw new IllegalArgumentException("Cannot merge into referenced work item: (%s) -> (%s)".formatted(source.getId(), target.getId()));
                     }
-                } else if (source != null) {// "target" is null in this case, so new item out of "source" to be created
+                }
+
+                if (source != null && target == null) { // "target" is null in this case, so new item out of "source" to be created
                     if (context.getSourceModule().getExternalWorkItems().contains(source)) {
                         if (insertReferencedWorkItem(source, context) != null) {
                             created.add(pair);
+                            reloadModule(context.getTargetModule());
                         } else {
                             notPaired.add(pair);
                         }
@@ -121,9 +117,47 @@ public class MergeService {
                                 )
                         );
                         created.add(pair);
+                        reloadModule(context.getTargetModule());
                     }
-                } else { // "source" is null in this case, so "target" to be deleted
+                    return true;
+                } else if (source == null && target != null) { // "source" is null in this case, so "target" to be deleted
                     deleteWorkItemFromDocument(context.getTargetDocumentIdentifier(), target);
+                    reloadModule(context.getTargetModule());
+                    return true;
+                }
+                return false;
+            });
+
+            // move
+            pairs.removeIf(pair -> {
+                IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
+                IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+
+                if (source != null && target != null && moveAction(pair)) {
+                    if (move(source, target, context)) {
+                        target.save();
+                        moved.add(pair);
+                        reloadModule(context.getTargetModule());
+                    } else {
+                        notMoved.add(pair);
+                    }
+                    return true;
+                }
+                return false;
+            });
+
+            // update
+            for (WorkItemsPair pair : pairs) {
+                IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
+                IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+
+                if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
+                    conflicted.add(pair); // Don't allow merging if work item's revision was modified meanwhile
+                } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
+                    prohibited.add(pair); // Don't allow merging referenced work item into included one
+                } else {
+                    merge(source, target, diffModel.getDiffFields(), linkRole);
+                    modified.add(pair);
                 }
             }
             reloadModule(context.getTargetModule());
