@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.6...v4.3.0) (2024-11-03)
+
+
+### Features
+
+* Added logic to display and merge incorrectly linked work items ([#112](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/112)) ([a802c93](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/a802c93b6f756a40fc7e4e5119d58e31dc89f56a)), closes [#111](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/111)
+
+
+### Bug Fixes
+
+* Fix showing proper diff configurations for creating new document option ([7f24b4d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/7f24b4db4aa2db8d1715bf7420b4f8c599b300f2))
+* Fix showing proper diff configurations when creating new document ([#109](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/109)) ([7f24b4d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/7f24b4db4aa2db8d1715bf7420b4f8c599b300f2)), closes [#84](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/84)
+* user has to make several sequential merges in order to achieve d… ([#114](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/114)) ([dd27f3f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/dd27f3f0969e1be64be77a362c73fa8d766ca640)), closes [#68](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/68)
+* user has to make several sequential merges in order to achieve desired state ([dd27f3f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/dd27f3f0969e1be64be77a362c73fa8d766ca640))
+
 ## [4.2.6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.5...v4.2.6) (2024-11-02)
 
 
