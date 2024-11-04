@@ -45,6 +45,7 @@ import com.polarion.alm.tracker.model.ipi.IInternalBaselinesManager;
 import com.polarion.alm.ui.shared.FieldRenderType;
 import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.Logger;
+import com.polarion.core.util.types.Text;
 import com.polarion.platform.IPlatformService;
 import com.polarion.platform.persistence.ICustomFieldsService;
 import com.polarion.platform.persistence.IEnumOption;
@@ -218,6 +219,9 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             createdModule.save();
 
             cleanUpNonListFields(createdModule, targetProjectContextId, allowedFields);
+            if (!sourceProjectId.equals(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())) {
+                fixLinksInRichTextFields(createdModule, sourceProjectId, linkRole.getId(), allowedFields);
+            }
 
             return createdModule;
         }));
@@ -266,6 +270,21 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                 }
             }
             workItem.save();
+        }
+    }
+
+    private void fixLinksInRichTextFields(@NotNull IModule targetModule, @NotNull String sourceProjectId, @NotNull String linkRoleId, @NotNull List<DiffField> diffFields) {
+        for (IWorkItem targetWorkItem : getWorkItemsForCleanUp(targetModule)) {
+            for (DiffField field : diffFields) {
+                Object fieldValue = getFieldValue(targetWorkItem, field.getKey());
+                if (fieldValue instanceof Text text) {
+                    IWorkItem sourceWorkItem = getPairedWorkItems(targetWorkItem, sourceProjectId, linkRoleId).stream().findFirst().orElse(null);
+                    if (sourceWorkItem != null) {
+                        fieldValue = new Text(text.getType(), replaceLinksToPairedWorkItems(sourceWorkItem, targetWorkItem, linkRoleId, text.getContent()));
+                        setFieldValue(targetWorkItem, field.getKey(), fieldValue);
+                    }
+                }
+            }
         }
     }
 
