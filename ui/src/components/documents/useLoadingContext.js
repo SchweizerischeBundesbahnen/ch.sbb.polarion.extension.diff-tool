@@ -1,16 +1,18 @@
 import {useContext, useEffect, useState} from "react";
 import AppContext from "@/components/AppContext";
 import {useSearchParams} from "next/navigation";
+import useRemote from "@/services/useRemote";
 
 const PAUSED = 0;
 const READY = 1;
 const FINISHED = 2;
 
 export default function useLoadingContext() {
+  const remote = useRemote();
   const appContext = useContext(AppContext);
   const searchParams = useSearchParams();
 
-  const [chunkSize] = useState(searchParams.get('chunkSize') || 10);
+  const [chunkSize, setChunkSize] = useState(1);
   const [pairsLoading, setPairsLoading] = useState(true); // We consider initial state as pairs loading even prior sending factual request, otherwise view will be undefined
   const [pairsLoadingError, setPairsLoadingError] = useState(null);
   const [pairs, setPairs] = useState([]);
@@ -20,6 +22,25 @@ export default function useLoadingContext() {
   const [diffsLoadingProgress, setDiffsLoadingProgress] = useState(0);
   const [diffsLoadingErrors, setDiffsLoadingErrors] = useState(false);
   const [reloadMarker, setReloadMarker] = useState(0);
+
+  useEffect(() => {
+    remote
+        .sendRequest({
+          method: "GET",
+          url: `/communication/settings`
+        })
+        .then(response => response.json())
+        .then(json => {
+          if (json.chunkSize) {
+            setChunkSize(json.chunkSize);
+          } else {
+            console.warn("chunkSize not found in response");
+          }
+        })
+        .catch(error => {
+          console.error("Failed to fetch settings:", error);
+        });
+  }, []);
 
   useEffect(() => {
     // In case of loading errors we stop further data portions loading that's why consider process as finished (100%)
@@ -86,8 +107,10 @@ export default function useLoadingContext() {
     }
     setLoadedDiffs(pairs.length - indexes.length);
     setReloadMarker(n => n + 1);
-  }
+  };
 
-  return { pairsLoading, pairsLoadingError, pairs, pairsCount, loadedDiffs, diffsLoadingProgress, diffsLoadingErrors, reloadMarker,
-    pairLoadingAllowed, pairsLoadingStarted, pairsLoadingFinished, pairsLoadingFinishedWithError, diffLoadingFinished, resetDiffsLoadingState, reload };
+  return {
+    pairsLoading, pairsLoadingError, pairs, pairsCount, loadedDiffs, diffsLoadingProgress, diffsLoadingErrors, reloadMarker,
+    pairLoadingAllowed, pairsLoadingStarted, pairsLoadingFinished, pairsLoadingFinishedWithError, diffLoadingFinished, resetDiffsLoadingState, reload
+  };
 }

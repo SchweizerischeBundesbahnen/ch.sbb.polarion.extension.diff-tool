@@ -1,7 +1,9 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
+import ch.sbb.polarion.extension.diff_tool.properties.DiffToolExtensionConfiguration;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentDuplicateParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CommunicationSettings;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Document;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
@@ -176,5 +178,27 @@ public class UtilityInternalController {
             throw new BadRequestException(MISSING_PROJECT_ID_MESSAGE);
         }
         return polarionService.getWorkItemStatuses(projectId);
+    }
+
+    @GET
+    @Path("/communication/settings")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Gets communication settings for JS client",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Communication settings in JSON format",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = CommunicationSettings.class)
+                            )
+                    )
+            }
+    )
+    public CommunicationSettings getCommunicationSettings() {
+        Integer chunkSize = DiffToolExtensionConfiguration.getInstance().getChunkSize();
+        return CommunicationSettings.builder()
+                .chunkSize(chunkSize)
+                .build();
     }
 }
