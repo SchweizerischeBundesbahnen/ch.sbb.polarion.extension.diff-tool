@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
+import ch.sbb.polarion.extension.diff_tool.service.handler.impl.LinksHandler;
 import ch.sbb.polarion.extension.diff_tool.settings.AuthorizationSettings;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache;
@@ -573,14 +574,13 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             return html; // do not modify links when copying data between same project work items
         }
 
-        Pattern pattern = Pattern.compile("(?<match><span[^>]+?class=\"polarion-rte-link\"[^>]+?data-type=\"workItem\"([^>]+?data-scope=\"(?<workItemProjectId>[^\"]+?)\")*[^>]+?data-item-id=\"(?<workItemId>[^\"]+?)\"" +
-                                          "([^>]+?data-revision=\"(?<workItemRevision>[^\"]+?)\")*)");
+        Pattern pattern = Pattern.compile(LinksHandler.LINK_REGEX);
         Matcher matcher = pattern.matcher(html);
 
         StringBuilder buf = new StringBuilder();
         while (matcher.find()) {
-            String match = matcher.group("match");
-            String workItemProjectId = ObjectUtils.firstNonNull(matcher.group("workItemProjectId"), from.getProjectId()); //data-scope is rendered in case of another project reference
+            String match = matcher.group();
+            String workItemProjectId = ObjectUtils.firstNonNull(matcher.group("workItemProjectId"), from.getProjectId());
             String workItemId = matcher.group("workItemId");
             String revision = matcher.group("workItemRevision");
             IWorkItem workItem;
@@ -592,16 +592,25 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             }
             IWorkItem pairedWorkItem = getPairedWorkItems(workItem, to.getProjectId(), linkRole).stream().findFirst().orElse(null);
             if (pairedWorkItem != null) {
-                String scopeEntry = "data-scope=\"%s\"".formatted(pairedWorkItem.getProjectId());
-                String idEntry = "data-item-id=\"%s\"".formatted(pairedWorkItem.getId());
-                if (!StringUtils.isEmpty(pairedWorkItem.getRevision())) {
-                    idEntry = idEntry + " data-revision=\"%s\"".formatted(pairedWorkItem.getRevision());
-                }
-                matcher.appendReplacement(buf, match
-                        .replaceAll("\\sdata-revision=\"[^\"]+?\"", "") // cleanup revision if exists
-                        .replaceAll("data-scope=\"[^\"]+?\"", scopeEntry)
-                        .replaceAll("data-item-id=\"[^\"]+?\"", idEntry));
+                workItemProjectId = ""; // when we place link to the wi from target project there's no need to set 'data-scope' explicitly
+                workItemId = pairedWorkItem.getId();
+                revision = pairedWorkItem.getRevision();
             }
+
+            // Even if we don't find paired item we must proceed at least for inserting
+            // proper 'data-scope' - otherwise link will be completely broken
+            String idEntry = "data-item-id=\"%s\"".formatted(workItemId);
+            if (!StringUtils.isEmpty(workItemProjectId)) {
+                idEntry = idEntry + " data-scope=\"%s\"".formatted(workItemProjectId);
+            }
+            if (!StringUtils.isEmpty(revision)) {
+                idEntry = idEntry + " data-revision=\"%s\"".formatted(revision);
+            }
+            matcher.appendReplacement(buf, match
+                    .replaceAll("data-scope=\"[^\"]+?\"", "")    // cleanup revision & scope, new attributes will be set below if needed
+                    .replaceAll("data-revision=\"[^\"]+?\"", "")
+                    .replaceAll("( )+", " ")                     // cleanup duplicated spaces
+                    .replaceAll("data-item-id=\"[^\"]+?\"", idEntry));
         }
         matcher.appendTail(buf);
         return buf.toString();
