@@ -7,12 +7,30 @@ export function useMergingContext() {
   const [selectionRegistry, setSelectionRegistry] = useState(new Map());
   const [selectionCount, setSelectionCount] = useState(0);
   const [selectAll, setSelectAll] = useState(false);
+  const [selectAllTrigger, setSelectAllTrigger] = useState(0);
 
   useEffect(() => {
+    let allSelected = true;
     let count = 0;
-    selectionRegistry.forEach((value) => count += (value ? 1 : 0));
+    selectionRegistry.forEach((value) => {
+      count += (value ? 1 : 0);
+      if (!value) {
+        allSelected = false;
+      }
+    });
     setSelectionCount(count);
+    if (allSelected !== selectAll) {
+      setSelectAll(allSelected);
+    }
   }, [selectionRegistry]);
+
+  const resetRegistryEntry = (index) => {
+    setSelectionRegistry(r => {
+      const registry = new Map(r);
+      registry.delete(index);
+      return registry;
+    });
+  };
 
   const setPairSelected = (index, workItemsPair, selected) => {
     setSelectionRegistry(r => {
@@ -20,7 +38,7 @@ export function useMergingContext() {
       if (selected) {
         registry.set(index, workItemsPair);
       } else {
-        registry.delete(index);
+        registry.set(index, null);
       }
       return registry;
     });
@@ -28,7 +46,7 @@ export function useMergingContext() {
 
   const isPairSelected = (pairToCheck) => {
     for (let pair of selectionRegistry.values()) {
-      if (pairsEqual(pair, pairToCheck)) {
+      if (pair && pairsEqual(pair, pairToCheck)) {
         return true;
       }
     }
@@ -44,8 +62,19 @@ export function useMergingContext() {
   };
 
   const resetSelection = () => {
-    setSelectionRegistry(new Map());
+    setSelectionRegistry(r => {
+      const registry = new Map(r);
+      registry.forEach((value, index) => {
+        registry.set(index, null);
+      });
+      return registry;
+    });
   };
 
-  return { selectionRegistry, selectionCount, setPairSelected, isPairSelected, resetSelection, selectAll, setSelectAll };
+  const setAndApplySelectAll = (selectAll) => {
+    setSelectAll(selectAll);
+    setSelectAllTrigger(selectAllTrigger === Number.MAX_SAFE_INTEGER ? 1 : selectAllTrigger + 1);
+  };
+
+  return { selectionRegistry, resetRegistryEntry, selectionCount, setPairSelected, isPairSelected, resetSelection, selectAll, setSelectAll, selectAllTrigger, setAndApplySelectAll };
 }
