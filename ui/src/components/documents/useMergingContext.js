@@ -8,23 +8,11 @@ export function useMergingContext() {
   const [selectionCount, setSelectionCount] = useState(0);
   const [selectAll, setSelectAll] = useState(false);
 
-  const switchSelectAll = () => {
-    const newValue = !selectAll;
-    if (!newValue) {
-      resetSelection();
-    }
-    setSelectAll(newValue);
-  };
-
   useEffect(() => {
     let count = 0;
     selectionRegistry.forEach((value) => count += (value ? 1 : 0));
     setSelectionCount(count);
   }, [selectionRegistry]);
-
-  const isAllChecked = () => {
-    return Array.from(document.querySelectorAll('.merge-item-check')).every(checkbox => checkbox.checked);
-  };
 
   const setPairSelected = (index, workItemsPair, selected) => {
     setSelectionRegistry(r => {
@@ -59,5 +47,5 @@ export function useMergingContext() {
     setSelectionRegistry(new Map());
   };
 
-  return { selectionRegistry, selectionCount, setPairSelected, isPairSelected, resetSelection, selectAll, setSelectAll, isAllChecked, switchSelectAll };
+  return { selectionRegistry, selectionCount, setPairSelected, isPairSelected, resetSelection, selectAll, setSelectAll };
 }

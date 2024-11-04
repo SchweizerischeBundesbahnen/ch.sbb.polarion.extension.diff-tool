@@ -13,7 +13,7 @@ export default function MergeTicker({workItemsPair, diffs, selected, pairSelecte
   return (
       <div className="merge-ticker" onClick={changeSelected}>
         {diffService.diffsExist(workItemsPair, diffs) && <div className="form-check" onClick={changeSelected}>
-          <input className="form-check-input merge-item-check" type="checkbox" checked={selected} id="flexCheckChecked" onChange={changeSelected} />
+          <input className="form-check-input" type="checkbox" checked={selected} id="flexCheckChecked" onChange={changeSelected} />
         </div>}
       </div>
   );
