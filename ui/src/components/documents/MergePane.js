@@ -65,7 +65,7 @@ export default function MergePane({leftDocument, rightDocument, mergingContext, 
                 display: selectAllVisible ? "inline-block" : "none"
               }}>
                 <input className="form-check-input" type="checkbox" checked={mergingContext.selectAll} onChange={() => {
-                  mergingContext.setSelectAll(!mergingContext.selectAll)
+                  mergingContext.setAndApplySelectAll(!mergingContext.selectAll);
                 }}/>
                 select all
               </label>

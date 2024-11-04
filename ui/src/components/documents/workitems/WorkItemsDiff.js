@@ -138,8 +138,10 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
       const leftWiId = workItemsPair.leftWorkItem ? workItemsPair.leftWorkItem.id : null;
       const rightWiId = workItemsPair.rightWorkItem ? workItemsPair.rightWorkItem.id : null;
       dataLoadedCallback(currentIndex, error, diffsExist, selected, leftChapter, rightChapter, leftWiId, rightWiId);
-      if (selected && !diffsExist) {
-        mergingContext.setPairSelected(currentIndex, workItemsPair, false); // if no diffs for certain work items pair - unselect this pair if it was previously selected
+      if (diffsExist) {
+        mergingContext.setPairSelected(currentIndex, workItemsPair, selected); // Initialize pair in selection registry
+      } else {
+        mergingContext.resetRegistryEntry(currentIndex); // Reset pair in selection registry
       }
       setDataLoadedFired(true);
     }
@@ -150,10 +152,11 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
   }, [mergingContext.selectionRegistry]);
 
   useEffect(() => {
-    if (mergingContext.selectAll !== selected && diffService.diffsExist(workItemsPair, diffs)) {
+    // selectAllTrigger of 0 value is initial value which should be ignored
+    if (mergingContext.selectAllTrigger > 0 && mergingContext.selectAll !== selected && diffService.diffsExist(workItemsPair, diffs)) {
       pairSelected(mergingContext.selectAll, true);
     }
-  }, [mergingContext.selectAll]);
+  }, [mergingContext.selectAllTrigger]);
 
   const pairSelected = (selected, forceAndSuppressWarnings) => {
     if (workItemsPair) {
