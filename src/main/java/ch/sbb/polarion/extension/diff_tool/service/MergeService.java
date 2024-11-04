@@ -1,7 +1,11 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.*;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import com.polarion.alm.shared.api.model.document.internal.InternalDocument;
@@ -9,22 +13,23 @@ import com.polarion.alm.shared.api.model.document.internal.InternalUpdatableDocu
 import com.polarion.alm.shared.api.model.wi.WorkItemReference;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.internal.InternalWriteTransaction;
-import com.polarion.alm.shared.dle.compare.*;
+import com.polarion.alm.shared.dle.compare.CompareOptions;
+import com.polarion.alm.shared.dle.compare.DleWIsMergeAction;
+import com.polarion.alm.shared.dle.compare.DleWIsMergeActionExecuter;
+import com.polarion.alm.shared.dle.compare.DleWorkItemsComparator;
+import com.polarion.alm.shared.dle.compare.DleWorkitemsMatcher;
 import com.polarion.alm.shared.dle.compare.merge.DuplicateWorkItemAction;
-import com.polarion.alm.shared.dle.compare.merge.FreezeReferenceAction;
-import com.polarion.alm.shared.dle.compare.merge.InsertReferenceAction;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
+import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
-import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.spi.EnumOption;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IStructType;
-import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,55 +64,107 @@ public class MergeService {
         }
         List<WorkItemsPair> conflicted = new ArrayList<>();
         List<WorkItemsPair> prohibited = new ArrayList<>();
+        List<WorkItemsPair> notPaired = new ArrayList<>();
         List<WorkItemsPair> created = new ArrayList<>();
         List<WorkItemsPair> modified = new ArrayList<>();
         List<WorkItemsPair> moved = new ArrayList<>();
         List<WorkItemsPair> notMoved = new ArrayList<>();
+
+        ILinkRoleOpt iLinkRole = polarionService.getLinkRoleById(linkRole, context.getTargetModule().getProject());
+        if (iLinkRole == null) {
+            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", linkRole));
+        }
+
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
+
+            // Here we separate operations based on their type to reduce merge steps to achieve desired document state.
+            // It's impossible to reduce the process to 1 step even theoretically because of the following requirement:
+            // "If the checked pair simultaneously:
+            // 1) moved to another position
+            // 2) has changes in the content
+            // then it must be ONLY moved to the desired position leaving modified content unchanged"
+            // So this means that some cases require 2 steps by their nature.
+
+            // create & delete + fix refs
+            pairs.removeIf(pair -> {
+                IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
+                IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+
+                if (context.getTargetModule().getExternalWorkItems().contains(target)) { // merge into external work item
+                    if (!target.getProjectId().equals(context.getTargetModule().getProjectId())) {
+                        polarionService.fixReferencedWorkItem(target, context.getTargetModule(), iLinkRole);
+                        reloadModule(context.getTargetModule());
+                    } else {
+                        throw new IllegalArgumentException("Cannot merge into referenced work item: (%s) -> (%s)".formatted(source.getId(), target.getId()));
+                    }
+                }
+
+                if (source != null && target == null) { // "target" is null in this case, so new item out of "source" to be created
+                    if (context.getSourceModule().getExternalWorkItems().contains(source)) {
+                        if (insertReferencedWorkItem(source, context) != null) {
+                            created.add(pair);
+                            reloadModule(context.getTargetModule());
+                        } else {
+                            notPaired.add(pair);
+                        }
+                    } else {
+                        IWorkItem newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context);
+                        context.bindCounterpartItem(pair,
+                                WorkItem.of(newWorkItem,
+                                        context.getTargetModule().getOutlineNumberOfWorkitem(newWorkItem),
+                                        source.getId().equals(newWorkItem.getId()),
+                                        newWorkItem.getProjectId().equals(context.getTargetModule().getProjectId())
+                                )
+                        );
+                        created.add(pair);
+                        reloadModule(context.getTargetModule());
+                    }
+                    return true;
+                } else if (source == null && target != null) { // "source" is null in this case, so "target" to be deleted
+                    deleteWorkItemFromDocument(context.getTargetDocumentIdentifier(), target);
+                    reloadModule(context.getTargetModule());
+                    return true;
+                }
+                return false;
+            });
+
+            // move
+            pairs.removeIf(pair -> {
+                IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
+                IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+
+                if (source != null && target != null && moveAction(pair)) {
+                    if (move(source, target, context)) {
+                        target.save();
+                        moved.add(pair);
+                        reloadModule(context.getTargetModule());
+                    } else {
+                        notMoved.add(pair);
+                    }
+                    return true;
+                }
+                return false;
+            });
+
+            // update
             for (WorkItemsPair pair : pairs) {
                 IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
                 IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
 
-                if (source != null && target != null) {
-                    if (moveAction(pair)) { // Intentionally handled at first place. We first move items, and only then as an additional step merge content if needed
-                        if (move(source, target, context)) {
-                            target.save();
-                            moved.add(pair);
-                        } else {
-                            notMoved.add(pair);
-                        }
-                    } else if (context.getTargetModule().getExternalWorkItems().contains(target)) { // merge into external work item
-                        if (!Objects.equals(source.getId(), target.getId())) {
-                            // is it okay to prevent merge process completely or we must create a separate notification for this case?
-                            throw new IllegalArgumentException("Cannot merge referenced work item (%s) with the completely different one (%s)".formatted(target.getId(), source.getId()));
-                        }
-                        String freezeRevision = ObjectUtils.firstNonNull(source.getRevision(), source.getLastRevision());
-                        copyWorkItemToDocument(source, freezeRevision, (InternalWriteTransaction) transaction, context);
-                        context.getTargetWorkItem(pair).setRevision(freezeRevision);
-                        context.getTargetWorkItem(pair).setReferenced(true);
-                        modified.add(pair);
-                    } else {
-                        if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
-                            conflicted.add(pair); // Don't allow merging if work item's revision was modified meanwhile
-                        } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
-                            prohibited.add(pair); // Don't allow merging referenced work item into included one
-                        } else {
-                            merge(source, target, diffModel.getDiffFields());
-                        }
-                    }
-                } else if (source != null) { // "target" is null in this case, so new item out of "source" to be created
-                    IWorkItem newWorkItem = copyWorkItemToDocument(source, null, (InternalWriteTransaction) transaction, context);
-                    context.bindCounterpartItem(pair, WorkItem.of(newWorkItem, context.getTargetModule().getOutlineNumberOfWorkitem(newWorkItem), source.getId().equals(newWorkItem.getId())));
-                    created.add(pair);
-                } else { // "source" is null in this case, so "target" to be deleted
-                    deleteWorkItemFromDocument(context.getTargetDocumentIdentifier(), target);
+                if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
+                    conflicted.add(pair); // Don't allow merging if work item's revision was modified meanwhile
+                } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
+                    prohibited.add(pair); // Don't allow merging referenced work item into included one
+                } else {
+                    merge(source, target, diffModel.getDiffFields(), linkRole);
+                    modified.add(pair);
                 }
             }
             reloadModule(context.getTargetModule());
             return null;
         });
         return MergeResult.builder().success(true)
-                .createdPairs(created).modifiedPairs(modified).conflictedPairs(conflicted).prohibitedPairs(prohibited).movedPairs(moved).notMovedPairs(notMoved)
+                .createdPairs(created).modifiedPairs(modified).conflictedPairs(conflicted).prohibitedPairs(prohibited).notPaired(notPaired).movedPairs(moved).notMovedPairs(notMoved)
                 .targetModuleHasStructuralChanges(!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision()))
                 .build();
     }
@@ -164,7 +221,7 @@ public class MergeService {
     private String getTargetDestinationNumber(IModule.IStructureNode sourceNode, IModule.IStructureNode targetDestinationParentNode) {
         String sourceNumberWithinParent = (sourceNode.getParent() == null || sourceNode.getParent().getOutlineNumber() == null)
                 ? sourceNode.getOutlineNumber() : sourceNode.getOutlineNumber().substring(sourceNode.getParent().getOutlineNumber().length());
-        return  (targetDestinationParentNode == null || targetDestinationParentNode.getOutlineNumber() == null)
+        return (targetDestinationParentNode == null || targetDestinationParentNode.getOutlineNumber() == null)
                 ? sourceNumberWithinParent : targetDestinationParentNode.getOutlineNumber() + sourceNumberWithinParent;
     }
 
@@ -180,9 +237,7 @@ public class MergeService {
     /**
      * Solution based on internal Polarion classes usage.
      */
-    private IWorkItem copyWorkItemToDocument(IWorkItem sourceWorkItem, String freezeRevision, @NotNull InternalWriteTransaction transaction, MergeContext context) {
-        boolean fromExternal = context.getSourceModule().getExternalWorkItems().contains(sourceWorkItem);
-
+    private IWorkItem copyWorkItemToDocument(IWorkItem sourceWorkItem, @NotNull InternalWriteTransaction transaction, MergeContext context) {
         // taken from DleWorkItemsCompareOther#initializeOutside
         InternalDocument leftDocument = (InternalDocument) context.getSourceDocumentReference().get(transaction);
         InternalDocument rightDocument = (InternalDocument) context.getTargetDocumentReference().get(transaction);
@@ -196,14 +251,7 @@ public class MergeService {
         DleWIsMergeActionExecuter executer = new DleWIsMergeActionExecuter(targetDocument, comparator.getLeftMergedPartsOrder(), comparator.getRightMergedPartsOrder());
 
         WorkItemReference workItemReference = new WorkItemReference(sourceWorkItem.getProjectId(), sourceWorkItem.getId(), sourceWorkItem.getRevision(), null);
-        DleWIsMergeAction action;
-        if (freezeRevision != null) {
-            action = new FreezeReferenceAction(workItemReference, ObjectUtils.firstNonNull(sourceWorkItem.getRevision(), sourceWorkItem.getLastRevision()));
-        } else if (fromExternal) {
-            action = new InsertReferenceAction(workItemReference, !StringUtils.isEmpty(sourceWorkItem.getRevision()), 0);
-        } else {
-            action = new DuplicateWorkItemAction(workItemReference);
-        }
+        DleWIsMergeAction action = new DuplicateWorkItemAction(workItemReference);
         action.execute(executer);
         executer.finish();
         // end of internal polarion code
@@ -238,6 +286,27 @@ public class MergeService {
         } else {
             return sourceWorkItem; // return the same WI coz there is no simple way to get created WI when copying references
         }
+    }
+
+    private IWorkItem insertReferencedWorkItem(IWorkItem sourceWorkItem, MergeContext context) {
+        final IWorkItem workItemToReference;
+        if (sourceWorkItem.getProjectId().equals(context.getTargetModule().getProjectId())) {
+            workItemToReference = sourceWorkItem;
+        } else {
+            workItemToReference = polarionService.getPairedWorkItems(sourceWorkItem, context.getTargetModule().getProjectId(), context.linkRole).stream().findFirst().orElse(null);
+        }
+        if (workItemToReference != null) {
+            IModule.IStructureNode sourceNode = context.getSourceModule().getStructureNodeOfWI(sourceWorkItem);
+            IModule.IStructureNode sourceParentNode = sourceNode.getParent();
+
+            IWorkItem destinationParentWorkItem = polarionService.getPairedWorkItems(sourceParentNode.getWorkItem(), context.getTargetModule().getProjectId(), context.linkRole)
+                    .stream().findFirst().orElse(null);
+            IModule.IStructureNode destinationParentNode = context.getTargetModule().getStructureNodeOfWI(destinationParentWorkItem);
+            int destinationIndex = sourceParentNode.getChildren().indexOf(sourceNode);
+
+            polarionService.insertReferencedWorkItem(workItemToReference, context.getTargetModule(), destinationParentNode, destinationIndex);
+        }
+        return workItemToReference;
     }
 
     private void reloadModule(IModule module) {
@@ -275,9 +344,13 @@ public class MergeService {
         module.save();
     }
 
-    private void merge(IWorkItem source, IWorkItem target, List<DiffField> fields) {
+    private void merge(IWorkItem source, IWorkItem target, List<DiffField> fields, String linkRole) {
         for (DiffField field : fields) {
-            polarionService.setFieldValue(target, field.getKey(), polarionService.getFieldValue(source, field.getKey()));
+            Object fieldValue = polarionService.getFieldValue(source, field.getKey());
+            if (fieldValue instanceof Text text) {
+                fieldValue = new Text(text.getType(), polarionService.replaceLinksToPairedWorkItems(source, target, linkRole, text.getContent()));
+            }
+            polarionService.setFieldValue(target, field.getKey(), fieldValue);
         }
         target.save();
     }

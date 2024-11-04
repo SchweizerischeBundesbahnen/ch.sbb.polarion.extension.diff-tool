@@ -410,6 +410,12 @@ a:hover {
   margin-left: .6em;
 }
 
+.wi-header span.external-project-wi {
+  color: red;
+  font-size: .9em;
+  font-weight: normal;
+}
+
 .in-progress-overlay {
   display: flex;
   position: absolute;

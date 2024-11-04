@@ -1,1464 +1,1374 @@
 {
-  "openapi": "3.0.1",
-  "info": {
-    "title": "Diff Tool REST API",
-    "version": "v1"
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "Diff Tool REST API",
+    "version" : "v1"
   },
-  "paths": {
-    "/api/context": {
-      "get": {
-        "operationId": "getContext",
-        "responses": {
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Context"
+  "paths" : {
+    "/api/context" : {
+      "get" : {
+        "operationId" : "getContext",
+        "responses" : {
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Context"
                 }
               }
             },
-            "description": "Context information"
+            "description" : "Context information"
           }
         },
-        "summary": "Returns basic context information of Polarion's extension",
-        "tags": [
-          "Extension Information"
-        ]
+        "summary" : "Returns basic context information of Polarion's extension",
+        "tags" : [ "Extension Information" ]
       }
     },
-    "/api/conversion/html-to-pdf": {
-      "post": {
-        "operationId": "convertHtmlToPdf",
-        "parameters": [
-          {
-            "description": "default value: landscape",
-            "in": "query",
-            "name": "orientation",
-            "schema": {
-              "description": "Enum representing print orientations",
-              "enum": [
-                "PORTRAIT",
-                "LANDSCAPE"
-              ],
-              "type": "string"
-            }
-          },
-          {
-            "description": "default value: A4",
-            "in": "query",
-            "name": "paperSize",
-            "schema": {
-              "description": "Enum representing print paper sizes",
-              "enum": [
-                "A4",
-                "A3"
-              ],
-              "type": "string"
-            }
+    "/api/conversion/html-to-pdf" : {
+      "post" : {
+        "operationId" : "convertHtmlToPdf",
+        "parameters" : [ {
+          "description" : "default value: landscape",
+          "in" : "query",
+          "name" : "orientation",
+          "schema" : {
+            "type" : "string",
+            "description" : "Enum representing print orientations",
+            "enum" : [ "PORTRAIT", "LANDSCAPE" ]
           }
-        ],
-        "requestBody": {
-          "content": {
-            "text/html": {
-              "schema": {
-                "type": "string"
+        }, {
+          "description" : "default value: A4",
+          "in" : "query",
+          "name" : "paperSize",
+          "schema" : {
+            "type" : "string",
+            "description" : "Enum representing print paper sizes",
+            "enum" : [ "A4", "A3" ]
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "text/html" : {
+              "schema" : {
+                "type" : "string"
               }
             }
           },
-          "description": "input html (must include html and body elements)"
+          "description" : "input html (must include html and body elements)"
         },
-        "responses": {
-          "200": {
-            "content": {
-              "application/pdf": {}
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : { }
             },
-            "description": "Content of PDF document as a byte array"
+            "description" : "Content of PDF document as a byte array"
           }
         },
-        "summary": "Converts input HTML to PDF",
-        "tags": [
-          "Conversion"
-        ]
+        "summary" : "Converts input HTML to PDF",
+        "tags" : [ "Conversion" ]
       }
     },
-    "/api/diff/documents": {
-      "post": {
-        "operationId": "getDocumentsDiff",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DocumentsDiffParams"
+    "/api/diff/documents" : {
+      "post" : {
+        "operationId" : "getDocumentsDiff",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DocumentsDiffParams"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DocumentsDiff"
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DocumentsDiff"
                 }
               }
             },
-            "description": "Successfully retrieved the differences between the provided documents"
+            "description" : "Successfully retrieved the differences between the provided documents"
           }
         },
-        "summary": "Gets difference of two live documents",
-        "tags": [
-          "Difference"
-        ]
+        "summary" : "Gets difference of two live documents",
+        "tags" : [ "Difference" ]
       }
     },
-    "/api/diff/html": {
-      "post": {
-        "operationId": "diffHtml",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "properties": {
-                  "html1": {
-                    "type": "string"
+    "/api/diff/html" : {
+      "post" : {
+        "operationId" : "diffHtml",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "html1" : {
+                    "type" : "string"
                   },
-                  "html2": {
-                    "type": "string"
+                  "html2" : {
+                    "type" : "string"
                   }
-                },
-                "type": "object"
+                }
               }
             }
           }
         },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StringsDiff"
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StringsDiff"
                 }
               }
             },
-            "description": "Successfully retrieved the differences between the provided HTML strings"
+            "description" : "Successfully retrieved the differences between the provided HTML strings"
           }
         },
-        "summary": "Gets difference of two strings which contain HTML tags",
-        "tags": [
-          "Difference"
-        ]
+        "summary" : "Gets difference of two strings which contain HTML tags",
+        "tags" : [ "Difference" ]
       }
     },
-    "/api/diff/text": {
-      "post": {
-        "operationId": "diffText",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "properties": {
-                  "text1": {
-                    "type": "string"
+    "/api/diff/text" : {
+      "post" : {
+        "operationId" : "diffText",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "text1" : {
+                    "type" : "string"
                   },
-                  "text2": {
-                    "type": "string"
+                  "text2" : {
+                    "type" : "string"
                   }
-                },
-                "type": "object"
+                }
               }
             }
           }
         },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StringsDiff"
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StringsDiff"
                 }
               }
             },
-            "description": "Successfully retrieved the differences between the provided plain text strings"
+            "description" : "Successfully retrieved the differences between the provided plain text strings"
           }
         },
-        "summary": "Gets difference of two strings which contain plain text",
-        "tags": [
-          "Difference"
-        ]
+        "summary" : "Gets difference of two strings which contain plain text",
+        "tags" : [ "Difference" ]
       }
     },
-    "/api/diff/workitems": {
-      "post": {
-        "operationId": "getWorkItemsDiff",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WorkItemsDiffParams"
+    "/api/diff/workitems" : {
+      "post" : {
+        "operationId" : "getWorkItemsDiff",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WorkItemsDiffParams"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkItemsDiff"
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WorkItemsDiff"
                 }
               }
             },
-            "description": "Successfully retrieved the differences between the provided WorkItems"
+            "description" : "Successfully retrieved the differences between the provided WorkItems"
           }
         },
-        "summary": "Gets difference of two WorkItems",
-        "tags": [
-          "Difference"
-        ]
+        "summary" : "Gets difference of two WorkItems",
+        "tags" : [ "Difference" ]
       }
     },
-    "/api/merge/workitems": {
-      "post": {
-        "operationId": "mergeWorkItems",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MergeParams"
+    "/api/merge/workitems" : {
+      "post" : {
+        "operationId" : "mergeWorkItems",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MergeParams"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MergeResult"
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MergeResult"
                 }
               }
             },
-            "description": "Merge result"
+            "description" : "Merge result"
           }
         },
-        "summary": "Merge WorkItems",
-        "tags": [
-          "Merge"
-        ]
+        "summary" : "Merge WorkItems",
+        "tags" : [ "Merge" ]
       }
     },
-    "/api/projects/{projectId}/spaces": {
-      "get": {
-        "operationId": "getSpaces",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "projectId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+    "/api/projects/{projectId}/spaces" : {
+      "get" : {
+        "operationId" : "getSpaces",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "projectId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Space"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Space"
                 }
               }
             },
-            "description": "List of spaces"
+            "description" : "List of spaces"
           }
         },
-        "summary": "Gets list of spaces (folders) located in specified project",
-        "tags": [
-          "Utility API"
-        ]
+        "summary" : "Gets list of spaces (folders) located in specified project",
+        "tags" : [ "Utility API" ]
       }
     },
-    "/api/projects/{projectId}/spaces/{spaceId}/documents": {
-      "get": {
-        "operationId": "getDocuments",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "projectId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "spaceId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+    "/api/projects/{projectId}/spaces/{spaceId}/documents" : {
+      "get" : {
+        "operationId" : "getDocuments",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "projectId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Document"
+        }, {
+          "in" : "path",
+          "name" : "spaceId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Document"
                 }
               }
             },
-            "description": "List of documents"
+            "description" : "List of documents"
           }
         },
-        "summary": "Gets list of documents located in specified space of specified project",
-        "tags": [
-          "Utility API"
-        ]
+        "summary" : "Gets list of documents located in specified space of specified project",
+        "tags" : [ "Utility API" ]
       }
     },
-    "/api/projects/{projectId}/spaces/{spaceId}/documents/{docName}/revisions": {
-      "get": {
-        "operationId": "getDocumentRevisions",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "projectId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "spaceId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "docName",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+    "/api/projects/{projectId}/spaces/{spaceId}/documents/{docName}/revisions" : {
+      "get" : {
+        "operationId" : "getDocumentRevisions",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "projectId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DocumentRevision"
+        }, {
+          "in" : "path",
+          "name" : "spaceId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "docName",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DocumentRevision"
                 }
               }
             },
-            "description": "List of revisions for the specified document"
+            "description" : "List of revisions for the specified document"
           }
         },
-        "summary": "Gets list of revisions for the document located in specified space of specified project",
-        "tags": [
-          "Utility API"
-        ]
+        "summary" : "Gets list of revisions for the document located in specified space of specified project",
+        "tags" : [ "Utility API" ]
       }
     },
-    "/api/projects/{projectId}/spaces/{spaceId}/documents/{documentName}/duplicate": {
-      "post": {
-        "operationId": "createDocumentDuplicate",
-        "parameters": [
-          {
-            "description": "Project ID of source document",
-            "in": "path",
-            "name": "projectId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "Space ID of source document",
-            "in": "path",
-            "name": "spaceId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "Source document name",
-            "in": "path",
-            "name": "documentName",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "Optional revision of source document",
-            "in": "query",
-            "name": "revision",
-            "schema": {
-              "type": "string"
-            }
+    "/api/projects/{projectId}/spaces/{spaceId}/documents/{documentName}/duplicate" : {
+      "post" : {
+        "operationId" : "createDocumentDuplicate",
+        "parameters" : [ {
+          "description" : "Project ID of source document",
+          "in" : "path",
+          "name" : "projectId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DocumentDuplicateParams"
+        }, {
+          "description" : "Space ID of source document",
+          "in" : "path",
+          "name" : "spaceId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Source document name",
+          "in" : "path",
+          "name" : "documentName",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "Optional revision of source document",
+          "in" : "query",
+          "name" : "revision",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DocumentDuplicateParams"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "200": {
-            "description": "Document created successfully"
+        "responses" : {
+          "200" : {
+            "description" : "Document created successfully"
           },
-          "409": {
-            "description": "Target document already exists"
+          "409" : {
+            "description" : "Target document already exists"
           }
         },
-        "summary": "Creates a new document as a duplicate of specified one",
-        "tags": [
-          "Utility API"
-        ]
+        "summary" : "Creates a new document as a duplicate of specified one",
+        "tags" : [ "Utility API" ]
       }
     },
-    "/api/projects/{projectId}/workitem-fields": {
-      "get": {
-        "operationId": "getAllWorkItemFields",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "projectId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+    "/api/projects/{projectId}/workitem-fields" : {
+      "get" : {
+        "operationId" : "getAllWorkItemFields",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "projectId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkItemField"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WorkItemField"
                 }
               }
             },
-            "description": "List of all work item fields for the specified project"
+            "description" : "List of all work item fields for the specified project"
           }
         },
-        "summary": "Gets full list of all general and custom fields configured for all kind of work items in specified project",
-        "tags": [
-          "Utility API"
-        ]
+        "summary" : "Gets full list of all general and custom fields configured for all kind of work items in specified project",
+        "tags" : [ "Utility API" ]
       }
     },
-    "/api/projects/{projectId}/workitem-statuses": {
-      "get": {
-        "operationId": "getAllWorkItemStatuses",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "projectId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+    "/api/projects/{projectId}/workitem-statuses" : {
+      "get" : {
+        "operationId" : "getAllWorkItemStatuses",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "projectId",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IStatusOpt"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IStatusOpt"
                 }
               }
             },
-            "description": "List of all work item statuses for the specified project"
+            "description" : "List of all work item statuses for the specified project"
           }
         },
-        "summary": "Gets list of all statuses configured for all kind of work items in specified project",
-        "tags": [
-          "Utility API"
-        ]
+        "summary" : "Gets list of all statuses configured for all kind of work items in specified project",
+        "tags" : [ "Utility API" ]
       }
     },
-    "/api/settings": {
-      "get": {
-        "operationId": "readFeaturesList_1",
-        "responses": {
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
+    "/api/settings" : {
+      "get" : {
+        "operationId" : "readFeaturesList_1",
+        "responses" : {
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "string"
                 }
               }
             },
-            "description": "List of supported features"
+            "description" : "List of supported features"
           }
         },
-        "summary": "Returns the complete list of all supported features",
-        "tags": [
-          "Settings"
-        ]
+        "summary" : "Returns the complete list of all supported features",
+        "tags" : [ "Settings" ]
       }
     },
-    "/api/settings/{feature}/default-content": {
-      "get": {
-        "operationId": "getDefaultValues_1",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "feature",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+    "/api/settings/{feature}/default-content" : {
+      "get" : {
+        "operationId" : "getDefaultValues_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "feature",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SettingsModel"
+        } ],
+        "responses" : {
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SettingsModel"
                 }
               }
             },
-            "description": "Default values"
+            "description" : "Default values"
           }
         },
-        "summary": "Returns default values of specified setting",
-        "tags": [
-          "Settings"
-        ]
+        "summary" : "Returns default values of specified setting",
+        "tags" : [ "Settings" ]
       }
     },
-    "/api/settings/{feature}/names": {
-      "get": {
-        "operationId": "readSettingNames_1",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "feature",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+    "/api/settings/{feature}/names" : {
+      "get" : {
+        "operationId" : "readSettingNames_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "feature",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SettingName"
+        } ],
+        "responses" : {
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SettingName"
                 }
               }
             },
-            "description": "List of setting names"
+            "description" : "List of setting names"
           }
         },
-        "summary": "Returns names of specified setting",
-        "tags": [
-          "Settings"
-        ]
+        "summary" : "Returns names of specified setting",
+        "tags" : [ "Settings" ]
       }
     },
-    "/api/settings/{feature}/names/{name}": {
-      "delete": {
-        "operationId": "deleteSetting_1",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "feature",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+    "/api/settings/{feature}/names/{name}" : {
+      "delete" : {
+        "operationId" : "deleteSetting_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "feature",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "204": {
-            "description": "Setting deleted successfully"
+        }, {
+          "in" : "path",
+          "name" : "name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Setting deleted successfully"
           }
         },
-        "summary": "Deletes specified setting by id",
-        "tags": [
-          "Settings"
-        ]
+        "summary" : "Deletes specified setting by id",
+        "tags" : [ "Settings" ]
       },
-      "post": {
-        "operationId": "renameSetting_1",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "feature",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+      "post" : {
+        "operationId" : "renameSetting_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "feature",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "string"
+        }, {
+          "in" : "path",
+          "name" : "name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "string"
               }
             }
           }
         },
-        "responses": {
-          "204": {
-            "description": "Setting name updated successfully"
+        "responses" : {
+          "204" : {
+            "description" : "Setting name updated successfully"
           }
         },
-        "summary": "Updates name of specified named setting",
-        "tags": [
-          "Settings"
-        ]
+        "summary" : "Updates name of specified named setting",
+        "tags" : [ "Settings" ]
       }
     },
-    "/api/settings/{feature}/names/{name}/content": {
-      "get": {
-        "operationId": "readSetting_1",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "feature",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "revision",
-            "schema": {
-              "type": "string"
-            }
+    "/api/settings/{feature}/names/{name}/content" : {
+      "get" : {
+        "operationId" : "readSetting_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "feature",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SettingsModel"
+        }, {
+          "in" : "path",
+          "name" : "name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "revision",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SettingsModel"
                 }
               }
             },
-            "description": "Setting content"
+            "description" : "Setting content"
           }
         },
-        "summary": "Returns values (content) of specified setting by its id and revision",
-        "tags": [
-          "Settings"
-        ]
+        "summary" : "Returns values (content) of specified setting by its id and revision",
+        "tags" : [ "Settings" ]
       },
-      "put": {
-        "operationId": "saveSetting_1",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "feature",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+      "put" : {
+        "operationId" : "saveSetting_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "feature",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "string"
+        }, {
+          "in" : "path",
+          "name" : "name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "string"
               }
             }
           }
         },
-        "responses": {
-          "204": {
-            "description": "Setting created/updated successfully"
+        "responses" : {
+          "204" : {
+            "description" : "Setting created/updated successfully"
           }
         },
-        "summary": "Creates or updates named setting. Creation scenario will use default setting value if no body specified in the request.",
-        "tags": [
-          "Settings"
-        ]
+        "summary" : "Creates or updates named setting. Creation scenario will use default setting value if no body specified in the request.",
+        "tags" : [ "Settings" ]
       }
     },
-    "/api/settings/{feature}/names/{name}/revisions": {
-      "get": {
-        "operationId": "readRevisionsList_1",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "feature",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+    "/api/settings/{feature}/names/{name}/revisions" : {
+      "get" : {
+        "operationId" : "readRevisionsList_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "feature",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
           }
-        ],
-        "responses": {
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Revision"
+        }, {
+          "in" : "path",
+          "name" : "name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Revision"
                 }
               }
             },
-            "description": "List of revisions"
+            "description" : "List of revisions"
           }
         },
-        "summary": "Returns revisions history of specified setting with specified id",
-        "tags": [
-          "Settings"
-        ]
+        "summary" : "Returns revisions history of specified setting with specified id",
+        "tags" : [ "Settings" ]
       }
     },
-    "/api/version": {
-      "get": {
-        "operationId": "getVersion",
-        "responses": {
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Version"
+    "/api/version" : {
+      "get" : {
+        "operationId" : "getVersion",
+        "responses" : {
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Version"
                 }
               }
             },
-            "description": "Version information"
+            "description" : "Version information"
           }
         },
-        "summary": "Returns version of Polarion's extension",
-        "tags": [
-          "Extension Information"
-        ]
+        "summary" : "Returns version of Polarion's extension",
+        "tags" : [ "Extension Information" ]
       }
     }
   },
-  "components": {
-    "schemas": {
-      "BaseDocumentIdentifier": {
-        "description": "Unique document identifier data without revision information, i.e. in HEAD revision",
-        "properties": {
-          "name": {
-            "description": "Name of the document",
-            "type": "string"
+  "components" : {
+    "schemas" : {
+      "BaseDocumentIdentifier" : {
+        "type" : "object",
+        "description" : "Unique document identifier data without revision information, i.e. in HEAD revision",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "Name of the document"
           },
-          "projectId": {
-            "description": "ID of the project",
-            "type": "string"
+          "projectId" : {
+            "type" : "string",
+            "description" : "ID of the project"
           },
-          "spaceId": {
-            "description": "ID of the space",
-            "type": "string"
+          "spaceId" : {
+            "type" : "string",
+            "description" : "ID of the space"
           }
-        },
-        "type": "object"
+        }
       },
-      "Context": {
-        "description": "Represents the context for building URLs related to Polarion services",
-        "properties": {
-          "baseUrl": {
-            "description": "Returns the base URL constructed with the extension context",
-            "example": "/polarion/pdf-exporter",
-            "type": "string"
+      "Context" : {
+        "type" : "object",
+        "description" : "Represents the context for building URLs related to Polarion services",
+        "properties" : {
+          "baseUrl" : {
+            "type" : "string",
+            "description" : "Returns the base URL constructed with the extension context",
+            "example" : "/polarion/pdf-exporter"
           },
-          "extensionContext": {
-            "description": "The extension context used as a base for URL construction",
-            "example": "pdf-exporter",
-            "type": "string"
+          "extensionContext" : {
+            "type" : "string",
+            "description" : "The extension context used as a base for URL construction",
+            "example" : "pdf-exporter"
           },
-          "restUrl": {
-            "description": "Returns the REST API URL constructed with the extension context",
-            "example": "/polarion/pdf-exporter/rest",
-            "type": "string"
+          "restUrl" : {
+            "type" : "string",
+            "description" : "Returns the REST API URL constructed with the extension context",
+            "example" : "/polarion/pdf-exporter/rest"
           },
-          "swaggerUiUrl": {
-            "description": "Returns the Swagger UI URL for the REST API",
-            "type": "string"
+          "swaggerUiUrl" : {
+            "type" : "string",
+            "description" : "Returns the Swagger UI URL for the REST API"
           }
-        },
-        "type": "object"
+        }
       },
-      "Document": {
-        "description": "Represents a document within a project, including metadata such as projectID, space ID, and revision details",
-        "properties": {
-          "authorizedForMerge": {
-            "description": "Indicates whether the user is authorized for merge operations",
-            "type": "boolean"
+      "Document" : {
+        "type" : "object",
+        "description" : "Represents a document within a project, including metadata such as projectID, space ID, and revision details",
+        "properties" : {
+          "authorizedForMerge" : {
+            "type" : "boolean",
+            "description" : "Indicates whether the user is authorized for merge operations"
           },
-          "headRevision": {
-            "description": "The head revision of the document",
-            "type": "string"
+          "headRevision" : {
+            "type" : "string",
+            "description" : "The head revision of the document"
           },
-          "id": {
-            "description": "The unique identifier of the document",
-            "type": "string"
+          "id" : {
+            "type" : "string",
+            "description" : "The unique identifier of the document"
           },
-          "locationPath": {
-            "description": "The location path of the document",
-            "type": "string"
+          "locationPath" : {
+            "type" : "string",
+            "description" : "The location path of the document"
           },
-          "moduleXmlRevision": {
-            "description": "The XML revision of the module",
-            "type": "string"
+          "moduleXmlRevision" : {
+            "type" : "string",
+            "description" : "The XML revision of the module"
           },
-          "projectId": {
-            "description": "The ID of the project this document belongs to",
-            "type": "string"
+          "projectId" : {
+            "type" : "string",
+            "description" : "The ID of the project this document belongs to"
           },
-          "projectName": {
-            "description": "The name of the project this document belongs to",
-            "type": "string"
+          "projectName" : {
+            "type" : "string",
+            "description" : "The name of the project this document belongs to"
           },
-          "revision": {
-            "description": "The current revision of the document",
-            "type": "string"
+          "revision" : {
+            "type" : "string",
+            "description" : "The current revision of the document"
           },
-          "spaceId": {
-            "description": "The ID of the space where the document is located",
-            "type": "string"
+          "spaceId" : {
+            "type" : "string",
+            "description" : "The ID of the space where the document is located"
           },
-          "spaceName": {
-            "type": "string"
+          "spaceName" : {
+            "type" : "string"
           },
-          "title": {
-            "description": "The title of the document",
-            "type": "string"
+          "title" : {
+            "type" : "string",
+            "description" : "The title of the document"
           }
-        },
-        "type": "object"
+        }
       },
-      "DocumentDuplicateParams": {
-        "description": "Parameters to create a document duplicated from another one",
-        "properties": {
-          "configName": {
-            "description": "The configuration name to use for the duplication, which specifies which fields of work items to copy",
-            "type": "string"
+      "DocumentDuplicateParams" : {
+        "type" : "object",
+        "description" : "Parameters to create a document duplicated from another one",
+        "properties" : {
+          "configName" : {
+            "type" : "string",
+            "description" : "The configuration name to use for the duplication, which specifies which fields of work items to copy"
           },
-          "linkRoleId": {
-            "description": "ID of link role by which work items in target document will be linked with counterparts from source document",
-            "type": "string"
+          "linkRoleId" : {
+            "type" : "string",
+            "description" : "ID of link role by which work items in target document will be linked with counterparts from source document"
           },
-          "targetDocumentIdentifier": {
-            "$ref": "#/components/schemas/BaseDocumentIdentifier"
+          "targetDocumentIdentifier" : {
+            "$ref" : "#/components/schemas/BaseDocumentIdentifier"
           },
-          "targetDocumentTitle": {
-            "description": "Title of target document",
-            "type": "string"
+          "targetDocumentTitle" : {
+            "type" : "string",
+            "description" : "Title of target document"
           }
-        },
-        "type": "object"
+        }
       },
-      "DocumentIdentifier": {
-        "description": "Unique document identifier data with optional revision information, if revision is not specified this means document is in HEAD revision",
-        "properties": {
-          "moduleXmlRevision": {
-            "description": "XML module revision number",
-            "type": "string"
+      "DocumentIdentifier" : {
+        "type" : "object",
+        "description" : "Unique document identifier data with optional revision information, if revision is not specified this means document is in HEAD revision",
+        "properties" : {
+          "moduleXmlRevision" : {
+            "type" : "string",
+            "description" : "XML module revision number"
           },
-          "name": {
-            "description": "Name of the document",
-            "type": "string"
+          "name" : {
+            "type" : "string",
+            "description" : "Name of the document"
           },
-          "projectId": {
-            "description": "ID of the project",
-            "type": "string"
+          "projectId" : {
+            "type" : "string",
+            "description" : "ID of the project"
           },
-          "revision": {
-            "description": "Revision number of the document",
-            "type": "string"
+          "revision" : {
+            "type" : "string",
+            "description" : "Revision number of the document"
           },
-          "spaceId": {
-            "description": "ID of the space",
-            "type": "string"
+          "spaceId" : {
+            "type" : "string",
+            "description" : "ID of the space"
           }
-        },
-        "type": "object"
+        }
       },
-      "DocumentRevision": {
-        "description": "Revision details",
-        "properties": {
-          "baselineName": {
-            "description": "The baseline of the revision",
-            "type": "string"
+      "DocumentRevision" : {
+        "type" : "object",
+        "description" : "Revision details",
+        "properties" : {
+          "baselineName" : {
+            "type" : "string",
+            "description" : "The baseline of the revision"
           },
-          "name": {
-            "description": "The name of the revision",
-            "type": "string"
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the revision"
           }
-        },
-        "type": "object"
+        }
       },
-      "DocumentWorkItem": {
-        "description": "WorkItem in document data",
-        "properties": {
-          "documentLocationPath": {
-            "description": "The location path of the document containing the WorkItem",
-            "type": "string"
+      "DocumentWorkItem" : {
+        "type" : "object",
+        "description" : "WorkItem in document data",
+        "properties" : {
+          "documentLocationPath" : {
+            "type" : "string",
+            "description" : "The location path of the document containing the WorkItem"
           },
-          "documentProjectId": {
-            "description": "The project ID of the document containing the WorkItem",
-            "type": "string"
+          "documentProjectId" : {
+            "type" : "string",
+            "description" : "The project ID of the document containing the WorkItem"
           },
-          "documentRevision": {
-            "description": "The revision of the document containing the WorkItem",
-            "type": "string"
+          "documentRevision" : {
+            "type" : "string",
+            "description" : "The revision of the document containing the WorkItem"
           },
-          "id": {
-            "description": "Unique identifier of the WorkItem",
-            "type": "string"
+          "id" : {
+            "type" : "string",
+            "description" : "Unique identifier of the WorkItem"
           },
-          "projectId": {
-            "description": "WorkItem's project ID, it can differ from document's project ID in case of referenced WorkItems",
-            "type": "string"
+          "projectId" : {
+            "type" : "string",
+            "description" : "WorkItem's project ID, it can differ from document's project ID in case of referenced WorkItems"
           },
-          "revision": {
-            "description": "The revision of the WorkItem. Referenced WorkItem's can be frozen in document in certain revision",
-            "type": "string"
+          "revision" : {
+            "type" : "string",
+            "description" : "The revision of the WorkItem. Referenced WorkItem's can be frozen in document in certain revision"
           }
-        },
-        "type": "object"
+        }
       },
-      "DocumentsDiff": {
-        "description": "Represents the difference between two documents",
-        "properties": {
-          "extensionInfo": {
-            "description": "Information about extension (version, build timestamp)",
-            "type": "string"
+      "DocumentsDiff" : {
+        "type" : "object",
+        "description" : "Represents the difference between two documents",
+        "properties" : {
+          "extensionInfo" : {
+            "type" : "string",
+            "description" : "Information about extension (version, build timestamp)"
           },
-          "leftDocument": {
-            "$ref": "#/components/schemas/Document"
+          "leftDocument" : {
+            "$ref" : "#/components/schemas/Document"
           },
-          "pairedWorkItems": {
-            "$ref": "#/components/schemas/WorkItemsPair"
+          "pairedWorkItems" : {
+            "$ref" : "#/components/schemas/WorkItemsPair"
           },
-          "rightDocument": {
-            "$ref": "#/components/schemas/Document"
+          "rightDocument" : {
+            "$ref" : "#/components/schemas/Document"
           }
-        },
-        "type": "object"
+        }
       },
-      "DocumentsDiffParams": {
-        "description": "Comparison input data",
-        "properties": {
-          "configCacheBucketId": {
-            "description": "The ID of the configuration cache bucket",
-            "type": "string"
+      "DocumentsDiffParams" : {
+        "type" : "object",
+        "description" : "Comparison input data",
+        "properties" : {
+          "configCacheBucketId" : {
+            "type" : "string",
+            "description" : "The ID of the configuration cache bucket"
           },
-          "configName": {
-            "description": "The configuration name to use for the comparison",
-            "type": "string"
+          "configName" : {
+            "type" : "string",
+            "description" : "The configuration name to use for the comparison"
           },
-          "leftDocument": {
-            "$ref": "#/components/schemas/DocumentIdentifier"
+          "leftDocument" : {
+            "$ref" : "#/components/schemas/DocumentIdentifier"
           },
-          "linkRole": {
-            "description": "The role of the link connecting the two documents",
-            "type": "string"
+          "linkRole" : {
+            "type" : "string",
+            "description" : "The role of the link connecting the two documents"
           },
-          "rightDocument": {
-            "$ref": "#/components/schemas/DocumentIdentifier"
+          "rightDocument" : {
+            "$ref" : "#/components/schemas/DocumentIdentifier"
           }
-        },
-        "type": "object"
+        }
       },
-      "Field": {
-        "description": "Represents a field within a work item",
-        "properties": {
-          "html": {
-            "description": "HTML representation of the field",
-            "type": "string"
+      "Field" : {
+        "type" : "object",
+        "description" : "Represents a field within a work item",
+        "properties" : {
+          "html" : {
+            "type" : "string",
+            "description" : "HTML representation of the field"
           },
-          "htmlDiff": {
-            "description": "HTML diff representation of the field",
-            "type": "string"
+          "htmlDiff" : {
+            "type" : "string",
+            "description" : "HTML diff representation of the field"
           },
-          "id": {
-            "description": "Unique identifier of the field",
-            "type": "string"
+          "id" : {
+            "type" : "string",
+            "description" : "Unique identifier of the field"
           },
-          "issues": {
-            "description": "Set of issues related to the field",
-            "items": {
-              "description": "Set of issues related to the field",
-              "type": "string"
+          "issues" : {
+            "type" : "array",
+            "description" : "Set of issues related to the field",
+            "items" : {
+              "type" : "string",
+              "description" : "Set of issues related to the field"
             },
-            "type": "array",
-            "uniqueItems": true
+            "uniqueItems" : true
           },
-          "name": {
-            "description": "Name of the field",
-            "type": "string"
+          "name" : {
+            "type" : "string",
+            "description" : "Name of the field"
           },
-          "type": {
-            "$ref": "#/components/schemas/IType"
+          "type" : {
+            "$ref" : "#/components/schemas/IType"
           },
-          "value": {
-            "description": "Value of the field",
-            "type": "object"
+          "value" : {
+            "type" : "object",
+            "description" : "Value of the field"
           }
-        },
-        "type": "object"
+        }
       },
-      "FieldDiff": {
-        "description": "Represents the differences between fields in WorkItems",
-        "properties": {
-          "diffLeft": {
-            "description": "Difference on the left side",
-            "type": "string"
+      "FieldDiff" : {
+        "type" : "object",
+        "description" : "Represents the differences between fields in WorkItems",
+        "properties" : {
+          "diffLeft" : {
+            "type" : "string",
+            "description" : "Difference on the left side"
           },
-          "diffRight": {
-            "description": "Difference on the right side",
-            "type": "string"
+          "diffRight" : {
+            "type" : "string",
+            "description" : "Difference on the right side"
           },
-          "id": {
-            "description": "Field ID",
-            "type": "string"
+          "id" : {
+            "type" : "string",
+            "description" : "Field ID"
           },
-          "issues": {
-            "description": "Set of issues related to this field",
-            "items": {
-              "description": "Set of issues related to this field",
-              "type": "string"
+          "issues" : {
+            "type" : "array",
+            "description" : "Set of issues related to this field",
+            "items" : {
+              "type" : "string",
+              "description" : "Set of issues related to this field"
             },
-            "type": "array",
-            "uniqueItems": true
+            "uniqueItems" : true
           },
-          "name": {
-            "description": "Field name",
-            "type": "string"
+          "name" : {
+            "type" : "string",
+            "description" : "Field name"
           }
-        },
-        "type": "object"
+        }
       },
-      "IStatusOpt": {
-        "properties": {
-          "default": {
-            "type": "boolean"
+      "IStatusOpt" : {
+        "type" : "object",
+        "properties" : {
+          "default" : {
+            "type" : "boolean"
           },
-          "enumId": {
-            "type": "string"
+          "enumId" : {
+            "type" : "string"
           },
-          "hidden": {
-            "type": "boolean"
+          "hidden" : {
+            "type" : "boolean"
           },
-          "id": {
-            "type": "string"
+          "id" : {
+            "type" : "string"
           },
-          "name": {
-            "type": "string"
+          "name" : {
+            "type" : "string"
           },
-          "phantom": {
-            "type": "boolean"
+          "phantom" : {
+            "type" : "boolean"
           },
-          "properties": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object"
+          "properties" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
           },
-          "sequenceNumber": {
-            "format": "int32",
-            "type": "integer"
+          "sequenceNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
-          "terminal": {
-            "type": "boolean"
+          "terminal" : {
+            "type" : "boolean"
           }
-        },
-        "type": "object"
+        }
       },
-      "IType": {
-        "description": "Type of the field",
-        "type": "object"
+      "IType" : {
+        "type" : "object",
+        "description" : "Type of the field"
       },
-      "MergeParams": {
-        "description": "Merge input data",
-        "properties": {
-          "configCacheBucketId": {
-            "description": "The ID of the configuration cache bucket",
-            "type": "string"
+      "MergeParams" : {
+        "type" : "object",
+        "description" : "Merge input data",
+        "properties" : {
+          "configCacheBucketId" : {
+            "type" : "string",
+            "description" : "The ID of the configuration cache bucket"
           },
-          "configName": {
-            "description": "The configuration name to use for the merge operation",
-            "type": "string"
+          "configName" : {
+            "type" : "string",
+            "description" : "The configuration name to use for the merge operation"
           },
-          "direction": {
-            "description": "Enum representing the direction of a merge operation",
-            "enum": [
-              "LEFT_TO_RIGHT",
-              "RIGHT_TO_LEFT"
-            ],
-            "type": "string"
+          "direction" : {
+            "type" : "string",
+            "description" : "Enum representing the direction of a merge operation",
+            "enum" : [ "LEFT_TO_RIGHT", "RIGHT_TO_LEFT" ]
           },
-          "leftDocument": {
-            "$ref": "#/components/schemas/DocumentIdentifier"
+          "leftDocument" : {
+            "$ref" : "#/components/schemas/DocumentIdentifier"
           },
-          "linkRole": {
-            "description": "The role of the link connecting the two documents",
-            "type": "string"
+          "linkRole" : {
+            "type" : "string",
+            "description" : "The role of the link connecting the two documents"
           },
-          "pairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
+          "pairs" : {
+            "$ref" : "#/components/schemas/WorkItemsPair"
           },
-          "rightDocument": {
-            "$ref": "#/components/schemas/DocumentIdentifier"
+          "rightDocument" : {
+            "$ref" : "#/components/schemas/DocumentIdentifier"
           }
-        },
-        "type": "object"
+        }
       },
-      "MergeResult": {
-        "description": "Result of a merge operation",
-        "properties": {
-          "conflictedPairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
+      "MergeResult" : {
+        "type" : "object",
+        "description" : "Result of a merge operation",
+        "properties" : {
+          "conflictedPairs" : {
+            "$ref" : "#/components/schemas/WorkItemsPair"
           },
-          "createdPairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
+          "createdPairs" : {
+            "$ref" : "#/components/schemas/WorkItemsPair"
           },
-          "mergeNotAuthorized": {
-            "description": "Indicates whether the merge was not authorized",
-            "type": "boolean"
+          "mergeNotAuthorized" : {
+            "type" : "boolean",
+            "description" : "Indicates whether the merge was not authorized"
           },
-          "modifiedPairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
+          "modifiedPairs" : {
+            "$ref" : "#/components/schemas/WorkItemsPair"
           },
-          "movedPairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
+          "movedPairs" : {
+            "$ref" : "#/components/schemas/WorkItemsPair"
           },
-          "notMovedPairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
+          "notMovedPairs" : {
+            "$ref" : "#/components/schemas/WorkItemsPair"
           },
-          "prohibitedPairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
+          "notPaired" : {
+            "$ref" : "#/components/schemas/WorkItemsPair"
           },
-          "success": {
-            "description": "Indicates whether the merge operation was successful",
-            "type": "boolean"
+          "prohibitedPairs" : {
+            "$ref" : "#/components/schemas/WorkItemsPair"
           },
-          "targetModuleHasStructuralChanges": {
-            "description": "Indicates whether the target module has structural changes",
-            "type": "boolean"
+          "success" : {
+            "type" : "boolean",
+            "description" : "Indicates whether the merge operation was successful"
+          },
+          "targetModuleHasStructuralChanges" : {
+            "type" : "boolean",
+            "description" : "Indicates whether the target module has structural changes"
           }
-        },
-        "type": "object"
+        }
       },
-      "Revision": {
-        "description": "Revision details",
-        "properties": {
-          "author": {
-            "description": "The author of the revision",
-            "type": "string"
+      "Revision" : {
+        "type" : "object",
+        "description" : "Revision details",
+        "properties" : {
+          "author" : {
+            "type" : "string",
+            "description" : "The author of the revision"
           },
-          "baseline": {
-            "description": "The baseline of the revision",
-            "type": "string"
+          "baseline" : {
+            "type" : "string",
+            "description" : "The baseline of the revision"
           },
-          "date": {
-            "description": "The date of the revision",
-            "type": "string"
+          "date" : {
+            "type" : "string",
+            "description" : "The date of the revision"
           },
-          "description": {
-            "description": "The description of the revision",
-            "type": "string"
+          "description" : {
+            "type" : "string",
+            "description" : "The description of the revision"
           },
-          "name": {
-            "description": "The name of the revision",
-            "type": "string"
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the revision"
           }
-        },
-        "type": "object"
+        }
       },
-      "SettingName": {
-        "properties": {
-          "name": {
-            "description": "The name of the setting",
-            "type": "string"
+      "SettingName" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the setting"
           },
-          "scope": {
-            "description": "The scope of the setting",
-            "type": "string"
+          "scope" : {
+            "type" : "string",
+            "description" : "The scope of the setting"
           }
-        },
-        "type": "object"
+        }
       },
-      "SettingsModel": {
-        "description": "Settings model",
-        "properties": {
-          "bundleTimestamp": {
-            "description": "The bundle timestamp of the setting",
-            "type": "string"
+      "SettingsModel" : {
+        "type" : "object",
+        "description" : "Settings model",
+        "properties" : {
+          "bundleTimestamp" : {
+            "type" : "string",
+            "description" : "The bundle timestamp of the setting"
           }
-        },
-        "type": "object"
+        }
       },
-      "Space": {
-        "description": "Represents a space within a project",
-        "properties": {
-          "id": {
-            "description": "Space ID",
-            "type": "string"
+      "Space" : {
+        "type" : "object",
+        "description" : "Represents a space within a project",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Space ID"
           },
-          "name": {
-            "description": "The name of the space",
-            "type": "string"
+          "name" : {
+            "type" : "string",
+            "description" : "The name of the space"
           }
-        },
-        "type": "object"
+        }
       },
-      "StringsDiff": {
-        "description": "Represents the result of comparing two strings",
-        "properties": {
-          "different": {
-            "description": "Indicates whether the two strings are different",
-            "type": "boolean"
+      "StringsDiff" : {
+        "type" : "object",
+        "description" : "Represents the result of comparing two strings",
+        "properties" : {
+          "different" : {
+            "type" : "boolean",
+            "description" : "Indicates whether the two strings are different"
           },
-          "result": {
-            "description": "The result after comparing the strings",
-            "type": "string"
+          "result" : {
+            "type" : "string",
+            "description" : "The result after comparing the strings"
           }
-        },
-        "type": "object"
+        }
       },
-      "Version": {
-        "description": "Details about the software version",
-        "properties": {
-          "automaticModuleName": {
-            "description": "The automatic module name",
-            "type": "string"
+      "Version" : {
+        "type" : "object",
+        "description" : "Details about the software version",
+        "properties" : {
+          "automaticModuleName" : {
+            "type" : "string",
+            "description" : "The automatic module name"
           },
-          "bundleBuildTimestamp": {
-            "description": "The build timestamp of the bundle",
-            "type": "string"
+          "bundleBuildTimestamp" : {
+            "type" : "string",
+            "description" : "The build timestamp of the bundle"
           },
-          "bundleName": {
-            "description": "The name of the bundle",
-            "type": "string"
+          "bundleName" : {
+            "type" : "string",
+            "description" : "The name of the bundle"
           },
-          "bundleVendor": {
-            "description": "The vendor of the bundle",
-            "type": "string"
+          "bundleVendor" : {
+            "type" : "string",
+            "description" : "The vendor of the bundle"
           },
-          "bundleVersion": {
-            "description": "The version of the bundle",
-            "type": "string"
+          "bundleVersion" : {
+            "type" : "string",
+            "description" : "The version of the bundle"
           },
-          "projectURL": {
-            "description": "The project URL",
-            "type": "string"
+          "projectURL" : {
+            "type" : "string",
+            "description" : "The project URL"
           },
-          "supportEmail": {
-            "description": "Support email for the bundle",
-            "type": "string"
+          "supportEmail" : {
+            "type" : "string",
+            "description" : "Support email for the bundle"
           }
-        },
-        "type": "object"
+        }
       },
-      "WorkItem": {
-        "description": "Represents a WorkItem",
-        "properties": {
-          "fields": {
-            "items": {
-              "$ref": "#/components/schemas/Field"
-            },
-            "type": "array"
+      "WorkItem" : {
+        "type" : "object",
+        "description" : "Represents a WorkItem",
+        "properties" : {
+          "externalProjectWorkItem" : {
+            "type" : "boolean",
+            "description" : "Flag indicating whether the WorkItem is assigned to a different project"
           },
-          "id": {
-            "description": "Unique identifier of the WorkItem",
-            "type": "string"
+          "fields" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Field"
+            }
           },
-          "lastRevision": {
-            "description": "Last revision number of the WorkItem",
-            "type": "string"
+          "id" : {
+            "type" : "string",
+            "description" : "Unique identifier of the WorkItem"
           },
-          "moveDirection": {
-            "description": "Enum representing the direction in which a merge move operation can occur",
-            "enum": [
-              "UP",
-              "DOWN"
-            ],
-            "type": "string"
+          "lastRevision" : {
+            "type" : "string",
+            "description" : "Last revision number of the WorkItem"
           },
-          "movedOutlineNumber": {
-            "description": "Moved outline number of the work item after a merge",
-            "type": "string"
+          "moveDirection" : {
+            "type" : "string",
+            "description" : "Enum representing the direction in which a merge move operation can occur",
+            "enum" : [ "UP", "DOWN" ]
           },
-          "outlineNumber": {
-            "description": "Outline number of the WorkItem",
-            "type": "string"
+          "movedOutlineNumber" : {
+            "type" : "string",
+            "description" : "Moved outline number of the work item after a merge"
           },
-          "projectId": {
-            "description": "Project ID associated with the WorkItem",
-            "type": "string"
+          "outlineNumber" : {
+            "type" : "string",
+            "description" : "Outline number of the WorkItem"
           },
-          "referenced": {
-            "description": "Flag indicating whether the WorkItem is referenced",
-            "type": "boolean"
+          "projectId" : {
+            "type" : "string",
+            "description" : "Project ID associated with the WorkItem"
           },
-          "revision": {
-            "description": "Revision number of the WorkItem",
-            "type": "string"
+          "referenced" : {
+            "type" : "boolean",
+            "description" : "Flag indicating whether the WorkItem is referenced"
           },
-          "title": {
-            "description": "Title of the WorkItem",
-            "type": "string"
+          "revision" : {
+            "type" : "string",
+            "description" : "Revision number of the WorkItem"
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "Title of the WorkItem"
           }
-        },
-        "type": "object"
+        }
       },
-      "WorkItemField": {
-        "description": "WorkItem field data",
-        "properties": {
-          "customField": {
-            "description": "If field is custom",
-            "type": "boolean"
+      "WorkItemField" : {
+        "type" : "object",
+        "description" : "WorkItem field data",
+        "properties" : {
+          "customField" : {
+            "type" : "boolean",
+            "description" : "If field is custom"
           },
-          "key": {
-            "description": "Unique key for the field",
-            "type": "string"
+          "key" : {
+            "type" : "string",
+            "description" : "Unique key for the field"
           },
-          "name": {
-            "description": "Name of the field",
-            "type": "string"
+          "name" : {
+            "type" : "string",
+            "description" : "Name of the field"
           },
-          "readOnly": {
-            "description": "If field is read only",
-            "type": "boolean"
+          "readOnly" : {
+            "type" : "boolean",
+            "description" : "If field is read only"
           },
-          "required": {
-            "description": "If field is required",
-            "type": "boolean"
+          "required" : {
+            "type" : "boolean",
+            "description" : "If field is required"
           },
-          "wiTypeId": {
-            "description": "WorkItem type ID",
-            "type": "string"
+          "wiTypeId" : {
+            "type" : "string",
+            "description" : "WorkItem type ID"
           },
-          "wiTypeName": {
-            "description": "WorkItem type name",
-            "type": "string"
+          "wiTypeName" : {
+            "type" : "string",
+            "description" : "WorkItem type name"
           }
-        },
-        "type": "object"
+        }
       },
-      "WorkItemsDiff": {
-        "description": "Represents the differences between two WorkItems",
-        "properties": {
-          "fieldDiffs": {
-            "items": {
-              "$ref": "#/components/schemas/FieldDiff"
-            },
-            "type": "array"
+      "WorkItemsDiff" : {
+        "type" : "object",
+        "description" : "Represents the differences between two WorkItems",
+        "properties" : {
+          "fieldDiffs" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FieldDiff"
+            }
           },
-          "leftWorkItem": {
-            "$ref": "#/components/schemas/WorkItem"
+          "leftWorkItem" : {
+            "$ref" : "#/components/schemas/WorkItem"
           },
-          "rightWorkItem": {
-            "$ref": "#/components/schemas/WorkItem"
+          "rightWorkItem" : {
+            "$ref" : "#/components/schemas/WorkItem"
           }
-        },
-        "type": "object"
+        }
       },
-      "WorkItemsDiffParams": {
-        "description": "Comparison input data",
-        "properties": {
-          "configCacheBucketId": {
-            "description": "Cache bucket Id",
-            "type": "string"
+      "WorkItemsDiffParams" : {
+        "type" : "object",
+        "description" : "Comparison input data",
+        "properties" : {
+          "configCacheBucketId" : {
+            "type" : "string",
+            "description" : "Cache bucket Id"
           },
-          "configName": {
-            "description": "Name of the configuration used for comparison",
-            "type": "string"
+          "configName" : {
+            "type" : "string",
+            "description" : "Name of the configuration used for comparison"
           },
-          "leftProjectId": {
-            "description": "ID of the left project",
-            "type": "string"
+          "leftProjectId" : {
+            "type" : "string",
+            "description" : "ID of the left project"
           },
-          "leftWorkItem": {
-            "$ref": "#/components/schemas/DocumentWorkItem"
+          "leftWorkItem" : {
+            "$ref" : "#/components/schemas/DocumentWorkItem"
           },
-          "pairedWorkItemsDiffer": {
-            "description": "Indicates if the paired WorkItems differ",
-            "type": "boolean"
+          "pairedWorkItemsDiffer" : {
+            "type" : "boolean",
+            "description" : "Indicates if the paired WorkItems differ"
           },
-          "pairedWorkItemsLinkRole": {
-            "description": "Link role between paired WorkItems",
-            "type": "string"
+          "pairedWorkItemsLinkRole" : {
+            "type" : "string",
+            "description" : "Link role between paired WorkItems"
           },
-          "rightWorkItem": {
-            "$ref": "#/components/schemas/DocumentWorkItem"
+          "rightWorkItem" : {
+            "$ref" : "#/components/schemas/DocumentWorkItem"
           }
-        },
-        "type": "object"
+        }
       },
-      "WorkItemsPair": {
-        "description": "Represents a pair of WorkItems for comparison",
-        "properties": {
-          "leftWorkItem": {
-            "$ref": "#/components/schemas/WorkItem"
+      "WorkItemsPair" : {
+        "type" : "object",
+        "description" : "Represents a pair of WorkItems for comparison",
+        "properties" : {
+          "leftWorkItem" : {
+            "$ref" : "#/components/schemas/WorkItem"
           },
-          "rightWorkItem": {
-            "$ref": "#/components/schemas/WorkItem"
+          "rightWorkItem" : {
+            "$ref" : "#/components/schemas/WorkItem"
           }
-        },
-        "type": "object"
+        }
       }
     }
   }

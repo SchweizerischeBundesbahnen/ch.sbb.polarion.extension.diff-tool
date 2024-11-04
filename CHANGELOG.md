@@ -1,5 +1,63 @@
 # Changelog
 
+## [4.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.6...v4.3.0) (2024-11-03)
+
+
+### Features
+
+* Added logic to display and merge incorrectly linked work items ([#112](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/112)) ([a802c93](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/a802c93b6f756a40fc7e4e5119d58e31dc89f56a)), closes [#111](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/111)
+
+
+### Bug Fixes
+
+* Fix showing proper diff configurations for creating new document option ([7f24b4d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/7f24b4db4aa2db8d1715bf7420b4f8c599b300f2))
+* Fix showing proper diff configurations when creating new document ([#109](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/109)) ([7f24b4d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/7f24b4db4aa2db8d1715bf7420b4f8c599b300f2)), closes [#84](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/84)
+* user has to make several sequential merges in order to achieve d… ([#114](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/114)) ([dd27f3f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/dd27f3f0969e1be64be77a362c73fa8d766ca640)), closes [#68](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/68)
+* user has to make several sequential merges in order to achieve desired state ([dd27f3f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/dd27f3f0969e1be64be77a362c73fa8d766ca640))
+
+## [4.2.6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.5...v4.2.6) (2024-11-02)
+
+
+### Bug Fixes
+
+* referenced WorkItems in rich text fields ([#106](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/106)) ([f91d9cd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/f91d9cdf33b154499268fe112c1bbdfa239d64ed)), closes [#87](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/87)
+
+## [4.2.5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.4...v4.2.5) (2024-11-01)
+
+
+### Bug Fixes
+
+* Fix inserting referenced work items in target document if target project differs from source project ([#102](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/102)) ([2485bc4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2485bc4f7c903509c77003deec5996e1172bda46)), closes [#76](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/76)
+
+## [4.2.4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.3...v4.2.4) (2024-11-01)
+
+
+### Bug Fixes
+
+* Follow-up fix of re-referencing external work items ([#99](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/99)) ([760177d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/760177db582b14ff3c40f7d50dd297811a81acf5)), closes [#73](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/73)
+
+## [4.2.3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.2...v4.2.3) (2024-10-31)
+
+
+### Bug Fixes
+
+* empty commit to test [#73](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/73) ([#96](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/96)) ([57d6cc9](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/57d6cc995a9fabde74607a6d5bfaaec08890796f))
+
+## [4.2.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.1...v4.2.2) (2024-10-31)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v7.7.0 ([965bbf5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/965bbf5ea3fb785bdfdd8d635bd85e9f419b6dc5))
+* Fix loading diffs by chunks ([#92](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/92)) ([8b7d8ed](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/8b7d8ed0cc975ee65d0896beb0bbaa4105e7a8dd)), closes [#86](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/86)
+
+## [4.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.0...v4.2.1) (2024-10-31)
+
+
+### Bug Fixes
+
+* When new document created in different project referenced WIs should be replaced by their counterparts or removed ([#89](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/89)) ([d29b0ec](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d29b0ecd7149ffac51ddef29e370e6ee04357218)), closes [#73](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/73)
+
 ## [4.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.1.4...v4.2.0) (2024-10-29)
 
 

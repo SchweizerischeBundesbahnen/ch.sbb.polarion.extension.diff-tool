@@ -63,6 +63,7 @@ import com.polarion.subterra.base.location.ILocation;
 import com.polarion.subterra.base.location.Location;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
@@ -84,6 +85,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -207,7 +210,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         // Following 2 calls are intentionally split into 2 calls in separate transactions as list fields during documents duplication
         // are becoming visible "outside" only as soon as duplication transaction is closed, meaning that cleaning them up should be done
         // in new additional transaction
-        IModule module = TransactionalExecutor.executeInWriteTransaction(transaction -> {
+        IModule targetModule = Objects.requireNonNull(TransactionalExecutor.executeInWriteTransaction(transaction -> {
             IModule createdModule = trackerService.getModuleManager().duplicate(sourceModule, targetProject, targetLocation,
                     documentDuplicateParams.getTargetDocumentIdentifier().getName(), linkRole, null, null, null, null);
             createdModule.setTitle(documentDuplicateParams.getTargetDocumentTitle());
@@ -217,19 +220,22 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             cleanUpNonListFields(createdModule, targetProjectContextId, allowedFields);
 
             return createdModule;
-        });
+        }));
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            cleanUpListFields(module, targetProjectContextId, allowedFields);
+            cleanUpListFields(targetModule, targetProjectContextId, allowedFields);
             return null;
         });
+
+        fixReferencedWorkItems(targetModule, linkRole);
+
         // ----------
 
         return DocumentIdentifier.builder()
                 .projectId(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())
                 .spaceId(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId())
-                .name(Objects.requireNonNull(module).getModuleName())
-                .moduleXmlRevision(module.getLastRevision())
+                .name(Objects.requireNonNull(targetModule).getModuleName())
+                .moduleXmlRevision(targetModule.getLastRevision())
                 .build();
     }
 
@@ -288,9 +294,49 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         }
     }
 
+    public void fixReferencedWorkItems(@NotNull IModule targetModule, @NotNull ILinkRoleOpt linkRole) {
+        TransactionalExecutor.executeInWriteTransaction(transaction -> {
+            for (IWorkItem workItem : targetModule.getExternalWorkItems()) {
+                fixReferencedWorkItem(workItem, targetModule, linkRole);
+            }
+            targetModule.save();
+            return null;
+        });
+    }
+
+    /**
+     * WARNING: this method just references/un-references work items in module, but does not persist module, which should be done in caller code which should run in write transaction!
+     */
+    public void fixReferencedWorkItem(@NotNull IWorkItem referencedWorkItem, @NotNull IModule targetModule, @NotNull ILinkRoleOpt linkRole) {
+        // If a document contains a work item which is referenced (external) and belongs to a different project,
+        // we are trying here to replace it by a reference of its counterpart item belonging to document's project, if possible.
+        // If counterpart work item wasn't found such reference will be just removed
+        if (!referencedWorkItem.getProjectId().equals(targetModule.getProjectId())) {
+            IWorkItem workItemInHead = referencedWorkItem.getRevision() == null ? referencedWorkItem : getWorkItem(referencedWorkItem.getProjectId(), referencedWorkItem.getId());
+            IWorkItem pairedWorkItem = getPairedWorkItems(workItemInHead, targetModule.getProjectId(), linkRole.getId()).stream().findFirst().orElse(null);
+            if (pairedWorkItem != null) {
+                IModule.IStructureNode nodeToBeRemoved = targetModule.getStructureNodeOfWI(referencedWorkItem);
+                IModule.IStructureNode parentNode = nodeToBeRemoved.getParent();
+                int destinationIndex = parentNode.getChildren().indexOf(nodeToBeRemoved);
+
+                insertReferencedWorkItem(pairedWorkItem, targetModule, parentNode, destinationIndex);
+            }
+            targetModule.unreference(referencedWorkItem);
+        }
+    }
+
+    public void insertReferencedWorkItem(@NotNull IWorkItem workItemToReference, @NotNull IModule targetModule, @Nullable IModule.IStructureNode parentNode, int destinationIndex) {
+        targetModule.addExternalWorkItem(workItemToReference);
+        if (parentNode != null) {
+            IModule.IStructureNode referencedWorkItemNode = targetModule.getStructureNodeOfWI(workItemToReference);
+            parentNode.addChild(referencedWorkItemNode, destinationIndex); // Placing inserted referenced work item at required position in document
+        }
+    }
+
     private List<IWorkItem> getWorkItemsForCleanUp(@NotNull IModule module) {
+        List<IWorkItem> externalWorkItems = module.getExternalWorkItems();
         return module.getAllWorkItems().stream().filter(item -> {
-            if (item.isUnresolvable()) {
+            if (item.isUnresolvable() || externalWorkItems.contains(item)) {
                 return false;
             }
             if (item instanceof WorkItem workItem) {
@@ -502,10 +548,50 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         return workItem.isUnresolvable() || context.getOutlineNumber(workItem, !inversePair) == null || (!inversePair && context.hasStatusToIgnore(workItem));
     }
 
+    @NotNull
+    public String replaceLinksToPairedWorkItems(@NotNull IWorkItem from, @NotNull IWorkItem to, @NotNull String linkRole, @NotNull String html) {
+        if (Objects.equals(from.getProjectId(), to.getProjectId())) {
+            return html; // do not modify links when copying data between same project work items
+        }
+
+        Pattern pattern = Pattern.compile("(?<match><span[^>]+?class=\"polarion-rte-link\"[^>]+?data-type=\"workItem\"([^>]+?data-scope=\"(?<workItemProjectId>[^\"]+?)\")*[^>]+?data-item-id=\"(?<workItemId>[^\"]+?)\"" +
+                                          "([^>]+?data-revision=\"(?<workItemRevision>[^\"]+?)\")*)");
+        Matcher matcher = pattern.matcher(html);
+
+        StringBuilder buf = new StringBuilder();
+        while (matcher.find()) {
+            String match = matcher.group("match");
+            String workItemProjectId = ObjectUtils.firstNonNull(matcher.group("workItemProjectId"), from.getProjectId()); //data-scope is rendered in case of another project reference
+            String workItemId = matcher.group("workItemId");
+            String revision = matcher.group("workItemRevision");
+            IWorkItem workItem;
+            try {
+                workItem = getWorkItem(workItemProjectId, workItemId, revision);
+            } catch (Exception e) {
+                logger.error("Cannot get work item %s/%s/%s".formatted(workItemProjectId, workItemId, revision), e);
+                continue;
+            }
+            IWorkItem pairedWorkItem = getPairedWorkItems(workItem, to.getProjectId(), linkRole).stream().findFirst().orElse(null);
+            if (pairedWorkItem != null) {
+                String scopeEntry = "data-scope=\"%s\"".formatted(pairedWorkItem.getProjectId());
+                String idEntry = "data-item-id=\"%s\"".formatted(pairedWorkItem.getId());
+                if (!StringUtils.isEmpty(pairedWorkItem.getRevision())) {
+                    idEntry = idEntry + " data-revision=\"%s\"".formatted(pairedWorkItem.getRevision());
+                }
+                matcher.appendReplacement(buf, match
+                        .replaceAll("\\sdata-revision=\"[^\"]+?\"", "") // cleanup revision if exists
+                        .replaceAll("data-scope=\"[^\"]+?\"", scopeEntry)
+                        .replaceAll("data-item-id=\"[^\"]+?\"", idEntry));
+            }
+        }
+        matcher.appendTail(buf);
+        return buf.toString();
+    }
+
     @SuppressWarnings("squid:S1166") // Initial exception swallowed intentionally
     public List<IWorkItem> getPairedWorkItems(@NotNull IWorkItem toWorkItem, @NotNull String targetProjectId, @NotNull String linkRoleId) {
         return Streams.concat(toWorkItem.getLinkedWorkItemsStructsDirect().stream(), toWorkItem.getLinkedWorkItemsStructsBack().stream())
-                .filter(linkedWorkItemStruct -> linkedWorkItemStruct.getLinkRole().getId().equals(linkRoleId))
+                .filter(linkedWorkItemStruct -> linkedWorkItemStruct.getLinkRole() != null && linkedWorkItemStruct.getLinkRole().getId().equals(linkRoleId))
                 .map(linkedWorkItemStruct -> {
                     Optional<IWorkItem> optionalLinkedWorkItem = Optional.empty();
 

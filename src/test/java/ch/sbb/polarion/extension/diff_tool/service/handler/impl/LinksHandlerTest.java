@@ -53,7 +53,7 @@ class LinksHandlerTest {
             when(polarionService.getPairedWorkItems(eq(workItemSpecificRevision), eq(projectId), anyString())).thenReturn(Collections.singletonList(linkedWorkItemSpecificRevision));
 
             String result = new LinksHandler().appendPairedWorkItemId(unprocessedHtml,
-                    projectId, projectId, new DiffContext(WorkItem.of(mock(IWorkItem.class), "wi_outline_number", false), WorkItem.of(mock(IWorkItem.class), "wi_outline_number", false),
+                    projectId, projectId, new DiffContext(WorkItem.of(mock(IWorkItem.class), "wi_outline_number", false, false), WorkItem.of(mock(IWorkItem.class), "wi_outline_number", false, false),
                             "testFieldId", WorkItemsDiffParams.builder().pairedWorkItemsLinkRole("roleId").build(), polarionService));
 
             assertEquals(expectedHtml, result);

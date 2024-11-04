@@ -34,6 +34,7 @@ export default function DocumentsDiff() {
   const [mergeErrorModalVisible, setMergeErrorModalVisible] = useState(false);
   const [conflictedPairs, setConflictedPairs] = useState([]);
   const [prohibitedPairs, setProhibitedPairs] = useState([]);
+  const [notPaired, setNotPaired] = useState([]);
   const [createdPairs, setCreatedPairs] = useState([]);
   const [modifiedPairs, setModifiedPairs] = useState([]);
   const [notMovedPairs, setNotMovedPairs] = useState([]);
@@ -107,6 +108,7 @@ export default function DocumentsDiff() {
           setModifiedPairs(data.modifiedPairs);
           setConflictedPairs(data.conflictedPairs);
           setProhibitedPairs(data.prohibitedPairs);
+          setNotPaired(data.notPaired);
           setNotMovedPairs(data.notMovedPairs);
           setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);
           setMergeNotAuthorizedWarning(!data.success && data.mergeNotAuthorized);
@@ -114,6 +116,7 @@ export default function DocumentsDiff() {
           setWarningModalVisible(data.mergeNotAuthorized || data.targetModuleHasStructuralChanges
               || (data.conflictedPairs && data.conflictedPairs.length > 0)
               || (data.prohibitedPairs && data.prohibitedPairs.length > 0)
+              || (data.notPaired && data.notPaired.length > 0)
               || (data.notMovedPairs && data.notMovedPairs.length > 0));
         })
         .catch((error) => {
@@ -243,6 +246,14 @@ export default function DocumentsDiff() {
         <ul>
           {prohibitedPairs && prohibitedPairs.map((pair, index) => {
             return <li key={index}>{pair.leftWorkItem.id} - {pair.rightWorkItem.id}</li>;
+          })}
+        </ul>
+      </div>
+      <div style={{display: notPaired.length > 0 ? 'block' : 'none'}}>
+        <p>Following work items referenced in source document do not have counterparts in target project and therefore were not referenced in target document:</p>
+        <ul>
+          {notPaired && notPaired.map((pair, index) => {
+            return <li key={index}>{pair.leftWorkItem?.id}{pair.rightWorkItem?.id}</li>;
           })}
         </ul>
       </div>
