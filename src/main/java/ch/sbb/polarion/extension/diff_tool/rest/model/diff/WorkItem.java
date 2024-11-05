@@ -62,8 +62,11 @@ public final class WorkItem {
     @Schema(description = "Direction of the merge move", implementation = MergeMoveDirection.class)
     private MergeMoveDirection moveDirection;
 
+    @Schema(description = "Flag indicating whether the WorkItem is assigned to a different project")
+    private boolean externalProjectWorkItem;
 
-    private WorkItem(@NotNull IWorkItem underlyingObject, String outlineNumber, boolean referenced) {
+
+    private WorkItem(@NotNull IWorkItem underlyingObject, String outlineNumber, boolean referenced, boolean externalProjectWorkItem) {
         this.underlyingObject = underlyingObject;
         id = underlyingObject.getId();
         title = underlyingObject.getTitle();
@@ -71,6 +74,7 @@ public final class WorkItem {
         this.projectId = underlyingObject.getProjectId();
         this.referenced = referenced;
         this.revision = underlyingObject.getRevision();
+        this.externalProjectWorkItem = externalProjectWorkItem;
         try {
             this.lastRevision = underlyingObject.getLastRevision();
         } catch (Exception e) {
@@ -80,12 +84,12 @@ public final class WorkItem {
         }
     }
 
-    public static WorkItem of(@Nullable IWorkItem iWorkItem, String outlineNumber, boolean referenced) {
-        return iWorkItem == null ? null : new WorkItem(iWorkItem, outlineNumber, referenced);
+    public static WorkItem of(@Nullable IWorkItem iWorkItem, String outlineNumber, boolean referenced, boolean externalProjectWorkItem) {
+        return iWorkItem == null ? null : new WorkItem(iWorkItem, outlineNumber, referenced, externalProjectWorkItem);
     }
 
     public static WorkItem of(@NotNull WorkItem workItem) {
-        return new WorkItem(workItem.getUnderlyingObject(), workItem.getOutlineNumber(), workItem.isReferenced());
+        return new WorkItem(workItem.getUnderlyingObject(), workItem.getOutlineNumber(), workItem.isReferenced(), workItem.isExternalProjectWorkItem());
     }
 
     @JsonIgnore

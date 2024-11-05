@@ -325,6 +325,7 @@ public class DiffService {
         // -----
         // Outline numbers are minimally required to show structure difference
         fieldsToDiff.add(DiffField.OUTLINE_NUMBER);
+        fieldsToDiff.add(DiffField.EXTERNAL_PROJECT_WORK_ITEM);
         // -----
 
         IWorkItem baseWorkItem = leftWorkItem != null ? leftWorkItem : rightWorkItem;
@@ -340,7 +341,7 @@ public class DiffService {
     }
 
     private WorkItem buildWorkItem(IWorkItem iWorkItem, Set<String> fieldIds, String outlineNumber, boolean referenced, DocumentReference documentReference) {
-        WorkItem workItem = WorkItem.of(iWorkItem, outlineNumber, referenced);
+        WorkItem workItem = WorkItem.of(iWorkItem, outlineNumber, referenced, !iWorkItem.getProjectId().equals(documentReference.projectId()));
         Set<FieldMetadata> fields = Sets.union(polarionService.getGeneralFields(IWorkItem.PROTO, iWorkItem.getContextId()),
                 polarionService.getCustomFields(IWorkItem.PROTO, iWorkItem.getContextId(), Optional.ofNullable(iWorkItem.getType()).map(IEnumOption::getId).orElse(null)));
         for (String fieldId : fieldIds) {
@@ -362,6 +363,8 @@ public class DiffService {
             // Work item may either do not contain outline number or it may be invalid in case when it is referenced (for referenced work items its outline number stored on document level).
             // So in order to cover all cases it is better to request it from outer document.
             return workItem.getOutlineNumber();
+        } else if (DiffField.EXTERNAL_PROJECT_WORK_ITEM.getKey().equals(fieldId) && workItem.isExternalProjectWorkItem()) {
+                return Boolean.TRUE.toString();
         }
         return polarionService.renderField(iWorkItem.getProjectId(), iWorkItem.getId(), workItem.getRevision(), fieldId, documentReference);
     }
@@ -378,6 +381,8 @@ public class DiffService {
             // Work item may either do not contain outline number or it may be invalid in case when it is referenced (for referenced work items its outline number stored on document level).
             // So in order to cover all cases it is better to request it from outer document.
             value = workItem.getOutlineNumber();
+        } else if (fieldId.equals(DiffField.EXTERNAL_PROJECT_WORK_ITEM.getKey())) {
+            value = workItem.isExternalProjectWorkItem();
         }
         return value;
     }

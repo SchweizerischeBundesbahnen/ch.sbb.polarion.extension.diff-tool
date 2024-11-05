@@ -138,8 +138,10 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
       const leftWiId = workItemsPair.leftWorkItem ? workItemsPair.leftWorkItem.id : null;
       const rightWiId = workItemsPair.rightWorkItem ? workItemsPair.rightWorkItem.id : null;
       dataLoadedCallback(currentIndex, error, diffsExist, selected, leftChapter, rightChapter, leftWiId, rightWiId);
-      if (selected && !diffsExist) {
-        mergingContext.setPairSelected(currentIndex, workItemsPair, false); // if no diffs for certain work items pair - unselect this pair if it was previously selected
+      if (diffsExist) {
+        mergingContext.setPairSelected(currentIndex, workItemsPair, selected); // Initialize pair in selection registry
+      } else {
+        mergingContext.resetRegistryEntry(currentIndex); // Reset pair in selection registry
       }
       setDataLoadedFired(true);
     }
@@ -150,10 +152,11 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
   }, [mergingContext.selectionRegistry]);
 
   useEffect(() => {
-    if (mergingContext.selectAll !== selected && diffService.diffsExist(workItemsPair, diffs)) {
+    // selectAllTrigger of 0 value is initial value which should be ignored
+    if (mergingContext.selectAllTrigger > 0 && mergingContext.selectAll !== selected && diffService.diffsExist(workItemsPair, diffs)) {
       pairSelected(mergingContext.selectAll, true);
     }
-  }, [mergingContext.selectAll]);
+  }, [mergingContext.selectAllTrigger]);
 
   const pairSelected = (selected, forceAndSuppressWarnings) => {
     if (workItemsPair) {
@@ -288,7 +291,9 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
           </div>
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
           {loading && <div className="loader wi-loader"></div>}
-          {!loading && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber) && <DiffContent diffs={diffs} expanded={expanded}/>}
+          {!loading && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber)
+              && !(workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.externalProjectWorkItem)
+              && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.externalProjectWorkItem) && <DiffContent diffs={diffs} expanded={expanded}/>}
         </div>
         <Modal title="Information" cancelButtonTitle="OK" visible={childrenSelectionModalVisible}
                setVisible={setChildrenSelectionModalVisible} className="modal-md">
