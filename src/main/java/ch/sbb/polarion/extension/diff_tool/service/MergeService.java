@@ -163,6 +163,10 @@ public class MergeService {
             reloadModule(context.getTargetModule());
             return null;
         });
+        for (WorkItemsPair pair : modified) {
+            WorkItem targetWorkItem = context.getTargetWorkItem(pair);
+            targetWorkItem.setLastRevision(getWorkItem(targetWorkItem).getLastRevision());
+        }
         return MergeResult.builder().success(true)
                 .createdPairs(created).modifiedPairs(modified).conflictedPairs(conflicted).prohibitedPairs(prohibited).notPaired(notPaired).movedPairs(moved).notMovedPairs(notMoved)
                 .targetModuleHasStructuralChanges(!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision()))
