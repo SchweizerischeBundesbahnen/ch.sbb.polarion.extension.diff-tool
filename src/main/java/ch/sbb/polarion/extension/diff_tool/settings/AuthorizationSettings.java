@@ -18,9 +18,9 @@ public class AuthorizationSettings extends GenericNamedSettings<AuthorizationMod
 
     @Override
     public @NotNull AuthorizationModel defaultValues() {
-        AuthorizationModel projectCustomFieldsSettingsModel = new AuthorizationModel();
-        projectCustomFieldsSettingsModel.setGlobalRoles("admin");
-        projectCustomFieldsSettingsModel.setProjectRoles();
-        return projectCustomFieldsSettingsModel;
+        AuthorizationModel authorizationModel = new AuthorizationModel();
+        authorizationModel.setGlobalRoles("admin");
+        authorizationModel.setProjectRoles();
+        return authorizationModel;
     }
 }

@@ -3,9 +3,10 @@ const REST_PATH = '/polarion/diff-tool/rest';
 export default function useRemote() {
 
   const sendRequest = ({method, url, body, contentType}) => {
-    const headers = {
-      "Content-Type": contentType
-    };
+    const headers = {};
+    if (contentType) {
+      headers["Content-Type"] = contentType;
+    }
     if (process.env.NEXT_PUBLIC_BEARER_TOKEN) {
       headers["Authorization"] = `Bearer ${process.env.NEXT_PUBLIC_BEARER_TOKEN}`;
     }
@@ -21,5 +22,5 @@ export default function useRemote() {
     });
   }
 
-  return { sendRequest };
+  return {sendRequest};
 }
