@@ -43,7 +43,7 @@ export default function useLoadingContext() {
   }, []);
 
   useEffect(() => {
-    if (chunkSize !== 1 && pairs.length > 0) {
+    if (pairs.length > 0) {
       pairsLoadingFinished(pairs);
     }
   }, [chunkSize, pairs]);
