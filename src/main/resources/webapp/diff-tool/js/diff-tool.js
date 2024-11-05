@@ -245,7 +245,25 @@ DiffTool = {
       path += `&targetRevision=${targetRevision}`;
     }
 
+    if (document.getElementById("use-work-items-filter").checked && localStorage) {
+      const filterHash = this.generateUuid();
+      localStorage.setItem(filterHash + "_filter", document.getElementById("work-items-filter-input").value);
+      localStorage.setItem(filterHash + "_type", document.getElementById("include-work-items").checked ? "include" : "exclude");
+      path += `&filter=${filterHash}`;
+    }
+
     window.open(path, '_blank');
+  },
+
+  generateUuid : function() {
+    return (
+        String('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx')
+    ).replace(/[xy]/g, (character) => {
+      const random = (Math.random() * 16) | 0;
+      const value = character === "x" ? random : (random & 0x3) | 0x8;
+
+      return value.toString(16);
+    });
   },
 
   callAsync: function ({method = "GET", url, body = null}) {
@@ -307,7 +325,7 @@ DiffTool = {
 
   toggleCompareSameDocument: function () {
     // hide/show unnecessary fields
-    let elements = document.getElementsByClassName('hide-when-comparing-same');
+    const elements = document.getElementsByClassName('hide-when-comparing-same');
     for (let i = 0; i < elements.length; i++) {
       if (this.compareSameDocument()) {
         elements[i].classList.add("hide");
@@ -334,5 +352,9 @@ DiffTool = {
     document.getElementById("select-revision-manual-container").style.display = "none";
 
     this.documentChanged();
-  }
+  },
+
+  toggleWorkItemsFilter: function () {
+    document.getElementById("work-items-filter-pane").style.display = document.getElementById("use-work-items-filter").checked ? "block" : "none";
+  },
 }
