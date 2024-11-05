@@ -12,7 +12,7 @@ export default function useLoadingContext() {
   const appContext = useContext(AppContext);
   const searchParams = useSearchParams();
 
-  const [chunkSize, setChunkSize] = useState(1);
+  const [chunkSize, setChunkSize] = useState(2);
   const [pairsLoading, setPairsLoading] = useState(true); // We consider initial state as pairs loading even prior sending factual request, otherwise view will be undefined
   const [pairsLoadingError, setPairsLoadingError] = useState(null);
   const [pairs, setPairs] = useState([]);

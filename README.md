@@ -61,6 +61,17 @@ Changes only take effect after restart of Polarion.
    ```
 6. Save changes by clicking 💾 Save
 
+### Fine-tuning the communication between Polarion and Diff Tool extension
+
+The Diff Tool UI makes numerous requests to Polarion using the REST API to retrieve information about documents and their workitems. These requests can be processed in parallel to improve performance.
+The number of parallel requests can be configured in `polarion.properties` file:
+
+```properties
+ch.sbb.polarion.extension.diff-tool.chunk.size=2
+```
+
+Default value is `2`. Increasing this value may speed up the process but can also overload your Polarion server.
+
 ## Extension Configuration
 
 1. On the top of the project's navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Project's administration page will be opened.

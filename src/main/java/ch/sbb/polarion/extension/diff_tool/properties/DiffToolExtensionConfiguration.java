@@ -13,7 +13,7 @@ import java.util.List;
 public class DiffToolExtensionConfiguration extends ExtensionConfiguration {
     public static final String CHUNK_SIZE = "chunk.size";
     public static final String CHUNK_SIZE_DESCRIPTION = "The number of parallel executed requests to the server";
-    public static final Integer CHUNK_SIZE_DEFAULT_VALUE = 3;
+    public static final Integer CHUNK_SIZE_DEFAULT_VALUE = 2;
 
     public Integer getChunkSize() {
         return SystemValueReader.getInstance().readInt(getPropertyPrefix() + CHUNK_SIZE, CHUNK_SIZE_DEFAULT_VALUE);
