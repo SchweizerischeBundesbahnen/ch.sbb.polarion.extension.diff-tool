@@ -12,7 +12,7 @@ import java.util.List;
 @Discoverable
 public class DiffToolExtensionConfiguration extends ExtensionConfiguration {
     public static final String CHUNK_SIZE = "chunk.size";
-    public static final String CHUNK_SIZE_DESCRIPTION = "The number of parallel executed requests to the server";
+    public static final String CHUNK_SIZE_DESCRIPTION = "The number of <a href='#fine-tuning-the-communication-between-polarion-and-diff-tool-extension'>parallel executed requests</a> to the server";
     public static final Integer CHUNK_SIZE_DEFAULT_VALUE = 2;
 
     public Integer getChunkSize() {
