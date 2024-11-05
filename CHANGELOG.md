@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.3.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.3.0...v4.3.1) (2024-11-05)
+
+
+### Bug Fixes
+
+* 'select all' behavior fix ([#82](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/82)) ([d0013b6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d0013b6d50cc9a2fc92d87349b24f3b88596b242))
+* concurrent modification after second merge issue fix ([#120](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/120)) ([65c6613](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/65c6613a94ffe0882853d38f3af53c41036d4219)), closes [#113](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/113)
+* During copying of a document into another project using diff tool links in rich text fields should be replaced by counterparts in target project ([#121](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/121)) ([8c4295d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/8c4295dacec2f72d8278cc541f9a19e952685346))
+
 ## [4.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.2.6...v4.3.0) (2024-11-03)
 
 
