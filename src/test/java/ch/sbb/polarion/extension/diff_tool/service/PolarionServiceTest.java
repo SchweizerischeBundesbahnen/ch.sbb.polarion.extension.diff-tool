@@ -167,11 +167,11 @@ class PolarionServiceTest {
 
         String result = service.replaceLinksToPairedWorkItems(from, to, "expectedLinkRole", """
                 item to replace
-                <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="A-1" data-option-id="short"></span>
+                <span data-type="workItem" id="fake" data-item-id="A-1" data-option-id="short" class="polarion-rte-link"></span>
                 <span>some random span and one more to replace</span>
-                <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="A-2" data-option-id="short"></span>
+                <span data-type="workItem" class="polarion-rte-link" id="fake" data-item-id="A-2" data-option-id="short"></span>
                 one more but this time with revision which must be cleaned after merge
-                <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="A-2" data-revision="42" data-option-id="short"></span>
+                <span class="polarion-rte-link" id="fake" data-item-id="A-2" data-revision="42" data-type="workItem" data-option-id="short"></span>
                 this has projectId explicitly
                 <span class="polarion-rte-link" data-type="workItem" id="fake" data-scope="projectIdC" data-item-id="C-3" data-option-id="short"></span>
                 item below has no pair
@@ -184,11 +184,11 @@ class PolarionServiceTest {
 
         assertEquals("""
                 item to replace
-                <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="B-1" data-option-id="short"></span>
+                <span data-type="workItem" id="fake" data-item-id="B-1" data-option-id="short" class="polarion-rte-link"></span>
                 <span>some random span and one more to replace</span>
-                <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="B-2" data-option-id="short"></span>
+                <span data-type="workItem" class="polarion-rte-link" id="fake" data-item-id="B-2" data-option-id="short"></span>
                 one more but this time with revision which must be cleaned after merge
-                <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="B-2r" data-option-id="short"></span>
+                <span class="polarion-rte-link" id="fake" data-item-id="B-2r" data-type="workItem" data-option-id="short"></span>
                 this has projectId explicitly
                 <span class="polarion-rte-link" data-type="workItem" id="fake" data-item-id="B-3" data-option-id="short"></span>
                 item below has no pair
