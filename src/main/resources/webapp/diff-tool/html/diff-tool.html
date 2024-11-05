@@ -65,6 +65,25 @@
             {CONFIG_OPTIONS}
         </select>
     </div>
+    <div class='property-wrapper hide-when-new-document'>
+        <input type='checkbox' id='use-work-items-filter' onclick='DiffTool.toggleWorkItemsFilter()'/>
+        <label for='use-work-items-filter'>Use work items filter</label>
+    </div>
+    <div class='property-wrapper hide-when-new-document'>
+        <div id="work-items-filter-pane" style="display: none; width: 100%">
+            <div id="work-items-filter-radios">
+                <input type="radio" id="include-work-items" name="work-items-filter-type" value="including">
+                <label for="include-work-items">Only work items</label>
+                <input type="radio" id="exclude-work-items" name="work-items-filter-type" value="excluding" checked="checked">
+                <label for="exclude-work-items">Excluding work items</label>
+            </div>
+
+            <div id ="work-items-filter" style="margin: 5px 0 0 5px;">
+                <input id="work-items-filter-input" placeholder="comma separated list of IDs" type="text" style="width: 100%;"/>
+            </div>
+        </div>
+    </div>
+
     <div class='buttons-wrapper hide-when-new-document'>
         <button type='button' id="compare-documents" disabled onclick='DiffTool.showDiffResult()'>
             <img src='/polarion/ria/images/dle/operations/compare.png'/>Compare

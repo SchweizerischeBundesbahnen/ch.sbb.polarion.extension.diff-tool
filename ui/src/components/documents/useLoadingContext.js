@@ -1,6 +1,5 @@
 import {useContext, useEffect, useState} from "react";
 import AppContext from "@/components/AppContext";
-import {useSearchParams} from "next/navigation";
 import useRemote from "@/services/useRemote";
 
 const PAUSED = 0;
@@ -10,7 +9,6 @@ const FINISHED = 2;
 export default function useLoadingContext() {
   const remote = useRemote();
   const appContext = useContext(AppContext);
-  const searchParams = useSearchParams();
 
   const [chunkSize, setChunkSize] = useState(2);
   const [pairsLoading, setPairsLoading] = useState(true); // We consider initial state as pairs loading even prior sending factual request, otherwise view will be undefined

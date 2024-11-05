@@ -30,7 +30,7 @@ export default function useDiffService() {
             }
           })
           .then(data =>  {
-            loadingContext.pairsLoadingFinished(data.pairedWorkItems.slice());
+            loadingContext.pairsLoadingFinished(getFilteredPairs(data.pairedWorkItems.slice(), searchParams));
             resolve(data);
           })
           .catch(errorResponse => {
@@ -40,6 +40,20 @@ export default function useDiffService() {
             });
           });
     });
+  };
+
+  const getFilteredPairs = (pairs, searchParams) => {
+    const filterHash = searchParams.get("filter");
+    if (filterHash && localStorage && localStorage.getItem(filterHash + "_filter")) {
+      const filter = localStorage.getItem(filterHash + "_filter").split(",");
+      if (localStorage.getItem(filterHash + "_type") === "exclude") {
+        return pairs.filter(pair => !pair.leftWorkItem || !filter.includes(pair.leftWorkItem.id));
+      } else if (localStorage.getItem(filterHash + "_type") === "include") {
+        return pairs.filter(pair => pair.leftWorkItem && filter.includes(pair.leftWorkItem.id))
+      }
+    }
+
+    return pairs;
   };
 
   const sendMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData) => {
