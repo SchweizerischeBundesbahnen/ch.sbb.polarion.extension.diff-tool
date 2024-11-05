@@ -61,6 +61,24 @@ export function useMergingContext() {
     return (!item1 && !item2) || (item1 && item2 && item1.outlineNumber === item2.outlineNumber && item2.movedOutlineNumber === item2.movedOutlineNumber);
   };
 
+  const isIndexSelected = (indexToCheck) => {
+    return !!selectionRegistry.get(indexToCheck);
+  };
+
+  const getSelectedValues = () => {
+    return Array.from(selectionRegistry.values()).filter(value => value);
+  };
+
+  const getSelectedIndexes = () => {
+    const selectedIndexes = [];
+    for (let index of selectionRegistry.keys()) {
+      if (selectionRegistry.get(index)) {
+        selectedIndexes.push(index);
+      }
+    }
+    return selectedIndexes;
+  };
+
   const resetSelection = () => {
     setSelectionRegistry(r => {
       const registry = new Map(r);
@@ -76,5 +94,6 @@ export function useMergingContext() {
     setSelectAllTrigger(selectAllTrigger === Number.MAX_SAFE_INTEGER ? 1 : selectAllTrigger + 1);
   };
 
-  return { selectionRegistry, resetRegistryEntry, selectionCount, setPairSelected, isPairSelected, resetSelection, selectAll, setSelectAll, selectAllTrigger, setAndApplySelectAll };
+  return { selectionRegistry, resetRegistryEntry, selectionCount, setPairSelected, isPairSelected, isIndexSelected, resetSelection,
+    getSelectedValues, getSelectedIndexes, selectAll, setSelectAll, selectAllTrigger, setAndApplySelectAll };
 }

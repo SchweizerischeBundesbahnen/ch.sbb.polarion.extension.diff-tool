@@ -95,7 +95,8 @@ public class MergeService {
                         polarionService.fixReferencedWorkItem(target, context.getTargetModule(), iLinkRole);
                         reloadModule(context.getTargetModule());
                     } else {
-                        throw new IllegalArgumentException("Cannot merge into referenced work item: (%s) -> (%s)".formatted(source.getId(), target.getId()));
+                        prohibited.add(pair);
+                        return true;
                     }
                 }
 
