@@ -220,14 +220,14 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             createdModule.save();
 
             cleanUpNonListFields(createdModule, targetProjectContextId, allowedFields);
-            if (!sourceProjectId.equals(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())) {
-                fixLinksInRichTextFields(createdModule, sourceProjectId, linkRole.getId(), allowedFields);
-            }
 
             return createdModule;
         }));
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
+            if (!sourceProjectId.equals(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())) {
+                fixLinksInRichTextFields(targetModule, sourceProjectId, linkRole.getId(), allowedFields);
+            }
             cleanUpListFields(targetModule, targetProjectContextId, allowedFields);
             return null;
         });
