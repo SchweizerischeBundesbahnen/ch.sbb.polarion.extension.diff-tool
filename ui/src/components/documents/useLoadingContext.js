@@ -43,6 +43,12 @@ export default function useLoadingContext() {
   }, []);
 
   useEffect(() => {
+    if (chunkSize !== 1 && pairs.length > 0) {
+      pairsLoadingFinished(pairs);
+    }
+  }, [chunkSize, pairs]);
+
+  useEffect(() => {
     // In case of loading errors we stop further data portions loading that's why consider process as finished (100%)
     const progress = pairsCount > 0 ? (diffsLoadingErrors ? 100 : Math.min(100, Math.floor((loadedDiffs * 100) / pairsCount))) : 0;
     setDiffsLoadingProgress(progress);
@@ -110,7 +116,20 @@ export default function useLoadingContext() {
   };
 
   return {
-    pairsLoading, pairsLoadingError, pairs, pairsCount, loadedDiffs, diffsLoadingProgress, diffsLoadingErrors, reloadMarker,
-    pairLoadingAllowed, pairsLoadingStarted, pairsLoadingFinished, pairsLoadingFinishedWithError, diffLoadingFinished, resetDiffsLoadingState, reload
+    pairsLoading,
+    pairsLoadingError,
+    pairs,
+    pairsCount,
+    loadedDiffs,
+    diffsLoadingProgress,
+    diffsLoadingErrors,
+    reloadMarker,
+    pairLoadingAllowed,
+    pairsLoadingStarted,
+    pairsLoadingFinished,
+    pairsLoadingFinishedWithError,
+    diffLoadingFinished,
+    resetDiffsLoadingState,
+    reload,
   };
 }
