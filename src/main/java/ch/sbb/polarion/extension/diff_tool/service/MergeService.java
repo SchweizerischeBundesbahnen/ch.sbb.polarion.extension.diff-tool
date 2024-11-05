@@ -96,6 +96,7 @@ public class MergeService {
                         reloadModule(context.getTargetModule());
                     } else {
                         prohibited.add(pair);
+                        return true;
                     }
                 }
 
