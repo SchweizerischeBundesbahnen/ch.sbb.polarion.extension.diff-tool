@@ -32,7 +32,7 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
   const [error, setError] = useState(null);
   const [diffs, setDiffs] = useState([]);
   const [dataLoadedFired, setDataLoadedFired] = useState(false);
-  const [selected, setSelected] = useState(!!mergingContext.selectionRegistry.get(currentIndex));
+  const [selected, setSelected] = useState(mergingContext.isIndexSelected(currentIndex));
   const [childrenSelectionModalVisible, setChildrenSelectionModalVisible] = useState(false);
 
   useEffect(() => {
@@ -148,7 +148,7 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
   }, [diffData, error]);
 
   useEffect(() => {
-    setSelected(!!mergingContext.selectionRegistry.get(currentIndex));
+    setSelected(mergingContext.isIndexSelected(currentIndex));
   }, [mergingContext.selectionRegistry]);
 
   useEffect(() => {

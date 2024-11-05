@@ -59,7 +59,7 @@ export default function useDiffService() {
           linkRole: searchParams.get('linkRole'),
           configName: searchParams.get('config'),
           configCacheBucketId: configCacheId,
-          pairs: filterRedundant(Array.from(mergingContext.selectionRegistry.values()))
+          pairs: filterRedundant(mergingContext.getSelectedValues())
         }),
         contentType: "application/json"
       })
@@ -76,7 +76,7 @@ export default function useDiffService() {
             }
           })
           .then((data) =>  {
-            loadingContext.reload(Array.from(mergingContext.selectionRegistry.keys()));
+            loadingContext.reload(mergingContext.getSelectedIndexes());
             resolve(data);
           })
           .catch(errorResponse => {
