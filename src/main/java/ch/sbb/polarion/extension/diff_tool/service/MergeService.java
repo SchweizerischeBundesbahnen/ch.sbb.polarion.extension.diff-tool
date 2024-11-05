@@ -95,7 +95,8 @@ public class MergeService {
                         polarionService.fixReferencedWorkItem(target, context.getTargetModule(), iLinkRole);
                         reloadModule(context.getTargetModule());
                     } else {
-                        throw new IllegalArgumentException("Cannot merge into referenced work item: (%s) -> (%s)".formatted(source.getId(), target.getId()));
+                        prohibited.add(pair);
+                        return true;
                     }
                 }
 
@@ -163,6 +164,10 @@ public class MergeService {
             reloadModule(context.getTargetModule());
             return null;
         });
+        for (WorkItemsPair pair : modified) {
+            WorkItem targetWorkItem = context.getTargetWorkItem(pair);
+            targetWorkItem.setLastRevision(getWorkItem(targetWorkItem).getLastRevision());
+        }
         return MergeResult.builder().success(true)
                 .createdPairs(created).modifiedPairs(modified).conflictedPairs(conflicted).prohibitedPairs(prohibited).notPaired(notPaired).movedPairs(moved).notMovedPairs(notMoved)
                 .targetModuleHasStructuralChanges(!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision()))

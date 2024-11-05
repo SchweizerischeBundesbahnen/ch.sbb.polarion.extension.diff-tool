@@ -32,7 +32,7 @@ export default function MergePane({leftDocument, rightDocument, mergingContext, 
 
   const confirmMerge = (direction) => {
     setDirection(direction);
-    const pairsToMerge = Array.from(mergingContext.selectionRegistry.values());
+    const pairsToMerge = mergingContext.getSelectedValues();
     setStructuralChanges(containsStructuralChanges(pairsToMerge));
     setModalVisible(true);
   };
@@ -65,7 +65,7 @@ export default function MergePane({leftDocument, rightDocument, mergingContext, 
                 display: selectAllVisible ? "inline-block" : "none"
               }}>
                 <input className="form-check-input" type="checkbox" checked={mergingContext.selectAll} onChange={() => {
-                  mergingContext.setSelectAll(!mergingContext.selectAll)
+                  mergingContext.setAndApplySelectAll(!mergingContext.selectAll);
                 }}/>
                 select all
               </label>

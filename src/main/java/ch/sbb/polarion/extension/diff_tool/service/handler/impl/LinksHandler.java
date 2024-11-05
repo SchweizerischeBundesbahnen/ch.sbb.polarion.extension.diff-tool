@@ -17,6 +17,20 @@ import java.util.regex.Pattern;
 
 @NoArgsConstructor
 public class LinksHandler implements DiffLifecycleHandler {
+
+    /*
+     * Link must have specific class attribute, data-type="workItem" and data-item-id which contains work item ID.
+     * Also link may have data-scope & data-revision attributes in some cases so in this regex they are optional.
+     * Note that all those attributes may come in random order.
+     */
+    public static final String LINK_REGEX = "<span\\s+" +
+                                            "(?=[^>]*class=\"polarion-rte-link\")" +
+                                            "(?=[^>]*data-type=\"workItem\")" +
+                                            "(?=[^>]*data-item-id=\"(?<workItemId>[^\"]+?)\")" +
+                                            "(?=[^>]*data-scope=\"(?<workItemProjectId>[^\"]+?)\")?" +
+                                            "(?=[^>]*data-revision=\"(?<workItemRevision>[^\"]+?)\")?" +
+                                            "[^>]*?>";
+
     private static final String DATA_PAIRED_ITEM_ID = "data-paired-item-id";
     private static final String SPAN_START = "<span";
     private static final String SPAN_END = "</span>";
@@ -40,16 +54,15 @@ public class LinksHandler implements DiffLifecycleHandler {
     }
 
     String appendPairedWorkItemId(String html, @NotNull String sourceProjectId, @NotNull String targetProjectId, @NotNull DiffContext context) {
-        Pattern pattern = Pattern.compile("(?<match><span class=\"polarion-rte-link\" data-type=\"workItem\"([^>]+?data-scope=\"(?<workItemProjectId>[^\"]+?)\")*[^>]+?data-item-id=\"(?<workItemId>[^\"]+?)\"" +
-                "([^>]+?data-revision=\"(?<workItemRevision>[^\"]+?)\")*)");
+        Pattern pattern = Pattern.compile(LINK_REGEX);
         Matcher matcher = pattern.matcher(html);
 
         StringBuilder buf = new StringBuilder();
         while (matcher.find()) {
-            String match = matcher.group("match");
+            String match = matcher.group();
             String workItemProjectId = StringUtils.defaultString(matcher.group("workItemProjectId"), sourceProjectId); //data-scope is rendered in case of another project reference
-            String workItemId = matcher.group("workItemId");
             String revision = matcher.group("workItemRevision");
+            String workItemId = matcher.group("workItemId");
             IWorkItem workItem = null;
             try {
                 workItem = context.polarionService.getWorkItem(workItemProjectId, workItemId, revision);
@@ -58,9 +71,7 @@ public class LinksHandler implements DiffLifecycleHandler {
             }
             IWorkItem pairedWorkItem = workItem != null ? context.polarionService.getPairedWorkItems(workItem, targetProjectId, context.pairedWorkItemsLinkRole).stream().findFirst().orElse(null) : null;
             if (pairedWorkItem != null) {
-                matcher.appendReplacement(buf, String.format("%s %s=\"%s\"", match, DATA_PAIRED_ITEM_ID, pairedWorkItem.getId()));
-            } else {
-                matcher.appendReplacement(buf, String.format("%s", match));
+                matcher.appendReplacement(buf, match.replace(">", " %s=\"%s\">".formatted(DATA_PAIRED_ITEM_ID, pairedWorkItem.getId())));
             }
         }
         matcher.appendTail(buf);

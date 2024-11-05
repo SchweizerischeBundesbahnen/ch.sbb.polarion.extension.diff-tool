@@ -32,7 +32,7 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
   const [error, setError] = useState(null);
   const [diffs, setDiffs] = useState([]);
   const [dataLoadedFired, setDataLoadedFired] = useState(false);
-  const [selected, setSelected] = useState(!!mergingContext.selectionRegistry.get(currentIndex));
+  const [selected, setSelected] = useState(mergingContext.isIndexSelected(currentIndex));
   const [childrenSelectionModalVisible, setChildrenSelectionModalVisible] = useState(false);
 
   useEffect(() => {
@@ -138,22 +138,25 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
       const leftWiId = workItemsPair.leftWorkItem ? workItemsPair.leftWorkItem.id : null;
       const rightWiId = workItemsPair.rightWorkItem ? workItemsPair.rightWorkItem.id : null;
       dataLoadedCallback(currentIndex, error, diffsExist, selected, leftChapter, rightChapter, leftWiId, rightWiId);
-      if (selected && !diffsExist) {
-        mergingContext.setPairSelected(currentIndex, workItemsPair, false); // if no diffs for certain work items pair - unselect this pair if it was previously selected
+      if (diffsExist) {
+        mergingContext.setPairSelected(currentIndex, workItemsPair, selected); // Initialize pair in selection registry
+      } else {
+        mergingContext.resetRegistryEntry(currentIndex); // Reset pair in selection registry
       }
       setDataLoadedFired(true);
     }
   }, [diffData, error]);
 
   useEffect(() => {
-    setSelected(!!mergingContext.selectionRegistry.get(currentIndex));
+    setSelected(mergingContext.isIndexSelected(currentIndex));
   }, [mergingContext.selectionRegistry]);
 
   useEffect(() => {
-    if (mergingContext.selectAll !== selected && diffService.diffsExist(workItemsPair, diffs)) {
+    // selectAllTrigger of 0 value is initial value which should be ignored
+    if (mergingContext.selectAllTrigger > 0 && mergingContext.selectAll !== selected && diffService.diffsExist(workItemsPair, diffs)) {
       pairSelected(mergingContext.selectAll, true);
     }
-  }, [mergingContext.selectAll]);
+  }, [mergingContext.selectAllTrigger]);
 
   const pairSelected = (selected, forceAndSuppressWarnings) => {
     if (workItemsPair) {
