@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.4.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.3.1...v4.4.0) (2024-11-05)
+
+
+### Features
+
+* Add exclusion/inclusion filter of work items to be diffed/merged ([#130](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/130)) ([c6bb3ee](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/c6bb3ee075cde96fe2e6bf9ed62e0bd7690bb3c0)), closes [#123](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/123)
+* prevent uncontrolled chunks parameter changes by the user ([#126](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/126)) ([e6de243](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/e6de243ff7731ba9752293658f46c9618d561cc9)), closes [#118](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/118)
+
+
+### Bug Fixes
+
+* documentation update ([#129](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/129)) ([6d1b150](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/6d1b15008c937972ca22fc70d2b5db584c245807)), closes [#118](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/118)
+* prevent uncontrolled chunks parameter changes by the user ([#128](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/128)) ([1d83ce4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/1d83ce4a418c40ce69d4a59f76e6a2e058745d6f)), closes [#118](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/118)
+
 ## [4.3.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.3.0...v4.3.1) (2024-11-05)
 
 
