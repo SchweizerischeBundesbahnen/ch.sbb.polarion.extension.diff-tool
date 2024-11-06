@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
 
@@ -13,11 +14,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MergeReportEntry {
-    private WorkItemsPair workItemsPair;
-    private String description;
-    private LocalDateTime operationTime;
+    private @NotNull MergeReport.OperationResultType operationResultType;
+    private @NotNull WorkItemsPair workItemsPair;
+    private @NotNull String description;
+    private @NotNull LocalDateTime operationTime;
 
-    public MergeReportEntry(WorkItemsPair workItemsPair, String description) {
+    public MergeReportEntry(@NotNull MergeReport.OperationResultType operationResultType, @NotNull WorkItemsPair workItemsPair, @NotNull String description) {
+        this.operationResultType = operationResultType;
         this.workItemsPair = workItemsPair;
         this.description = description;
         this.operationTime = LocalDateTime.now();

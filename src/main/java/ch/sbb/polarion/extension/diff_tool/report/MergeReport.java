@@ -1,63 +1,89 @@
 package ch.sbb.polarion.extension.diff_tool.report;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
-import lombok.Getter;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-@Getter
 public class MergeReport {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
-    private final List<MergeReportEntry> conflicted;
-    private final List<MergeReportEntry> prohibited;
-    private final List<MergeReportEntry> notPaired;
-    private final List<MergeReportEntry> created;
-    private final List<MergeReportEntry> modified;
-    private final List<MergeReportEntry> moved;
-    private final List<MergeReportEntry> notMoved;
+    private final List<MergeReportEntry> entries;
 
     public MergeReport() {
-        conflicted = new ArrayList<>();
-        prohibited = new ArrayList<>();
-        notPaired = new ArrayList<>();
-        created = new ArrayList<>();
-        modified = new ArrayList<>();
-        moved = new ArrayList<>();
-        notMoved = new ArrayList<>();
+        entries = new ArrayList<>();
+    }
+
+    public List<MergeReportEntry> getEntriesByType(OperationResultType operationResultType) {
+        return entries.stream()
+                .filter(entry -> entry.getOperationResultType() == operationResultType)
+                .toList();
+    }
+
+    public List<MergeReportEntry> getConflicted() {
+        return getEntriesByType(OperationResultType.CONFLICTED);
+    }
+
+    public List<MergeReportEntry> getProhibited() {
+        return getEntriesByType(OperationResultType.PROHIBITED);
+    }
+
+    public List<MergeReportEntry> getNotPaired() {
+        return getEntriesByType(OperationResultType.NOT_PAIRED);
+    }
+
+    public List<MergeReportEntry> getCreated() {
+        return getEntriesByType(OperationResultType.CREATED);
+    }
+
+    public List<MergeReportEntry> getModified() {
+        return getEntriesByType(OperationResultType.MODIFIED);
+    }
+
+    public List<MergeReportEntry> getMoved() {
+        return getEntriesByType(OperationResultType.MOVED);
+    }
+
+    public List<MergeReportEntry> getNotMoved() {
+        return getEntriesByType(OperationResultType.NOT_MOVED);
     }
 
     public String getLogs() {
-        return Stream.of(
-                        conflicted.stream().map(entry -> formatLogEntry(entry, "CONFLICTED")),
-                        prohibited.stream().map(entry -> formatLogEntry(entry, "PROHIBITED")),
-                        notPaired.stream().map(entry -> formatLogEntry(entry, "NOT_PAIRED")),
-                        created.stream().map(entry -> formatLogEntry(entry, "CREATED")),
-                        modified.stream().map(entry -> formatLogEntry(entry, "MODIFIED")),
-                        moved.stream().map(entry -> formatLogEntry(entry, "MOVED")),
-                        notMoved.stream().map(entry -> formatLogEntry(entry, "NOT_MOVED"))
-                )
-                .flatMap(stream -> stream)
-                .sorted(Comparator.comparing(entry -> entry.split(": ")[0]))
+        return entries.stream()
+                .sorted(Comparator.comparing(entry -> entry.getOperationTime().format(DATE_TIME_FORMATTER)))
+                .map(this::formatLogEntry)
                 .collect(Collectors.joining(System.lineSeparator()));
     }
 
-    private String formatLogEntry(MergeReportEntry entry, String action) {
+    private String formatLogEntry(MergeReportEntry entry) {
         WorkItem leftWorkItem = entry.getWorkItemsPair().getLeftWorkItem();
         String leftWorkItemId = leftWorkItem == null ? "null" : leftWorkItem.getId();
         WorkItem rightWorkItem = entry.getWorkItemsPair().getRightWorkItem();
         String rightWorkItemId = rightWorkItem == null ? "null" : rightWorkItem.getId();
+
         return String.format("%s: '%s' -- left WI '%s', right WI '%s' -- %s",
                 entry.getOperationTime().format(DATE_TIME_FORMATTER),
-                action,
+                entry.getOperationResultType(),
                 leftWorkItemId,
                 rightWorkItemId,
                 entry.getDescription());
+    }
+
+    public void addEntry(MergeReportEntry entry) {
+        entries.add(entry);
+    }
+
+    public enum OperationResultType {
+        CONFLICTED,
+        PROHIBITED,
+        NOT_PAIRED,
+        CREATED,
+        MODIFIED,
+        MOVED,
+        NOT_MOVED
     }
 
 }

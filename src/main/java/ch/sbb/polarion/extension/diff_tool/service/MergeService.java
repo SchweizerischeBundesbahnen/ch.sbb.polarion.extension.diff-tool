@@ -91,7 +91,7 @@ public class MergeService {
                         polarionService.fixReferencedWorkItem(target, context.getTargetModule(), iLinkRole);
                         reloadModule(context.getTargetModule());
                     } else {
-                        mergeReport.getProhibited().add(new MergeReportEntry(pair, "target workitem '%s' and target document '%s' in different projects: '%s' and '%s'".formatted(target.getId(), context.getTargetModule(), target.getProjectId(), context.getTargetModule().getProjectId())));
+                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.PROHIBITED, pair, "target workitem '%s' and target document '%s' in different projects: '%s' and '%s'".formatted(target.getId(), context.getTargetModule(), target.getProjectId(), context.getTargetModule().getProjectId())));
                         return true;
                     }
                 }
@@ -100,10 +100,10 @@ public class MergeService {
                     if (context.getSourceModule().getExternalWorkItems().contains(source)) {
                         IWorkItem createdWorkItem = insertReferencedWorkItem(source, context);
                         if (createdWorkItem != null) {
-                            mergeReport.getCreated().add(new MergeReportEntry(pair, "new workitem '%s' based on source workitem '%s' created".formatted(createdWorkItem.getId(), source.getId())));
+                            mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(createdWorkItem.getId(), source.getId())));
                             reloadModule(context.getTargetModule());
                         } else {
-                            mergeReport.getNotPaired().add(new MergeReportEntry(pair, "new workitem based on source workitem '%s' NOT created".formatted(source.getId())));
+                            mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.NOT_PAIRED, pair, "new workitem based on source workitem '%s' NOT created".formatted(source.getId())));
                         }
                     } else {
                         IWorkItem newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context);
@@ -114,7 +114,7 @@ public class MergeService {
                                         newWorkItem.getProjectId().equals(context.getTargetModule().getProjectId())
                                 )
                         );
-                        mergeReport.getCreated().add(new MergeReportEntry(pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId())));
+                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId())));
                         reloadModule(context.getTargetModule());
                     }
                     return true;
@@ -134,10 +134,10 @@ public class MergeService {
                 if (source != null && target != null && moveAction(pair)) {
                     if (move(source, target, context)) {
                         target.save();
-                        mergeReport.getMoved().add(new MergeReportEntry(pair, "workitem '%s' moved".formatted(target.getId())));
+                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.MOVED, pair, "workitem '%s' moved".formatted(target.getId())));
                         reloadModule(context.getTargetModule());
                     } else {
-                        mergeReport.getNotMoved().add(new MergeReportEntry(pair, "workitem '%s' NOT moved".formatted(target.getId())));
+                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.NOT_MOVED, pair, "workitem '%s' NOT moved".formatted(target.getId())));
                     }
                     return true;
                 }
@@ -150,12 +150,12 @@ public class MergeService {
                 IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
 
                 if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
-                    mergeReport.getConflicted().add(new MergeReportEntry(pair, "Merge is not allowed: target workitem '%s' revision '%s' has been already changed to '%s'".formatted(target.getId(), context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision())));
+                    mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.CONFLICTED, pair, "Merge is not allowed: target workitem '%s' revision '%s' has been already changed to '%s'".formatted(target.getId(), context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision())));
                 } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
-                    mergeReport.getProhibited().add(new MergeReportEntry(pair, "Don't allow merging referenced work item into included one"));
+                    mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.PROHIBITED, pair, "Don't allow merging referenced work item into included one"));
                 } else {
                     merge(source, target, diffModel.getDiffFields(), linkRole);
-                    mergeReport.getModified().add(new MergeReportEntry(pair, "workitem '%s' modified with info from '%s'".formatted(target.getId(), source.getId())));
+                    mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.MODIFIED, pair, "workitem '%s' modified with info from '%s'".formatted(target.getId(), source.getId())));
                 }
             }
             reloadModule(context.getTargetModule());
