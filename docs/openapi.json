@@ -1260,20 +1260,13 @@
             "description": "Type of the operation result",
             "enum": [
               "CONFLICTED",
-              "PROHIBITED",
-              "NOT_PAIRED",
               "CREATED",
               "DELETED",
               "MODIFIED",
               "MOVED",
               "NOT_MOVED",
-              "CONFLICTED",
-              "PROHIBITED",
               "NOT_PAIRED",
-              "CREATED",
-              "MODIFIED",
-              "MOVED",
-              "NOT_MOVED"
+              "PROHIBITED"
             ],
             "type": "string"
           },

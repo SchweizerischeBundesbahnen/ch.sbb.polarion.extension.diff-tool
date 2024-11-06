@@ -210,7 +210,7 @@ export default function DocumentsDiff() {
       <p>{mergeError}</p>
     </Modal>
     <Modal title="Merge Report" cancelButtonTitle="Close" visible={mergeReportModalVisible}
-           setVisible={setWarningModalVisibleAndReloadIfNeeded} className="modal-lg">
+           setVisible={setWarningModalVisibleAndReloadIfNeeded} className="modal-xl">
       <div style={{
         marginBottom: "10px"
       }}>
@@ -241,7 +241,8 @@ export default function DocumentsDiff() {
                 overflow: "auto",
                 borderRadius: "5px",
                 fontSize: ".8em",
-                height: "400px"
+                height: "400px",
+                textWrap: "wrap"
               }}>{mergeReport.logs}</pre>}
             </>
         }
@@ -261,7 +262,7 @@ export default function DocumentsDiff() {
                             currentIndex={index} loadingContext={loadingContext} mergingContext={mergingContext}
                             unSelectionAllowedCallback={unSelectionAllowed} selectChildrenCallback={selectChildren}
                             setMirroredPairSelectedCallback={setMirroredPairSelected}
-                            createdPairs={mergeReport.created || []} modifiedPairs={mergeReport.modified || []}/>;
+                            createdReportEntries={mergeReport.created || []} modifiedReportEntries={mergeReport.modified || []}/>;
 
     })}
   </div>;

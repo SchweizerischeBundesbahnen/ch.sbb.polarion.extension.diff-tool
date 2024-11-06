@@ -15,7 +15,7 @@ const RETRY_MARKER = "RETRY";
 
 export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPair, pairedWorkItemsLinkRole, configCacheId, dataLoadedCallback,
                                        leftChaptersDiffMarkers, rightChaptersDiffMarkers, currentIndex, loadingContext, mergingContext,
-                                       unSelectionAllowedCallback, selectChildrenCallback, setMirroredPairSelectedCallback, createdPairs, modifiedPairs}) {
+                                       unSelectionAllowedCallback, selectChildrenCallback, setMirroredPairSelectedCallback, createdReportEntries, modifiedReportEntries}) {
   const context = useContext(AppContext);
   const searchParams = useSearchParams();
   const remote = useRemote();
@@ -59,8 +59,8 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
       configName: searchParams.get('config'),
       configCacheBucketId: configCacheId
     };
-    if (!workItemsPair.leftWorkItem && createdPairs) {
-      let newPairData = findPair(createdPairs, workItemsPair.rightWorkItem.id);
+    if (!workItemsPair.leftWorkItem && createdReportEntries) {
+      let newPairData = findPair(createdReportEntries, workItemsPair.rightWorkItem.id);
       if (newPairData) {
         workItemsPair.leftWorkItem = newPairData.leftWorkItem;
       }
@@ -72,8 +72,8 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
         documentLocationPath: leftDocument.locationPath,
         documentRevision: leftDocument.revision
       }
-      if (modifiedPairs) {
-        let modifiedPairData = findPair(modifiedPairs, workItemsPair.leftWorkItem.id);
+      if (modifiedReportEntries) {
+        let modifiedPairData = findPair(modifiedReportEntries, workItemsPair.leftWorkItem.id);
         if (modifiedPairData) {
           workItemsPair.leftWorkItem = modifiedPairData.leftWorkItem;
         }
@@ -83,8 +83,8 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
         body.leftWorkItem.revision = workItemsPair.leftWorkItem.revision;
       }
     }
-    if (!workItemsPair.rightWorkItem && createdPairs) {
-      let newPairData = findPair(createdPairs, workItemsPair.leftWorkItem.id);
+    if (!workItemsPair.rightWorkItem && createdReportEntries) {
+      let newPairData = findPair(createdReportEntries, workItemsPair.leftWorkItem.id);
       if (newPairData) {
         workItemsPair.rightWorkItem = newPairData.rightWorkItem;
       }
@@ -96,8 +96,8 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
         documentLocationPath: rightDocument.locationPath,
         documentRevision: rightDocument.revision
       }
-      if (modifiedPairs) {
-        let modifiedPairData = findPair(modifiedPairs, workItemsPair.rightWorkItem.id);
+      if (modifiedReportEntries) {
+        let modifiedPairData = findPair(modifiedReportEntries, workItemsPair.rightWorkItem.id);
         if (modifiedPairData) {
           workItemsPair.rightWorkItem = modifiedPairData.rightWorkItem;
         }
@@ -178,10 +178,12 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
     }
   };
 
-  const findPair = (pairs, workItemId) => {
-    return pairs.find(item => {
-      return (item.leftWorkItem && item.leftWorkItem.id === workItemId) || (item.rightWorkItem && item.rightWorkItem.id === workItemId);
+  const findPair = (reportEntries, workItemId) => {
+    const reportEntry = reportEntries.find(entry => {
+      return (entry.workItemsPair.leftWorkItem && entry.workItemsPair.leftWorkItem.id === workItemId)
+          || (entry.workItemsPair.rightWorkItem && entry.workItemsPair.rightWorkItem.id === workItemId);
     });
+    return reportEntry && reportEntry.workItemsPair;
   };
 
   const requestDiff = (body, triesCount) => {
