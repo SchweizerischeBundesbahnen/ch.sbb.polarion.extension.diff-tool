@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MergeReportEntry {
-    @Schema(description = "Type of the operation result", allowableValues = {"CONFLICTED", "PROHIBITED", "NOT_PAIRED", "CREATED", "MODIFIED", "MOVED", "NOT_MOVED"})
+    @Schema(description = "Type of the operation result")
     private @NotNull MergeReport.OperationResultType operationResultType;
     @Schema(description = "WorkItem pairs", implementation = WorkItemsPair.class)
     private @NotNull WorkItemsPair workItemsPair;
