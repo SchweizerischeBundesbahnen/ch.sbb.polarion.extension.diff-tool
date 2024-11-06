@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.4.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.4.0...v4.4.1) (2024-11-06)
+
+
+### Bug Fixes
+
+* comma or space separated list of IDs in work items filter ([#134](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/134)) ([4857109](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/48571099365e85326c51f70c303d8cfbeff74ca1)), closes [#132](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/132)
+
 ## [4.4.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.3.1...v4.4.0) (2024-11-05)
 
 
