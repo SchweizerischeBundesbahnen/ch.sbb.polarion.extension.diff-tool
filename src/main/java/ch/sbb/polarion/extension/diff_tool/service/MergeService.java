@@ -120,6 +120,7 @@ public class MergeService {
                     return true;
                 } else if (source == null && target != null) { // "source" is null in this case, so "target" to be deleted
                     deleteWorkItemFromDocument(context.getTargetDocumentIdentifier(), target);
+                    mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.DELETED, pair, "workitem '%s' deleted in target document".formatted(target.getId())));
                     reloadModule(context.getTargetModule());
                     return true;
                 }

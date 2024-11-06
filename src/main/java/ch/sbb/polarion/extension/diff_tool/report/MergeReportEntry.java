@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.report;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,8 +21,10 @@ public class MergeReportEntry {
     @Schema(description = "WorkItem pairs", implementation = WorkItemsPair.class)
     private @NotNull WorkItemsPair workItemsPair;
     @Schema(description = "Extended description of the operation")
+    @JsonIgnore
     private @NotNull String description;
     @Schema(description = "Date and time of the operation")
+    @JsonIgnore
     private @NotNull LocalDateTime operationTime;
 
     public MergeReportEntry(@NotNull MergeReport.OperationResultType operationResultType, @NotNull WorkItemsPair workItemsPair, @NotNull String description) {

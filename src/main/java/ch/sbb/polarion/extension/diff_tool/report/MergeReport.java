@@ -41,6 +41,10 @@ public class MergeReport {
         return getEntriesByType(OperationResultType.CREATED);
     }
 
+    public List<MergeReportEntry> getDeleted() {
+        return getEntriesByType(OperationResultType.DELETED);
+    }
+
     public List<MergeReportEntry> getModified() {
         return getEntriesByType(OperationResultType.MODIFIED);
     }
@@ -83,6 +87,7 @@ public class MergeReport {
         PROHIBITED,
         NOT_PAIRED,
         CREATED,
+        DELETED,
         MODIFIED,
         MOVED,
         NOT_MOVED

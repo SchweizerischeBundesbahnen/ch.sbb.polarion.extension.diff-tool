@@ -1212,6 +1212,12 @@
             },
             "type": "array"
           },
+          "deleted": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
           "logs": {
             "type": "string"
           },
@@ -1250,10 +1256,6 @@
       },
       "MergeReportEntry": {
         "properties": {
-          "description": {
-            "description": "Extended description of the operation",
-            "type": "string"
-          },
           "operationResultType": {
             "description": "Type of the operation result",
             "enum": [
@@ -1261,6 +1263,7 @@
               "PROHIBITED",
               "NOT_PAIRED",
               "CREATED",
+              "DELETED",
               "MODIFIED",
               "MOVED",
               "NOT_MOVED",
@@ -1272,11 +1275,6 @@
               "MOVED",
               "NOT_MOVED"
             ],
-            "type": "string"
-          },
-          "operationTime": {
-            "description": "Date and time of the operation",
-            "format": "date-time",
             "type": "string"
           },
           "workItemsPair": {
