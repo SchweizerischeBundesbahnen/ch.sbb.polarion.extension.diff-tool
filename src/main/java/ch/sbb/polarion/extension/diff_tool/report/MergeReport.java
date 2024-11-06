@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.report;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 public class MergeReport {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
+    @Schema(description = "List of log entries that describe the merge operations and their results", implementation = MergeReportEntry.class)
     private final List<MergeReportEntry> entries;
 
     public MergeReport() {

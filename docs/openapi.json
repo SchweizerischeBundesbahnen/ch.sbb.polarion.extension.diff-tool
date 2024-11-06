@@ -1197,33 +1197,103 @@
         },
         "type": "object"
       },
+      "MergeReport": {
+        "description": "Merge report with detailed information about the merge operation",
+        "properties": {
+          "conflicted": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
+          "created": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
+          "logs": {
+            "type": "string"
+          },
+          "modified": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
+          "notMoved": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
+          "notPaired": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
+          "prohibited": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "MergeReportEntry": {
+        "properties": {
+          "description": {
+            "description": "Extended description of the operation",
+            "type": "string"
+          },
+          "operationResultType": {
+            "description": "Type of the operation result",
+            "enum": [
+              "CONFLICTED",
+              "PROHIBITED",
+              "NOT_PAIRED",
+              "CREATED",
+              "MODIFIED",
+              "MOVED",
+              "NOT_MOVED",
+              "CONFLICTED",
+              "PROHIBITED",
+              "NOT_PAIRED",
+              "CREATED",
+              "MODIFIED",
+              "MOVED",
+              "NOT_MOVED"
+            ],
+            "type": "string"
+          },
+          "operationTime": {
+            "description": "Date and time of the operation",
+            "format": "date-time",
+            "type": "string"
+          },
+          "workItemsPair": {
+            "$ref": "#/components/schemas/WorkItemsPair"
+          }
+        },
+        "type": "object"
+      },
       "MergeResult": {
         "description": "Result of a merge operation",
         "properties": {
-          "conflictedPairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
-          },
-          "createdPairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
-          },
           "mergeNotAuthorized": {
             "description": "Indicates whether the merge was not authorized",
             "type": "boolean"
           },
-          "modifiedPairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
-          },
-          "movedPairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
-          },
-          "notMovedPairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
-          },
-          "notPaired": {
-            "$ref": "#/components/schemas/WorkItemsPair"
-          },
-          "prohibitedPairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
+          "mergeReport": {
+            "$ref": "#/components/schemas/MergeReport"
           },
           "success": {
             "description": "Indicates whether the merge operation was successful",
