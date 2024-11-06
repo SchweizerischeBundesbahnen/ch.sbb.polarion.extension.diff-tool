@@ -32,16 +32,12 @@ export default function DocumentsDiff() {
   const [mergeInProgress, setMergeInProgress] = useState(false);
   const [mergeError, setMergeError] = useState("");
   const [mergeErrorModalVisible, setMergeErrorModalVisible] = useState(false);
-  const [conflictedPairs, setConflictedPairs] = useState([]);
-  const [prohibitedPairs, setProhibitedPairs] = useState([]);
-  const [notPaired, setNotPaired] = useState([]);
-  const [createdPairs, setCreatedPairs] = useState([]);
-  const [modifiedPairs, setModifiedPairs] = useState([]);
-  const [notMovedPairs, setNotMovedPairs] = useState([]);
+  const [mergeReport, setMergeReport] = useState({});
   const [mergeDeniedWarning, setMergeDeniedWarning] = useState(false);  // means that merge operation was denied because displayed state of documents is not last one
   const [mergeNotAuthorizedWarning, setMergeNotAuthorizedWarning] = useState(false);  // means that merge to target document is not authorized for current user
   const [structuralChangesWarning, setStructuralChangesWarning] = useState(false);  // means that documents have undergone structural changes as a result of merge operation
-  const [warningModalVisible, setWarningModalVisible] = useState(false);
+  const [mergeReportModalVisible, setMergeReportModalVisible] = useState(false);
+  const [mergeLogsVisible, setMergeLogsVisible] = useState(false);
 
   useEffect(() => {
     const missingParams = REQUIRED_PARAMS.filter(param => !searchParams.get(param));
@@ -104,20 +100,12 @@ export default function DocumentsDiff() {
     setMergeInProgress(true);
     diffService.sendMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, docsData)
         .then((data) => {
-          setCreatedPairs(data.createdPairs);
-          setModifiedPairs(data.modifiedPairs);
-          setConflictedPairs(data.conflictedPairs);
-          setProhibitedPairs(data.prohibitedPairs);
-          setNotPaired(data.notPaired);
-          setNotMovedPairs(data.notMovedPairs);
+          setMergeReport(data.mergeReport);
           setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);
           setMergeNotAuthorizedWarning(!data.success && data.mergeNotAuthorized);
           setStructuralChangesWarning(data.success && data.targetModuleHasStructuralChanges);
-          setWarningModalVisible(data.mergeNotAuthorized || data.targetModuleHasStructuralChanges
-              || (data.conflictedPairs && data.conflictedPairs.length > 0)
-              || (data.prohibitedPairs && data.prohibitedPairs.length > 0)
-              || (data.notPaired && data.notPaired.length > 0)
-              || (data.notMovedPairs && data.notMovedPairs.length > 0));
+          setMergeLogsVisible(false);
+          setMergeReportModalVisible(true);
         })
         .catch((error) => {
           console.log(error);
@@ -190,7 +178,7 @@ export default function DocumentsDiff() {
   };
 
   const setWarningModalVisibleAndReloadIfNeeded = (visible) => {
-    setWarningModalVisible(visible);
+    setMergeReportModalVisible(visible);
     if (!visible && structuralChangesWarning) {
       location.reload();
     }
@@ -221,52 +209,49 @@ export default function DocumentsDiff() {
     <Modal title="Merge error" cancelButtonTitle="Close" visible={mergeErrorModalVisible} setVisible={setMergeErrorModalVisible} className="modal-md error">
       <p>{mergeError}</p>
     </Modal>
-    <Modal title="Warning" cancelButtonTitle="Close" visible={warningModalVisible}
-           setVisible={setWarningModalVisibleAndReloadIfNeeded} className="modal-md">
-      <div style={{display: structuralChangesWarning ? 'block' : 'none'}}>
+    <Modal title="Merge Report" cancelButtonTitle="Close" visible={mergeReportModalVisible}
+           setVisible={setWarningModalVisibleAndReloadIfNeeded} className="modal-xl">
+      <div style={{
+        marginBottom: "10px"
+      }}>
+        {mergeDeniedWarning && <p>Merge was aborted because some structural changes were done in target document meanwhile.</p>}
+        {mergeNotAuthorizedWarning && <p>You are not authorized to execute such merge request.</p>}
+        {!mergeDeniedWarning && !mergeNotAuthorizedWarning &&
+            <>
+              <p>
+                Merge operation completed with following result:
+                <ul>
+                  {mergeReport.created && mergeReport.created.length > 0 && <li><strong>{mergeReport.created.length}</strong> items were created.</li>}
+                  {mergeReport.deleted && mergeReport.deleted.length > 0 && <li><strong>{mergeReport.deleted.length}</strong> items were deleted.</li>}
+                  {mergeReport.modified && mergeReport.modified.length > 0 && <li>Content of <strong>{mergeReport.modified.length}</strong> items were modified.</li>}
+                  {mergeReport.moved && mergeReport.moved.length > 0 && <li><strong>{mergeReport.moved.length}</strong> items were moved (structural changes).</li>}
+                  {mergeReport.notMoved && mergeReport.notMoved.length > 0 && <li><strong>{mergeReport.notMoved.length}</strong> items were not moved because target document
+                    does not contain destination chapter. Please, merge first parent nodes of mentioned work items.</li>}
+                  {mergeReport.conflicted && mergeReport.conflicted.length > 0 && <li><strong>{mergeReport.conflicted.length}</strong> items were not merged because of concurrent modifications.</li>}
+                  {mergeReport.prohibited && mergeReport.prohibited.length > 0 && <li><strong>{mergeReport.prohibited.length}</strong> items were not merged because such operation is logically prohibited.</li>}
+                  {mergeReport.notPaired && mergeReport.notPaired.length > 0 && <li><strong>{mergeReport.notPaired.length}</strong> items were not merged because work items referenced in source document
+                    do not have counterparts in target project.</li>}
+                </ul>
+              </p>
+              {mergeReport.logs && !mergeLogsVisible && <a href="#" onClick={() => setMergeLogsVisible(true)}>See full log</a>}
+              {mergeReport.logs && mergeLogsVisible && <pre style={{
+                padding: "10px",
+                background: "#444",
+                color: "#eee",
+                overflow: "auto",
+                borderRadius: "5px",
+                fontSize: ".8em",
+                height: "400px",
+                textWrap: "wrap"
+              }}>{mergeReport.logs}</pre>}
+            </>
+        }
+      </div>
+      <div style={{display: !mergeDeniedWarning && structuralChangesWarning ? 'block' : 'none'}}>
         <p>The target document has just undergone some structural changes, which mean that no more merge actions are allowed using the current state of the view.
           The page will automatically be reloaded to actualize documents state.</p>
       </div>
-      <div style={{display: mergeDeniedWarning ? 'block' : 'none'}}>
-        <p>Merge was aborted because target document has some structural changes.</p>
-      </div>
-      <div style={{display: mergeNotAuthorizedWarning ? 'block' : 'none'}}>
-        <p>You are not authorized to execute such merge request.</p>
-      </div>
-      <div style={{display: conflictedPairs.length > 0 ? 'block' : 'none'}}>
-        <p>Following pairs of work items were not merged because of concurrent modifications:</p>
-        <ul>
-          {conflictedPairs && conflictedPairs.map((pair, index) => {
-            return <li key={index}>{pair.leftWorkItem.id} - {pair.rightWorkItem.id}</li>;
-          })}
-        </ul>
-      </div>
-      <div style={{display: prohibitedPairs.length > 0 ? 'block' : 'none'}}>
-        <p>Following pairs of work items were not merged because such operation is logically prohibited:</p>
-        <ul>
-          {prohibitedPairs && prohibitedPairs.map((pair, index) => {
-            return <li key={index}>{pair.leftWorkItem.id} - {pair.rightWorkItem.id}</li>;
-          })}
-        </ul>
-      </div>
-      <div style={{display: notPaired.length > 0 ? 'block' : 'none'}}>
-        <p>Following work items referenced in source document do not have counterparts in target project and therefore were not referenced in target document:</p>
-        <ul>
-          {notPaired && notPaired.map((pair, index) => {
-            return <li key={index}>{pair.leftWorkItem?.id}{pair.rightWorkItem?.id}</li>;
-          })}
-        </ul>
-      </div>
-      <div style={{display: notMovedPairs.length > 0 ? 'block' : 'none'}}>
-        <p>Following pairs of work items were not merged (move action) because target document does not contain destination chapter:</p>
-        <ul>
-          {notMovedPairs.map((pair, index) => {
-            return <li key={index}>{pair.leftWorkItem.id} - {pair.rightWorkItem.id}</li>;
-          })}
-        </ul>
-        <p>Please, merge first parent nodes of mentioned work items.</p>
-      </div>
-      <p style={{display: mergeDeniedWarning || conflictedPairs.length > 0 ? 'block' : 'none'}}>Please, reload the page to actualize the state and try again.</p>
+      <p style={{display: mergeDeniedWarning || (mergeReport.conflicted && mergeReport.conflicted.length > 0) ? 'block' : 'none'}}>Please, reload the page to actualize the state and try again.</p>
     </Modal>
 
     {loadingContext.pairs.map((pair, index) => {
@@ -277,7 +262,7 @@ export default function DocumentsDiff() {
                             currentIndex={index} loadingContext={loadingContext} mergingContext={mergingContext}
                             unSelectionAllowedCallback={unSelectionAllowed} selectChildrenCallback={selectChildren}
                             setMirroredPairSelectedCallback={setMirroredPairSelected}
-                            createdPairs={createdPairs} modifiedPairs={modifiedPairs}/>;
+                            createdReportEntries={mergeReport.created || []} modifiedReportEntries={mergeReport.modified || []}/>;
 
     })}
   </div>;
