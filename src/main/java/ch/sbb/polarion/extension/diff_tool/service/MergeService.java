@@ -23,6 +23,7 @@ import com.polarion.alm.shared.dle.compare.DleWorkitemsMatcher;
 import com.polarion.alm.shared.dle.compare.merge.DuplicateWorkItemAction;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
+import com.polarion.alm.tracker.internal.model.module.Module;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
@@ -134,9 +135,7 @@ public class MergeService {
 
                 if (source != null && target != null && moveAction(pair)) {
                     if (move(source, target, context)) {
-                        target.save();
                         mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.MOVED, pair, "workitem '%s' moved".formatted(target.getId())));
-                        reloadModule(context.getTargetModule());
                     } else {
                         mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.NOT_MOVED, pair, "workitem '%s' NOT moved".formatted(target.getId())));
                     }
@@ -315,7 +314,7 @@ public class MergeService {
     }
 
     private void reloadModule(IModule module) {
-        module.save();
+        ((Module) module).save(false);
         module.update();
     }
 
