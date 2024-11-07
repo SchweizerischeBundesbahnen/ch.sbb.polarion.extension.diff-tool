@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.5.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.5.0...v4.5.1) (2024-11-07)
+
+
+### Bug Fixes
+
+* Do not exclude child items of moved parent items ([#141](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/141)) ([4281dfe](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/4281dfef64356514458cfe86ef756fc2398aa10c)), closes [#140](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/140)
+* Fix false positive of skipping mirrored and child items (quick, not full fix) ([#149](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/149)) ([4036421](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/40364218fd5426fbcccacb2ba8cea868d52ebd1f))
+* merge produces new revisions for work items without changes in t… ([#145](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/145)) ([7ac0d09](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/7ac0d09a2f4413f341fa810df5f8e64eb08cde05)), closes [#144](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/144)
+* merge produces new revisions for work items without changes in their content ([7ac0d09](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/7ac0d09a2f4413f341fa810df5f8e64eb08cde05))
+
 ## [4.5.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.4.1...v4.5.0) (2024-11-06)
 
 
