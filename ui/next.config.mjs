@@ -2,6 +2,17 @@ export default (phase, { defaultConfig }) => {
   if (phase === "phase-development-server") {
     return {
       /* development only config options here */
+      /* proxy to Polarion resources */
+      rewrites: async () => [
+        {
+          source: '/polarion/icons/:path*',
+          destination: `${process.env.NEXT_PUBLIC_BASE_URL}/polarion/icons/:path*`,
+        },
+        {
+          source: '/polarion/ria/:path*',
+          destination: `${process.env.NEXT_PUBLIC_BASE_URL}/polarion/ria/:path*`,
+        },
+      ]
     }
   }
 
