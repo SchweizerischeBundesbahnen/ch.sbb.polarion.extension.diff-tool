@@ -118,6 +118,23 @@ public class MergeService {
                 return false;
             });
 
+            // update, excluding referenced WIs, which content should never be updated
+            for (WorkItemsPair pair : pairs) {
+                IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
+                IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+
+                if (!context.getTargetModule().getExternalWorkItems().contains(target)) { // Updating referenced WIs just skipped at this stage for later processing
+                    if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
+                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.CONFLICTED, pair, "Merge is not allowed: target workitem '%s' revision '%s' has been already changed to '%s'".formatted(target.getId(), context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision())));
+                    } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
+                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.PROHIBITED, pair, "Don't allow merging referenced work item into included one"));
+                    } else {
+                        merge(source, target, diffModel.getDiffFields(), linkRole);
+                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.MODIFIED, pair, "workitem '%s' modified with info from '%s'".formatted(target.getId(), source.getId())));
+                    }
+                }
+            }
+
             // move
             pairs.removeIf(pair -> {
                 IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
@@ -149,20 +166,6 @@ public class MergeService {
                 return false;
             });
 
-            // update
-            for (WorkItemsPair pair : pairs) {
-                IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
-                IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
-
-                if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
-                    mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.CONFLICTED, pair, "Merge is not allowed: target workitem '%s' revision '%s' has been already changed to '%s'".formatted(target.getId(), context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision())));
-                } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
-                    mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.PROHIBITED, pair, "Don't allow merging referenced work item into included one"));
-                } else {
-                    merge(source, target, diffModel.getDiffFields(), linkRole);
-                    mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.MODIFIED, pair, "workitem '%s' modified with info from '%s'".formatted(target.getId(), source.getId())));
-                }
-            }
             reloadModule(context.getTargetModule());
             return null;
         });
