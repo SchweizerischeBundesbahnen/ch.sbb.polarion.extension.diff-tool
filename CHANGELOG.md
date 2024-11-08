@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.5.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.5.1...v4.5.2) (2024-11-08)
+
+
+### Bug Fixes
+
+* Fix filtering logic ([#153](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/153)) ([68babad](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/68babad658a68a16e94bfd9b49406eb7d6a073c4)), closes [#140](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/140)
+* Fix report message ([#151](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/151)) ([dd338ec](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/dd338ecbff438b59e869c59777866441b206b8bf)), closes [#133](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/133)
+
 ## [4.5.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.5.0...v4.5.1) (2024-11-07)
 
 
