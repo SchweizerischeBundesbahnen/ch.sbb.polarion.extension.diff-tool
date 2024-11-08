@@ -82,20 +82,10 @@ public class MergeService {
             // then it must be ONLY moved to the desired position leaving modified content unchanged"
             // So this means that some cases require 2 steps by their nature.
 
-            // create & delete + fix refs
+            // create & delete
             pairs.removeIf(pair -> {
                 IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
                 IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
-
-                if (context.getTargetModule().getExternalWorkItems().contains(target)) { // merge into external work item
-                    if (!target.getProjectId().equals(context.getTargetModule().getProjectId())) {
-                        polarionService.fixReferencedWorkItem(target, context.getTargetModule(), iLinkRole);
-                        reloadModule(context.getTargetModule());
-                    } else {
-                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.PROHIBITED, pair, "can't merge into referenced workitem '%s' in target document '%s'".formatted(target.getId(), context.getTargetModule())));
-                        return true;
-                    }
-                }
 
                 if (source != null && target == null) { // "target" is null in this case, so new item out of "source" to be created
                     if (context.getSourceModule().getExternalWorkItems().contains(source)) {
@@ -138,6 +128,21 @@ public class MergeService {
                         mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.MOVED, pair, "workitem '%s' moved".formatted(target.getId())));
                     } else {
                         mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.NOT_MOVED, pair, "workitem '%s' NOT moved".formatted(target.getId())));
+                    }
+                    return true;
+                }
+                return false;
+            });
+
+            // fix refs or skip prohibited
+            pairs.removeIf(pair -> {
+                IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+                if (context.getTargetModule().getExternalWorkItems().contains(target)) { // merge into external work item
+                    if (!target.getProjectId().equals(context.getTargetModule().getProjectId())) {
+                        polarionService.fixReferencedWorkItem(target, context.getTargetModule(), iLinkRole);
+                        reloadModule(context.getTargetModule());
+                    } else {
+                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.PROHIBITED, pair, "can't merge into referenced workitem '%s' in target document '%s'".formatted(target.getId(), context.getTargetModule())));
                     }
                     return true;
                 }
