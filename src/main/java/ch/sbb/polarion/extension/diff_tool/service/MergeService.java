@@ -13,6 +13,7 @@ import com.polarion.alm.shared.api.model.document.internal.InternalDocument;
 import com.polarion.alm.shared.api.model.document.internal.InternalUpdatableDocument;
 import com.polarion.alm.shared.api.model.wi.WorkItemReference;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
+import com.polarion.alm.shared.api.transaction.WriteTransaction;
 import com.polarion.alm.shared.api.transaction.internal.InternalWriteTransaction;
 import com.polarion.alm.shared.dle.compare.CompareOptions;
 import com.polarion.alm.shared.dle.compare.DleWIsMergeAction;
@@ -23,7 +24,6 @@ import com.polarion.alm.shared.dle.compare.merge.DuplicateWorkItemAction;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
 import com.polarion.alm.tracker.internal.model.module.Module;
-import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.logging.Logger;
@@ -62,7 +62,7 @@ public class MergeService {
         polarionService.evictDocumentsCache(documentIdentifier1, documentIdentifier2);
 
         DiffModel diffModel = DiffModelCachedResource.get(documentIdentifier1.getProjectId(), configName, configCacheBucketId);
-        MergeContext context = new MergeContext(polarionService, documentIdentifier1, documentIdentifier2, direction, linkRole);
+        MergeContext context = new MergeContext(polarionService, documentIdentifier1, documentIdentifier2, direction, linkRole, diffModel);
         if (!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision())) {
             return MergeResult.builder().success(false).targetModuleHasStructuralChanges(true).build();
         }
@@ -70,96 +70,19 @@ public class MergeService {
             return MergeResult.builder().success(false).mergeNotAuthorized(true).build();
         }
 
-        ILinkRoleOpt iLinkRole = polarionService.getLinkRoleById(linkRole, context.getTargetModule().getProject());
-        if (iLinkRole == null) {
-            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", linkRole));
-        }
-
         removeDuplicatedOrConflictingPairs(pairs, context);
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
             // Here we separate some operations based on their type attempting to reduce merge steps to achieve desired document state.
-
-            // create & delete
-            pairs.removeIf(pair -> {
-                IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
-                IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
-
-                if (source != null && target == null) { // "target" is null in this case, so new item out of "source" to be created
-                    if (context.getSourceModule().getExternalWorkItems().contains(source)) {
-                        IWorkItem createdWorkItem = insertReferencedWorkItem(source, context);
-                        if (createdWorkItem != null) {
-                            context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(createdWorkItem.getId(), source.getId()));
-                            reloadModule(context.getTargetModule());
-                        } else {
-                            context.reportEntry(NOT_PAIRED, pair, "new workitem based on source workitem '%s' NOT created".formatted(source.getId()));
-                        }
-                    } else {
-                        IWorkItem newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context);
-                        context.bindCounterpartItem(pair,
-                                WorkItem.of(newWorkItem,
-                                        context.getTargetModule().getOutlineNumberOfWorkitem(newWorkItem),
-                                        source.getId().equals(newWorkItem.getId()),
-                                        newWorkItem.getProjectId().equals(context.getTargetModule().getProjectId())
-                                )
-                        );
-                        context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId()));
-                        reloadModule(context.getTargetModule());
-                    }
-                    return true;
-                } else if (source == null && target != null) { // "source" is null in this case, so "target" to be deleted
-                    deleteWorkItemFromDocument(context.getTargetDocumentIdentifier(), target);
-                    context.reportEntry(DELETED, pair, "workitem '%s' deleted in target document".formatted(target.getId()));
-                    reloadModule(context.getTargetModule());
-                    return true;
-                }
-                return false;
-            });
-
-            // update & move
+            pairs.removeIf(pair -> createOrDeleteItem(pair, context, transaction));
             for (WorkItemsPair pair : pairs) {
-                IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
-                IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
-                boolean moveRequested = moveAction(pair);
-
-                if (!context.getTargetModule().getExternalWorkItems().contains(target)) { // do not merge data of referenced WIs
-                    if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
-                        context.reportEntry(CONFLICTED, pair, "merge is not allowed: target workitem '%s' revision '%s' has been already changed to '%s'"
-                                .formatted(target.getId(), context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision()));
-                    } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
-                        context.reportEntry(PROHIBITED, pair, "don't allow merging referenced work item into included one");
-                    } else {
-                        merge(source, target, diffModel.getDiffFields(), linkRole);
-                        context.reportEntry(MODIFIED, pair, "workitem '%s' modified with info from '%s'".formatted(target.getId(), source.getId()));
-                    }
-                } else {
-                    if (!target.getProjectId().equals(context.getTargetModule().getProjectId())) {
-                        polarionService.fixReferencedWorkItem(target, context.getTargetModule(), iLinkRole);
-                        reloadModule(context.getTargetModule());
-                    } else if (!moveRequested) {
-                        context.reportEntry(PROHIBITED, pair, "can't merge into referenced workitem '%s' in target document '%s'".formatted(target.getId(), context.getTargetModule()));
-                    }
-                }
-
-                if (moveRequested) {
-                    if (Objects.equals(context.getSourceModule().getOutlineNumberOfWorkitem(source), context.getTargetModule().getOutlineNumberOfWorkitem(target))) {
-                        context.reportEntry(MOVE_SKIPPED, pair, "move skipped the item is already at the desired position");
-                    } else if (move(source, target, context)) {
-                        context.reportEntry(MOVED, pair, "workitem '%s' moved".formatted(target.getId()));
-                    } else {
-                        context.reportEntry(NOT_MOVED, pair, "workitem '%s' NOT moved".formatted(target.getId()));
-                    }
-                }
+                updateAndMoveItem(pair, context);
             }
-
             reloadModule(context.getTargetModule());
             return null;
         });
 
-        for (MergeReportEntry mergeReportEntry : context.getMergeReport().getModified()) {
-            WorkItem targetWorkItem = context.getTargetWorkItem(mergeReportEntry.getWorkItemsPair());
-            targetWorkItem.setLastRevision(getWorkItem(targetWorkItem).getLastRevision());
-        }
+        updateModifiedItemsRevisions(context);
 
         return MergeResult.builder().success(true)
                 .mergeReport(context.getMergeReport())
@@ -167,8 +90,81 @@ public class MergeService {
                 .build();
     }
 
-    private boolean moveAction(@NotNull WorkItemsPair pair) {
-        return pair.getLeftWorkItem().getMovedOutlineNumber() != null || pair.getRightWorkItem().getMovedOutlineNumber() != null;
+    private boolean createOrDeleteItem(WorkItemsPair pair, MergeContext context, WriteTransaction transaction) {
+        IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
+        IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+
+        if (source != null && target == null) { // "target" is null in this case, so new item out of "source" to be created
+            if (context.getSourceModule().getExternalWorkItems().contains(source)) {
+                IWorkItem createdWorkItem = insertReferencedWorkItem(source, context);
+                if (createdWorkItem != null) {
+                    context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(createdWorkItem.getId(), source.getId()));
+                    reloadModule(context.getTargetModule());
+                } else {
+                    context.reportEntry(CREATION_FAILED, pair, "new workitem based on source workitem '%s' NOT created".formatted(source.getId()));
+                }
+            } else {
+                IWorkItem newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context);
+                context.bindCounterpartItem(pair,
+                        WorkItem.of(newWorkItem,
+                                context.getTargetModule().getOutlineNumberOfWorkitem(newWorkItem),
+                                source.getId().equals(newWorkItem.getId()),
+                                newWorkItem.getProjectId().equals(context.getTargetModule().getProjectId())
+                        )
+                );
+                context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId()));
+                reloadModule(context.getTargetModule());
+            }
+            return true;
+        } else if (source == null && target != null) { // "source" is null in this case, so "target" to be deleted
+            deleteWorkItemFromDocument(context.getTargetDocumentIdentifier(), target);
+            context.reportEntry(DELETED, pair, "workitem '%s' deleted in target document".formatted(target.getId()));
+            reloadModule(context.getTargetModule());
+            return true;
+        }
+        return false;
+    }
+
+    private void updateAndMoveItem(WorkItemsPair pair, MergeContext context) {
+        IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
+        IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+        boolean moveRequested = pair.getLeftWorkItem().getMovedOutlineNumber() != null || pair.getRightWorkItem().getMovedOutlineNumber() != null;
+
+        if (!context.getTargetModule().getExternalWorkItems().contains(target)) { // do not merge data of referenced WIs
+            if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
+                context.reportEntry(CONFLICTED, pair, "merge is not allowed: target workitem '%s' revision '%s' has been already changed to '%s'"
+                        .formatted(target.getId(), context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision()));
+            } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
+                context.reportEntry(PROHIBITED, pair, "don't allow merging referenced work item into included one");
+            } else {
+                merge(source, target, context.diffModel.getDiffFields(), context.linkRole);
+                context.reportEntry(MODIFIED, pair, "workitem '%s' modified with info from '%s'".formatted(target.getId(), source.getId()));
+            }
+        } else {
+            if (!target.getProjectId().equals(context.getTargetModule().getProjectId())) {
+                polarionService.fixReferencedWorkItem(target, context.getTargetModule(), context.linkRoleObject);
+                reloadModule(context.getTargetModule());
+            } else if (!moveRequested) {
+                context.reportEntry(PROHIBITED, pair, "can't merge into referenced workitem '%s' in target document '%s'".formatted(target.getId(), context.getTargetModule()));
+            }
+        }
+
+        if (moveRequested) {
+            if (Objects.equals(context.getSourceModule().getOutlineNumberOfWorkitem(source), context.getTargetModule().getOutlineNumberOfWorkitem(target))) {
+                context.reportEntry(MOVE_SKIPPED, pair, "move skipped the item is already at the desired position");
+            } else if (move(source, target, context)) {
+                context.reportEntry(MOVED, pair, "workitem '%s' moved".formatted(target.getId()));
+            } else {
+                context.reportEntry(MOVE_FAILED, pair, "workitem '%s' NOT moved".formatted(target.getId()));
+            }
+        }
+    }
+
+    private void updateModifiedItemsRevisions(MergeContext context) {
+        for (MergeReportEntry mergeReportEntry : context.getMergeReport().getModified()) {
+            WorkItem targetWorkItem = context.getTargetWorkItem(mergeReportEntry.getWorkItemsPair());
+            targetWorkItem.setLastRevision(getWorkItem(targetWorkItem).getLastRevision());
+        }
     }
 
     private boolean move(@NotNull IWorkItem source, @NotNull IWorkItem target, @NotNull MergeContext mergeContext) {
@@ -229,7 +225,7 @@ public class MergeService {
             String sourceId = Optional.ofNullable(context.getSourceWorkItem(pair)).map(WorkItem::getId).orElse("");
             String targetId = Optional.ofNullable(context.getTargetWorkItem(pair)).map(WorkItem::getId).orElse("");
             if (!StringUtils.isEmpty(sourceId) && processedSourceIds.contains(sourceId) || !StringUtils.isEmpty(targetId) && processedTargetIds.contains(targetId)) {
-                context.reportEntry(DUPLICATED, pair, "pair processing will be skipped because it duplicates entry from another pair");
+                context.reportEntry(DUPLICATE_SKIPPED, pair, "pair processing will be skipped because it duplicates entry from another pair");
                 return true;
             }
             processedSourceIds.add(sourceId);

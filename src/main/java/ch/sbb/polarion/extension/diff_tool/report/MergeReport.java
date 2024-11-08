@@ -33,8 +33,8 @@ public class MergeReport {
         return getEntriesByType(OperationResultType.PROHIBITED);
     }
 
-    public List<MergeReportEntry> getNotPaired() {
-        return getEntriesByType(OperationResultType.NOT_PAIRED);
+    public List<MergeReportEntry> getCreationFailed() {
+        return getEntriesByType(OperationResultType.CREATION_FAILED);
     }
 
     public List<MergeReportEntry> getCreated() {
@@ -45,6 +45,10 @@ public class MergeReport {
         return getEntriesByType(OperationResultType.DELETED);
     }
 
+    public List<MergeReportEntry> getDuplicateSkipped() {
+        return getEntriesByType(OperationResultType.DUPLICATE_SKIPPED);
+    }
+
     public List<MergeReportEntry> getModified() {
         return getEntriesByType(OperationResultType.MODIFIED);
     }
@@ -53,8 +57,12 @@ public class MergeReport {
         return getEntriesByType(OperationResultType.MOVED);
     }
 
-    public List<MergeReportEntry> getNotMoved() {
-        return getEntriesByType(OperationResultType.NOT_MOVED);
+    public List<MergeReportEntry> getMoveFailed() {
+        return getEntriesByType(OperationResultType.MOVE_FAILED);
+    }
+
+    public List<MergeReportEntry> getMoveSkipped() {
+        return getEntriesByType(OperationResultType.MOVE_SKIPPED);
     }
 
     public String getLogs() {
@@ -83,15 +91,15 @@ public class MergeReport {
     }
 
     public enum OperationResultType {
-        DUPLICATED,
         CONFLICTED,
         CREATED,
+        CREATION_FAILED,
         DELETED,
+        DUPLICATE_SKIPPED,
         MODIFIED,
         MOVED,
         MOVE_SKIPPED,
-        NOT_MOVED,
-        NOT_PAIRED,
+        MOVE_FAILED,
         PROHIBITED
     }
 
