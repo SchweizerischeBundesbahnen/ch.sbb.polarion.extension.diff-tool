@@ -1212,7 +1212,19 @@
             },
             "type": "array"
           },
+          "creationFailed": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
           "deleted": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
+          "duplicateSkipped": {
             "items": {
               "$ref": "#/components/schemas/MergeReportEntry"
             },
@@ -1227,19 +1239,19 @@
             },
             "type": "array"
           },
+          "moveFailed": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
+          "moveSkipped": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
           "moved": {
-            "items": {
-              "$ref": "#/components/schemas/MergeReportEntry"
-            },
-            "type": "array"
-          },
-          "notMoved": {
-            "items": {
-              "$ref": "#/components/schemas/MergeReportEntry"
-            },
-            "type": "array"
-          },
-          "notPaired": {
             "items": {
               "$ref": "#/components/schemas/MergeReportEntry"
             },
@@ -1261,11 +1273,13 @@
             "enum": [
               "CONFLICTED",
               "CREATED",
+              "CREATION_FAILED",
               "DELETED",
+              "DUPLICATE_SKIPPED",
               "MODIFIED",
               "MOVED",
-              "NOT_MOVED",
-              "NOT_PAIRED",
+              "MOVE_SKIPPED",
+              "MOVE_FAILED",
               "PROHIBITED"
             ],
             "type": "string"

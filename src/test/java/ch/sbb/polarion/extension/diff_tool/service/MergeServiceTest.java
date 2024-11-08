@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
 import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
+import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.subterra.base.location.ILocation;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +22,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -58,6 +60,7 @@ public class MergeServiceTest {
         when(module2.getModuleLocation()).thenReturn(location2);
         when(module2.getLastRevision()).thenReturn("rev3");
         when(polarionService.getModule(documentIdentifier2)).thenReturn(module2);
+        when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
 
         MergeResult mergeResult = mergeService.mergeWorkItems(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
                 "any", Collections.emptyList(), null, "any");
@@ -84,6 +87,7 @@ public class MergeServiceTest {
         when(module2.getModuleLocation()).thenReturn(location2);
         when(module2.getLastRevision()).thenReturn("rev2");
         when(polarionService.getModule(documentIdentifier2)).thenReturn(module2);
+        when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
 
         when(polarionService.userAuthorizedForMerge(any())).thenReturn(false);
 

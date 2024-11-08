@@ -221,15 +221,15 @@ export default function DocumentsDiff() {
               <p>
                 Merge operation completed with following result:
                 <ul>
-                  {mergeReport.created && mergeReport.created.length > 0 && <li><strong>{mergeReport.created.length}</strong> items were created.</li>}
-                  {mergeReport.deleted && mergeReport.deleted.length > 0 && <li><strong>{mergeReport.deleted.length}</strong> items were deleted.</li>}
-                  {mergeReport.modified && mergeReport.modified.length > 0 && <li>Content of <strong>{mergeReport.modified.length}</strong> items were modified.</li>}
-                  {mergeReport.moved && mergeReport.moved.length > 0 && <li><strong>{mergeReport.moved.length}</strong> items were moved (structural changes).</li>}
-                  {mergeReport.notMoved && mergeReport.notMoved.length > 0 && <li><strong>{mergeReport.notMoved.length}</strong> items were not moved because target document
+                  {mergeReport.created?.length > 0 && <li><strong>{mergeReport.created.length}</strong> items were created.</li>}
+                  {mergeReport.deleted?.length > 0 && <li><strong>{mergeReport.deleted.length}</strong> items were deleted.</li>}
+                  {mergeReport.modified?.length > 0 && <li>Content of <strong>{mergeReport.modified.length}</strong> items were modified.</li>}
+                  {mergeReport.moved?.length > 0 && <li><strong>{mergeReport.moved.length}</strong> items were moved (structural changes).</li>}
+                  {mergeReport.moveFailed?.length > 0 && <li><strong>{mergeReport.moveFailed.length}</strong> items were not moved because target document
                     does not contain destination chapter. Please, merge first parent nodes of mentioned work items.</li>}
-                  {mergeReport.conflicted && mergeReport.conflicted.length > 0 && <li><strong>{mergeReport.conflicted.length}</strong> items were not merged because of concurrent modifications.</li>}
-                  {mergeReport.prohibited && mergeReport.prohibited.length > 0 && <li><strong>{mergeReport.prohibited.length}</strong> items were not merged because such operation is logically prohibited.</li>}
-                  {mergeReport.notPaired && mergeReport.notPaired.length > 0 && <li><strong>{mergeReport.notPaired.length}</strong> items were not merged because work items referenced in source document
+                  {mergeReport.conflicted?.length > 0 && <li><strong>{mergeReport.conflicted.length}</strong> items were not merged because of concurrent modifications.</li>}
+                  {mergeReport.prohibited?.length > 0 && <li><strong>{mergeReport.prohibited.length}</strong> items were not merged because such operation is logically prohibited.</li>}
+                  {mergeReport.creationFailed?.length > 0 && <li><strong>{mergeReport.creationFailed.length}</strong> items were not merged because work items referenced in source document
                     do not have counterparts in target project.</li>}
                 </ul>
               </p>

@@ -1,11 +1,15 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
+import ch.sbb.polarion.extension.diff_tool.report.MergeReport;
+import ch.sbb.polarion.extension.diff_tool.report.MergeReportEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import com.google.common.collect.Streams;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
+import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
 import lombok.Getter;
@@ -23,17 +27,27 @@ public final class MergeContext {
     final DocumentReference rightDocumentReference;
     @Getter
     final MergeDirection direction;
+    @Getter
+    final MergeReport mergeReport = new MergeReport();
     final String linkRole;
+    final ILinkRoleOpt linkRoleObject;
+    final DiffModel diffModel;
 
     public MergeContext(@NotNull PolarionService polarionService, @NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier,
-                        @NotNull MergeDirection direction, @NotNull String linkRole) {
+                        @NotNull MergeDirection direction, @NotNull String linkRole, DiffModel diffModel) {
         this.leftDocumentIdentifier = leftDocumentIdentifier;
         this.rightDocumentIdentifier = rightDocumentIdentifier;
         this.direction = direction;
         this.linkRole = linkRole;
+        this.diffModel = diffModel;
 
         leftModule = polarionService.getModule(leftDocumentIdentifier);
         rightModule = polarionService.getModule(rightDocumentIdentifier);
+
+        linkRoleObject = polarionService.getLinkRoleById(linkRole, getTargetModule().getProject());
+        if (linkRoleObject == null) {
+            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", linkRole));
+        }
 
         leftDocumentReference = DocumentReference.fromModuleLocation(leftDocumentIdentifier.getProjectId(), leftModule.getModuleLocation().getLocationPath(),
                 leftDocumentIdentifier.getRevision() == null ? leftModule.getLastRevision() : leftDocumentIdentifier.getRevision());
@@ -89,6 +103,10 @@ public final class MergeContext {
             }
         }
         return null;
+    }
+
+    public void reportEntry(@NotNull MergeReport.OperationResultType operationResultType, @NotNull WorkItemsPair workItemsPair, @NotNull String description) {
+        mergeReport.addEntry(new MergeReportEntry(operationResultType, workItemsPair, description));
     }
 
     private boolean linked(IWorkItem workItemA, IWorkItem workItemB) {
