@@ -45,7 +45,7 @@ public class DiffContext {
         this.polarionService = polarionService;
 
         pairedWorkItemsLinkRole = workItemsDiffParams.getPairedWorkItemsLinkRole();
-        pairedWorkItemsDiffer = workItemsDiffParams.getPairedWorkItemsDiffer() != null && workItemsDiffParams.getPairedWorkItemsDiffer();
+        pairedWorkItemsDiffer = workItemsDiffParams.isPairedWorkItemsDiffer();
     }
 
     public void addIssue(String issue) {

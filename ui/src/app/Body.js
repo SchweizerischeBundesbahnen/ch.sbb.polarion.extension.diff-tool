@@ -13,6 +13,7 @@ export default function Body({ children }) {
   const [controlPaneExpanded, setControlPaneExpanded] = useState(false);
   const [showOutlineNumbersDiff, setShowOutlineNumbersDiff] = useState(false);
   const [counterpartWorkItemsDiffer, setCounterpartWorkItemsDiffer] = useState(false);
+  const [compareEnumsById, setCompareEnumsById] = useState(false);
   const [hideChaptersIfNoDifference, setHideChaptersIfNoDifference] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [diffsExist, setDiffsExist] = useState(false);
@@ -43,6 +44,8 @@ export default function Body({ children }) {
           setShowOutlineNumbersDiff: setShowOutlineNumbersDiff,
           counterpartWorkItemsDiffer: counterpartWorkItemsDiffer,
           setCounterpartWorkItemsDiffer: setCounterpartWorkItemsDiffer,
+          compareEnumsById: compareEnumsById,
+          setCompareEnumsById: setCompareEnumsById,
           hideChaptersIfNoDifference: hideChaptersIfNoDifference,
           setHideChaptersIfNoDifference: setHideChaptersIfNoDifference,
           dataLoaded: dataLoaded,

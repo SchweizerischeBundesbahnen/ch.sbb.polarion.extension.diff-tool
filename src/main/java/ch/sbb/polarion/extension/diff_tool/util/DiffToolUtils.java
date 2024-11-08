@@ -4,6 +4,9 @@ package ch.sbb.polarion.extension.diff_tool.util;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.StringsDiff;
 import ch.sbb.polarion.extension.diff_tool.service.ModifiedHtmlSaxDiffOutput;
 import com.polarion.core.util.logging.Logger;
+import com.polarion.subterra.base.data.model.IEnumType;
+import com.polarion.subterra.base.data.model.IListType;
+import com.polarion.subterra.base.data.model.IType;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -108,6 +111,10 @@ public class DiffToolUtils {
 
     private boolean isDifferent(@NotNull String diffResult) {
         return diffResult.contains("<span class=\"diff-html-");
+    }
+
+    public boolean isEnumContainingType(IType fieldType) {
+        return fieldType instanceof IEnumType || fieldType instanceof IListType && ((IListType) fieldType).getItemType() instanceof IEnumType;
     }
 
     @NotNull
