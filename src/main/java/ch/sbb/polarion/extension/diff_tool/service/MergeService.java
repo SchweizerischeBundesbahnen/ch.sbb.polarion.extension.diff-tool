@@ -92,7 +92,7 @@ public class MergeService {
                         polarionService.fixReferencedWorkItem(target, context.getTargetModule(), iLinkRole);
                         reloadModule(context.getTargetModule());
                     } else {
-                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.PROHIBITED, pair, "target workitem '%s' and target document '%s' in different projects: '%s' and '%s'".formatted(target.getId(), context.getTargetModule(), target.getProjectId(), context.getTargetModule().getProjectId())));
+                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.PROHIBITED, pair, "can't merge into referenced workitem '%s' in target document '%s'".formatted(target.getId(), context.getTargetModule())));
                         return true;
                     }
                 }
