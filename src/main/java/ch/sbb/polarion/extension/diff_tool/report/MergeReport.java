@@ -83,11 +83,13 @@ public class MergeReport {
     }
 
     public enum OperationResultType {
+        DUPLICATED,
         CONFLICTED,
         CREATED,
         DELETED,
         MODIFIED,
         MOVED,
+        MOVE_SKIPPED,
         NOT_MOVED,
         NOT_PAIRED,
         PROHIBITED

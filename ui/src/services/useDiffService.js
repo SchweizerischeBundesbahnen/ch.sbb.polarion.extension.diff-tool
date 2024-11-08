@@ -110,12 +110,10 @@ export default function useDiffService() {
     const filteredPairs = [];
     selectedPairs.forEach(pair => {
       let redundant = false;
-      // Exclude mirrored and child items in case of moving items (such redundant selection is done automatically on UI for better usability)
+      // Exclude mirrored items in case of moving items (such redundant selection is done automatically on UI for better usability)
       if (pair.leftWorkItem && pair.rightWorkItem && (pair.leftWorkItem.movedOutlineNumber || pair.rightWorkItem.outlineNumber)) {
         for (let filtered of filteredPairs) {
-          if (filtered.leftWorkItem && (pair.leftWorkItem.outlineNumber === filtered.leftWorkItem.outlineNumber
-              || pair.leftWorkItem.outlineNumber.startsWith(filtered.leftWorkItem.outlineNumber + ".")
-              || pair.leftWorkItem.outlineNumber.startsWith(filtered.leftWorkItem.outlineNumber + "-"))) {
+          if (filtered.leftWorkItem && pair.leftWorkItem.outlineNumber === filtered.leftWorkItem.outlineNumber) {
             redundant = true;
             break;
           }

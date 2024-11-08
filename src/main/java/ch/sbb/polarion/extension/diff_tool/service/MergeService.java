@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
-import ch.sbb.polarion.extension.diff_tool.report.MergeReport;
 import ch.sbb.polarion.extension.diff_tool.report.MergeReportEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
@@ -33,13 +32,19 @@ import com.polarion.platform.persistence.spi.EnumOption;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IStructType;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationResultType.*;
 
 public class MergeService {
 
@@ -70,17 +75,10 @@ public class MergeService {
             throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", linkRole));
         }
 
-        MergeReport mergeReport = new MergeReport();
+        removeDuplicatedOrConflictingPairs(pairs, context);
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
-
-            // Here we separate operations based on their type to reduce merge steps to achieve desired document state.
-            // It's impossible to reduce the process to 1 step even theoretically because of the following requirement:
-            // "If the checked pair simultaneously:
-            // 1) moved to another position
-            // 2) has changes in the content
-            // then it must be ONLY moved to the desired position leaving modified content unchanged"
-            // So this means that some cases require 2 steps by their nature.
+            // Here we separate some operations based on their type attempting to reduce merge steps to achieve desired document state.
 
             // create & delete
             pairs.removeIf(pair -> {
@@ -91,10 +89,10 @@ public class MergeService {
                     if (context.getSourceModule().getExternalWorkItems().contains(source)) {
                         IWorkItem createdWorkItem = insertReferencedWorkItem(source, context);
                         if (createdWorkItem != null) {
-                            mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(createdWorkItem.getId(), source.getId())));
+                            context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(createdWorkItem.getId(), source.getId()));
                             reloadModule(context.getTargetModule());
                         } else {
-                            mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.NOT_PAIRED, pair, "new workitem based on source workitem '%s' NOT created".formatted(source.getId())));
+                            context.reportEntry(NOT_PAIRED, pair, "new workitem based on source workitem '%s' NOT created".formatted(source.getId()));
                         }
                     } else {
                         IWorkItem newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context);
@@ -105,78 +103,66 @@ public class MergeService {
                                         newWorkItem.getProjectId().equals(context.getTargetModule().getProjectId())
                                 )
                         );
-                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId())));
+                        context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId()));
                         reloadModule(context.getTargetModule());
                     }
                     return true;
                 } else if (source == null && target != null) { // "source" is null in this case, so "target" to be deleted
                     deleteWorkItemFromDocument(context.getTargetDocumentIdentifier(), target);
-                    mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.DELETED, pair, "workitem '%s' deleted in target document".formatted(target.getId())));
+                    context.reportEntry(DELETED, pair, "workitem '%s' deleted in target document".formatted(target.getId()));
                     reloadModule(context.getTargetModule());
                     return true;
                 }
                 return false;
             });
 
-            // update, excluding referenced WIs, which content should never be updated
+            // update & move
             for (WorkItemsPair pair : pairs) {
                 IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
                 IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+                boolean moveRequested = moveAction(pair);
 
-                if (!context.getTargetModule().getExternalWorkItems().contains(target)) { // Updating referenced WIs just skipped at this stage for later processing
+                if (!context.getTargetModule().getExternalWorkItems().contains(target)) { // do not merge data of referenced WIs
                     if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
-                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.CONFLICTED, pair, "Merge is not allowed: target workitem '%s' revision '%s' has been already changed to '%s'".formatted(target.getId(), context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision())));
+                        context.reportEntry(CONFLICTED, pair, "merge is not allowed: target workitem '%s' revision '%s' has been already changed to '%s'"
+                                .formatted(target.getId(), context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision()));
                     } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
-                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.PROHIBITED, pair, "Don't allow merging referenced work item into included one"));
+                        context.reportEntry(PROHIBITED, pair, "don't allow merging referenced work item into included one");
                     } else {
                         merge(source, target, diffModel.getDiffFields(), linkRole);
-                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.MODIFIED, pair, "workitem '%s' modified with info from '%s'".formatted(target.getId(), source.getId())));
+                        context.reportEntry(MODIFIED, pair, "workitem '%s' modified with info from '%s'".formatted(target.getId(), source.getId()));
                     }
-                }
-            }
-
-            // move
-            pairs.removeIf(pair -> {
-                IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
-                IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
-
-                if (source != null && target != null && moveAction(pair)) {
-                    if (move(source, target, context)) {
-                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.MOVED, pair, "workitem '%s' moved".formatted(target.getId())));
-                    } else {
-                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.NOT_MOVED, pair, "workitem '%s' NOT moved".formatted(target.getId())));
-                    }
-                    return true;
-                }
-                return false;
-            });
-
-            // fix refs or skip prohibited
-            pairs.removeIf(pair -> {
-                IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
-                if (context.getTargetModule().getExternalWorkItems().contains(target)) { // merge into external work item
+                } else {
                     if (!target.getProjectId().equals(context.getTargetModule().getProjectId())) {
                         polarionService.fixReferencedWorkItem(target, context.getTargetModule(), iLinkRole);
                         reloadModule(context.getTargetModule());
-                    } else {
-                        mergeReport.addEntry(new MergeReportEntry(MergeReport.OperationResultType.PROHIBITED, pair, "can't merge into referenced workitem '%s' in target document '%s'".formatted(target.getId(), context.getTargetModule())));
+                    } else if (!moveRequested) {
+                        context.reportEntry(PROHIBITED, pair, "can't merge into referenced workitem '%s' in target document '%s'".formatted(target.getId(), context.getTargetModule()));
                     }
-                    return true;
                 }
-                return false;
-            });
+
+                if (moveRequested) {
+                    if (Objects.equals(context.getSourceModule().getOutlineNumberOfWorkitem(source), context.getTargetModule().getOutlineNumberOfWorkitem(target))) {
+                        context.reportEntry(MOVE_SKIPPED, pair, "move skipped the item is already at the desired position");
+                    } else if (move(source, target, context)) {
+                        context.reportEntry(MOVED, pair, "workitem '%s' moved".formatted(target.getId()));
+                    } else {
+                        context.reportEntry(NOT_MOVED, pair, "workitem '%s' NOT moved".formatted(target.getId()));
+                    }
+                }
+            }
 
             reloadModule(context.getTargetModule());
             return null;
         });
 
-        for (MergeReportEntry mergeReportEntry : mergeReport.getModified()) {
+        for (MergeReportEntry mergeReportEntry : context.getMergeReport().getModified()) {
             WorkItem targetWorkItem = context.getTargetWorkItem(mergeReportEntry.getWorkItemsPair());
             targetWorkItem.setLastRevision(getWorkItem(targetWorkItem).getLastRevision());
         }
 
         return MergeResult.builder().success(true)
-                .mergeReport(mergeReport)
+                .mergeReport(context.getMergeReport())
                 .targetModuleHasStructuralChanges(!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision()))
                 .build();
     }
@@ -228,6 +214,28 @@ public class MergeService {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Client can accidentally (or not) send:
+     * a) duplicated pairs
+     * b) several pairs which have particular work item as a source/target but different value as a counterpart
+     * I these cases we must leave only the first pair in the list.
+     */
+    private void removeDuplicatedOrConflictingPairs(List<WorkItemsPair> pairs, MergeContext context) {
+        Set<String> processedSourceIds = new HashSet<>();
+        Set<String> processedTargetIds = new HashSet<>();
+        pairs.removeIf(pair -> {
+            String sourceId = Optional.ofNullable(context.getSourceWorkItem(pair)).map(WorkItem::getId).orElse("");
+            String targetId = Optional.ofNullable(context.getTargetWorkItem(pair)).map(WorkItem::getId).orElse("");
+            if (!StringUtils.isEmpty(sourceId) && processedSourceIds.contains(sourceId) || !StringUtils.isEmpty(targetId) && processedTargetIds.contains(targetId)) {
+                context.reportEntry(DUPLICATED, pair, "pair processing will be skipped because it duplicates entry from another pair");
+                return true;
+            }
+            processedSourceIds.add(sourceId);
+            processedTargetIds.add(targetId);
+            return false;
+        });
     }
 
     private String getTargetDestinationNumber(IModule.IStructureNode sourceNode, IModule.IStructureNode targetDestinationParentNode) {

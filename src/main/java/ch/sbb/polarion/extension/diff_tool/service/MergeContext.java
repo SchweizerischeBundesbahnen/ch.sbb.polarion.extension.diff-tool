@@ -1,5 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
+import ch.sbb.polarion.extension.diff_tool.report.MergeReport;
+import ch.sbb.polarion.extension.diff_tool.report.MergeReportEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
@@ -23,6 +25,8 @@ public final class MergeContext {
     final DocumentReference rightDocumentReference;
     @Getter
     final MergeDirection direction;
+    @Getter
+    final MergeReport mergeReport = new MergeReport();
     final String linkRole;
 
     public MergeContext(@NotNull PolarionService polarionService, @NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier,
@@ -89,6 +93,10 @@ public final class MergeContext {
             }
         }
         return null;
+    }
+
+    public void reportEntry(@NotNull MergeReport.OperationResultType operationResultType, @NotNull WorkItemsPair workItemsPair, @NotNull String description) {
+        mergeReport.addEntry(new MergeReportEntry(operationResultType, workItemsPair, description));
     }
 
     private boolean linked(IWorkItem workItemA, IWorkItem workItemB) {
