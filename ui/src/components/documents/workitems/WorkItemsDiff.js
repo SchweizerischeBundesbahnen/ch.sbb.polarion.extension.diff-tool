@@ -134,7 +134,8 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
 
   useEffect(() => {
     if (!dataLoadedFired && (diffData || error)) {
-      const diffsExist = diffData && diffData.fieldDiffs && diffData.fieldDiffs.length > 0;
+      const diffsExist = (diffData && diffData.fieldDiffs && diffData.fieldDiffs.length > 0) || ((workItemsPair.leftWorkItem?.referenced && !workItemsPair.rightWorkItem?.referenced) ||
+          (!workItemsPair.leftWorkItem?.referenced && workItemsPair.rightWorkItem?.referenced));
       const leftWiId = workItemsPair.leftWorkItem ? workItemsPair.leftWorkItem.id : null;
       const rightWiId = workItemsPair.rightWorkItem ? workItemsPair.rightWorkItem.id : null;
       dataLoadedCallback(currentIndex, error, diffsExist, selected, leftChapter, rightChapter, leftWiId, rightWiId);

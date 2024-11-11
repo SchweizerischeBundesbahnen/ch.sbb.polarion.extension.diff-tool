@@ -1233,6 +1233,12 @@
           "logs": {
             "type": "string"
           },
+          "mergeDetached": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
           "modified": {
             "items": {
               "$ref": "#/components/schemas/MergeReportEntry"
@@ -1280,7 +1286,8 @@
               "MOVED",
               "MOVE_SKIPPED",
               "MOVE_FAILED",
-              "PROHIBITED"
+              "PROHIBITED",
+              "DETACHED"
             ],
             "type": "string"
           },

@@ -36,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -78,9 +79,20 @@ public class MergeService {
             for (WorkItemsPair pair : pairs) {
                 updateAndMoveItem(pair, context);
             }
+
+            pairs.removeIf(pair -> moveWorkItemOutOfDocument(pair, context));
             reloadModule(context.getTargetModule());
             return null;
         });
+
+        if (!pairs.isEmpty()) {
+            TransactionalExecutor.executeInWriteTransaction(transaction -> {
+                context.getTargetModule().update();
+                pairs.removeIf(pair -> createOrDeleteItem(pair, context, transaction));
+                reloadModule(context.getTargetModule());
+                return null;
+            });
+        }
 
         updateModifiedItemsRevisions(context);
 
@@ -157,6 +169,26 @@ public class MergeService {
             } else {
                 context.reportEntry(MOVE_FAILED, pair, "workitem '%s' NOT moved".formatted(target.getId()));
             }
+        }
+    }
+
+    private boolean moveWorkItemOutOfDocument(@NotNull WorkItemsPair pair, @NotNull MergeContext context) {
+        IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
+        IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+
+        if (source != null && target != null && source.getLinkedWorkItems().contains(target)) {
+            moveWorkItemOutOfDocument(context.getTargetDocumentIdentifier(), target);
+            context.reportEntry(DETACHED, pair, "workitem '%s' moved out of document".formatted(target.getId()));
+            clearPairWorkItem(pair, context.direction);
+        }
+        return false;
+    }
+
+    private void clearPairWorkItem(WorkItemsPair pair, MergeDirection direction) {
+        if (direction == MergeDirection.LEFT_TO_RIGHT) {
+            pair.setRightWorkItem(null);
+        } else {
+            pair.setLeftWorkItem(null);
         }
     }
 
@@ -357,6 +389,12 @@ public class MergeService {
     private void deleteWorkItemFromDocument(DocumentIdentifier documentIdentifier, IWorkItem workItem) {
         IModule module = polarionService.getModule(documentIdentifier.getProjectId(), documentIdentifier.getSpaceId(), documentIdentifier.getName());
         module.unreference(workItem);
+        module.save();
+    }
+
+    private void moveWorkItemOutOfDocument(DocumentIdentifier documentIdentifier, IWorkItem workItem) {
+        IModule module = polarionService.getModule(documentIdentifier.getProjectId(), documentIdentifier.getSpaceId(), documentIdentifier.getName());
+        module.moveOut(Collections.singletonList(workItem));
         module.save();
     }
 

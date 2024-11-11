@@ -142,6 +142,9 @@ export default function useDiffService() {
       return true; // Work item was moved, so there's a difference
     } else if (!workItemsPair.leftWorkItem || !workItemsPair.rightWorkItem) {
       return true; // Work item was deleted/created, so there's a difference
+    } else if ((workItemsPair.leftWorkItem?.referenced && !workItemsPair.rightWorkItem?.referenced) ||
+        (!workItemsPair.leftWorkItem?.referenced && workItemsPair.rightWorkItem?.referenced)) {
+      return true; // Work items have a referenced mismatch: one is referenced while the other is not
     } else {
       return false; // If no conditions above were met - no difference
     }
