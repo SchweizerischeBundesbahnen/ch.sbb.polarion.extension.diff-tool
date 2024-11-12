@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
+import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListCleanerProvider;
 import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.tracker.model.IApprovalStruct;
 import com.polarion.alm.tracker.model.IComment;
@@ -20,7 +21,7 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ListFieldCleanerTest {
+public class ListCleanerTest {
 
     @Test
     void testApprovalsCleanUp() {
@@ -31,7 +32,7 @@ public class ListFieldCleanerTest {
         when(approvalStruct.getUser()).thenReturn(user);
         when(workItem.getApprovals()).thenReturn(List.of(approvalStruct));
 
-        ListFieldCleanerProvider.getInstance(IWorkItem.KEY_APPROVALS).clean(workItem);
+        ListCleanerProvider.getInstance(IWorkItem.KEY_APPROVALS).clean(workItem);
 
         verify(workItem, times(1)).removeApprovee(user);
     }
@@ -43,7 +44,7 @@ public class ListFieldCleanerTest {
         IUser user = mock(IUser.class);
         when(workItem.getAssignees()).thenReturn(new PObjectList(mock(IDataService.class), List.of(user)));
 
-        ListFieldCleanerProvider.getInstance(IWorkItem.KEY_ASSIGNEE).clean(workItem);
+        ListCleanerProvider.getInstance(IWorkItem.KEY_ASSIGNEE).clean(workItem);
 
         verify(workItem, times(1)).removeAssignee(user);
     }
@@ -59,7 +60,7 @@ public class ListFieldCleanerTest {
         IPObjectList comments = new PObjectList(mock(IDataService.class), List.of(comment));
         when(workItem.getComments()).thenReturn(comments);
 
-        ListFieldCleanerProvider.getInstance(IWorkItem.KEY_COMMENTS).clean(workItem);
+        ListCleanerProvider.getInstance(IWorkItem.KEY_COMMENTS).clean(workItem);
 
         verify(dataService, times(1)).delete(comments);
     }
@@ -76,7 +77,7 @@ public class ListFieldCleanerTest {
         IWorkflowSignaturesManager workflowSignaturesManager = mock(IWorkflowSignaturesManager.class);
         when(workItem.getWorkflowSignaturesManager()).thenReturn(workflowSignaturesManager);
 
-        ListFieldCleanerProvider.getInstance(IWorkItem.KEY_WORKFLOW_SIGNATURES).clean(workItem);
+        ListCleanerProvider.getInstance(IWorkItem.KEY_WORKFLOW_SIGNATURES).clean(workItem);
 
         verify(workflowSignaturesManager, times(1)).removeWorkflowSignature(status);
     }
@@ -88,7 +89,7 @@ public class ListFieldCleanerTest {
         IWorkRecord workRecord = mock(IWorkRecord.class);
         when(workItem.getWorkRecords()).thenReturn(new PObjectList(mock(IDataService.class), List.of(workRecord)));
 
-        ListFieldCleanerProvider.getInstance(IWorkItem.KEY_WORK_RECORDS).clean(workItem);
+        ListCleanerProvider.getInstance(IWorkItem.KEY_WORK_RECORDS).clean(workItem);
 
         verify(workItem, times(1)).deleteWorkRecord(workRecord);
     }

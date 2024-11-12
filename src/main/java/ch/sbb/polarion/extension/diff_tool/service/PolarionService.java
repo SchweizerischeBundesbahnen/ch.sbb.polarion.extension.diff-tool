@@ -8,6 +8,11 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
+import ch.sbb.polarion.extension.diff_tool.service.cleaners.FieldCleaner;
+import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListCleaner;
+import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListCleanerProvider;
+import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
+import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.LinksHandler;
 import ch.sbb.polarion.extension.diff_tool.settings.AuthorizationSettings;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
@@ -86,6 +91,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -184,12 +190,8 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                         documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId()));
             }
         } catch (ObjectNotFoundException ex) {
-            // Normal case, just swallow
+            // Target Document doesn't exist, thus we can create it
         }
-
-        IProject targetProject = getProject(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId());
-        ITrackerProject targetTrackerProject = trackerService.getTrackerProject(targetProject);
-        IContextId targetProjectContextId = targetTrackerProject.getContextId();
         if (StringUtils.isEmptyTrimmed(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId())) {
             throw new IllegalArgumentException("Target 'spaceId' should be provided");
         }
@@ -197,21 +199,23 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             throw new IllegalArgumentException("Target 'documentName' should be provided");
         }
 
+        IProject targetProject = getProject(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId());
+        ITrackerProject targetTrackerProject = trackerService.getTrackerProject(targetProject);
+        IContextId targetProjectContextId = targetTrackerProject.getContextId();
         ILocation targetLocation = Location.getLocation(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId());
-
-        IModule sourceModule = getModule(sourceProjectId, sourceSpaceId, sourceDocumentName, revision);
         ILinkRoleOpt linkRole = getLinkRoleById(documentDuplicateParams.getLinkRoleId(), targetTrackerProject);
         if (linkRole == null) {
             throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", documentDuplicateParams.getLinkRoleId()));
         }
 
+        IModule sourceModule = getModule(sourceProjectId, sourceSpaceId, sourceDocumentName, revision);
         List<DiffField> allowedFields = DiffModelCachedResource.get(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(),
                 documentDuplicateParams.getConfigName(), null).getDiffFields();
 
         // ---------
-        // Following 2 calls are intentionally split into 2 calls in separate transactions as list fields during documents duplication
-        // are becoming visible "outside" only as soon as duplication transaction is closed, meaning that cleaning them up should be done
-        // in new additional transaction
+        // Following calls are intentionally split into separate transactions as list fields during documents duplication
+        // are becoming visible in Polarion's API only as soon as document's creation transaction is closed, meaning that cleaning them up
+        // should be done in a separate transaction
         IModule targetModule = Objects.requireNonNull(TransactionalExecutor.executeInWriteTransaction(transaction -> {
             IModule createdModule = trackerService.getModuleManager().duplicate(sourceModule, targetProject, targetLocation,
                     documentDuplicateParams.getTargetDocumentIdentifier().getName(), linkRole, null, null, null, null);
@@ -219,7 +223,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             createdModule.updateTitleHeading(documentDuplicateParams.getTargetDocumentTitle());
             createdModule.save();
 
-            cleanUpNonListFields(createdModule, targetProjectContextId, allowedFields);
+            cleanUpFields(createdModule, targetProjectContextId, allowedFields, new NonListFieldCleaner());
 
             return createdModule;
         }));
@@ -228,12 +232,17 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             if (!sourceProjectId.equals(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())) {
                 fixLinksInRichTextFields(targetModule, sourceProjectId, linkRole.getId(), allowedFields);
             }
-            cleanUpListFields(targetModule, targetProjectContextId, allowedFields);
+            cleanUpFields(targetModule, targetProjectContextId, allowedFields, new ListFieldCleaner());
             return null;
         });
 
-        fixReferencedWorkItems(targetModule, linkRole);
-
+        TransactionalExecutor.executeInWriteTransaction(transaction -> {
+            for (IWorkItem workItem : targetModule.getExternalWorkItems()) {
+                fixReferencedWorkItem(workItem, targetModule, linkRole);
+            }
+            targetModule.save();
+            return null;
+        });
         // ----------
 
         return DocumentIdentifier.builder()
@@ -244,30 +253,12 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                 .build();
     }
 
-    /**
-     * Cleans up non-list fields of work items in specified module (document), leaving only either allowed fields (not to clean up) or read-only ones.
-     * Method should be called in write transaction context.
-     *
-     * @param module           Module which work items to clean up
-     * @param projectContextId ID of project's context where module is located
-     * @param allowedFields    List of allowed fields (not to clean up)
-     */
-    void cleanUpNonListFields(@NotNull IModule module, @NotNull IContextId projectContextId, @NotNull List<DiffField> allowedFields) {
+    void cleanUpFields(@NotNull IModule module, @NotNull IContextId projectContextId, @NotNull List<DiffField> allowedFields, @NotNull FieldCleaner cleaner) {
         List<WorkItemField> standardFieldsDeletable = getStandardFields().stream().filter(deletableFieldsFilter).toList();
         for (IWorkItem workItem : getWorkItemsForCleanUp(module)) {
             for (WorkItemField field : getDeletableFields(workItem, projectContextId, standardFieldsDeletable)) {
                 if (isFieldToCleanUp(allowedFields, field, workItem.getType())) {
-                    if (field.isRequired()) {
-                        if (field.isCustomField()) {
-                            workItem.setValue(field.getKey(), field.getDefaultValue());
-                        } else {
-                            fillStandardFieldDefaultValue(workItem, field);
-                        }
-                    } else {
-                        if (!(workItem.getFieldType(field.getKey()) instanceof IListType)) {
-                            workItem.setValue(field.getKey(), null);
-                        }
-                    }
+                    cleaner.clean(workItem, field);
                 }
             }
             workItem.save();
@@ -287,41 +278,6 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                 }
             }
         }
-    }
-
-    /**
-     * Cleans up list fields of work items in specified module (document), leaving only either allowed fields (not to clean up) or read-only ones.
-     * Method should be called in write transaction context.
-     *
-     * @param module           Module which work items to clean up
-     * @param projectContextId ID of project's context where module is located
-     * @param allowedFields    List of allowed fields (not to clean up)
-     */
-    void cleanUpListFields(IModule module, IContextId projectContextId, List<DiffField> allowedFields) {
-        List<WorkItemField> standardFieldsDeletable = getStandardFields().stream().filter(deletableFieldsFilter).toList();
-        for (IWorkItem workItem : getWorkItemsForCleanUp(module)) {
-            for (WorkItemField field : getDeletableFields(workItem, projectContextId, standardFieldsDeletable)) {
-                if (isFieldToCleanUp(allowedFields, field, workItem.getType())) {
-                    if (workItem.getFieldType(field.getKey()) instanceof IListType) {
-                        ListFieldCleaner cleaner = ListFieldCleanerProvider.getInstance(field.getKey());
-                        if (!field.isRequired() && cleaner != null) {
-                            cleaner.clean(workItem);
-                        }
-                    }
-                }
-            }
-            workItem.save();
-        }
-    }
-
-    public void fixReferencedWorkItems(@NotNull IModule targetModule, @NotNull ILinkRoleOpt linkRole) {
-        TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            for (IWorkItem workItem : targetModule.getExternalWorkItems()) {
-                fixReferencedWorkItem(workItem, targetModule, linkRole);
-            }
-            targetModule.save();
-            return null;
-        });
     }
 
     /**
@@ -373,17 +329,6 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             deletableFields.addAll(getCustomFields(projectContextId, workItem.getType()).stream().filter(deletableFieldsFilter).toList());
         }
         return deletableFields;
-    }
-
-    void fillStandardFieldDefaultValue(@NotNull IWorkItem workItem, @NotNull WorkItemField standardField) {
-        IType keyType = workItem.getPrototype().getKeyType(standardField.getKey());
-        if (keyType instanceof IEnumType) {
-            IEnumeration<?> enumeration = workItem.getDataSvc().getEnumerationForKey(workItem.getPrototype().getName(), standardField.getKey(), workItem.getContextId());
-            IEnumOption defaultOption = enumeration.getDefaultOption(null);
-            if (defaultOption != null) {
-                workItem.setValue(standardField.getKey(), defaultOption);
-            }
-        }
     }
 
     boolean isFieldToCleanUp(List<DiffField> allowedFields, WorkItemField fieldToCheck, @Nullable ITypeOpt workItemType) {
