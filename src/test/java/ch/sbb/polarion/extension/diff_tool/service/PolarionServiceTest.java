@@ -5,6 +5,8 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
+import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
+import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.settings.AuthorizationSettings;
 import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
@@ -329,7 +331,7 @@ class PolarionServiceTest {
         when(workItem.getType()).thenReturn(workItemType);
         when(workItem.getPrototype()).thenReturn(workItemPrototype);
         when(module.getAllWorkItems()).thenReturn(List.of(workItem));
-        polarionService.cleanUpNonListFields(module, contextId, Collections.emptyList());
+        polarionService.cleanUpFields(module, contextId, Collections.emptyList(), new NonListFieldCleaner());
 
         verify(workItem, never()).setValue(eq("field_1"), any());
         verify(workItem, never()).setValue(eq("field_2"), any());
@@ -372,7 +374,7 @@ class PolarionServiceTest {
         when(approvalStruct.getUser()).thenReturn(user);
         when(workItem.getApprovals()).thenReturn(List.of(approvalStruct));
 
-        polarionService.cleanUpListFields(module, contextId, Collections.emptyList());
+        polarionService.cleanUpFields(module, contextId, Collections.emptyList(), new ListFieldCleaner());
 
         verify(workItem, times(1)).removeApprovee(user);
     }
@@ -445,7 +447,7 @@ class PolarionServiceTest {
         IEnumOption newValue = mock(IEnumOption.class);
         when(enumeration.getDefaultOption(null)).thenReturn(newValue);
 
-        polarionService.fillStandardFieldDefaultValue(workItem, field);
+        new NonListFieldCleaner().fillStandardFieldDefaultValue(workItem, field);
 
         verify(workItem, times(1)).setValue(field.getKey(), newValue);
     }
@@ -462,7 +464,7 @@ class PolarionServiceTest {
         IType nonEnumType = mock(IType.class);
         when(workItemPrototype.getKeyType(field.getKey())).thenReturn(nonEnumType);
 
-        polarionService.fillStandardFieldDefaultValue(workItem, field);
+        new NonListFieldCleaner().fillStandardFieldDefaultValue(workItem, field);
 
         verify(workItem, never()).setValue(eq(field.getKey()), any());
     }
