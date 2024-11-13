@@ -3,6 +3,7 @@ package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
+import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import com.polarion.subterra.base.data.model.IEnumType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +29,6 @@ public class EnumReplaceHandler implements DiffLifecycleHandler {
     }
 
     private boolean isEnumDiff(WorkItem.Field fieldA, WorkItem.Field fieldB) {
-        return fieldA.getType() instanceof IEnumType || fieldB.getType() instanceof IEnumType;
+        return DiffToolUtils.isEnumContainingType(fieldA.getType()) || DiffToolUtils.isEnumContainingType(fieldB.getType());
     }
 }

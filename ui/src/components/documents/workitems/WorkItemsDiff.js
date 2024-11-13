@@ -56,6 +56,7 @@ export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPai
       leftProjectId: leftDocument.projectId,
       pairedWorkItemsLinkRole: pairedWorkItemsLinkRole,
       pairedWorkItemsDiffer: context.state.counterpartWorkItemsDiffer,
+      compareEnumsById: context.state.compareEnumsById,
       configName: searchParams.get('config'),
       configCacheBucketId: configCacheId
     };
