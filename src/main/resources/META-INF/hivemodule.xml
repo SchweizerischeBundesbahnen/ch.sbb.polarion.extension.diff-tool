@@ -46,4 +46,10 @@
     <contribution configuration-id="com.polarion.alm.richpages.velocityContext">
         <item key="diffTool" value="instance:ch.sbb.polarion.extension.diff_tool.velocity.VelocityDiffTool" />
     </contribution>
+
+    <service-point id="diffToolNavigationExtender" interface="com.polarion.alm.ui.server.navigation.NavigationExtender">
+        <invoke-factory>
+            <construct class="ch.sbb.polarion.extension.diff_tool.DiffToolNavigationExtender"/>
+        </invoke-factory>
+    </service-point>
 </module>
