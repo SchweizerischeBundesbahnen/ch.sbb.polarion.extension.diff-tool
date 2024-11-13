@@ -1,0 +1,49 @@
+<link href='/polarion/diff-tool/ui/css/common.css' rel='stylesheet' onload='$.when(
+                $.getScript("/polarion/diff-tool/ui/js/copy-tool.js"),
+                $.getScript("/polarion/diff-tool/ui/js/common.js")
+             ).done(function() { CopyTool.init({SOURCE_DOC_PARAMS}); })'>
+
+<div class="copy form-wrapper">
+    <div class="in-progress-overlay"><img src='/polarion/ria/images/progress.gif' alt=""/><span id="copy-in-progress-message"></span></div>
+
+    <p>
+        Please select <strong>target</strong> project and space.
+        Additionally select which link role should be taken into account when copying WorkItems, as well as fields configuration.
+    </p>
+
+    <div class='property-wrapper'>
+        <label for='copy-project-selector' class="fixed-width w-1">Project:</label>
+        <select id='copy-project-selector' onchange='CopyTool.projectChanged()'>
+            {PROJECT_OPTIONS}
+        </select>
+    </div>
+    <div class='property-wrapper'>
+        <label for='copy-space-selector' class="fixed-width w-1">Space:</label>
+        <select id='copy-space-selector' onchange='CopyTool.spaceChanged()'>
+        </select>
+    </div>
+
+    <div class='property-wrapper'>
+        <label for='copy-link-role-selector' class="fixed-width w-1">Link role:</label>
+        <select id='copy-link-role-selector'>
+            {LINK_ROLE_OPTIONS}
+        </select>
+    </div>
+    <div class='property-wrapper'>
+        <label for='copy-config-selector' class="fixed-width w-1">Configuration:</label>
+        <select id='copy-config-selector'>
+            {CONFIG_OPTIONS}
+        </select>
+    </div>
+
+    <div class='buttons-wrapper'>
+        <button type='button' id="create-document" disabled onclick='CopyTool.createNewDocument()'>
+            <img src='/polarion/ria/images/control/tablePlus.png' alt=""/>Create Document
+        </button>
+    </div>
+    <div id='creation-success' class="alert">
+        <span class="alert-success">Document created:</span> <a href="" style="font-weight: normal"></a>
+    </div>
+    <div class="alert alert-error"></div>
+    <div class="alert alert-warning"></div>
+</div>
