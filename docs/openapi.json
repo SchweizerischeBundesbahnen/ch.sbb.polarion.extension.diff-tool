@@ -1533,6 +1533,10 @@
       "WorkItemsDiffParams": {
         "description": "Comparison input data",
         "properties": {
+          "compareEnumsById": {
+            "description": "Indicates if enums must be compared by their ID",
+            "type": "boolean"
+          },
           "configCacheBucketId": {
             "description": "Cache bucket Id",
             "type": "string"

@@ -130,6 +130,13 @@ export default function ControlPane() {
             </label>
           </div>
           <div className="form-check">
+            <input className="form-check-input" type="checkbox" value="" id="compare-enums-by-id"
+                   onChange={() => context.state.setCompareEnumsById(!context.state.compareEnumsById)}/>
+            <label className="form-check-label" htmlFor="compare-enums-by-id">
+              Compare enums by ID
+            </label>
+          </div>
+          <div className="form-check">
             <input className="form-check-input" type="checkbox" value="" checked={context.state.hideChaptersIfNoDifference} id="hide-chapters"
                    onChange={() => context.state.setHideChaptersIfNoDifference(!context.state.hideChaptersIfNoDifference)}/>
             <label className="form-check-label" htmlFor="hide-chapters">

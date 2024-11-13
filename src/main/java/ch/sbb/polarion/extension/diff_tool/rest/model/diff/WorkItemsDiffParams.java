@@ -27,9 +27,20 @@ public class WorkItemsDiffParams {
     @Schema(description = "Indicates if the paired WorkItems differ")
     private Boolean pairedWorkItemsDiffer;
 
+    @Schema(description = "Indicates if enums must be compared by their ID")
+    private Boolean compareEnumsById;
+
     @Schema(description = "Name of the configuration used for comparison")
     private String configName;
 
     @Schema(description = "Cache bucket Id")
     private String configCacheBucketId;
+
+    public boolean isPairedWorkItemsDiffer() {
+        return Boolean.TRUE.equals(pairedWorkItemsDiffer);
+    }
+
+    public boolean isCompareEnumsById() {
+        return Boolean.TRUE.equals(compareEnumsById);
+    }
 }
