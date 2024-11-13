@@ -1,4 +1,4 @@
-package ch.sbb.polarion.extension.diff_tool.service;
+package ch.sbb.polarion.extension.diff_tool.service.cleaners;
 
 import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.tracker.model.IApprovalStruct;
@@ -6,13 +6,14 @@ import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.alm.tracker.model.signatures.IWorkItemWorkflowSignature;
 import com.polarion.alm.tracker.model.signatures.IWorkflowSignature;
 import com.polarion.alm.tracker.model.signatures.IWorkflowSignaturesManager;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public final class ListFieldCleanerProvider {
-    private static final Map<String, ListFieldCleaner> INSTANCES = new TreeMap<>();
+public final class ListCleanerProvider {
+    private static final Map<String, ListCleaner> INSTANCES = new TreeMap<>();
 
     static {
         INSTANCES.put(IWorkItem.KEY_APPROVALS, new ApprovalsCleaner());
@@ -22,18 +23,18 @@ public final class ListFieldCleanerProvider {
         INSTANCES.put(IWorkItem.KEY_WORK_RECORDS, new WorkRecordsCleaner());
     }
 
-    private ListFieldCleanerProvider() {
+    private ListCleanerProvider() {
         // Factory class, not to be instantiated
     }
 
-    public static ListFieldCleaner getInstance(String fieldName) {
+    public static ListCleaner getInstance(String fieldName) {
         return INSTANCES.get(fieldName);
     }
 
-    private static class ApprovalsCleaner implements ListFieldCleaner {
+    private static class ApprovalsCleaner implements ListCleaner {
         @Override
         @SuppressWarnings("unchecked")
-        public void clean(IWorkItem workItem) {
+        public void clean(@NotNull IWorkItem workItem) {
             List<IUser> users = workItem.getApprovals().stream()
                     .filter(approval -> approval instanceof IApprovalStruct)
                     .map(approvalStruct -> ((IApprovalStruct) approvalStruct).getUser())
@@ -42,9 +43,9 @@ public final class ListFieldCleanerProvider {
         }
     }
 
-    private static class AssigneeCleaner implements ListFieldCleaner {
+    private static class AssigneeCleaner implements ListCleaner {
         @Override
-        public void clean(IWorkItem workItem) {
+        public void clean(@NotNull IWorkItem workItem) {
             for (int i = 0; i < workItem.getAssignees().size(); i++) {
                 Object assignee = workItem.getAssignees().get(i);
                 if (assignee instanceof IUser user) {
@@ -54,16 +55,16 @@ public final class ListFieldCleanerProvider {
         }
     }
 
-    private static class CommentsCleaner implements ListFieldCleaner {
+    private static class CommentsCleaner implements ListCleaner {
         @Override
-        public void clean(IWorkItem workItem) {
+        public void clean(@NotNull IWorkItem workItem) {
             workItem.getDataSvc().delete(workItem.getComments());
         }
     }
 
-    private static class WorkflowSignaturesCleaner implements ListFieldCleaner {
+    private static class WorkflowSignaturesCleaner implements ListCleaner {
         @Override
-        public void clean(IWorkItem workItem) {
+        public void clean(@NotNull IWorkItem workItem) {
             IWorkflowSignaturesManager<IWorkItemWorkflowSignature> workflowSignaturesManager = workItem.getWorkflowSignaturesManager();
             for (int i = 0; i < workItem.getWorkflowSignatures().size(); i++) {
                 IWorkflowSignature workflowSignature = workItem.getWorkflowSignatures().get(i);
@@ -74,9 +75,9 @@ public final class ListFieldCleanerProvider {
         }
     }
 
-    private static class WorkRecordsCleaner implements ListFieldCleaner {
+    private static class WorkRecordsCleaner implements ListCleaner {
         @Override
-        public void clean(IWorkItem workItem) {
+        public void clean(@NotNull IWorkItem workItem) {
             for (int i = 0; i < workItem.getWorkRecords().size(); i++) {
                 workItem.deleteWorkRecord(workItem.getWorkRecords().get(i));
             }

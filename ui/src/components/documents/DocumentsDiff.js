@@ -66,7 +66,7 @@ export default function DocumentsDiff() {
       setLeftChaptersDiffMarkers(new Map());
       setRightChaptersDiffMarkers(new Map());
     }
-  }, [context.state.counterpartWorkItemsDiffer]); // Reload diff of all work item pairs if specified property changed
+  }, [context.state.counterpartWorkItemsDiffer, context.state.compareEnumsById]); // Reload diff of all work item pairs if specified properties changed
 
   const dataLoadedCallback = (index, error, diffExists, resetDiffMarker, leftChapter, rightChapter, leftWiId, rightWiId) => {
     diffExists && context.state.setDiffsExist(true);

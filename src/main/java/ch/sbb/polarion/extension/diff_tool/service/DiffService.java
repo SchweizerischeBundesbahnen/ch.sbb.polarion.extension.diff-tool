@@ -22,6 +22,8 @@ import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
 import com.polarion.core.util.xml.HTMLCleaner;
 import com.polarion.platform.persistence.IEnumOption;
+import com.polarion.platform.persistence.model.ITypedList;
+import com.polarion.subterra.base.data.model.IType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -287,13 +289,13 @@ public class DiffService {
             workItemsPair.setLeftWorkItem(buildWorkItem(leftWorkItem, fieldIds,
                     modules.getLeft().getOutlineNumberOfWorkitem(leftWorkItem),
                     modules.getLeft().getExternalWorkItems().contains(leftWorkItem),
-                    leftDocumentReference));
+                    leftDocumentReference, workItemsDiffParams.isCompareEnumsById()));
         }
         if (rightWorkItem != null) {
             workItemsPair.setRightWorkItem(buildWorkItem(rightWorkItem, fieldIds,
                     modules.getRight().getOutlineNumberOfWorkitem(rightWorkItem),
                     modules.getRight().getExternalWorkItems().contains(rightWorkItem),
-                    rightDocumentReference));
+                    rightDocumentReference, workItemsDiffParams.isCompareEnumsById()));
         }
 
         fillHtmlDiffs(workItemsPair, fieldIds, workItemsDiffParams);
@@ -340,17 +342,18 @@ public class DiffService {
                 DocumentReference.fromModuleLocation(workItemInDocument.getDocumentProjectId(), workItemInDocument.getDocumentLocationPath(), workItemInDocument.getDocumentRevision());
     }
 
-    private WorkItem buildWorkItem(IWorkItem iWorkItem, Set<String> fieldIds, String outlineNumber, boolean referenced, DocumentReference documentReference) {
+    private WorkItem buildWorkItem(IWorkItem iWorkItem, Set<String> fieldIds, String outlineNumber, boolean referenced, DocumentReference documentReference, boolean compareEnumsById) {
         WorkItem workItem = WorkItem.of(iWorkItem, outlineNumber, referenced, !iWorkItem.getProjectId().equals(documentReference.projectId()));
         Set<FieldMetadata> fields = Sets.union(polarionService.getGeneralFields(IWorkItem.PROTO, iWorkItem.getContextId()),
                 polarionService.getCustomFields(IWorkItem.PROTO, iWorkItem.getContextId(), Optional.ofNullable(iWorkItem.getType()).map(IEnumOption::getId).orElse(null)));
         for (String fieldId : fieldIds) {
+            IType fieldType = fields.stream().filter(f -> f.getId().equals(fieldId)).map(FieldMetadata::getType).findFirst().orElse(null);
             workItem.addField(
                     WorkItem.Field.builder()
                             .id(fieldId)
                             .name(iWorkItem.getFieldLabel(fieldId))
-                            .type(fields.stream().filter(f -> f.getId().equals(fieldId)).map(FieldMetadata::getType).findFirst().orElse(null))
-                            .value(getFieldValue(iWorkItem, fieldId, workItem))
+                            .type(fieldType)
+                            .value(getFieldValue(iWorkItem, fieldId, workItem, fieldType, compareEnumsById))
                             .html(renderHtml(iWorkItem, fieldId, documentReference, workItem))
                             .build()
             );
@@ -369,8 +372,9 @@ public class DiffService {
         return polarionService.renderField(iWorkItem.getProjectId(), iWorkItem.getId(), workItem.getRevision(), fieldId, documentReference);
     }
 
-    private Object getFieldValue(IWorkItem iWorkItem, String fieldId, WorkItem workItem) {
-        Object value = polarionService.getFieldValue(iWorkItem, fieldId, String.class);
+    private Object getFieldValue(IWorkItem iWorkItem, String fieldId, WorkItem workItem, IType fieldType, boolean compareEnumsById) {
+        boolean enumIdComparisonMode = compareEnumsById && DiffToolUtils.isEnumContainingType(fieldType);
+        Object value = polarionService.getFieldValue(iWorkItem, fieldId, enumIdComparisonMode ? Object.class : String.class);
         if (IWorkItem.KEY_DESCRIPTION.equals(fieldId)) {
             // Sometimes during work item duplication the description is 'cleaned' (see WorkItem#setValue method).
             // This results in slight differences between initial & copied description values.
@@ -383,6 +387,18 @@ public class DiffService {
             value = workItem.getOutlineNumber();
         } else if (fieldId.equals(DiffField.EXTERNAL_PROJECT_WORK_ITEM.getKey())) {
             value = workItem.isExternalProjectWorkItem();
+        } else if (enumIdComparisonMode) {
+            if (value instanceof IEnumOption) {
+                // single enum - just take enum ID
+                value = ((IEnumOption) value).getId();
+            } else if (value instanceof ITypedList<?>) {
+                // enum list - get all IDs in order to later compare them properly using Objects.equals()
+                // (note that we are sorting list in order to ignore the values order)
+                value = ((ITypedList<?>) value).stream().filter(i -> i instanceof IEnumOption).map(e -> ((IEnumOption) e).getId()).sorted().toList();
+            } else if (value != null) {
+                // theoretically we shouldn't reach this statement, but just in case we convert it to string otherwise we get jackson serialization exception
+                value = String.valueOf(value);
+            }
         }
         return value;
     }
