@@ -12,6 +12,7 @@ import org.ehcache.config.builders.ExpiryPolicyBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
 
 import javax.security.auth.Subject;
+import java.security.Principal;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -50,19 +51,19 @@ public class DocumentWorkItemsCache {
 
     public void evictDocumentFromCache(IModule document, Subject userSubject) {
         CacheKey key = getCacheKey(document, userSubject);
-        if (cache.containsKey(key)) {
-            cache.remove(key);
+        synchronized (cache) {
+            if (cache.containsKey(key)) {
+                cache.remove(key);
+            }
         }
     }
 
     public void evictDocumentFromCache(String projectId, ILocation location, String revision, Subject userSubject) {
-        CacheKey key = CacheKey.builder()
-                .projectId(projectId)
-                .location(location)
-                .revision(revision)
-                .userSubject(userSubject).build();
-        if (cache.containsKey(key)) {
-            cache.remove(key);
+        CacheKey key = CacheKey.from(projectId, location, revision, userSubject);
+        synchronized (cache) {
+            if (cache.containsKey(key)) {
+                cache.remove(key);
+            }
         }
     }
 
@@ -77,14 +78,26 @@ public class DocumentWorkItemsCache {
     }
 
     private CacheKey getCacheKey(IModule document, Subject userSubject) {
-        return CacheKey.builder()
-                .projectId(document.getProjectId())
-                .location(document.getModuleLocation())
-                .revision(document.getRevision())
-                .userSubject(userSubject).build();
+        return CacheKey.from(
+                document.getProjectId(),
+                document.getModuleLocation(),
+                document.getRevision(),
+                userSubject);
     }
 
     @Builder
-    private record CacheKey (String projectId, ILocation location, String revision, Subject userSubject) {
+    private record CacheKey(String projectId, ILocation location, String revision, String userSubject) {
+        public static CacheKey from(String projectId, ILocation location, String revision, Subject userSubject) {
+            return new CacheKey(projectId,
+                    location,
+                    revision,
+                    (userSubject != null) ? getSubjectKey(userSubject) : null);
+        }
+
+        private static String getSubjectKey(Subject userSubject) {
+            return userSubject.getPrincipals().stream()
+                    .map(Principal::toString)
+                    .collect(Collectors.joining(",", "[", "]"));
+        }
     }
 }

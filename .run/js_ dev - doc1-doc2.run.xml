@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="js: dev - doc1-doc2" type="JavascriptDebugType" uri="http://localhost:3000/?sourceProjectId=elibrary&amp;sourceSpaceId=Specification&amp;sourceDocument=doc1&amp;targetProjectId=elibrary&amp;targetSpaceId=Specification&amp;targetDocument=doc2&amp;linkRole=derived_from&amp;config=Default" useFirstLineBreakpoints="true">
+    <method v="2" />
+  </configuration>
+</component>
