@@ -1,7 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.subterra.base.data.model.IType;
