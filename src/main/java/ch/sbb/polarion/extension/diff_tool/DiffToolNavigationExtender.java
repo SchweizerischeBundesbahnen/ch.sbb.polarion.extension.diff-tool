@@ -1,7 +1,9 @@
 package ch.sbb.polarion.extension.diff_tool;
 
+import com.polarion.alm.shared.api.impl.ScopeImpl;
 import com.polarion.alm.ui.server.navigation.NavigationExtender;
 import com.polarion.alm.ui.server.navigation.NavigationExtenderNode;
+import com.polarion.portal.shared.navigation.IScope;
 import com.polarion.subterra.base.data.identification.IContextId;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,8 +36,7 @@ public class DiffToolNavigationExtender extends NavigationExtender {
     @Override
     public String getPageUrl(@NotNull IContextId contextId) {
         String contextName = contextId.getContextName();
-        String scope = contextName == null ? "" : "project/%s/".formatted(contextName);
-        return "/polarion/diff-tool-admin/pages/about.jsp?scope=" + scope;
+        return "/polarion/diff-tool/pages/diff-tool.jsp?projectId=" + (contextName == null || contextName.startsWith("-") ? "" : contextName) + "&buildId=" + System.getProperty("polarion.build.id");
     }
 
     @Override

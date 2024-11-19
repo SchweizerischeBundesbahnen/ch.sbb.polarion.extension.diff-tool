@@ -1,3 +1,7 @@
+a, td, div, li, ul, input, button {
+    font-family: "Segoe UI", "Selawik", "Open Sans", Arial, sans-serif;
+}
+
 .form-wrapper .in-progress-overlay {
     position: absolute;
     width: 100%;
@@ -136,4 +140,97 @@
 
 .alert-success {
     color: green;
+}
+
+.polarion-rp-column {
+    width: 100%;
+}
+
+.polarion-DiffTool {
+    margin-bottom: 30px;
+}
+
+.polarion-DiffTool .header h3 {
+    margin: 0 0 20px;
+}
+
+.polarion-DiffTool .header p {
+    color: grey;
+}
+
+.polarion-DiffTool button {
+    cursor: pointer;
+    color: #595959;
+    background: #f5f5f5;
+    border: 1px solid #DEDEDE;
+    border-radius: 2px;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 5px 10px;
+}
+
+.polarion-DiffTool button:hover {
+    background: #f7f7f7;
+    border: 1px solid #cecece;
+    box-shadow: 0 0 2px #e0dede;
+}
+
+.polarion-DiffTool .items-for-diff {
+    display: flex;
+    flex-direction: column;
+    margin-top: 30px;
+}
+
+.polarion-DiffTool .items-for-diff .controls {
+    display: flex;
+    margin: 10px 0;
+    column-gap: 10px;
+    align-items: center;
+}
+
+.polarion-DiffTool .items-for-diff .controls .query-input {
+    flex-grow: 2;
+    border: 1px solid #969696;
+    border-radius: 2px;
+    padding: 5px 10px;
+}
+
+.polarion-DiffTool .items-for-diff .controls .query-input:hover {
+    box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.3);
+}
+
+.polarion-DiffTool .items-for-diff .controls .query-input:focus {
+    border-color: #40abc0;
+}
+
+.polarion-DiffTool .paginator {
+    display: flex;
+    margin: 20px 0 10px;
+    column-gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.polarion-DiffTool .polarion-TestsExecutionButton-link {
+    display: block;
+}
+
+.polarion-DiffTool .polarion-TestsExecutionButton-buttons {
+    display: inline-block;
+}
+
+.polarion-DiffTool .polarion-TestsExecutionButton-buttons-content {
+    min-width: auto;
+}
+
+.polarion-DiffTool .polarion-TestsExecutionButton-buttons-content-labelCell {
+    padding: 10px;
+}
+
+.polarion-DiffTool .polarion-TestsExecutionButton-labelTextNew {
+    font-size: 20px;
+}
+
+.polarion-DiffTool .polarion-TestsExecutionButton-buttons-defaultCursor .polarion-TestsExecutionButton-labelTextNew {
+    color: gray;
 }
