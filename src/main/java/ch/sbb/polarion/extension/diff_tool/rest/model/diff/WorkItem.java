@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.subterra.base.data.model.IType;
@@ -26,7 +27,6 @@ import java.util.Set;
 @Schema(description = "Represents a WorkItem")
 public final class WorkItem {
     @JsonIgnore
-    @Getter(AccessLevel.PROTECTED)
     @Setter(AccessLevel.NONE)
     private IWorkItem underlyingObject;
 
