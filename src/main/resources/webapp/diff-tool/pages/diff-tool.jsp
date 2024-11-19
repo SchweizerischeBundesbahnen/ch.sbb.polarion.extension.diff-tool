@@ -8,7 +8,7 @@
 <html>
 <head>
     <link rel="stylesheet" type="text/css" href="/polarion/gwt/gwt/polarion/polarion.css?buildId=<%= product.buildNumber() %>">
-    <link rel="stylesheet" type="text/css" href="../css/diff-tool.css?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>">
+    <link rel="stylesheet" type="text/css" href="../css/common.css?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>">
     <script type="text/javascript" src="../js/diff-tool.js?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>"></script>
 </head>
 <body onload="document.getElementById('query-input').addEventListener('keydown', (event) => {

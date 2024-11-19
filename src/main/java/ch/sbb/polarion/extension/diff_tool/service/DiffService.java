@@ -46,7 +46,7 @@ public class DiffService {
         LEFT, RIGHT
     }
 
-    private static final CharSequence DAISY_DIFF_CHANGED_FRAGMENT = "<span class=\"diff-html-";
+    private static final CharSequence DAISY_DIFF_CHANGED_FRAGMENT = "class=\"diff-html-";
     private final PolarionService polarionService;
 
     public DiffService(PolarionService polarionService) {

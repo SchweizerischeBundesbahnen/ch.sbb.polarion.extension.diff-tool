@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="npm: dev - doc1-doc2" type="js.build_tools.npm">
+    <package-json value="$PROJECT_DIR$/ui/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="dev" />
+    </scripts>
+    <node-interpreter value="project" />
+    <envs />
+    <EXTENSION ID="com.intellij.lang.javascript.buildTools.npm.rc.StartBrowserRunConfigurationExtension">
+      <browser name="a7bb68e0-33c0-4d6f-a81a-aac1fdb870c8" start="true" with-js-debugger="true" url="http://localhost:3000/?sourceProjectId=elibrary&amp;sourceSpaceId=Specification&amp;sourceDocument=Doc100-2&amp;targetProjectId=elibrary&amp;targetSpaceId=Specification&amp;targetDocument=Doc100&amp;linkRole=derived_from&amp;config=Default" />
+    </EXTENSION>
+    <method v="2" />
+  </configuration>
+</component>

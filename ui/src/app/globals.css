@@ -505,6 +505,7 @@ a:hover {
 .diff-viewer {
   display: table;
   width: 100%;
+  table-layout: fixed; /* forces the child to respect width, e.g. linkedWorkItem item will take more space than allowed without this */
   /*border-left: 1px solid rgba(0, 0, 0, 0.1);*/
   /*border-right: 1px solid rgba(0, 0, 0, 0.1);*/
 }
@@ -543,6 +544,16 @@ a:hover {
 }
 .word-diff.removed, .diff-leaf.left del, .diff-leaf.left .diff-html-removed {
   background: #FDC6C6;
+}
+
+.diff-lwi-container {
+  display: flex;
+}
+.diff-lwi {
+  display: inline;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @page {
