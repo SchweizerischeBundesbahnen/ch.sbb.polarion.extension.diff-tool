@@ -1,13 +1,14 @@
-<link href='/polarion/diff-tool/ui/css/diff-tool.css' rel='stylesheet' onload='$.getScript("/polarion/diff-tool/ui/js/diff-tool.js").done(function() {
-            DiffTool.init({SOURCE_DOC_PARAMS});
-        })'>
+<link href='/polarion/diff-tool/ui/css/common.css' rel='stylesheet' onload='$.when(
+                $.getScript("/polarion/diff-tool/ui/js/diff-tool.js"),
+                $.getScript("/polarion/diff-tool/ui/js/common.js")
+             ).done(function() { DiffTool.init({SOURCE_DOC_PARAMS}); })'>
 
 <div class="comparison form-wrapper">
-    <div class="in-progress-overlay"><img src='/polarion/ria/images/progress.gif'/><span id="in-progress-message"></span></div>
+    <div class="in-progress-overlay"><img src='/polarion/ria/images/progress.gif' alt=""/><span id="comparison-in-progress-message"></span></div>
 
     <p>
         Please select <strong>target</strong> document and its revision below preliminary selecting its project and space, to compare current document in selected revision with it.
-        Additionally select which link role should be taken into account when determining counterpart WorkItems, as well as diffing configuration.
+        Additionally select which link role should be taken into account when determining counterpart work items as well as diffing configuration.
     </p>
     <div class='property-wrapper'>
         <input type='checkbox' id='compare-with-same-checkbox' onclick='DiffTool.toggleCompareSameDocument()'/>
@@ -15,14 +16,14 @@
     </div>
 
     <div class='property-wrapper hide-when-comparing-same'>
-        <label for='project-selector' class="fixed-width w-1">Project:</label>
-        <select id='project-selector' onchange='DiffTool.projectChanged()'>
+        <label for='comparison-project-selector' class="fixed-width w-1">Project:</label>
+        <select id='comparison-project-selector' onchange='DiffTool.projectChanged()'>
             {PROJECT_OPTIONS}
         </select>
     </div>
     <div class='property-wrapper hide-when-comparing-same'>
-        <label for='space-selector' class="fixed-width w-1">Space:</label>
-        <select id='space-selector' onchange='DiffTool.spaceChanged()'>
+        <label for='comparison-space-selector' class="fixed-width w-1">Space:</label>
+        <select id='comparison-space-selector' onchange='DiffTool.spaceChanged()'>
         </select>
     </div>
     <div class='property-wrapper hide-when-comparing-same'>
@@ -30,7 +31,7 @@
         <select id='document-selector' onchange='DiffTool.documentChanged()'>
         </select>
     </div>
-    <div class='property-wrapper hide-when-new-document'>
+    <div class='property-wrapper'>
         <label for="select-revision-panel" class="fixed-width w-1">Revision:</label>
         <div id="select-revision-panel">
             <div id="select-revision-radios">
@@ -54,22 +55,22 @@
         </div>
     </div>
     <div class='property-wrapper hide-when-comparing-same'>
-        <label for='link-role-selector' class="fixed-width w-1">Link role:</label>
-        <select id='link-role-selector'>
+        <label for='comparison-link-role-selector' class="fixed-width w-1">Link role:</label>
+        <select id='comparison-link-role-selector'>
             {LINK_ROLE_OPTIONS}
         </select>
     </div>
     <div class='property-wrapper'>
-        <label for='config-selector' class="fixed-width w-1">Configuration:</label>
-        <select id='config-selector'>
+        <label for='comparison-config-selector' class="fixed-width w-1">Configuration:</label>
+        <select id='comparison-config-selector'>
             {CONFIG_OPTIONS}
         </select>
     </div>
-    <div class='property-wrapper hide-when-new-document'>
+    <div class='property-wrapper'>
         <input type='checkbox' id='use-work-items-filter' onclick='DiffTool.toggleWorkItemsFilter()'/>
         <label for='use-work-items-filter'>Use work items filter</label>
     </div>
-    <div class='property-wrapper hide-when-new-document'>
+    <div class='property-wrapper'>
         <div id="work-items-filter-pane" style="display: none; width: 100%">
             <div id="work-items-filter-radios">
                 <input type="radio" id="include-work-items" name="work-items-filter-type" value="including">
@@ -84,19 +85,11 @@
         </div>
     </div>
 
-    <div class='buttons-wrapper hide-when-new-document'>
+    <div class='buttons-wrapper'>
         <button type='button' id="compare-documents" disabled onclick='DiffTool.showDiffResult()'>
-            <img src='/polarion/ria/images/dle/operations/compare.png'/>Compare
+            <img src='/polarion/ria/images/dle/operations/compare.png' alt=""/>Compare
         </button>
     </div>
-    <div class='buttons-wrapper hide-when-comparing hide'>
-        <button type='button' id="create-document" onclick='DiffTool.createNewDocument()'>
-            <img src='/polarion/ria/images/control/tablePlus.png'/>Create Document
-        </button>
-    </div>
-    <div id='comparison-error' class="alert alert-error"></div>
-    <div id='comparison-warning' class="alert alert-warning"></div>
-    <div id='creation-success' class="alert">
-        <span class="alert-success">Document created:</span> <a href="" style="font-weight: normal"></a>
-    </div>
+    <div class="alert alert-error"></div>
+    <div class="alert alert-warning"></div>
 </div>

@@ -61,6 +61,14 @@ Changes only take effect after restart of Polarion.
    ```
 6. Save changes by clicking 💾 Save
 
+### Documents copy form to appear on a Document's properties pane
+Repeat the instructions above except that on the step 5 use the following line:
+   ```xml
+   …
+   <extension id="copy-tool" label="Documents Copy" />
+   …
+   ```
+
 ### Fine-tuning the communication between Polarion and Diff Tool extension
 
 The Diff Tool UI makes numerous requests to Polarion using the REST API to retrieve information about documents and their workitems. These requests can be processed in parallel to improve performance.

@@ -26,7 +26,6 @@ import java.util.Set;
 @Schema(description = "Represents a WorkItem")
 public final class WorkItem {
     @JsonIgnore
-    @Getter(AccessLevel.PROTECTED)
     @Setter(AccessLevel.NONE)
     private IWorkItem underlyingObject;
 
