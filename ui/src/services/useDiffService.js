@@ -61,7 +61,7 @@ export default function useDiffService() {
     return pairs;
   };
 
-  const sendMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData) => {
+  const sendMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, allowReferencedWorkItemMerge) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
     leftDocument.moduleXmlRevision = docsData.leftDocument.moduleXmlRevision;
@@ -78,7 +78,8 @@ export default function useDiffService() {
           linkRole: searchParams.get('linkRole'),
           configName: searchParams.get('config'),
           configCacheBucketId: configCacheId,
-          pairs: filterRedundant(mergingContext.getSelectedValues())
+          pairs: filterRedundant(mergingContext.getSelectedValues()),
+          allowReferencedWorkItemMerge: allowReferencedWorkItemMerge
         }),
         contentType: "application/json"
       })

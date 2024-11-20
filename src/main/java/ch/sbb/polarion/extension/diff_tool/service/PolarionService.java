@@ -295,17 +295,22 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                 IModule.IStructureNode parentNode = nodeToBeRemoved.getParent();
                 int destinationIndex = parentNode.getChildren().indexOf(nodeToBeRemoved);
 
-                insertReferencedWorkItem(pairedWorkItem, targetModule, parentNode, destinationIndex);
+                insertWorkItem(pairedWorkItem, targetModule, parentNode, destinationIndex, true);
             }
             targetModule.unreference(referencedWorkItem);
         }
     }
 
-    public void insertReferencedWorkItem(@NotNull IWorkItem workItemToReference, @NotNull IModule targetModule, @Nullable IModule.IStructureNode parentNode, int destinationIndex) {
-        targetModule.addExternalWorkItem(workItemToReference);
+    public void insertWorkItem(@NotNull IWorkItem workItem, @NotNull IModule targetModule, @Nullable IModule.IStructureNode parentNode, int destinationIndex, boolean referenced) {
+        if (referenced) {
+            targetModule.addExternalWorkItem(workItem);
+        } else {
+            targetModule.moveIn(List.of(workItem));
+        }
+
         if (parentNode != null) {
-            IModule.IStructureNode referencedWorkItemNode = targetModule.getStructureNodeOfWI(workItemToReference);
-            parentNode.addChild(referencedWorkItemNode, destinationIndex); // Placing inserted referenced work item at required position in document
+            IModule.IStructureNode structureNodeOfWI = targetModule.getStructureNodeOfWI(workItem);
+            parentNode.addChild(structureNodeOfWI, destinationIndex); // Placing inserted work item at required position in document
         }
     }
 

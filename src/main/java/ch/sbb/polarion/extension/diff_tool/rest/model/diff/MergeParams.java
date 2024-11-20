@@ -36,4 +36,7 @@ public class MergeParams {
 
     @Schema(description = "List of WorkItem pairs to be considered in the merge operation", implementation = WorkItemsPair.class)
     private List<WorkItemsPair> pairs;
+
+    @Schema(description = "Indicates if merging referenced Work Item allowed")
+    private Boolean allowReferencedWorkItemMerge;
 }

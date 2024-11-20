@@ -99,13 +99,14 @@ public class MergeReport {
         CREATED,
         CREATION_FAILED,
         DELETED,
+        DETACHED,
         DUPLICATE_SKIPPED,
         MODIFIED,
         MOVED,
         MOVE_SKIPPED,
         MOVE_FAILED,
-        PROHIBITED,
-        DETACHED
+        MOVED_FROM,
+        PROHIBITED
     }
 
 }

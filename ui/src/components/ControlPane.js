@@ -137,6 +137,13 @@ export default function ControlPane() {
             </label>
           </div>
           <div className="form-check">
+            <input className="form-check-input" type="checkbox" value="" id="allow-reference-wi-merge"
+                   onChange={() => context.state.setAllowReferencedWorkItemMerge(!context.state.allowReferencedWorkItemMerge)}/>
+            <label className="form-check-label" htmlFor="allow-reference-wi-merge">
+              Allow reference work item merge
+            </label>
+          </div>
+          <div className="form-check">
             <input className="form-check-input" type="checkbox" value="" checked={context.state.hideChaptersIfNoDifference} id="hide-chapters"
                    onChange={() => context.state.setHideChaptersIfNoDifference(!context.state.hideChaptersIfNoDifference)}/>
             <label className="form-check-label" htmlFor="hide-chapters">

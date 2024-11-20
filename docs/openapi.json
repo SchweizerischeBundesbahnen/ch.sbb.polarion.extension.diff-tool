@@ -1165,6 +1165,10 @@
       "MergeParams": {
         "description": "Merge input data",
         "properties": {
+          "allowReferencedWorkItemMerge": {
+            "description": "Indicates if merging referenced Work Item allowed",
+            "type": "boolean"
+          },
           "configCacheBucketId": {
             "description": "The ID of the configuration cache bucket",
             "type": "string"
@@ -1281,13 +1285,14 @@
               "CREATED",
               "CREATION_FAILED",
               "DELETED",
+              "DETACHED",
               "DUPLICATE_SKIPPED",
               "MODIFIED",
               "MOVED",
               "MOVE_SKIPPED",
               "MOVE_FAILED",
-              "PROHIBITED",
-              "DETACHED"
+              "MOVED_FROM",
+              "PROHIBITED"
             ],
             "type": "string"
           },

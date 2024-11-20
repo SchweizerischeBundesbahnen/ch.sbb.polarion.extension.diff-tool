@@ -63,7 +63,7 @@ public class MergeServiceTest {
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
 
         MergeResult mergeResult = mergeService.mergeWorkItems(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
-                "any", Collections.emptyList(), null, "any");
+                "any", Collections.emptyList(), null, "any", false);
         assertFalse(mergeResult.isSuccess());
         assertTrue(mergeResult.isTargetModuleHasStructuralChanges());
     }
@@ -92,7 +92,7 @@ public class MergeServiceTest {
         when(polarionService.userAuthorizedForMerge(any())).thenReturn(false);
 
         MergeResult mergeResult = mergeService.mergeWorkItems(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
-                "any", Collections.emptyList(), null, "any");
+                "any", Collections.emptyList(), null, "any", false);
         assertFalse(mergeResult.isSuccess());
         assertTrue(mergeResult.isMergeNotAuthorized());
     }

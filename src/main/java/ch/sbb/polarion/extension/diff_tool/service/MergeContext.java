@@ -12,9 +12,12 @@ import com.polarion.alm.shared.api.model.document.DocumentReference;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
+import lombok.Builder;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -32,9 +35,13 @@ public final class MergeContext {
     final String linkRole;
     final ILinkRoleOpt linkRoleObject;
     final DiffModel diffModel;
+    @Getter
+    final List<ModifiedModule> modifiedModules = new ArrayList<>();
+    @Getter
+    final boolean allowReferencedWorkItemMerge;
 
     public MergeContext(@NotNull PolarionService polarionService, @NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier,
-                        @NotNull MergeDirection direction, @NotNull String linkRole, DiffModel diffModel) {
+                        @NotNull MergeDirection direction, @NotNull String linkRole, DiffModel diffModel, boolean allowReferencedWorkItemMerge) {
         this.leftDocumentIdentifier = leftDocumentIdentifier;
         this.rightDocumentIdentifier = rightDocumentIdentifier;
         this.direction = direction;
@@ -53,6 +60,7 @@ public final class MergeContext {
                 leftDocumentIdentifier.getRevision() == null ? leftModule.getLastRevision() : leftDocumentIdentifier.getRevision());
         rightDocumentReference = DocumentReference.fromModuleLocation(rightDocumentIdentifier.getProjectId(), rightModule.getModuleLocation().getLocationPath(),
                 rightDocumentIdentifier.getRevision() == null ? rightModule.getLastRevision() : rightDocumentIdentifier.getRevision());
+        this.allowReferencedWorkItemMerge = allowReferencedWorkItemMerge;
     }
 
     public IModule getSourceModule() {
@@ -121,5 +129,14 @@ public final class MergeContext {
             }
         });
         return linked.get();
+    }
+
+    @Builder
+    @Getter
+    public static class ModifiedModule {
+        @NotNull private final IModule module;
+        @NotNull private final IWorkItem workItem;
+        @NotNull private final IModule.IStructureNode parentNode;
+        private final int destinationIndex;
     }
 }
