@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentWorkItemsCacheTest {
-    private final DocumentWorkItemsCache documentWorkItemsCache = new DocumentWorkItemsCache();
+    private final DocumentWorkItemsCache documentWorkItemsCache = DocumentWorkItemsCache.getInstance();
     @Mock
     private IModule document;
     @Mock
@@ -35,6 +35,7 @@ class DocumentWorkItemsCacheTest {
 
     @BeforeEach
     void setup() {
+        documentWorkItemsCache.clearCache();
         prepareDocumentWorkItems();
         subject = new Subject();
         subject.getPrincipals().addAll(principles);
