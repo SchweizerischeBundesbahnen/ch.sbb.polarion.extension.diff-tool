@@ -9,8 +9,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.FieldCleaner;
-import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListCleaner;
-import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListCleanerProvider;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.LinksHandler;
@@ -54,8 +52,6 @@ import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.IPlatformService;
 import com.polarion.platform.persistence.ICustomFieldsService;
-import com.polarion.platform.persistence.IEnumOption;
-import com.polarion.platform.persistence.IEnumeration;
 import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.platform.persistence.model.IPrototype;
@@ -63,9 +59,6 @@ import com.polarion.platform.security.ISecurityService;
 import com.polarion.platform.service.repository.IRepositoryService;
 import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.ICustomField;
-import com.polarion.subterra.base.data.model.IEnumType;
-import com.polarion.subterra.base.data.model.IListType;
-import com.polarion.subterra.base.data.model.IType;
 import com.polarion.subterra.base.location.ILocation;
 import com.polarion.subterra.base.location.Location;
 import lombok.Getter;
@@ -91,7 +84,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -112,7 +104,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     ));
 
     @Getter
-    private final DocumentWorkItemsCache documentWorkItemsCache = new DocumentWorkItemsCache();
+    private final DocumentWorkItemsCache documentWorkItemsCache = DocumentWorkItemsCache.getInstance();
 
     public PolarionService() {
         super();
