@@ -1,5 +1,33 @@
 # Changelog
 
+## [4.6.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.5.4...v4.6.0) (2024-11-21)
+
+
+### Features
+
+* Added synchronization logic for linked work items across projects ([#164](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/164)) ([ff9dd9d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ff9dd9d0201263ad8043cb4ffa66dc382293935d))
+* compare enums by id ([#163](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/163)) ([ea491bc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ea491bccdbb96d9a50bd0c576a7f18ed7305afa1)), closes [#63](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/63)
+* hyperlink fields synchronisation ([#177](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/177)) ([ff78ee6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ff78ee6123a23e614d40772b1673bf18b0468118)), closes [#174](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/174)
+* new documents creation moved to the new 'Documents Copy' section ([#169](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/169)) ([56155b4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/56155b4b44f40759c23eb2fd9e2083030285232d)), closes [#88](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/88)
+
+
+### Bug Fixes
+
+* Create document cache as singleton ([#176](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/176)) ([9c1bd00](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9c1bd00901011124a50d0b5903f1dcc8ce41a9e3)), closes [#175](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/175)
+* **deps:** update dependency uuid to v11 ([#62](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/62)) ([2087927](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/20879277602d440634e8840a909c243869f243fe))
+* **deps:** update font awesome to v6.7.0 ([debbdec](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/debbdec127d579a406ad14d316b736855a6b7a3f))
+* **deps:** update font awesome to v6.7.1 ([fb64764](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/fb647641555a29aaaea091fd9692b14ded9522d9))
+* Fixed documents cache for destroyed credentials ([#168](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/168)) ([4c9c823](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/4c9c8231f0bef19ff7fa70c2c9a4a00a63c48c9d)), closes [#167](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/167)
+* linkedWorkItems diff is broken in polarion ([#172](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/172)) ([52c2e76](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/52c2e76fe8d5fce427fa8c3c62f176a80c8ebf51)), closes [#170](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/170)
+* Refactor initial document duplicate creation logic to optimize it ([#165](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/165)) ([f922084](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/f9220844ede11e63dd50d34933f0442fdc34cd89)), closes [#41](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/41)
+* simultaneous parent & children work items merge ([#161](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/161)) ([2b1945a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2b1945ad753e4f573efa74339b604e3a0cf24b0c)), closes [#68](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/68)
+* Update NodeJS dependencies (security alert) ([#173](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/173)) ([04afcc1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/04afcc1b5bc17bfc76c0a8282fe1eacd9cc7bbf2))
+
+
+### Documentation
+
+* how to debug react app in IntelliJ IDEA ([#166](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/166)) ([57adac8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/57adac87b00e4f98a55417e6d1b12557db2a8a85))
+
 ## [4.5.4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.5.3...v4.5.4) (2024-11-08)
 
 
