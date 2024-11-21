@@ -12,6 +12,7 @@ import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
 import com.polarion.alm.tracker.model.IWorkItem;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +42,11 @@ class DiffServiceTest {
     void init() {
         TestUtils.mockDiffSettings();
         diffService = new DiffService(polarionService);
+    }
+
+    @AfterEach
+    public void teardown() {
+        TestUtils.clearSettings();
     }
 
     @Test

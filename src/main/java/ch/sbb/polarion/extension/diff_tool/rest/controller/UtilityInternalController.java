@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Document;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.HyperlinkRole;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
@@ -191,12 +192,12 @@ public class UtilityInternalController {
                             description = "List of all hyperlink roles for the specified project",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(implementation = IHyperlinkRoleOpt.class)
+                                    schema = @Schema(implementation = HyperlinkRole.class)
                             )
                     )
             }
     )
-    public Collection<IHyperlinkRoleOpt> getAllHyperlinkRoles(@PathParam("projectId") String projectId) {
+    public Collection<HyperlinkRole> getAllHyperlinkRoles(@PathParam("projectId") String projectId) {
         if (StringUtils.isBlank(projectId)) {
             throw new BadRequestException(MISSING_PROJECT_ID_MESSAGE);
         }

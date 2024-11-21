@@ -289,7 +289,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IHyperlinkRoleOpt"
+                  "$ref": "#/components/schemas/HyperlinkRole"
                 }
               }
             },
@@ -1153,16 +1153,10 @@
         },
         "type": "object"
       },
-      "IHyperlinkRoleOpt": {
+      "HyperlinkRole": {
         "properties": {
-          "default": {
-            "type": "boolean"
-          },
-          "enumId": {
+          "combinedId": {
             "type": "string"
-          },
-          "hidden": {
-            "type": "boolean"
           },
           "id": {
             "type": "string"
@@ -1170,18 +1164,11 @@
           "name": {
             "type": "string"
           },
-          "phantom": {
-            "type": "boolean"
+          "workItemTypeId": {
+            "type": "string"
           },
-          "properties": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object"
-          },
-          "sequenceNumber": {
-            "format": "int32",
-            "type": "integer"
+          "workItemTypeName": {
+            "type": "string"
           }
         },
         "type": "object"

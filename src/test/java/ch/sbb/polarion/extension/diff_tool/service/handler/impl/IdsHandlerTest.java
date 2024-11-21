@@ -4,7 +4,9 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
+import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +31,13 @@ class IdsHandlerTest {
 
     @BeforeEach
     public void init() {
+        TestUtils.mockDiffSettings();
         handler = new IdsHandler();
+    }
+
+    @AfterEach
+    public void teardown() {
+        TestUtils.clearSettings();
     }
 
     @Test
