@@ -40,7 +40,6 @@ import com.polarion.alm.tracker.internal.baseline.BaseObjectBaselinesSearch;
 import com.polarion.alm.tracker.internal.model.WorkItem;
 import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.IBaseline;
-import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IStatusOpt;
