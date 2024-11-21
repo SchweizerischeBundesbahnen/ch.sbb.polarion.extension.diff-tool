@@ -4,8 +4,10 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
+import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
 import com.polarion.subterra.base.data.model.IEnumType;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +32,13 @@ class EnumReplaceHandlerTest {
 
     @BeforeEach
     public void init() {
+        TestUtils.mockDiffSettings();
         handler = new EnumReplaceHandler();
+    }
+
+    @AfterEach
+    public void teardown() {
+        TestUtils.clearSettings();
     }
 
     @Test
