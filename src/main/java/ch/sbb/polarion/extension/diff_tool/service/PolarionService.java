@@ -301,8 +301,8 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         }
 
         if (parentNode != null) {
-            IModule.IStructureNode structureNodeOfWI = targetModule.getStructureNodeOfWI(workItem);
-            parentNode.addChild(structureNodeOfWI, destinationIndex); // Placing inserted work item at required position in document
+            IModule.IStructureNode insertedWorkItemNode = targetModule.getStructureNodeOfWI(workItem);
+            parentNode.addChild(insertedWorkItemNode, destinationIndex); // Placing inserted work item at required position in document
         }
     }
 

@@ -202,17 +202,13 @@ public class MergeService {
                 moveWorkItemOutOfDocument(context.getTargetDocumentIdentifier(), target);
             }
             context.reportEntry(DETACHED, pair, "workitem '%s' moved out of document".formatted(target.getId()));
-            clearPairWorkItem(pair, context.direction);
+            if (context.getDirection() == MergeDirection.LEFT_TO_RIGHT) {
+                pair.setRightWorkItem(null);
+            } else {
+                pair.setLeftWorkItem(null);
+            }
         }
         return false;
-    }
-
-    private void clearPairWorkItem(@NotNull WorkItemsPair pair, @NotNull MergeDirection direction) {
-        if (direction == MergeDirection.LEFT_TO_RIGHT) {
-            pair.setRightWorkItem(null);
-        } else {
-            pair.setLeftWorkItem(null);
-        }
     }
 
     private boolean hasReferenceMismatch(@NotNull WorkItemsPair pair, @NotNull MergeContext context) {
