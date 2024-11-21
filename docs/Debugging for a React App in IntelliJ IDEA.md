@@ -1,6 +1,17 @@
 # Setting up Debugging for a React App in IntelliJ IDEA
 
+## Prerequisites
+
 `JavaScript and TypeScript` plugin should be installed.
+
+### Setting Up CORS
+Add the following lines to /etc/apache2/conf-enabled/polarion.conf:
+```properties
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods "*"
+Header set Access-Control-Allow-Headers "*"
+```
+Additionally, create a `.env.development.local` file based on the provided template in the project.
 
 ## Quick Start
 

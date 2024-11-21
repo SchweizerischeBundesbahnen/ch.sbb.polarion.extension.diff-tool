@@ -54,6 +54,6 @@ public class MergeInternalController {
             throw new BadRequestException("Parameters 'leftDocument', 'rightDocument' and 'direction' should be provided");
         }
         return mergeService.mergeWorkItems(mergeParams.getLeftDocument(), mergeParams.getRightDocument(), mergeParams.getDirection(), mergeParams.getLinkRole(), mergeParams.getPairs(),
-                mergeParams.getConfigName(), mergeParams.getConfigCacheBucketId());
+                mergeParams.getConfigName(), mergeParams.getConfigCacheBucketId(), mergeParams.getAllowReferencedWorkItemMerge());
     }
 }

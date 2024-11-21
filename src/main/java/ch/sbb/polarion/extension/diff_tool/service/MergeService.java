@@ -36,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -57,12 +58,12 @@ public class MergeService {
     }
 
     public MergeResult mergeWorkItems(@NotNull DocumentIdentifier documentIdentifier1, @NotNull DocumentIdentifier documentIdentifier2, @NotNull MergeDirection direction,
-                                      @NotNull String linkRole, @NotNull List<WorkItemsPair> pairs, @Nullable String configName, @Nullable String configCacheBucketId) {
+                                      @NotNull String linkRole, @NotNull List<WorkItemsPair> pairs, @Nullable String configName, @Nullable String configCacheBucketId, boolean allowReferencedWorkItemMerge) {
         // Evict cache of work items of specified documents before merging their work items, as after merge cache can become invalid
         polarionService.evictDocumentsCache(documentIdentifier1, documentIdentifier2);
 
         DiffModel diffModel = DiffModelCachedResource.get(documentIdentifier1.getProjectId(), configName, configCacheBucketId);
-        MergeContext context = new MergeContext(polarionService, documentIdentifier1, documentIdentifier2, direction, linkRole, diffModel);
+        MergeContext context = new MergeContext(polarionService, documentIdentifier1, documentIdentifier2, direction, linkRole, diffModel, allowReferencedWorkItemMerge);
         if (!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision())) {
             return MergeResult.builder().success(false).targetModuleHasStructuralChanges(true).build();
         }
@@ -78,9 +79,32 @@ public class MergeService {
             for (WorkItemsPair pair : pairs) {
                 updateAndMoveItem(pair, context);
             }
+
+            if (allowReferencedWorkItemMerge) {
+                pairs.removeIf(pair -> moveWorkItemOutOfDocument(pair, context));
+            }
             reloadModule(context.getTargetModule());
             return null;
         });
+
+        if (!pairs.isEmpty()) {
+            TransactionalExecutor.executeInWriteTransaction(transaction -> {
+                context.getTargetModule().update();
+                pairs.removeIf(pair -> createOrDeleteItem(pair, context, transaction));
+                reloadModule(context.getTargetModule());
+                return null;
+            });
+        }
+
+        if (!context.getModifiedModules().isEmpty()) {
+            TransactionalExecutor.executeInWriteTransaction(transaction -> {
+                context.getModifiedModules().forEach(module -> {
+                    polarionService.insertWorkItem(module.getWorkItem(), module.getModule(), module.getParentNode(), module.getDestinationIndex(), true );
+                    reloadModule(module.getModule());
+                });
+                return null;
+            });
+        }
 
         updateModifiedItemsRevisions(context);
 
@@ -96,7 +120,7 @@ public class MergeService {
 
         if (source != null && target == null) { // "target" is null in this case, so new item out of "source" to be created
             if (context.getSourceModule().getExternalWorkItems().contains(source)) {
-                IWorkItem createdWorkItem = insertReferencedWorkItem(source, context);
+                IWorkItem createdWorkItem = insertWorkItem(source, context, true);
                 if (createdWorkItem != null) {
                     context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(createdWorkItem.getId(), source.getId()));
                     reloadModule(context.getTargetModule());
@@ -104,7 +128,15 @@ public class MergeService {
                     context.reportEntry(CREATION_FAILED, pair, "new workitem based on source workitem '%s' NOT created".formatted(source.getId()));
                 }
             } else {
-                IWorkItem newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context);
+                IWorkItem newWorkItem;
+                IWorkItem pairedWorkItem = polarionService.getPairedWorkItems(source, context.getTargetModule().getProjectId(), context.linkRole).stream().findFirst().orElse(null);
+                if (pairedWorkItem != null) {
+                    newWorkItem = insertWorkItem(source, context, false);
+                    context.reportEntry(CREATED, pair, "workitem '%s' moved from '%s'".formatted(newWorkItem.getId(), pairedWorkItem.getModule() != null ? pairedWorkItem.getModule().getTitleWithSpace() : "tracker"));
+                } else {
+                    newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context);
+                    context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId()));
+                }
                 context.bindCounterpartItem(pair,
                         WorkItem.of(newWorkItem,
                                 context.getTargetModule().getOutlineNumberOfWorkitem(newWorkItem),
@@ -112,7 +144,6 @@ public class MergeService {
                                 newWorkItem.getProjectId().equals(context.getTargetModule().getProjectId())
                         )
                 );
-                context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId()));
                 reloadModule(context.getTargetModule());
             }
             return true;
@@ -144,7 +175,7 @@ public class MergeService {
             if (!target.getProjectId().equals(context.getTargetModule().getProjectId())) {
                 polarionService.fixReferencedWorkItem(target, context.getTargetModule(), context.linkRoleObject);
                 reloadModule(context.getTargetModule());
-            } else if (!moveRequested) {
+            } else if (!moveRequested && !context.allowReferencedWorkItemMerge) {
                 context.reportEntry(PROHIBITED, pair, "can't merge into referenced workitem '%s' in target document '%s'".formatted(target.getId(), context.getTargetModule()));
             }
         }
@@ -158,6 +189,32 @@ public class MergeService {
                 context.reportEntry(MOVE_FAILED, pair, "workitem '%s' NOT moved".formatted(target.getId()));
             }
         }
+    }
+
+    private boolean moveWorkItemOutOfDocument(@NotNull WorkItemsPair pair, @NotNull MergeContext context) {
+        IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
+        IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+
+        if (source != null && target != null && source.getLinkedWorkItems().contains(target) && hasReferenceMismatch(pair, context)) {
+            if (context.getTargetWorkItem(pair).isReferenced()) {
+                deleteWorkItemFromDocument(context.getTargetDocumentIdentifier(), target);
+            } else {
+                moveWorkItemOutOfDocument(context.getTargetDocumentIdentifier(), target);
+            }
+            context.reportEntry(DETACHED, pair, "workitem '%s' moved out of document".formatted(target.getId()));
+            if (context.getDirection() == MergeDirection.LEFT_TO_RIGHT) {
+                pair.setRightWorkItem(null);
+            } else {
+                pair.setLeftWorkItem(null);
+            }
+        }
+        return false;
+    }
+
+    private boolean hasReferenceMismatch(@NotNull WorkItemsPair pair, @NotNull MergeContext context) {
+        boolean sourceReferenced = context.getSourceWorkItem(pair).isReferenced();
+        boolean targetReferenced = context.getTargetWorkItem(pair).isReferenced();
+        return sourceReferenced != targetReferenced;
     }
 
     private void updateModifiedItemsRevisions(MergeContext context) {
@@ -304,14 +361,14 @@ public class MergeService {
         }
     }
 
-    private IWorkItem insertReferencedWorkItem(IWorkItem sourceWorkItem, MergeContext context) {
-        final IWorkItem workItemToReference;
+    private IWorkItem insertWorkItem(IWorkItem sourceWorkItem, MergeContext context, boolean referenced) {
+        final IWorkItem workItemToInsert;
         if (sourceWorkItem.getProjectId().equals(context.getTargetModule().getProjectId())) {
-            workItemToReference = sourceWorkItem;
+            workItemToInsert = sourceWorkItem;
         } else {
-            workItemToReference = polarionService.getPairedWorkItems(sourceWorkItem, context.getTargetModule().getProjectId(), context.linkRole).stream().findFirst().orElse(null);
+            workItemToInsert = polarionService.getPairedWorkItems(sourceWorkItem, context.getTargetModule().getProjectId(), context.linkRole).stream().findFirst().orElse(null);
         }
-        if (workItemToReference != null) {
+        if (workItemToInsert != null) {
             IModule.IStructureNode sourceNode = context.getSourceModule().getStructureNodeOfWI(sourceWorkItem);
             IModule.IStructureNode sourceParentNode = sourceNode.getParent();
 
@@ -320,9 +377,21 @@ public class MergeService {
             IModule.IStructureNode destinationParentNode = context.getTargetModule().getStructureNodeOfWI(destinationParentWorkItem);
             int destinationIndex = sourceParentNode.getChildren().indexOf(sourceNode);
 
-            polarionService.insertReferencedWorkItem(workItemToReference, context.getTargetModule(), destinationParentNode, destinationIndex);
+            if (workItemToInsert.getModule() != null && !workItemToInsert.getModule().equals(context.modifiedModules)) {
+                IModule.IStructureNode sourceExternalNode = workItemToInsert.getModule().getStructureNodeOfWI(workItemToInsert);
+                IModule.IStructureNode sourceExternalParentNode = sourceExternalNode.getParent();
+
+                MergeContext.ModifiedModule modifiedModule = MergeContext.ModifiedModule.builder()
+                        .module(workItemToInsert.getModule())
+                        .workItem(workItemToInsert)
+                        .parentNode(sourceExternalParentNode)
+                        .destinationIndex(sourceExternalParentNode.getChildren().indexOf(sourceExternalNode))
+                        .build();
+                context.getModifiedModules().add(modifiedModule);
+            }
+            polarionService.insertWorkItem(workItemToInsert, context.getTargetModule(), destinationParentNode, destinationIndex, referenced);
         }
-        return workItemToReference;
+        return workItemToInsert;
     }
 
     private void reloadModule(IModule module) {
@@ -357,6 +426,12 @@ public class MergeService {
     private void deleteWorkItemFromDocument(DocumentIdentifier documentIdentifier, IWorkItem workItem) {
         IModule module = polarionService.getModule(documentIdentifier.getProjectId(), documentIdentifier.getSpaceId(), documentIdentifier.getName());
         module.unreference(workItem);
+        module.save();
+    }
+
+    private void moveWorkItemOutOfDocument(DocumentIdentifier documentIdentifier, IWorkItem workItem) {
+        IModule module = polarionService.getModule(documentIdentifier.getProjectId(), documentIdentifier.getSpaceId(), documentIdentifier.getName());
+        module.moveOut(Collections.singletonList(workItem));
         module.save();
     }
 

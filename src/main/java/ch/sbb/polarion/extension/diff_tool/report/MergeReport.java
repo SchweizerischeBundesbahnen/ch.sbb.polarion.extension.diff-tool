@@ -65,6 +65,10 @@ public class MergeReport {
         return getEntriesByType(OperationResultType.MOVE_SKIPPED);
     }
 
+    public List<MergeReportEntry> getMergeDetached() {
+        return getEntriesByType(OperationResultType.DETACHED);
+    }
+
     public String getLogs() {
         return entries.stream()
                 .sorted(Comparator.comparing(entry -> entry.getOperationTime().format(DATE_TIME_FORMATTER)))
@@ -95,11 +99,13 @@ public class MergeReport {
         CREATED,
         CREATION_FAILED,
         DELETED,
+        DETACHED,
         DUPLICATE_SKIPPED,
         MODIFIED,
         MOVED,
         MOVE_SKIPPED,
         MOVE_FAILED,
+        MOVED_FROM,
         PROHIBITED
     }
 
