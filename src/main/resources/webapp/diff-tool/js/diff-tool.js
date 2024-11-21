@@ -1,3 +1,5 @@
+const DISABLED_BUTTON_CLASS= "polarion-TestsExecutionButton-buttons-defaultCursor";
+
 DiffTool = {
 
   init: function (sourceProjectId, sourceSpace, sourceDocument, sourceDocumentTitle, sourceRevision) {
@@ -203,6 +205,42 @@ DiffTool = {
 
   toggleWorkItemsFilter: function () {
     document.getElementById("work-items-filter-pane").style.display = document.getElementById("use-work-items-filter").checked ? "block" : "none";
+  },
+
+  updateWorkItemsDiffButton: function (clickedElement) {
+    const diffWidget = clickedElement?.closest("div.polarion-DiffTool");
+    const button = diffWidget?.querySelector(".polarion-TestsExecutionButton-buttons");
+    if (button) {
+      if (button.classList.contains(DISABLED_BUTTON_CLASS) && diffWidget.querySelectorAll('input[type="checkbox"]:checked').length > 0) {
+        button.classList.remove(DISABLED_BUTTON_CLASS);
+        // We need to remember click listener to remove it from button later
+        this.registeredButtonClickListener = () => DiffTool.openWorkItemsDiffApplication(diffWidget);
+        button.addEventListener("click", this.registeredButtonClickListener);
+      }
+      if (!button.classList.contains(DISABLED_BUTTON_CLASS) && diffWidget.querySelectorAll('input[type="checkbox"]:checked').length === 0) {
+        button.classList.add(DISABLED_BUTTON_CLASS);
+        button.removeEventListener("click", this.registeredButtonClickListener);
+      }
+      if (diffWidget.querySelectorAll('input[type="checkbox"]:not(.export-all):not(:checked)').length > 0) {
+        const exportAllCheckbox = diffWidget.querySelector('input[type="checkbox"].export-all');
+        if (exportAllCheckbox) {
+          exportAllCheckbox.checked = false;
+        }
+      }
+    }
+  },
+
+  selectAllItems: function (clickedElement) {
+    const diffWidget = clickedElement?.closest("div.polarion-DiffTool");
+    if (diffWidget) {
+      diffWidget.querySelectorAll('input[type="checkbox"]:not(.export-all)').forEach(checkbox => {
+        checkbox.checked = clickedElement.checked;
+      });
+    }
+  },
+
+  openWorkItemsDiffApplication: function (diffWidget) {
+    window.open(`/polarion/diff-tool-app/ui/app/index.html?workItemsDiff`, '_blank');
   },
 
   replaceUrlParam: function (url, paramName, paramValue){

@@ -8,6 +8,7 @@
 <%@ page import="com.polarion.alm.server.api.model.rp.widget.impl.RichPageWidgetRenderingContextImpl" %>
 <%@ page import="com.polarion.alm.server.api.model.rp.widget.WidgetResourcesServlet" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
+<%@ page import="ch.sbb.polarion.extension.diff_tool.widgets.WorkItemsDiffWidgetParams" %>
 <%@ page contentType="text/html; charset=UTF-8" %>
 
 <%
@@ -16,7 +17,12 @@
     String renderedContent = Objects.requireNonNull(TransactionalExecutor.executeInReadOnlyTransaction(transaction -> {
         RichPageWidgetRenderingContextImpl renderingContext = new RichPageWidgetRenderingContextImpl((InternalReadOnlyTransaction) transaction,
                 projectScope, WidgetResourcesServlet.createResourceUrl("diff-tool"));
-        WorkItemsDiffWidgetRenderer renderer = new WorkItemsDiffWidgetRenderer(renderingContext, request.getParameter("query"), request.getParameter("page"));
+        WorkItemsDiffWidgetRenderer renderer = new WorkItemsDiffWidgetRenderer(renderingContext,
+                WorkItemsDiffWidgetParams.builder()
+                        .query(request.getParameter("query"))
+                        .page(request.getParameter("page"))
+                        .configuration(request.getParameter("configuration"))
+                        .linkRole(request.getParameter("linkRole")).build());
         return renderer.render();
     }));
     out.println(renderedContent);

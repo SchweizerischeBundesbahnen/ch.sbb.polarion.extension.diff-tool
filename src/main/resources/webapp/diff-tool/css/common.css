@@ -146,16 +146,19 @@ a, td, div, li, ul, input, button {
     width: 100%;
 }
 
-.polarion-DiffTool {
-    margin-bottom: 30px;
-}
-
 .polarion-DiffTool .header h3 {
     margin: 0 0 20px;
 }
 
 .polarion-DiffTool .header p {
     color: grey;
+}
+
+.polarion-DiffTool .main-pane {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+    margin-bottom: 30px;
 }
 
 .polarion-DiffTool button {
@@ -175,32 +178,50 @@ a, td, div, li, ul, input, button {
     box-shadow: 0 0 2px #e0dede;
 }
 
-.polarion-DiffTool .items-for-diff {
-    display: flex;
-    flex-direction: column;
-    margin-top: 30px;
+.polarion-DiffTool label {
+    width: 100px;
 }
 
-.polarion-DiffTool .items-for-diff .controls {
-    display: flex;
-    margin: 10px 0;
-    column-gap: 10px;
-    align-items: center;
-}
-
-.polarion-DiffTool .items-for-diff .controls .query-input {
-    flex-grow: 2;
-    border: 1px solid #969696;
+.polarion-DiffTool input, .polarion-DiffTool select {
+    border: 1px solid #cccccc;
     border-radius: 2px;
+    font-weight: 600;
+    font-family: "Segoe UI", "Selawik", "Open Sans", Arial, sans-serif;
+    font-size: 13px;
+}
+
+.polarion-DiffTool input {
+    flex-grow: 2;
     padding: 5px 10px;
 }
 
-.polarion-DiffTool .items-for-diff .controls .query-input:hover {
+.polarion-DiffTool select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAOUlEQVR4nGNgwAOKGRgY/qNhkBgDCwMDw0UkwasMDAysMF22DAwM/6ASjuhGLmVgYFiCzS5JKAYDACJtDIY1VpdwAAAAAElFTkSuQmCC) no-repeat;
+    background-position: calc(100% - 1rem) 55% !important;
+    padding: 5px 2rem 5px 10px;
+}
+
+.polarion-DiffTool input:hover, .polarion-DiffTool select:hover {
     box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.3);
 }
 
-.polarion-DiffTool .items-for-diff .controls .query-input:focus {
+.polarion-DiffTool input:focus {
     border-color: #40abc0;
+}
+
+.polarion-DiffTool .items-for-diff {
+    display: flex;
+    flex-direction: column;
+    row-gap: 5px;
+}
+
+.polarion-DiffTool .configuration, .polarion-DiffTool .link-role, .polarion-DiffTool .items-for-diff .query {
+    display: flex;
+    column-gap: 10px;
+    align-items: center;
 }
 
 .polarion-DiffTool .paginator {

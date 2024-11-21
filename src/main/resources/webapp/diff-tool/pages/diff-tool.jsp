@@ -27,20 +27,7 @@
                             <div class="header">
                                 <h3>Compare work items</h3>
                             </div>
-                            <div class="items-for-diff">
-                                <table class="polarion-rpw-table-main">
-                                    <tr>
-                                        <td>
-                                            <jsp:include page="items-table-widget.jsp"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
+                            <jsp:include page="items-table-widget.jsp"/>
                         </div>
                     </div>
                 </div>
