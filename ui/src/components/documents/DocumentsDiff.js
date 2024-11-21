@@ -66,7 +66,7 @@ export default function DocumentsDiff() {
       setLeftChaptersDiffMarkers(new Map());
       setRightChaptersDiffMarkers(new Map());
     }
-  }, [context.state.counterpartWorkItemsDiffer, context.state.compareEnumsById]); // Reload diff of all work item pairs if specified properties changed
+  }, [context.state.counterpartWorkItemsDiffer, context.state.compareEnumsById, context.state.allowReferencedWorkItemMerge]); // Reload diff of all work item pairs if specified properties changed
 
   const dataLoadedCallback = (index, error, diffExists, resetDiffMarker, leftChapter, rightChapter, leftWiId, rightWiId) => {
     diffExists && context.state.setDiffsExist(true);
@@ -98,7 +98,7 @@ export default function DocumentsDiff() {
 
   const mergeCallback = (direction) => {
     setMergeInProgress(true);
-    diffService.sendMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, docsData)
+    diffService.sendMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, context.state.allowReferencedWorkItemMerge)
         .then((data) => {
           setMergeReport(data.mergeReport);
           setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);
@@ -231,6 +231,7 @@ export default function DocumentsDiff() {
                   {mergeReport.prohibited?.length > 0 && <li><strong>{mergeReport.prohibited.length}</strong> items were not merged because such operation is logically prohibited.</li>}
                   {mergeReport.creationFailed?.length > 0 && <li><strong>{mergeReport.creationFailed.length}</strong> items were not merged because work items referenced in source document
                     do not have counterparts in target project.</li>}
+                  {mergeReport.detached?.length > 0 && <li><strong>{mergeReport.detached.length}</strong> items were moved out of documents.</li>}
                 </ul>
               </p>
               {mergeReport.logs && !mergeLogsVisible && <a href="#" onClick={() => setMergeLogsVisible(true)}>See full log</a>}

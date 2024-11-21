@@ -14,6 +14,7 @@ export default function Body({ children }) {
   const [showOutlineNumbersDiff, setShowOutlineNumbersDiff] = useState(false);
   const [counterpartWorkItemsDiffer, setCounterpartWorkItemsDiffer] = useState(false);
   const [compareEnumsById, setCompareEnumsById] = useState(false);
+  const [allowReferencedWorkItemMerge, setAllowReferencedWorkItemMerge] = useState(false);
   const [hideChaptersIfNoDifference, setHideChaptersIfNoDifference] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [diffsExist, setDiffsExist] = useState(false);
@@ -46,6 +47,8 @@ export default function Body({ children }) {
           setCounterpartWorkItemsDiffer: setCounterpartWorkItemsDiffer,
           compareEnumsById: compareEnumsById,
           setCompareEnumsById: setCompareEnumsById,
+          allowReferencedWorkItemMerge: allowReferencedWorkItemMerge,
+          setAllowReferencedWorkItemMerge: setAllowReferencedWorkItemMerge,
           hideChaptersIfNoDifference: hideChaptersIfNoDifference,
           setHideChaptersIfNoDifference: setHideChaptersIfNoDifference,
           dataLoaded: dataLoaded,

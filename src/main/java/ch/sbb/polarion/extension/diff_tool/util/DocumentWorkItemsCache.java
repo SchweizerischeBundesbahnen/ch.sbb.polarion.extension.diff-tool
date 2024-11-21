@@ -22,9 +22,17 @@ import java.util.stream.Collectors;
 public class DocumentWorkItemsCache {
     private static final int CACHE_TIME_MINUTES = 10;
     private static final int CACHE_SIZE = 100;
+    private static DocumentWorkItemsCache instance;
     private final Cache<CacheKey, Map<String, IWorkItem>> cache;
 
-    public DocumentWorkItemsCache() {
+    public static synchronized DocumentWorkItemsCache getInstance() {
+        if (instance == null) {
+            instance = new DocumentWorkItemsCache();
+        }
+        return instance;
+    }
+
+    private DocumentWorkItemsCache() {
         CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder().build();
         cacheManager.init();
         Class<Map<String, IWorkItem>> mapClass = cast(Map.class);
@@ -65,6 +73,10 @@ public class DocumentWorkItemsCache {
                 cache.remove(key);
             }
         }
+    }
+
+    public void clearCache() {
+        cache.clear();
     }
 
     private Map<String, IWorkItem> getWorkItemsFromDocument(IModule document) {
