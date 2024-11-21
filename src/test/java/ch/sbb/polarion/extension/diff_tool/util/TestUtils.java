@@ -1,6 +1,8 @@
 package ch.sbb.polarion.extension.diff_tool.util;
 
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
+import ch.sbb.polarion.extension.diff_tool.settings.DiffSettings;
+import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import com.polarion.alm.projects.IProjectService;
 import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.platform.IPlatformService;
@@ -10,6 +12,8 @@ import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -48,5 +52,12 @@ public class TestUtils {
 
     public @NotNull String removeLineEndings(@NotNull String input) {
         return input.replaceAll("\\r\\n|\\r|\\n", "");
+    }
+
+    public void mockDiffSettings() {
+        DiffSettings settingsMock = mock(DiffSettings.class);
+        lenient().when(settingsMock.getFeatureName()).thenReturn(DiffSettings.FEATURE_NAME);
+        NamedSettingsRegistry.INSTANCE.getAll().clear();
+        NamedSettingsRegistry.INSTANCE.register(List.of(settingsMock));
     }
 }

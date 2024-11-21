@@ -69,6 +69,10 @@ public class MergeReport {
         return getEntriesByType(OperationResultType.DETACHED);
     }
 
+    public List<MergeReportEntry> getWarnings() {
+        return getEntriesByType(OperationResultType.WARNING);
+    }
+
     public String getLogs() {
         return entries.stream()
                 .sorted(Comparator.comparing(entry -> entry.getOperationTime().format(DATE_TIME_FORMATTER)))
@@ -106,7 +110,8 @@ public class MergeReport {
         MOVE_SKIPPED,
         MOVE_FAILED,
         MOVED_FROM,
-        PROHIBITED
+        PROHIBITED,
+        WARNING
     }
 
 }

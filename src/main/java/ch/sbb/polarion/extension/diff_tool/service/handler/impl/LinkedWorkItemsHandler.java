@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
+import ch.sbb.polarion.extension.diff_tool.util.ModificationType;
 import com.polarion.alm.server.ServerUiContext;
 import com.polarion.alm.server.api.model.wi.linked.LinkedWorkItemRendererImpl;
 import com.polarion.alm.server.api.model.wi.linked.ProxyLinkedWorkItem;
@@ -27,7 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ch.sbb.polarion.extension.diff_tool.service.handler.impl.LinkedWorkItemsHandler.ModificationType.*;
+import static ch.sbb.polarion.extension.diff_tool.util.ModificationType.*;
 import static com.polarion.alm.tracker.model.IWorkItem.KEY_LINKED_WORK_ITEMS;
 
 /**
@@ -126,7 +127,7 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
     }
 
     private String markChanged(String text, @NotNull ModificationType modificationType) {
-        return "<div class=\"diff-lwi-container\"><div class=\"%s diff-lwi\">%s</div></div>".formatted(modificationType.styleName, text);
+        return "<div class=\"diff-lwi-container\"><div class=\"%s diff-lwi\">%s</div></div>".formatted(modificationType.getStyleName(), text);
     }
 
     private List<ILinkedWorkItemStruct> sortLinks(Collection<ILinkedWorkItemStruct> links) {
@@ -143,18 +144,5 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
 
     private boolean isInappropriateCaseForHandler(DiffContext context) {
         return context.pairedWorkItemsDiffer || !Objects.equals(context.fieldA.getId(), KEY_LINKED_WORK_ITEMS) || !Objects.equals(context.fieldB.getId(), KEY_LINKED_WORK_ITEMS);
-    }
-
-    enum ModificationType {
-        ADDED("diff-html-added"),
-        REMOVED("diff-html-removed"),
-        MODIFIED("diff-html-changed"),
-        NONE("unchanged");
-
-        final String styleName;
-
-        ModificationType(String styleName) {
-            this.styleName = styleName;
-        }
     }
 }

@@ -39,6 +39,7 @@ import com.polarion.alm.tracker.internal.baseline.BaseObjectBaselinesSearch;
 import com.polarion.alm.tracker.internal.model.WorkItem;
 import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.IBaseline;
+import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IStatusOpt;
@@ -385,6 +386,16 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         }
 
         return statuses;
+    }
+
+    @NotNull
+    public Collection<IHyperlinkRoleOpt> getHyperlinkRoles(@NotNull String projectId) {
+        Set<IHyperlinkRoleOpt> hyperlinks = new LinkedHashSet<>();
+        ITrackerProject trackerProject = getTrackerProject(projectId);
+        for (ITypeOpt wiType : trackerProject.getWorkItemTypeEnum().getAllOptions()) {
+            hyperlinks.addAll(trackerProject.getHyperlinkRoleEnum().getAvailableOptions(wiType.getId()));
+        }
+        return hyperlinks;
     }
 
     @SneakyThrows

@@ -232,6 +232,7 @@ export default function DocumentsDiff() {
                   {mergeReport.creationFailed?.length > 0 && <li><strong>{mergeReport.creationFailed.length}</strong> items were not merged because work items referenced in source document
                     do not have counterparts in target project.</li>}
                   {mergeReport.detached?.length > 0 && <li><strong>{mergeReport.detached.length}</strong> items were moved out of documents.</li>}
+                  {mergeReport.warnings?.length > 0 && <li><strong>{mergeReport.warnings.length}</strong> warnings.</li>}
                 </ul>
               </p>
               {mergeReport.logs && !mergeLogsVisible && <a href="#" onClick={() => setMergeLogsVisible(true)}>See full log</a>}
