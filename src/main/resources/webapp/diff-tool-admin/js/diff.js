@@ -14,6 +14,7 @@ const Fields = {
   addButton: document.getElementById("add-button"),
   removeButton: document.getElementById("remove-button"),
   hyperlinkSettingsContainer: document.getElementById("hyperlink-settings-container"),
+  hyperlinkRolesSearchInput: document.getElementById("search-hyperlink-roles-input"),
 
   init: function () {
     document.getElementById("fields-load-error").style.display = "none";
@@ -22,6 +23,37 @@ const Fields = {
     this.selectedFields.addEventListener("change", (event) => this.removeButton.disabled = event.target.selectedIndex === -1);
     this.addButton.addEventListener("click", () => this.addFieldClicked());
     this.removeButton.addEventListener("click", () => this.removeFieldClicked());
+
+    this.hyperlinkRolesSearchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase().trim();
+      const options = HyperlinkRoles.roles.options;
+
+      // Store currently selected values
+      const selectedValues = Array.from(HyperlinkRoles.roles.selectedOptions)
+          .map(option => option.value);
+
+      const searchParts = searchTerm.split(/\s+/).filter(part => part.length > 0);
+
+      // Filter options
+      for (let i = 0; i < options.length; i++) {
+        const option = options[i];
+        const isMatch = searchParts.length === 0 ||
+            searchParts.every(part =>
+                option.text.toLowerCase().includes(part)
+            );
+
+        // Toggle visibility based on search match
+        option.hidden = !isMatch;
+      }
+
+      // Re-select previously selected options
+      selectedValues.forEach(value => {
+        const option = HyperlinkRoles.roles.querySelector(`option[value="${value}"]`);
+        if (option) {
+          option.selected = true;
+        }
+      });
+    });
 
     return new Promise((resolve, reject) => {
       SbbCommon.callAsync({
@@ -169,11 +201,10 @@ const HyperlinkRoles = {
         onOk: (responseText) => {
           for (let role of JSON.parse(responseText)) {
             const opt = document.createElement('option');
-            opt.value = role.id;
-            opt.innerHTML = role.name;
+            opt.value = `${role.combinedId}`;
+            opt.innerHTML = `[${role.workItemTypeName}] ${role.name}`;
             this.roles.appendChild(opt);
           }
-          // Fields.checkHyperlinkSettingsVisibility();
           resolve();
         },
         onError: () => {

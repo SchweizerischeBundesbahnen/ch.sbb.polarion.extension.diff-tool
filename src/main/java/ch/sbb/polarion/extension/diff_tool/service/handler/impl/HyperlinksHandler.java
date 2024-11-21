@@ -1,12 +1,14 @@
 package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.HyperlinkRole;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
 import ch.sbb.polarion.extension.diff_tool.util.ModificationType;
 import com.polarion.alm.tracker.internal.model.HyperlinkStruct;
 import com.polarion.platform.persistence.IEnumOption;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,11 +42,18 @@ public class HyperlinksHandler implements DiffLifecycleHandler {
             return diff;
         }
 
-        List<String> resultRows = new ArrayList<>();
+        String wiTypeId = Optional.ofNullable(ObjectUtils.firstNonNull(context.workItemA, context.workItemB)
+                .getUnderlyingObject().getType()).map(IEnumOption::getId).orElse(null);
+        if (wiTypeId == null) {
+            return diff;
+        }
 
+        List<String> resultRows = new ArrayList<>();
         List<String> rolesToMerge = Optional.of(context.diffModel.getHyperlinkRoles())
-                .filter(roles -> !roles.isEmpty())
-                .orElseGet(() -> context.polarionService.getHyperlinkRoles(context.leftProjectId).stream().map(IEnumOption::getId).toList());
+                .filter(settingsRoles -> !settingsRoles.isEmpty())
+                .orElseGet(() -> context.polarionService.getHyperlinkRoles(context.leftProjectId).stream().map(HyperlinkRole::getCombinedId).toList())
+                .stream().filter(combinedId -> combinedId.startsWith(wiTypeId + "#"))
+                .map(combinedId -> combinedId.substring(combinedId.indexOf("#") + 1)).toList();
 
         List<HyperlinkStruct> allLinksA = getHyperlinks(context.workItemA);
         List<HyperlinkStruct> allLinksB = getHyperlinks(context.workItemB);

@@ -26,10 +26,10 @@ import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
 import com.polarion.alm.tracker.internal.model.module.Module;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
-import com.polarion.platform.persistence.IEnumOption;
 import com.polarion.platform.persistence.spi.EnumOption;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
@@ -373,22 +373,29 @@ public class MergeService {
      */
     private void removeWrongHyperlinks(IWorkItem workItem, MergeContext context, WorkItemsPair pair) {
         if (!workItem.getHyperlinks().isEmpty()) {
-            List<String> projectRoles = polarionService.getHyperlinkRoles(workItem.getProjectId()).stream().map(IEnumOption::getId).toList();
             ((Collection<?>) workItem.getHyperlinks()).removeIf(link -> {
                 if (link instanceof HyperlinkStruct linkStruct) {
-                    if (!projectRoles.contains(linkStruct.getRole().getId())) {
-                        context.reportEntry(WARNING, pair, "Cannot create hyperlink in the workitem '%s' because project '%s' doesn't have role '%s'"
-                                .formatted(workItem.getId(), workItem.getProjectId(), linkStruct.getRole().getId()));
+                    if (!isHyperlinkRoleAllowedInConfiguration(linkStruct, workItem.getType(), context)) {
                         return true;
-                    } else return !isHyperlinkRoleAllowedInConfiguration(linkStruct, context);
+                    } else if (isHyperlinkRoleForbiddenForType(linkStruct, workItem.getType(), workItem.getProjectId())) {
+                        context.reportEntry(WARNING, pair, "Cannot create hyperlink in the workitem '%s' because project '%s' doesn't support role '%s' for type '%s'"
+                                .formatted(workItem.getId(), workItem.getProjectId(), linkStruct.getRole().getId(), workItem.getType()));
+                        return true;
+                    }
                 }
                 return false;
             });
         }
     }
 
-    private boolean isHyperlinkRoleAllowedInConfiguration(HyperlinkStruct link, MergeContext context) {
-        return context.getDiffModel().getHyperlinkRoles().isEmpty() || context.getDiffModel().getHyperlinkRoles().contains(link.getRole().getId());
+    private boolean isHyperlinkRoleForbiddenForType(HyperlinkStruct link, ITypeOpt type, String projectId) {
+        return polarionService.getHyperlinkRoles(projectId).stream().noneMatch(role ->
+                Objects.equals(role.getWorkItemTypeId(), (type == null ? "" : type.getId())) && Objects.equals(role.getId(), link.getRole().getId()));
+    }
+
+    private boolean isHyperlinkRoleAllowedInConfiguration(HyperlinkStruct link, ITypeOpt type, MergeContext context) {
+        return context.getDiffModel().getHyperlinkRoles().isEmpty() ||
+                context.getDiffModel().getHyperlinkRoles().contains((type == null ? "" : type.getId()) + "#" + link.getRole().getId());
     }
 
     private IWorkItem insertWorkItem(IWorkItem sourceWorkItem, MergeContext context, boolean referenced) {
@@ -481,10 +488,9 @@ public class MergeService {
     }
 
     private void mergeHyperlinks(IWorkItem workItem, @Nullable Collection<?> linksList, MergeContext context, WorkItemsPair pair) {
-        List<String> projectRoles = polarionService.getHyperlinkRoles(workItem.getProjectId()).stream().map(IEnumOption::getId).toList();
         List<HyperlinkStruct> existingList = ((Collection<?>) workItem.getHyperlinks()).stream()
                 .filter(HyperlinkStruct.class::isInstance).map(HyperlinkStruct.class::cast)
-                .filter(h -> isHyperlinkRoleAllowedInConfiguration(h, context))
+                .filter(h -> isHyperlinkRoleAllowedInConfiguration(h, workItem.getType(), context))
                 .collect(Collectors.toCollection(ArrayList::new));
         List<HyperlinkStruct> newList = linksList == null ? List.of() : linksList.stream()
                 .filter(HyperlinkStruct.class::isInstance).map(HyperlinkStruct.class::cast)
@@ -500,10 +506,10 @@ public class MergeService {
             }
         }
         for (HyperlinkStruct link : newList) {
-            if (isHyperlinkRoleAllowedInConfiguration(link, context)) {
-                if (!projectRoles.contains(link.getRole().getId())) {
-                    context.reportEntry(WARNING, pair, "Cannot create hyperlink in the workitem '%s' because project '%s' doesn't have role '%s'"
-                            .formatted(workItem.getId(), workItem.getProjectId(), link.getRole().getId()));
+            if (isHyperlinkRoleAllowedInConfiguration(link, workItem.getType(), context)) {
+                if (isHyperlinkRoleForbiddenForType(link, workItem.getType(), workItem.getProjectId())) {
+                    context.reportEntry(WARNING, pair, "Cannot create hyperlink in the workitem '%s' because project '%s' doesn't support role '%s' for type '%s'"
+                            .formatted(workItem.getId(), workItem.getProjectId(), link.getRole().getId(), workItem.getType()));
                 } else {
                     workItem.addHyperlink(link.getUri(), link.getRole());
                 }

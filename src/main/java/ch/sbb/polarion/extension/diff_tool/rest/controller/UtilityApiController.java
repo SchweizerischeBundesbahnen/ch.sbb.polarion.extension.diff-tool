@@ -7,6 +7,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Document;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.HyperlinkRole;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 import com.polarion.alm.tracker.model.IStatusOpt;
 
@@ -35,6 +36,11 @@ public class UtilityApiController extends UtilityInternalController {
     @Override
     public List<WorkItemField> getAllWorkItemFields(String projectId) {
         return polarionService.callPrivileged(() -> super.getAllWorkItemFields(projectId));
+    }
+
+    @Override
+    public Collection<HyperlinkRole> getAllHyperlinkRoles(String projectId) {
+        return polarionService.callPrivileged(() -> super.getAllHyperlinkRoles(projectId));
     }
 
     @Override

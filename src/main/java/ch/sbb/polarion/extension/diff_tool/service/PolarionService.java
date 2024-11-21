@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.HyperlinkRole;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.FieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
@@ -39,7 +40,6 @@ import com.polarion.alm.tracker.internal.baseline.BaseObjectBaselinesSearch;
 import com.polarion.alm.tracker.internal.model.WorkItem;
 import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.IBaseline;
-import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IStatusOpt;
@@ -389,11 +389,13 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     }
 
     @NotNull
-    public Collection<IHyperlinkRoleOpt> getHyperlinkRoles(@NotNull String projectId) {
-        Set<IHyperlinkRoleOpt> hyperlinks = new LinkedHashSet<>();
+    public Collection<HyperlinkRole> getHyperlinkRoles(@NotNull String projectId) {
+        Set<HyperlinkRole> hyperlinks = new LinkedHashSet<>();
         ITrackerProject trackerProject = getTrackerProject(projectId);
         for (ITypeOpt wiType : trackerProject.getWorkItemTypeEnum().getAllOptions()) {
-            hyperlinks.addAll(trackerProject.getHyperlinkRoleEnum().getAvailableOptions(wiType.getId()));
+            hyperlinks.addAll(trackerProject.getHyperlinkRoleEnum()
+                    .getAvailableOptions(wiType.getId()).stream()
+                    .map(e -> new HyperlinkRole(e.getId(), e.getName(), wiType.getId(), wiType.getName())).toList());
         }
         return hyperlinks;
     }

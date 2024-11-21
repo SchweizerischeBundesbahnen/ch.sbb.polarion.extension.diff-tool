@@ -55,9 +55,13 @@ public class TestUtils {
     }
 
     public void mockDiffSettings() {
+        clearSettings();
         DiffSettings settingsMock = mock(DiffSettings.class);
         lenient().when(settingsMock.getFeatureName()).thenReturn(DiffSettings.FEATURE_NAME);
-        NamedSettingsRegistry.INSTANCE.getAll().clear();
         NamedSettingsRegistry.INSTANCE.register(List.of(settingsMock));
+    }
+
+    public void clearSettings() {
+        NamedSettingsRegistry.INSTANCE.getAll().clear();
     }
 }
