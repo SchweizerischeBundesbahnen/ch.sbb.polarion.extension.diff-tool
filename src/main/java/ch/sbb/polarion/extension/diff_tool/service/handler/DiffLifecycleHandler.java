@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.service.handler;
 
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.EnumReplaceHandler;
+import ch.sbb.polarion.extension.diff_tool.service.handler.impl.HyperlinksHandler;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.IdsHandler;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.ImageHandler;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.LinksHandler;
@@ -29,6 +30,7 @@ public interface DiffLifecycleHandler {
                 new IdsHandler(),
                 new LinkedWorkItemsHandler(),
                 new LinksHandler(),
+                new HyperlinksHandler(),
                 new ImageHandler(),
                 new OuterWrapperHandler(),
                 new EnumReplaceHandler(),

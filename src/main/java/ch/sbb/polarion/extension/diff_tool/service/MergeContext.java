@@ -34,6 +34,7 @@ public final class MergeContext {
     final MergeReport mergeReport = new MergeReport();
     final String linkRole;
     final ILinkRoleOpt linkRoleObject;
+    @Getter
     final DiffModel diffModel;
     @Getter
     final List<ModifiedModule> modifiedModules = new ArrayList<>();

@@ -26,16 +26,20 @@ import java.util.List;
 public class DiffModel extends SettingsModel {
     private static final String DIFF_FIELDS = "DIFF FIELDS";
     private static final String STATUSES_TO_IGNORE = "STATUSES TO IGNORE";
+    private static final String HYPERLINK_ROLES = "HYPERLINK ROLES";
 
     @Builder.Default
     private List<DiffField> diffFields = new ArrayList<>();
     @Builder.Default
     private List<String> statusesToIgnore = new ArrayList<>();
+    @Builder.Default
+    private List<String> hyperlinkRoles = new ArrayList<>();
 
     @Override
     protected String serializeModelData() {
         return serializeEntry(DIFF_FIELDS, diffFields)
-                + serializeEntry(STATUSES_TO_IGNORE, statusesToIgnore);
+                + serializeEntry(STATUSES_TO_IGNORE, statusesToIgnore)
+                + serializeEntry(HYPERLINK_ROLES, hyperlinkRoles);
     }
 
     @Override
@@ -57,6 +61,16 @@ public class DiffModel extends SettingsModel {
                 statusesToIgnore = new ArrayList<>(Arrays.asList(statusesArray));
             } catch (JsonProcessingException e) {
                 throw new IllegalArgumentException("Statuses to ignore value couldn't be parsed", e);
+            }
+        }
+
+        String hyperlinkRolesString = deserializeEntry(HYPERLINK_ROLES, serializedString);
+        if (hyperlinkRolesString != null) {
+            try {
+                String[] rolesArray = new ObjectMapper().readValue(hyperlinkRolesString, String[].class);
+                hyperlinkRoles = new ArrayList<>(Arrays.asList(rolesArray));
+            } catch (JsonProcessingException e) {
+                throw new IllegalArgumentException("Hyperlink roles value couldn't be parsed", e);
             }
         }
     }

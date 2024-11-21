@@ -2,7 +2,9 @@ package ch.sbb.polarion.extension.diff_tool.service.handler;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
+import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -26,6 +28,8 @@ public class DiffContext {
     @NotNull
     public final String pairedWorkItemsLinkRole;
     public final boolean pairedWorkItemsDiffer;
+    public final String leftProjectId;
+    public final DiffModel diffModel;
 
     @Accessors(fluent = true)
     @Getter
@@ -46,6 +50,9 @@ public class DiffContext {
 
         pairedWorkItemsLinkRole = workItemsDiffParams.getPairedWorkItemsLinkRole();
         pairedWorkItemsDiffer = workItemsDiffParams.isPairedWorkItemsDiffer();
+
+        leftProjectId = workItemsDiffParams.getLeftProjectId();
+        diffModel = DiffModelCachedResource.get(workItemsDiffParams.getLeftProjectId(), workItemsDiffParams.getConfigName(), workItemsDiffParams.getConfigCacheBucketId());
     }
 
     public void addIssue(String issue) {

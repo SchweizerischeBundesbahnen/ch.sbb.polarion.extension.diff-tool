@@ -271,6 +271,37 @@
         ]
       }
     },
+    "/api/projects/{projectId}/hyperlink-roles": {
+      "get": {
+        "operationId": "getAllHyperlinkRoles",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IHyperlinkRoleOpt"
+                }
+              }
+            },
+            "description": "List of all hyperlink roles for the specified project"
+          }
+        },
+        "summary": "Gets list of all hyperlink roles in the specified project",
+        "tags": [
+          "Utility API"
+        ]
+      }
+    },
     "/api/projects/{projectId}/spaces": {
       "get": {
         "operationId": "getSpaces",
@@ -1122,6 +1153,39 @@
         },
         "type": "object"
       },
+      "IHyperlinkRoleOpt": {
+        "properties": {
+          "default": {
+            "type": "boolean"
+          },
+          "enumId": {
+            "type": "string"
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phantom": {
+            "type": "boolean"
+          },
+          "properties": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "sequenceNumber": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "IStatusOpt": {
         "properties": {
           "default": {
@@ -1272,6 +1336,12 @@
               "$ref": "#/components/schemas/MergeReportEntry"
             },
             "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -1292,7 +1362,8 @@
               "MOVE_SKIPPED",
               "MOVE_FAILED",
               "MOVED_FROM",
-              "PROHIBITED"
+              "PROHIBITED",
+              "WARNING"
             ],
             "type": "string"
           },

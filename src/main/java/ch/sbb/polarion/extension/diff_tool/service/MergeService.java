@@ -21,6 +21,7 @@ import com.polarion.alm.shared.dle.compare.DleWIsMergeActionExecuter;
 import com.polarion.alm.shared.dle.compare.DleWorkItemsComparator;
 import com.polarion.alm.shared.dle.compare.DleWorkitemsMatcher;
 import com.polarion.alm.shared.dle.compare.merge.DuplicateWorkItemAction;
+import com.polarion.alm.tracker.internal.model.HyperlinkStruct;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
 import com.polarion.alm.tracker.internal.model.module.Module;
@@ -28,6 +29,7 @@ import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
+import com.polarion.platform.persistence.IEnumOption;
 import com.polarion.platform.persistence.spi.EnumOption;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
@@ -36,6 +38,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +48,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationResultType.*;
 
@@ -134,7 +139,7 @@ public class MergeService {
                     newWorkItem = insertWorkItem(source, context, false);
                     context.reportEntry(CREATED, pair, "workitem '%s' moved from '%s'".formatted(newWorkItem.getId(), pairedWorkItem.getModule() != null ? pairedWorkItem.getModule().getTitleWithSpace() : "tracker"));
                 } else {
-                    newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context);
+                    newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context, pair);
                     context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId()));
                 }
                 context.bindCounterpartItem(pair,
@@ -168,7 +173,7 @@ public class MergeService {
             } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
                 context.reportEntry(PROHIBITED, pair, "don't allow merging referenced work item into included one");
             } else {
-                merge(source, target, context.diffModel.getDiffFields(), context.linkRole);
+                merge(source, target, context, pair);
                 context.reportEntry(MODIFIED, pair, "workitem '%s' modified with info from '%s'".formatted(target.getId(), source.getId()));
             }
         } else {
@@ -310,7 +315,7 @@ public class MergeService {
     /**
      * Solution based on internal Polarion classes usage.
      */
-    private IWorkItem copyWorkItemToDocument(IWorkItem sourceWorkItem, @NotNull InternalWriteTransaction transaction, MergeContext context) {
+    private IWorkItem copyWorkItemToDocument(IWorkItem sourceWorkItem, @NotNull InternalWriteTransaction transaction, MergeContext context, WorkItemsPair pair) {
         // taken from DleWorkItemsCompareOther#initializeOutside
         InternalDocument leftDocument = (InternalDocument) context.getSourceDocumentReference().get(transaction);
         InternalDocument rightDocument = (InternalDocument) context.getTargetDocumentReference().get(transaction);
@@ -345,6 +350,7 @@ public class MergeService {
             } else {
                 createdWorkItem.addLinkedItem(sourceWorkItem, new LinkRoleOpt(new EnumOption(roleEnumId, context.linkRole)), null, false);
             }
+            removeWrongHyperlinks(createdWorkItem, context, pair);
             createdWorkItem.save();
 
             reloadModule(context.getTargetModule());
@@ -359,6 +365,30 @@ public class MergeService {
         } else {
             return sourceWorkItem; // return the same WI coz there is no simple way to get created WI when copying references
         }
+    }
+
+    /**
+     * Newly created work item will have all the hyperlinks from the source but the allowed roles
+     * may be limited by settings therefore we have to check and remove forbidden links
+     */
+    private void removeWrongHyperlinks(IWorkItem workItem, MergeContext context, WorkItemsPair pair) {
+        if (!workItem.getHyperlinks().isEmpty()) {
+            List<String> projectRoles = polarionService.getHyperlinkRoles(workItem.getProjectId()).stream().map(IEnumOption::getId).toList();
+            ((Collection<?>) workItem.getHyperlinks()).removeIf(link -> {
+                if (link instanceof HyperlinkStruct linkStruct) {
+                    if (!projectRoles.contains(linkStruct.getRole().getId())) {
+                        context.reportEntry(WARNING, pair, "Cannot create hyperlink in the workitem '%s' because project '%s' doesn't have role '%s'"
+                                .formatted(workItem.getId(), workItem.getProjectId(), linkStruct.getRole().getId()));
+                        return true;
+                    } else return !isHyperlinkRoleAllowedInConfiguration(linkStruct, context);
+                }
+                return false;
+            });
+        }
+    }
+
+    private boolean isHyperlinkRoleAllowedInConfiguration(HyperlinkStruct link, MergeContext context) {
+        return context.getDiffModel().getHyperlinkRoles().isEmpty() || context.getDiffModel().getHyperlinkRoles().contains(link.getRole().getId());
     }
 
     private IWorkItem insertWorkItem(IWorkItem sourceWorkItem, MergeContext context, boolean referenced) {
@@ -435,15 +465,50 @@ public class MergeService {
         module.save();
     }
 
-    private void merge(IWorkItem source, IWorkItem target, List<DiffField> fields, String linkRole) {
-        for (DiffField field : fields) {
+    private void merge(IWorkItem source, IWorkItem target, MergeContext context, WorkItemsPair pair) {
+        for (DiffField field : context.diffModel.getDiffFields()) {
             Object fieldValue = polarionService.getFieldValue(source, field.getKey());
+            if (IWorkItem.KEY_HYPERLINKS.equals(field.getKey()) && (fieldValue == null || fieldValue instanceof Collection<?>)) {
+                mergeHyperlinks(target, (Collection<?>) fieldValue, context, pair);
+                continue;
+            }
             if (fieldValue instanceof Text text) {
-                fieldValue = new Text(text.getType(), polarionService.replaceLinksToPairedWorkItems(source, target, linkRole, text.getContent()));
+                fieldValue = new Text(text.getType(), polarionService.replaceLinksToPairedWorkItems(source, target, context.linkRole, text.getContent()));
             }
             polarionService.setFieldValue(target, field.getKey(), fieldValue);
         }
         target.save();
+    }
+
+    private void mergeHyperlinks(IWorkItem workItem, @Nullable Collection<?> linksList, MergeContext context, WorkItemsPair pair) {
+        List<String> projectRoles = polarionService.getHyperlinkRoles(workItem.getProjectId()).stream().map(IEnumOption::getId).toList();
+        List<HyperlinkStruct> existingList = ((Collection<?>) workItem.getHyperlinks()).stream()
+                .filter(HyperlinkStruct.class::isInstance).map(HyperlinkStruct.class::cast)
+                .filter(h -> isHyperlinkRoleAllowedInConfiguration(h, context))
+                .collect(Collectors.toCollection(ArrayList::new));
+        List<HyperlinkStruct> newList = linksList == null ? List.of() : linksList.stream()
+                .filter(HyperlinkStruct.class::isInstance).map(HyperlinkStruct.class::cast)
+                .collect(Collectors.toCollection(ArrayList::new));
+        for (HyperlinkStruct link : existingList) {
+            HyperlinkStruct sameLink = newList.stream()
+                    .filter(l -> Objects.equals(l.getRole().getId(), link.getRole().getId()) &&
+                            Objects.equals(l.getUri(), link.getUri())).findFirst().orElse(null);
+            if (sameLink != null) {
+                newList.remove(sameLink);
+            } else {
+                workItem.getHyperlinks().remove(link);
+            }
+        }
+        for (HyperlinkStruct link : newList) {
+            if (isHyperlinkRoleAllowedInConfiguration(link, context)) {
+                if (!projectRoles.contains(link.getRole().getId())) {
+                    context.reportEntry(WARNING, pair, "Cannot create hyperlink in the workitem '%s' because project '%s' doesn't have role '%s'"
+                            .formatted(workItem.getId(), workItem.getProjectId(), link.getRole().getId()));
+                } else {
+                    workItem.addHyperlink(link.getUri(), link.getRole());
+                }
+            }
+        }
     }
 
     private IWorkItem getWorkItem(@Nullable WorkItem workItem) {

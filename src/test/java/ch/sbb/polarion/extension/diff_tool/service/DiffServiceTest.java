@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.ImageHandler;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 
+import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
 import com.polarion.alm.tracker.model.IWorkItem;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
@@ -38,6 +39,7 @@ class DiffServiceTest {
 
     @BeforeEach
     void init() {
+        TestUtils.mockDiffSettings();
         diffService = new DiffService(polarionService);
     }
 
