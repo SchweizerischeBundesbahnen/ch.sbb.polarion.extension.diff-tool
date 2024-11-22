@@ -77,7 +77,6 @@ public class DiffService {
                 .leftDocument(Document.from(leftDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(leftDocumentIdentifier.getProjectId())))
                 .rightDocument(Document.from(rightDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(rightDocumentIdentifier.getProjectId())))
                 .pairedWorkItems(pairedWorkItems)
-                .extensionInfo(String.format("v%s (%s)", ExtensionInfo.getInstance().getVersion().getBundleVersion(), ExtensionInfo.getInstance().getVersion().getBundleBuildTimestamp()))
                 .build();
     }
 

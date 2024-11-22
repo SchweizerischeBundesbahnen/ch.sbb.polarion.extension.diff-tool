@@ -3,8 +3,8 @@ import "./globals.css";
 import Body from "@/app/Body";
 
 export const metadata = {
-  title: "Documents Diff",
-  description: "Documents Diff",
+  title: "Diff Tool",
+  description: "Diff Tool",
 };
 
 export default function RootLayout({ children }) {

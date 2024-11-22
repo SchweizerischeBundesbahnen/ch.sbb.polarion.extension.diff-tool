@@ -54,12 +54,6 @@ export default function DocumentsDiff() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (docsData) {
-       context.state.setExtensionInfo(docsData.extensionInfo)
-    }
-  }, [docsData]);
-
-  useEffect(() => {
     if (docsData && docsData.pairedWorkItems && docsData.pairedWorkItems.length > 0) {
       loadingContext.resetDiffsLoadingState(docsData.pairedWorkItems.slice());
       mergingContext.resetSelection();
@@ -187,9 +181,10 @@ export default function DocumentsDiff() {
   if (loadingContext.pairsLoading) return <Loading message="Loading paired WorkItems" />;
 
   if (loadingContext.pairsLoadingError || !docsData || !docsData.leftDocument || !docsData.rightDocument || !docsData.pairedWorkItems) {
-    return <Error message={loadingContext.pairsLoadingError && !loadingContext.pairsLoadingError.includes("<html")
-        ? loadingContext.pairsLoadingError
-        : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
+    return <Error title="Error occurred loading diff data!"
+                  message={loadingContext.pairsLoadingError && !loadingContext.pairsLoadingError.includes("<html")
+                      ? loadingContext.pairsLoadingError
+                      : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
   }
 
   return <div id="diff-body" className={`doc-diff ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
@@ -220,21 +215,21 @@ export default function DocumentsDiff() {
             <>
               <p>
                 Merge operation completed with following result:
-                <ul>
-                  {mergeReport.created?.length > 0 && <li><strong>{mergeReport.created.length}</strong> items were created.</li>}
-                  {mergeReport.deleted?.length > 0 && <li><strong>{mergeReport.deleted.length}</strong> items were deleted.</li>}
-                  {mergeReport.modified?.length > 0 && <li>Content of <strong>{mergeReport.modified.length}</strong> items were modified.</li>}
-                  {mergeReport.moved?.length > 0 && <li><strong>{mergeReport.moved.length}</strong> items were moved (structural changes).</li>}
-                  {mergeReport.moveFailed?.length > 0 && <li><strong>{mergeReport.moveFailed.length}</strong> items were not moved because target document
-                    does not contain destination chapter. Please, merge first parent nodes of mentioned work items.</li>}
-                  {mergeReport.conflicted?.length > 0 && <li><strong>{mergeReport.conflicted.length}</strong> items were not merged because of concurrent modifications.</li>}
-                  {mergeReport.prohibited?.length > 0 && <li><strong>{mergeReport.prohibited.length}</strong> items were not merged because such operation is logically prohibited.</li>}
-                  {mergeReport.creationFailed?.length > 0 && <li><strong>{mergeReport.creationFailed.length}</strong> items were not merged because work items referenced in source document
-                    do not have counterparts in target project.</li>}
-                  {mergeReport.detached?.length > 0 && <li><strong>{mergeReport.detached.length}</strong> items were moved out of documents.</li>}
-                </ul>
               </p>
-              {mergeReport.logs && !mergeLogsVisible && <a href="#" onClick={() => setMergeLogsVisible(true)}>See full log</a>}
+              <ul>
+                {mergeReport.created?.length > 0 && <li><strong>{mergeReport.created.length}</strong> items were created.</li>}
+                {mergeReport.deleted?.length > 0 && <li><strong>{mergeReport.deleted.length}</strong> items were deleted.</li>}
+                {mergeReport.modified?.length > 0 && <li>Content of <strong>{mergeReport.modified.length}</strong> items were modified.</li>}
+                {mergeReport.moved?.length > 0 && <li><strong>{mergeReport.moved.length}</strong> items were moved (structural changes).</li>}
+                {mergeReport.moveFailed?.length > 0 && <li><strong>{mergeReport.moveFailed.length}</strong> items were not moved because target document
+                  does not contain destination chapter. Please, merge first parent nodes of mentioned work items.</li>}
+                {mergeReport.conflicted?.length > 0 && <li><strong>{mergeReport.conflicted.length}</strong> items were not merged because of concurrent modifications.</li>}
+                {mergeReport.prohibited?.length > 0 && <li><strong>{mergeReport.prohibited.length}</strong> items were not merged because such operation is logically prohibited.</li>}
+                {mergeReport.creationFailed?.length > 0 && <li><strong>{mergeReport.creationFailed.length}</strong> items were not merged because work items referenced in source document
+                  do not have counterparts in target project.</li>}
+                {mergeReport.detached?.length > 0 && <li><strong>{mergeReport.detached.length}</strong> items were moved out of documents.</li>}
+              </ul>
+              {mergeReport.logs && !mergeLogsVisible && <p><a href="#" onClick={() => setMergeLogsVisible(true)}>See full log</a></p>}
               {mergeReport.logs && mergeLogsVisible && <pre style={{
                 padding: "10px",
                 background: "#444",

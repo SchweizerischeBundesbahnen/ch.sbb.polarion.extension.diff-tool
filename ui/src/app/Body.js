@@ -18,7 +18,6 @@ export default function Body({ children }) {
   const [hideChaptersIfNoDifference, setHideChaptersIfNoDifference] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [diffsExist, setDiffsExist] = useState(false);
-  const [extensionInfo, setExtensionInfo] = useState(null);
 
   const handleScroll = event => {
     setHeaderPinned(event.currentTarget.scrollTop > 60);
@@ -54,9 +53,7 @@ export default function Body({ children }) {
           dataLoaded: dataLoaded,
           setDataLoaded: setDataLoaded,
           diffsExist: diffsExist,
-          setDiffsExist: setDiffsExist,
-          extensionInfo: extensionInfo,
-          setExtensionInfo: setExtensionInfo
+          setDiffsExist: setDiffsExist
         }
       }}
   >

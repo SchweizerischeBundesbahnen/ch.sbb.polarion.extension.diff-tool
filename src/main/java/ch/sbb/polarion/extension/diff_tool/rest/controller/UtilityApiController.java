@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
+import ch.sbb.polarion.extension.generic.util.ExtensionInfo;
 import com.polarion.alm.tracker.model.IStatusOpt;
 
 import javax.ws.rs.Path;
@@ -51,4 +52,10 @@ public class UtilityApiController extends UtilityInternalController {
     public CommunicationSettings getCommunicationSettings() {
         return polarionService.callPrivileged(super::getCommunicationSettings);
     }
+
+    @Override
+    public ExtensionInfo getExtensionInfo() {
+        return polarionService.callPrivileged(super::getExtensionInfo);
+    }
+
 }

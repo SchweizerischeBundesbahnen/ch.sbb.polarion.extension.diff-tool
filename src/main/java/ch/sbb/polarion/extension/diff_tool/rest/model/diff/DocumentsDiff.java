@@ -19,7 +19,4 @@ public class DocumentsDiff {
 
     @Schema(description = "A collection of paired WorkItems between the two documents", implementation = WorkItemsPair.class)
     private Collection<WorkItemsPair> pairedWorkItems;
-
-    @Schema(description = "Information about extension (version, build timestamp)")
-    private String extensionInfo;
 }

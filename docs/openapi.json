@@ -240,6 +240,27 @@
         ]
       }
     },
+    "/api/extension/info": {
+      "get": {
+        "operationId": "getExtensionInfo",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtensionInfo"
+                }
+              }
+            },
+            "description": "Extension information in JSON format"
+          }
+        },
+        "summary": "Gets extension information",
+        "tags": [
+          "Utility API"
+        ]
+      }
+    },
     "/api/merge/workitems": {
       "post": {
         "operationId": "mergeWorkItems",
@@ -1049,6 +1070,17 @@
           },
           "rightDocument": {
             "$ref": "#/components/schemas/DocumentIdentifier"
+          }
+        },
+        "type": "object"
+      },
+      "ExtensionInfo": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/Context"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Version"
           }
         },
         "type": "object"

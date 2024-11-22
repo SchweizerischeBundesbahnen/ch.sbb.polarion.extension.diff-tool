@@ -1,5 +1,3 @@
-const DISABLED_BUTTON_CLASS= "polarion-TestsExecutionButton-buttons-defaultCursor";
-
 DiffTool = {
 
   init: function (sourceProjectId, sourceSpace, sourceDocument, sourceDocumentTitle, sourceRevision) {
@@ -136,8 +134,8 @@ DiffTool = {
     const linkRole = document.getElementById("comparison-link-role-selector").value;
     const config = document.getElementById("comparison-config-selector").value;
 
-    let path = `/polarion/diff-tool-app/ui/app/index.html`
-        + `?sourceProjectId=${this.sourceProjectId}&sourceSpaceId=${this.sourceSpace}&sourceDocument=${this.sourceDocument}`
+    let path = `/polarion/diff-tool-app/ui/app/index.html?type=documents`
+        + `&sourceProjectId=${this.sourceProjectId}&sourceSpaceId=${this.sourceSpace}&sourceDocument=${this.sourceDocument}`
         + `&targetProjectId=${targetProjectId}&targetSpaceId=${targetSpace}&targetDocument=${targetDocument}`
         + `&linkRole=${linkRole}&config=${config}`;
     if (this.sourceRevision) {
@@ -208,6 +206,8 @@ DiffTool = {
   },
 
   updateWorkItemsDiffButton: function (clickedElement) {
+    const DISABLED_BUTTON_CLASS= "polarion-TestsExecutionButton-buttons-defaultCursor";
+
     const diffWidget = clickedElement?.closest("div.polarion-DiffTool");
     const button = diffWidget?.querySelector(".polarion-TestsExecutionButton-buttons");
     if (button) {
@@ -240,7 +240,7 @@ DiffTool = {
   },
 
   openWorkItemsDiffApplication: function (diffWidget) {
-    window.open(`/polarion/diff-tool-app/ui/app/index.html?workItemsDiff`, '_blank');
+    window.open(`/polarion/diff-tool-app/ui/app/index.html?type=workitems`, '_blank');
   },
 
   replaceUrlParam: function (url, paramName, paramValue){

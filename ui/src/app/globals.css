@@ -132,10 +132,8 @@ a:hover {
 
 .extension-info {
   position: absolute;
-  top: 0;
-  right: 0;
-  padding-right: 1rem;
-  padding-top: 0.5rem;
+  top: 1.4rem;
+  right: 1.6rem;
   font-size: 10px;
   color: #888;
 }

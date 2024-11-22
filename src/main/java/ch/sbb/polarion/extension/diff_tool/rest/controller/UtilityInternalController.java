@@ -9,6 +9,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
+import ch.sbb.polarion.extension.generic.util.ExtensionInfo;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.tracker.model.IStatusOpt;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -200,5 +201,24 @@ public class UtilityInternalController {
         return CommunicationSettings.builder()
                 .chunkSize(chunkSize)
                 .build();
+    }
+
+    @GET
+    @Path("/extension/info")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Gets extension information",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Extension information in JSON format",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = ExtensionInfo.class)
+                            )
+                    )
+            }
+    )
+    public ExtensionInfo getExtensionInfo() {
+        return ExtensionInfo.getInstance();
     }
 }
