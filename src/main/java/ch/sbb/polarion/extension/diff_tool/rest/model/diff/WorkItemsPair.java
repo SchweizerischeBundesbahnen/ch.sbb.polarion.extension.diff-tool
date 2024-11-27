@@ -23,6 +23,10 @@ public class WorkItemsPair {
     @Schema(description = "The right WorkItem in the pair", implementation = WorkItem.class)
     private WorkItem rightWorkItem;
 
+    public static WorkItemsPair of(@NotNull IWorkItem leftWorkItem, @NotNull IWorkItem rightWorkItem) {
+        return WorkItemsPair.builder().leftWorkItem(WorkItem.of(leftWorkItem)).rightWorkItem(WorkItem.of(rightWorkItem)).build();
+    }
+
     public static WorkItemsPair of(@NotNull Pair<IWorkItem, IWorkItem> pair, @NotNull CalculatePairsContext context) {
         WorkItem left = WorkItem.of(
                 pair.getLeft(),

@@ -14,6 +14,7 @@ import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import ch.sbb.polarion.extension.diff_tool.util.RequestContextUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
@@ -267,6 +268,30 @@ public class DiffService {
         return (potentialParent == null && potentialInlined == null)
                 || (potentialParent != null && potentialInlined != null && potentialInlined.getOutlineNumber().contains("-")
                     && potentialParent.getOutlineNumber().equals(potentialInlined.getOutlineNumber().substring(0, potentialInlined.getOutlineNumber().indexOf("-"))));
+    }
+
+    public MultipleWorkItemsDiff getMultipleWorkItemsDiff(@NotNull MultipleWorkItemsDiffParams multipleWorkItemsDiffParams) {
+        ILinkRoleOpt linkRole = polarionService.getLinkRoleById(multipleWorkItemsDiffParams.getLinkRole(), polarionService.getTrackerProject(multipleWorkItemsDiffParams.getLeftProjectId()));
+        if (linkRole == null) {
+            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", multipleWorkItemsDiffParams.getLinkRole()));
+        }
+        IProject leftProject = polarionService.getProject(multipleWorkItemsDiffParams.getLeftProjectId());
+        IProject rightProject = polarionService.getProject(multipleWorkItemsDiffParams.getRightProjectId());
+
+        List<IWorkItem> leftWorkItems = polarionService.getWorkItems(multipleWorkItemsDiffParams.getLeftProjectId(), multipleWorkItemsDiffParams.getWorkItemIds());
+        Collection<WorkItemsPair> pairedWorkItems = new ArrayList<>();
+        leftWorkItems.forEach(leftWorkItem -> {
+            List<IWorkItem> paired = polarionService.getPairedWorkItems(leftWorkItem, multipleWorkItemsDiffParams.getRightProjectId(), multipleWorkItemsDiffParams.getLinkRole());
+            if (paired != null && paired.size() == 1) {
+                pairedWorkItems.add(WorkItemsPair.of(leftWorkItem, paired.get(0)));
+            }
+        });
+
+        return MultipleWorkItemsDiff.builder()
+                .leftProjectName(leftProject.getName())
+                .rightProjectName(rightProject.getName())
+                .pairedWorkItems(pairedWorkItems)
+                .build();
     }
 
     public WorkItemsDiff getWorkItemsDiff(@NotNull WorkItemsDiffParams workItemsDiffParams) {

@@ -8,7 +8,7 @@ import DocumentHeader from "@/components/documents/DocumentHeader";
 import ProgressBar from "@/components/documents/ProgressBar";
 import {v4 as uuidv4} from 'uuid';
 import ErrorsOverlay from "@/components/documents/ErrorsOverlay";
-import useLoadingContext from "@/components/documents/useLoadingContext";
+import useLoadingContext from "@/components/useLoadingContext";
 import {useMergingContext} from "@/components/documents/useMergingContext";
 import MergePane from "@/components/documents/MergePane";
 import useDiffService from "@/services/useDiffService";

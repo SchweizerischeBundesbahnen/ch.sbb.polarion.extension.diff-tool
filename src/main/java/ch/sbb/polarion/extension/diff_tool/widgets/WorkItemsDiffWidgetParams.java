@@ -8,8 +8,10 @@ import lombok.experimental.Accessors;
 @Builder
 @Accessors(fluent = true)
 public class WorkItemsDiffWidgetParams {
+    private String targetProject;
+    private String linkRole;
+    private String configuration;
     private String query;
     private String page;
-    private String configuration;
-    private String linkRole;
+    private String recordsPerPage;
 }

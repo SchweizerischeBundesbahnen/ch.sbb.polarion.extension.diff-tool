@@ -92,7 +92,7 @@ export default function ControlPane() {
   };
 
   return (
-      <div className={`control-pane ${context.state.headerPinned ? "no-app-header" : ""} ${context.state.controlPaneExpanded ? "expanded" : ""}`}>
+      <div className={`control-pane ${context.state.controlPaneExpanded ? "expanded" : ""}`}>
         <div style={{
           position: "absolute",
           right: "5px"

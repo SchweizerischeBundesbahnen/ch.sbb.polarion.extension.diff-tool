@@ -90,6 +90,10 @@ public final class WorkItem {
         return iWorkItem == null ? null : new WorkItem(iWorkItem, outlineNumber, referenced, externalProjectWorkItem);
     }
 
+    public static WorkItem of(@Nullable IWorkItem iWorkItem) {
+        return iWorkItem == null ? null : new WorkItem(iWorkItem, null, false, false);
+    }
+
     public static WorkItem of(@NotNull WorkItem workItem) {
         return new WorkItem(workItem.getUnderlyingObject(), workItem.getOutlineNumber(), workItem.isReferenced(), workItem.isExternalProjectWorkItem());
     }

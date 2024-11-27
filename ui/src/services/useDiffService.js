@@ -44,21 +44,80 @@ export default function useDiffService() {
 
   const getFilteredPairs = (pairs, searchParams) => {
     const filterHash = searchParams.get("filter");
-    if (filterHash && localStorage && localStorage.getItem(filterHash + "_filter")) {
-      let filter = localStorage.getItem(filterHash + "_filter");
+    const filterKey = filterHash && (filterHash + "_filter");
+    if (filterKey && localStorage && localStorage.getItem(filterKey)) {
+      const typeKey = filterHash + "_type";
+
+      let filter = localStorage.getItem(filterKey);
       if (filter.includes(",")) {
         filter = filter.split(",");
       } else if (filter.includes(" ")) {
         filter = filter.split(" ");
       }
-      if (localStorage.getItem(filterHash + "_type") === "exclude") {
+
+      window.addEventListener("beforeunload", function() {
+        // Clear local storage on page/tab close
+        localStorage.removeItem(filterKey);
+        localStorage.removeItem(typeKey);
+      });
+      if (localStorage.getItem(typeKey) === "exclude") {
         return pairs.filter(pair => !pair.leftWorkItem || !filter.includes(pair.leftWorkItem.id));
-      } else if (localStorage.getItem(filterHash + "_type") === "include") {
+      } else if (localStorage.getItem(typeKey) === "include") {
         return pairs.filter(pair => pair.leftWorkItem && filter.includes(pair.leftWorkItem.id))
       }
     }
 
     return pairs;
+  };
+
+  const sendMultipleWorkItemsDiffRequest = (searchParams, configCacheId, loadingContext) => {
+    loadingContext.pairsLoadingStarted(true); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
+
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/diff/multiple-workitems`,
+        body: JSON.stringify({
+          leftProjectId: searchParams.get('sourceProjectId'),
+          rightProjectId: searchParams.get('targetProjectId'),
+          workItemIds: getWorkItemIds(searchParams),
+          linkRole: searchParams.get('linkRole'),
+          configName: searchParams.get('config'),
+          configCacheBucketId: configCacheId
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw response.json();
+            }
+          })
+          .then(data =>  {
+            loadingContext.pairsLoadingFinished(data.pairedWorkItems.slice());
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            Promise.resolve(errorResponse).then((error) => {
+              loadingContext.pairsLoadingFinishedWithError(error && error.message);
+              reject(error);
+            });
+          });
+    });
+  };
+
+  const getWorkItemIds = (searchParams) => {
+    const idsHash = searchParams.get("ids");
+    let idsKey = idsHash && (idsHash + "_ids");
+    if (idsHash && localStorage && localStorage.getItem(idsKey)) {
+      window.addEventListener("beforeunload", function() {
+        // Clear local storage on page/tab close
+        localStorage.removeItem(idsKey);
+      });
+      return localStorage.getItem(idsKey).split(",");
+    }
+    return [];
   };
 
   const sendMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, allowReferencedWorkItemMerge) => {
@@ -151,5 +210,5 @@ export default function useDiffService() {
     }
   };
 
-  return { sendDocumentsDiffRequest, sendMergeRequest, diffsExist };
+  return { sendDocumentsDiffRequest, sendMultipleWorkItemsDiffRequest, sendMergeRequest, diffsExist };
 }

@@ -5,6 +5,7 @@ import ch.sbb.polarion.extension.diff_tool.settings.DiffSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingName;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
+import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.PrototypeEnum;
 import com.polarion.alm.shared.api.model.rp.parameter.impl.HierarchicalUrlParametersResolver;
@@ -45,11 +46,12 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
     private DataSet dataSet;
     @Nullable
     private IterableWithSize<ModelObject> items;
-    private final int pageSize = 20;
-    private final String query;
     private String projectId;
-    private String configuration;
-    private String linkRole;
+    private final String targetProject;
+    private final String linkRole;
+    private final String configuration;
+    private final String query;
+    private int recordsPerPage = 20;
     private int currentPage;
     private int lastPage;
 
@@ -60,9 +62,15 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
 
         FieldsParameter columnsParameter = new FieldsParameterImpl.Builder(WIDGET_ID).fields(List.of(IWorkItem.KEY_ID, IWorkItem.KEY_TITLE, IWorkItem.KEY_TYPE, IWorkItem.KEY_STATUS, IWorkItem.KEY_SEVERITY)).build();
         this.columns = columnsParameter.fields();
-        this.query = params.query();
-        this.configuration = params.configuration();
+        this.targetProject = params.targetProject();
         this.linkRole = params.linkRole();
+        this.configuration = params.configuration();
+        this.query = params.query();
+        try {
+            this.recordsPerPage = Integer.parseInt(params.recordsPerPage());
+        } catch (NumberFormatException ex) {
+            // Just ignore
+        }
         try {
             currentPage = Integer.parseInt(params.page());
         } catch (NumberFormatException ex) {
@@ -87,7 +95,7 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
             dataSet = dataSetParameter.getFor().sort(sort).revision(null);
             items = dataSet.items();
 
-            lastPage = (Math.max(0, items.size() - 1) / pageSize) + 1;
+            lastPage = (Math.max(0, items.size() - 1) / recordsPerPage) + 1;
             currentPage = Math.min(Math.max(1, currentPage), lastPage); // First check that page number can't be less than 1, then check it doesn't exceed last page
         }
     }
@@ -102,8 +110,9 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
         HtmlTagBuilder description = topPane.append().tag().div();
         description.append().tag().p().append().text("Please select diff configuration, link role and work items below which you want to compare and click button above");
 
-        renderConfiguration(wrap);
+        renderTargetProject(wrap);
         renderLinkRole(wrap);
+        renderConfiguration(wrap);
 
         HtmlTagBuilder diffItems = wrap.append().tag().div();
         diffItems.attributes().className("items-for-diff");
@@ -114,7 +123,7 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
 
         mainTable.attributes().className("polarion-rpw-table-main");
         //language=JS
-        mainTable.attributes().onClick("DiffTool.updateWorkItemsDiffButton(this);");
+        mainTable.attributes().onClick(String.format("DiffTool.updateWorkItemsDiffButton(this, '%s');", projectId));
 
         HtmlContentBuilder contentBuilder = mainTable.append();
         this.renderContentTable(contentBuilder.tag().tr().append().tag().td().append());
@@ -141,21 +150,20 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
         label.append().text("Compare");
     }
 
-    @SuppressWarnings("unchecked")
-    private void renderConfiguration(@NotNull HtmlTagBuilder parent) {
-        HtmlTagBuilder configurationPane = parent.append().tag().div();
-        configurationPane.attributes().className("configuration");
+    private void renderTargetProject(@NotNull HtmlTagBuilder parent) {
+        HtmlTagBuilder targetProjectPane = parent.append().tag().div();
+        targetProjectPane.attributes().className("target-project");
 
-        configurationPane.append().tag().byName("label").append().text("Configuration:");
-        HtmlTagBuilder configurationSelect = configurationPane.append().tag().byName("select");
-        configurationSelect.attributes().id("configuration-select");
+        targetProjectPane.append().tag().byName("label").append().text("Target project:");
+        HtmlTagBuilder targetProjectSelect = targetProjectPane.append().tag().byName("select");
+        targetProjectSelect.attributes().id("comparison-target-project-selector");
 
-        Collection<SettingName> configurations = NamedSettingsRegistry.INSTANCE.getByFeatureName(DiffSettings.FEATURE_NAME).readNames(ScopeUtils.getScopeFromProject(projectId));
-        for (SettingName configuration : configurations) {
-            HtmlTagBuilder option = configurationSelect.append().tag().byName("option");
-            option.attributes().byName("value", configuration.getId());
-            option.append().text(configuration.getName());
-            if (configuration.getId().equals(this.configuration)) {
+        List<IProject> projects = polarionService.getProjects();
+        for (IProject project : projects) {
+            HtmlTagBuilder option = targetProjectSelect.append().tag().byName("option");
+            option.attributes().byName("value", project.getId());
+            option.append().text(project.getName());
+            if (project.getId().equals(this.targetProject)) {
                 option.attributes().booleanAttribute("selected");
             }
         }
@@ -167,7 +175,7 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
 
         linkRolePane.append().tag().byName("label").append().text("Link role:");
         HtmlTagBuilder linkRoleSelect = linkRolePane.append().tag().byName("select");
-        linkRoleSelect.attributes().id("link-role-select");
+        linkRoleSelect.attributes().id("comparison-link-role-selector");
 
         Collection<ILinkRoleOpt> linkRoles = polarionService.getLinkRoles(projectId);
         for (ILinkRoleOpt linkRole : linkRoles) {
@@ -175,6 +183,26 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
             option.attributes().byName("value", linkRole.getId());
             option.append().text(String.format("%s / %s", linkRole.getName(), linkRole.getOppositeName()));
             if (linkRole.getId().equals(this.linkRole)) {
+                option.attributes().booleanAttribute("selected");
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void renderConfiguration(@NotNull HtmlTagBuilder parent) {
+        HtmlTagBuilder configurationPane = parent.append().tag().div();
+        configurationPane.attributes().className("configuration");
+
+        configurationPane.append().tag().byName("label").append().text("Configuration:");
+        HtmlTagBuilder configurationSelect = configurationPane.append().tag().byName("select");
+        configurationSelect.attributes().id("comparison-config-selector");
+
+        Collection<SettingName> configurations = NamedSettingsRegistry.INSTANCE.getByFeatureName(DiffSettings.FEATURE_NAME).readNames(ScopeUtils.getScopeFromProject(projectId));
+        for (SettingName configuration : configurations) {
+            HtmlTagBuilder option = configurationSelect.append().tag().byName("option");
+            option.attributes().byName("value", configuration.getId());
+            option.append().text(configuration.getName());
+            if (configuration.getId().equals(this.configuration)) {
                 option.attributes().booleanAttribute("selected");
             }
         }
@@ -188,24 +216,36 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
         HtmlTagBuilder queryInput = queryPane.append().tag().byName("input");
         queryInput.attributes().id("query-input").byName("value", this.query);
 
+        HtmlTagBuilder recordsPerPageLabel = queryPane.append().tag().byName("label");
+        recordsPerPageLabel.attributes().className("records-per-page-label");
+        recordsPerPageLabel.append().text("Records per page:");
+
+        HtmlTagBuilder recordsPerPageInput = queryPane.append().tag().byName("input");
+        recordsPerPageInput.attributes().id("records-per-page-input").byName("value", String.valueOf(this.recordsPerPage));
+
         HtmlTagBuilder applyButton = queryPane.append().tag().byName("button");
         applyButton.append().text("Apply");
         //language=JS
         applyButton.attributes().onClick("""
                 const newValue = document.getElementById('query-input').value;
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'targetProject', document.getElementById('comparison-target-project-selector').value);
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('comparison-link-role-selector').value);
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'configuration', document.getElementById('comparison-config-selector').value);
                 top.location.href = DiffTool.replaceUrlParam(top.location.href, 'query', newValue);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'configuration', document.getElementById('configuration-select').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role').value);
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'recordsPerPage', document.getElementById('records-per-page-input').value);
                 top.location.reload()""");
 
         HtmlTagBuilder resetButton = queryPane.append().tag().byName("button");
         resetButton.append().text("Reset");
         //language=JS
         resetButton.attributes().onClick("""
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'targetProject', document.getElementById('comparison-target-project-selector').value);
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('comparison-link-role-selector').value);
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'configuration', document.getElementById('comparison-config-selector').value);
                 top.location.href = DiffTool.replaceUrlParam(top.location.href, 'query', '');
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'configuration', document.getElementById('configuration-select').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role').value);
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'recordsPerPage', document.getElementById('records-per-page-input').value);
                 top.location.reload()""");
+
     }
 
     private void renderContentTable(@NotNull HtmlContentBuilder builder) {
@@ -221,8 +261,8 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
         }
 
         List<ModelObject> itemsList = items.toArrayList();
-        int pageEnd = currentPage * pageSize; // Potential end based on page number and page size
-        int pageStart = pageEnd - pageSize;
+        int pageEnd = currentPage * recordsPerPage; // Potential end based on page number and page size
+        int pageStart = pageEnd - recordsPerPage;
         pageEnd = Math.min(pageEnd, items.size()); // Recalculate not to go out of boundaries
         for (int i = pageStart; i < pageEnd; i++) {
             HtmlTagBuilder tr = builder.tag().tr();
@@ -294,7 +334,7 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
 
     private void renderFooter(@NotNull HtmlTagBuilder tagBuilder) {
         if (dataSet != null) {
-            (new BottomQueryLinksBuilder(context, dataSet, pageSize)).render(tagBuilder);
+            (new BottomQueryLinksBuilder(context, dataSet, recordsPerPage)).render(tagBuilder);
 
             if (lastPage > 1) {
                 renderPaginator(tagBuilder);
@@ -347,9 +387,11 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
         link.append().text(text);
         //language=JS
         String script = """
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'targetProject', document.getElementById('comparison-target-project-selector').value);
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('comparison-link-role-selector').value);
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'configuration', document.getElementById('comparison-config-selector').value);
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'recordsPerPage', document.getElementById('records-per-page-input').value);
                 top.location.href = DiffTool.replaceUrlParam(top.location.href, 'page', '<PAGE_NUMBER>');
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'configuration', document.getElementById('configuration-select').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role-select').value);
                 top.location.reload()""";
         link.attributes().onClick(script.replace("<PAGE_NUMBER>", String.valueOf(page)));
     }

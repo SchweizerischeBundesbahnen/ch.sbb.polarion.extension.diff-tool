@@ -134,8 +134,8 @@ DiffTool = {
     const linkRole = document.getElementById("comparison-link-role-selector").value;
     const config = document.getElementById("comparison-config-selector").value;
 
-    let path = `/polarion/diff-tool-app/ui/app/index.html?type=documents`
-        + `&sourceProjectId=${this.sourceProjectId}&sourceSpaceId=${this.sourceSpace}&sourceDocument=${this.sourceDocument}`
+    let path = `/polarion/diff-tool-app/ui/app/documents.html`
+        + `?sourceProjectId=${this.sourceProjectId}&sourceSpaceId=${this.sourceSpace}&sourceDocument=${this.sourceDocument}`
         + `&targetProjectId=${targetProjectId}&targetSpaceId=${targetSpace}&targetDocument=${targetDocument}`
         + `&linkRole=${linkRole}&config=${config}`;
     if (this.sourceRevision) {
@@ -153,17 +153,6 @@ DiffTool = {
     }
 
     window.open(path, '_blank');
-  },
-
-  generateUuid : function() {
-    return (
-        String('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx')
-    ).replace(/[xy]/g, (character) => {
-      const random = (Math.random() * 16) | 0;
-      const value = character === "x" ? random : (random & 0x3) | 0x8;
-
-      return value.toString(16);
-    });
   },
 
   compareSameDocument: function () {
@@ -205,7 +194,7 @@ DiffTool = {
     document.getElementById("work-items-filter-pane").style.display = document.getElementById("use-work-items-filter").checked ? "block" : "none";
   },
 
-  updateWorkItemsDiffButton: function (clickedElement) {
+  updateWorkItemsDiffButton: function (clickedElement, sourceProjectId) {
     const DISABLED_BUTTON_CLASS= "polarion-TestsExecutionButton-buttons-defaultCursor";
 
     const diffWidget = clickedElement?.closest("div.polarion-DiffTool");
@@ -214,7 +203,7 @@ DiffTool = {
       if (button.classList.contains(DISABLED_BUTTON_CLASS) && diffWidget.querySelectorAll('input[type="checkbox"]:checked').length > 0) {
         button.classList.remove(DISABLED_BUTTON_CLASS);
         // We need to remember click listener to remove it from button later
-        this.registeredButtonClickListener = () => DiffTool.openWorkItemsDiffApplication(diffWidget);
+        this.registeredButtonClickListener = () => DiffTool.openWorkItemsDiffApplication(diffWidget, sourceProjectId);
         button.addEventListener("click", this.registeredButtonClickListener);
       }
       if (!button.classList.contains(DISABLED_BUTTON_CLASS) && diffWidget.querySelectorAll('input[type="checkbox"]:checked').length === 0) {
@@ -239,8 +228,25 @@ DiffTool = {
     }
   },
 
-  openWorkItemsDiffApplication: function (diffWidget) {
-    window.open(`/polarion/diff-tool-app/ui/app/index.html?type=workitems`, '_blank');
+  openWorkItemsDiffApplication: function (diffWidget, sourceProjectId) {
+    const targetProjectId = document.getElementById("comparison-target-project-selector").value;
+    const linkRole = document.getElementById("comparison-link-role-selector").value;
+    const config = document.getElementById("comparison-config-selector").value;
+
+    let path = `/polarion/diff-tool-app/ui/app/workitems.html`
+        + `?sourceProjectId=${sourceProjectId}&targetProjectId=${targetProjectId}&linkRole=${linkRole}&config=${config}`;
+
+    const workItemIdsHash = this.generateUuid();
+    const selectedIds = [];
+    diffWidget.querySelectorAll('input[type="checkbox"]:checked').forEach((checkbox) => {
+      if (checkbox.dataset.id) {
+        selectedIds.push(checkbox.dataset.id);
+      }
+    });
+    localStorage.setItem(workItemIdsHash + "_ids", selectedIds.join(","));
+    path += `&ids=${workItemIdsHash}`;
+
+    window.open(path, '_blank');
   },
 
   replaceUrlParam: function (url, paramName, paramValue){
@@ -253,5 +259,17 @@ DiffTool = {
     }
     url = url.replace(/[?#]$/,'');
     return url + (url.indexOf('?')> 0 ? '&' : '?') + paramName + '=' + paramValue;
-  }
+  },
+
+  generateUuid : function() {
+    return (
+        String('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx')
+    ).replace(/[xy]/g, (character) => {
+      const random = (Math.random() * 16) | 0;
+      const value = character === "x" ? random : (random & 0x3) | 0x8;
+
+      return value.toString(16);
+    });
+  },
+
 }

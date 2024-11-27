@@ -558,6 +558,14 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         return buf.toString();
     }
 
+    public @NotNull List<IWorkItem> getWorkItems(@NotNull String projectId, @NotNull List<String> workItemIds) {
+        ITrackerProject trackerProject = this.getTrackerProject(projectId);
+        return workItemIds.stream()
+                .filter(id -> !StringUtils.isEmptyTrimmed(id))
+                .map(trackerProject::getWorkItem)
+                .filter(workItem -> !workItem.isUnresolvable()).toList();
+    }
+
     @SuppressWarnings("squid:S1166") // Initial exception swallowed intentionally
     public List<IWorkItem> getPairedWorkItems(@NotNull IWorkItem toWorkItem, @NotNull String targetProjectId, @NotNull String linkRoleId) {
         return Streams.concat(toWorkItem.getLinkedWorkItemsStructsDirect().stream(), toWorkItem.getLinkedWorkItemsStructsBack().stream())

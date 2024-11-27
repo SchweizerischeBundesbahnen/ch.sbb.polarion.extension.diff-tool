@@ -1,12 +1,7 @@
-import {useSearchParams} from "next/navigation";
-import Documents from "@/components/Documents";
-import WorkItems from "@/components/WorkItems";
-import Error from "@/components/Error";
-import useRemote from "@/services/useRemote";
 import {useEffect, useState} from "react";
+import useRemote from "@/services/useRemote";
 
-export default function AppWrapper() {
-  const searchParams = useSearchParams();
+export default function ExtensionInfo() {
   const remote = useRemote();
 
   const [extensionInfo, setExtensionInfo] = useState("");
@@ -31,11 +26,9 @@ export default function AppWrapper() {
     }
   }, []);
 
-  if (searchParams.get("type") === "documents") {
-    return <Documents extensionInfo={extensionInfo} />
-  } else if (searchParams.get("type") === "workitems") {
-    return <WorkItems extensionInfo={extensionInfo} />
-  } else {
-    return <Error title="Unknown diff type" />
-  }
+  return (
+      <div className="extension-info">
+        {extensionInfo}
+      </div>
+  );
 }

@@ -19,10 +19,13 @@
                 projectScope, WidgetResourcesServlet.createResourceUrl("diff-tool"));
         WorkItemsDiffWidgetRenderer renderer = new WorkItemsDiffWidgetRenderer(renderingContext,
                 WorkItemsDiffWidgetParams.builder()
-                        .query(request.getParameter("query"))
-                        .page(request.getParameter("page"))
+                        .targetProject(request.getParameter("targetProject"))
+                        .linkRole(request.getParameter("linkRole"))
                         .configuration(request.getParameter("configuration"))
-                        .linkRole(request.getParameter("linkRole")).build());
+                        .query(request.getParameter("query"))
+                        .recordsPerPage(request.getParameter("recordsPerPage"))
+                        .page(request.getParameter("page"))
+                        .build());
         return renderer.render();
     }));
     out.println(renderedContent);

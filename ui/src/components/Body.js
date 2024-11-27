@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from "react";
 import {Inter} from "next/font/google";
-import AppContext from "../components/AppContext";
+import AppContext from "./AppContext";
 import useSessionRenewal from '../services/useSessionRenewal';
 
 const inter = Inter({ subsets: ["latin"] });

@@ -2,6 +2,8 @@ package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MultipleWorkItemsDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MultipleWorkItemsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.StringsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsDiffParams;
@@ -15,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.commons.collections4.CollectionUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import javax.ws.rs.BadRequestException;
@@ -60,6 +63,37 @@ public class DiffInternalController {
         }
         return diffService.getDocumentsDiff(documentsDiffParams.getLeftDocument(), documentsDiffParams.getRightDocument(), documentsDiffParams.getLinkRole(),
                 documentsDiffParams.getConfigName(), documentsDiffParams.getConfigCacheBucketId());
+    }
+
+    @POST
+    @Path("/diff/multiple-workitems")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Gets pairs of specified WorkItems to be later diffed",
+            parameters = {
+                    @Parameter(
+                            description = "Parameters for getting the WorkItem differences",
+                            required = true,
+                            schema = @Schema(implementation = MultipleWorkItemsDiffParams.class)
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Successfully retrieved pairs of specified WorkItems to be later diffed",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = MultipleWorkItemsDiff.class)
+                            )
+                    )
+            }
+    )
+    public MultipleWorkItemsDiff getMultipleWorkItemsDiff(@Parameter(required = true) MultipleWorkItemsDiffParams multipleWorkItemsDiffParams) {
+        if (multipleWorkItemsDiffParams == null || multipleWorkItemsDiffParams.getLeftProjectId() == null
+                || multipleWorkItemsDiffParams.getRightProjectId() == null || CollectionUtils.isEmpty(multipleWorkItemsDiffParams.getWorkItemIds())) {
+            throw new BadRequestException("Parameters 'leftProjectId', 'rightProjectId' and 'workItemIds' should be provided");
+        }
+        return diffService.getMultipleWorkItemsDiff(multipleWorkItemsDiffParams);
     }
 
     @POST

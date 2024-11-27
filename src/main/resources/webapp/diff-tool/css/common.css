@@ -191,8 +191,15 @@ a, td, div, li, ul, input, button {
 }
 
 .polarion-DiffTool input {
-    flex-grow: 2;
     padding: 5px 10px;
+}
+
+#query-input {
+    flex-grow: 2;
+}
+
+#records-per-page-input {
+    width: 50px;
 }
 
 .polarion-DiffTool select {
@@ -218,10 +225,15 @@ a, td, div, li, ul, input, button {
     row-gap: 5px;
 }
 
-.polarion-DiffTool .configuration, .polarion-DiffTool .link-role, .polarion-DiffTool .items-for-diff .query {
+.polarion-DiffTool .target-project, .polarion-DiffTool .link-role, .polarion-DiffTool .configuration, .polarion-DiffTool .items-for-diff .query {
     display: flex;
     column-gap: 10px;
     align-items: center;
+}
+
+.polarion-DiffTool .records-per-page-label {
+    width: 110px;
+    margin-left: 40px;
 }
 
 .polarion-DiffTool .paginator {
