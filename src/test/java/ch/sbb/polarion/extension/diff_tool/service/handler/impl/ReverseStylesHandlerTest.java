@@ -1,7 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +36,7 @@ class ReverseStylesHandlerTest {
         when(workItemA.getField(STATUS)).thenReturn(WorkItem.Field.builder().id(STATUS).build());
         when(workItemB.getField(STATUS)).thenReturn(WorkItem.Field.builder().id(STATUS).build());
 
-        DiffContext context = new DiffContext(workItemA, workItemB, STATUS, WorkItemsDiffParams.builder().build(), mock(PolarionService.class));
+        DiffContext context = new DiffContext(workItemA, workItemB, STATUS, WorkItemsPairDiffParams.builder().build(), mock(PolarionService.class));
 
         assertEquals("<span class=\"diff-html-removed\">val1</span><span class=\"diff-html-added\">val2</span>",
                 handler.postProcess("<span class=\"diff-html-removed\">val1</span><span class=\"diff-html-added\">val2</span>", context));
@@ -47,7 +47,7 @@ class ReverseStylesHandlerTest {
         when(workItemA.getField(STATUS)).thenReturn(WorkItem.Field.builder().id(STATUS).build());
         when(workItemB.getField(STATUS)).thenReturn(WorkItem.Field.builder().id(STATUS).build());
 
-        DiffContext context = new DiffContext(workItemA, workItemB, STATUS, WorkItemsDiffParams.builder().build(), mock(PolarionService.class)).reverseStyles(true);
+        DiffContext context = new DiffContext(workItemA, workItemB, STATUS, WorkItemsPairDiffParams.builder().build(), mock(PolarionService.class)).reverseStyles(true);
 
         assertEquals("<span class=\"diff-html-added\">val1</span><span class=\"diff-html-removed\">val2</span>",
                 handler.postProcess("<span class=\"diff-html-removed\">val1</span><span class=\"diff-html-added\">val2</span>", context));

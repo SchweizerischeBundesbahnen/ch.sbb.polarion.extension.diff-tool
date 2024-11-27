@@ -1,7 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.service.handler;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,7 +33,7 @@ public class DiffContext {
     private boolean reverseStyles;
 
     public DiffContext(@Nullable WorkItem workItemA, @Nullable WorkItem workItemB, @NotNull String fieldId,
-                       @NotNull WorkItemsDiffParams workItemsDiffParams, @NotNull PolarionService polarionService) {
+                       @NotNull WorkItemsPairDiffParams workItemsPairDiffParams, @NotNull PolarionService polarionService) {
         WorkItem.Field stub = WorkItem.Field.builder().html("").build();
 
         this.workItemA = workItemA;
@@ -44,8 +44,8 @@ public class DiffContext {
 
         this.polarionService = polarionService;
 
-        pairedWorkItemsLinkRole = workItemsDiffParams.getPairedWorkItemsLinkRole();
-        pairedWorkItemsDiffer = workItemsDiffParams.isPairedWorkItemsDiffer();
+        pairedWorkItemsLinkRole = workItemsPairDiffParams.getPairedWorkItemsLinkRole();
+        pairedWorkItemsDiffer = workItemsPairDiffParams.isPairedWorkItemsDiffer();
     }
 
     public void addIssue(String issue) {

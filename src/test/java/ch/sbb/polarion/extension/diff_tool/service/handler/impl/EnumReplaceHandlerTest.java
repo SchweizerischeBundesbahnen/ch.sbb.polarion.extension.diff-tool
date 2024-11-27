@@ -1,7 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import com.polarion.subterra.base.data.model.IEnumType;
@@ -46,7 +46,7 @@ class EnumReplaceHandlerTest {
                 .type(mock(IEnumType.class))
                 .build());
 
-        DiffContext context = new DiffContext(workItemA, workItemB, STATUS, WorkItemsDiffParams.builder().build(), mock(PolarionService.class));
+        DiffContext context = new DiffContext(workItemA, workItemB, STATUS, WorkItemsPairDiffParams.builder().build(), mock(PolarionService.class));
 
         Pair<String, String> preProcessed = handler.preProcess(Pair.of(workItemA.getField(STATUS).getHtml(), workItemB.getField(STATUS).getHtml()), context); //NOSONAR
         assertEquals("LeftTokenToReplace", preProcessed.getLeft());

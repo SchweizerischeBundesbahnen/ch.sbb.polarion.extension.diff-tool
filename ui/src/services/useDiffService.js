@@ -70,20 +70,18 @@ export default function useDiffService() {
     return pairs;
   };
 
-  const sendMultipleWorkItemsDiffRequest = (searchParams, configCacheId, loadingContext) => {
+  const sendFindWorkItemsPairsRequest = (searchParams, loadingContext) => {
     loadingContext.pairsLoadingStarted(true); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
 
     return new Promise((resolve, reject) => {
       remote.sendRequest({
         method: "POST",
-        url: `/diff/multiple-workitems`,
+        url: `/diff/workitems-pairs`,
         body: JSON.stringify({
           leftProjectId: searchParams.get('sourceProjectId'),
           rightProjectId: searchParams.get('targetProjectId'),
-          workItemIds: getWorkItemIds(searchParams),
+          leftWorkItemIds: getWorkItemIds(searchParams),
           linkRole: searchParams.get('linkRole'),
-          configName: searchParams.get('config'),
-          configCacheBucketId: configCacheId
         }),
         contentType: "application/json"
       })
@@ -210,5 +208,5 @@ export default function useDiffService() {
     }
   };
 
-  return { sendDocumentsDiffRequest, sendMultipleWorkItemsDiffRequest, sendMergeRequest, diffsExist };
+  return { sendDocumentsDiffRequest, sendFindWorkItemsPairsRequest, sendMergeRequest, diffsExist };
 }

@@ -9,7 +9,7 @@ import java.util.Collection;
 @Data
 @Builder
 @Schema(description = "Represents starting point of diffing multiple work items - their project names and pairs of work items to be diffed")
-public class MultipleWorkItemsDiff {
+public class WorkItemsPairs {
 
     @Schema(description = "The left project name")
     private String leftProjectName;

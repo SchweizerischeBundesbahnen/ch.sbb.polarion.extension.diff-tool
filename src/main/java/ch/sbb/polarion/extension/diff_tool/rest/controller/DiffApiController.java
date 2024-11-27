@@ -14,13 +14,13 @@ public class DiffApiController extends DiffInternalController {
     }
 
     @Override
-    public MultipleWorkItemsDiff getMultipleWorkItemsDiff(MultipleWorkItemsDiffParams multipleWorkItemsDiffParams) {
-        return polarionService.callPrivileged(() -> super.getMultipleWorkItemsDiff(multipleWorkItemsDiffParams));
+    public WorkItemsPairs findWorkItemsPairs(WorkItemsPairsParams workItemsPairsParams) {
+        return polarionService.callPrivileged(() -> super.findWorkItemsPairs(workItemsPairsParams));
     }
 
     @Override
-    public WorkItemsDiff getWorkItemsDiff(WorkItemsDiffParams workItemsDiffParams) {
-        return polarionService.callPrivileged(() -> super.getWorkItemsDiff(workItemsDiffParams));
+    public WorkItemsPairDiff getWorkItemsPairDiff(WorkItemsPairDiffParams workItemsPairDiffParams) {
+        return polarionService.callPrivileged(() -> super.getWorkItemsPairDiff(workItemsPairDiffParams));
     }
 
     @Override

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Comparison input data")
-public class WorkItemsDiffParams {
+public class WorkItemsPairDiffParams {
     @Schema(description = "ID of the left project")
     private String leftProjectId; // This value is needed to load diff-configuration (see configName attribute below) even if leftWorkItem is not available
 

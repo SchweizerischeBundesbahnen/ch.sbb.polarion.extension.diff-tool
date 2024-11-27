@@ -2,7 +2,7 @@
 
 import ControlPane from "@/components/ControlPane";
 import ExtensionInfo from "@/components/ExtensionInfo";
-import MultipleWorkItemsDiff from "@/components/workitems/MultipleWorkItemsDiff";
+import WorkItemsDiff from "@/components/workitems/WorkItemsDiff";
 
 export default function WorkItemsPage() {
   return <>
@@ -13,6 +13,6 @@ export default function WorkItemsPage() {
       <ExtensionInfo />
     </div>
     <ControlPane/>
-    <MultipleWorkItemsDiff />
+    <WorkItemsDiff />
   </>;
 }

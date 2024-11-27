@@ -13,9 +13,9 @@ import useDiffService from "@/services/useDiffService";
 const CODES_TO_RETRY = [500, 502, 503, 504]; // 500 - Internal Server Error, 502 - Bad Gateway, 503 - Service Unavailable, 504 - Gateway Timeout
 const RETRY_MARKER = "RETRY";
 
-export default function WorkItemsDiff({leftDocument, rightDocument, workItemsPair, pairedWorkItemsLinkRole, configCacheId, dataLoadedCallback,
-                                       leftChaptersDiffMarkers, rightChaptersDiffMarkers, currentIndex, loadingContext, mergingContext,
-                                       unSelectionAllowedCallback, selectChildrenCallback, setMirroredPairSelectedCallback, createdReportEntries, modifiedReportEntries}) {
+export default function WorkItemsPairDiff({ leftDocument, rightDocument, workItemsPair, pairedWorkItemsLinkRole, configCacheId, dataLoadedCallback,
+                                            leftChaptersDiffMarkers, rightChaptersDiffMarkers, currentIndex, loadingContext, mergingContext,
+                                            unSelectionAllowedCallback, selectChildrenCallback, setMirroredPairSelectedCallback, createdReportEntries, modifiedReportEntries }) {
   const context = useContext(AppContext);
   const searchParams = useSearchParams();
   const remote = useRemote();

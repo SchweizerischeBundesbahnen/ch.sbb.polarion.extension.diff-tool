@@ -17,7 +17,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class WorkItemsDiffTest {
+class WorkItemsPairDiffTest {
     @Test
     void testCreation() {
         IWorkItem wiMock1 = mock(IWorkItem.class);
@@ -41,11 +41,11 @@ class WorkItemsDiffTest {
         Set<String> fieldIds = new HashSet<>();
         fieldIds.add("id");
         fieldIds.add("title");
-        Collection<WorkItemsDiff.FieldDiff> fieldDiffs = WorkItemsDiff.of(workItemsPair, fieldIds).getFieldDiffs();
+        Collection<WorkItemsPairDiff.FieldDiff> fieldDiffs = WorkItemsPairDiff.of(workItemsPair, fieldIds).getFieldDiffs();
 
         assertEquals(1, fieldDiffs.size());
 
-        WorkItemsDiff.FieldDiff fieldDiff = fieldDiffs.iterator().next();
+        WorkItemsPairDiff.FieldDiff fieldDiff = fieldDiffs.iterator().next();
         assertEquals("id", fieldDiff.getId());
         assertEquals("diffLeft", fieldDiff.getDiffLeft());
         assertEquals("diffRight", fieldDiff.getDiffRight());

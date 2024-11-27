@@ -171,37 +171,6 @@
         ]
       }
     },
-    "/api/diff/multiple-workitems": {
-      "post": {
-        "operationId": "getMultipleWorkItemsDiff",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MultipleWorkItemsDiffParams"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MultipleWorkItemsDiff"
-                }
-              }
-            },
-            "description": "Successfully retrieved pairs of specified WorkItems to be later diffed"
-          }
-        },
-        "summary": "Gets pairs of specified WorkItems to be later diffed",
-        "tags": [
-          "Difference"
-        ]
-      }
-    },
     "/api/diff/text": {
       "post": {
         "operationId": "diffText",
@@ -242,12 +211,12 @@
     },
     "/api/diff/workitems": {
       "post": {
-        "operationId": "getWorkItemsDiff",
+        "operationId": "getWorkItemsPairDiff",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WorkItemsDiffParams"
+                "$ref": "#/components/schemas/WorkItemsPairDiffParams"
               }
             }
           },
@@ -258,7 +227,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WorkItemsDiff"
+                  "$ref": "#/components/schemas/WorkItemsPairDiff"
                 }
               }
             },
@@ -266,6 +235,37 @@
           }
         },
         "summary": "Gets difference of two WorkItems",
+        "tags": [
+          "Difference"
+        ]
+      }
+    },
+    "/api/diff/workitems-pairs": {
+      "post": {
+        "operationId": "findWorkItemsPairs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkItemsPairsParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItemsPairs"
+                }
+              }
+            },
+            "description": "Successfully retrieved pairs of specified WorkItems to be later diffed"
+          }
+        },
+        "summary": "Finds pairs to specified WorkItems, for later diff",
         "tags": [
           "Difference"
         ]
@@ -1382,53 +1382,6 @@
         },
         "type": "object"
       },
-      "MultipleWorkItemsDiff": {
-        "description": "Represents starting point of diffing multiple work items - their project names and pairs of work items to be diffed",
-        "properties": {
-          "leftProjectName": {
-            "description": "The left project name",
-            "type": "string"
-          },
-          "pairedWorkItems": {
-            "$ref": "#/components/schemas/WorkItemsPair"
-          },
-          "rightProjectName": {
-            "description": "The right project name",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "MultipleWorkItemsDiffParams": {
-        "description": "Input data for diffing multiple work items",
-        "properties": {
-          "configCacheBucketId": {
-            "description": "The ID of the configuration cache bucket",
-            "type": "string"
-          },
-          "configName": {
-            "description": "The configuration name to use for the comparison",
-            "type": "string"
-          },
-          "leftProjectId": {
-            "$ref": "#/components/schemas/DocumentIdentifier"
-          },
-          "linkRole": {
-            "description": "The role of the link connecting work item pairs",
-            "type": "string"
-          },
-          "rightProjectId": {
-            "$ref": "#/components/schemas/DocumentIdentifier"
-          },
-          "workItemIds": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          }
-        },
-        "type": "object"
-      },
       "Revision": {
         "description": "Revision details",
         "properties": {
@@ -1630,7 +1583,19 @@
         },
         "type": "object"
       },
-      "WorkItemsDiff": {
+      "WorkItemsPair": {
+        "description": "Represents a pair of WorkItems for comparison",
+        "properties": {
+          "leftWorkItem": {
+            "$ref": "#/components/schemas/WorkItem"
+          },
+          "rightWorkItem": {
+            "$ref": "#/components/schemas/WorkItem"
+          }
+        },
+        "type": "object"
+      },
+      "WorkItemsPairDiff": {
         "description": "Represents the differences between two WorkItems",
         "properties": {
           "fieldDiffs": {
@@ -1648,7 +1613,7 @@
         },
         "type": "object"
       },
-      "WorkItemsDiffParams": {
+      "WorkItemsPairDiffParams": {
         "description": "Comparison input data",
         "properties": {
           "compareEnumsById": {
@@ -1684,14 +1649,45 @@
         },
         "type": "object"
       },
-      "WorkItemsPair": {
-        "description": "Represents a pair of WorkItems for comparison",
+      "WorkItemsPairs": {
+        "description": "Represents starting point of diffing multiple work items - their project names and pairs of work items to be diffed",
         "properties": {
-          "leftWorkItem": {
-            "$ref": "#/components/schemas/WorkItem"
+          "leftProjectName": {
+            "description": "The left project name",
+            "type": "string"
           },
-          "rightWorkItem": {
-            "$ref": "#/components/schemas/WorkItem"
+          "pairedWorkItems": {
+            "$ref": "#/components/schemas/WorkItemsPair"
+          },
+          "rightProjectName": {
+            "description": "The right project name",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "WorkItemsPairsParams": {
+        "description": "Input data for finding work items pairs",
+        "properties": {
+          "leftProjectId": {
+            "description": "Identifier for the left project",
+            "type": "string"
+          },
+          "leftWorkItemIds": {
+            "description": "IDs of work items in left project which counterparts from right project to be found",
+            "items": {
+              "description": "IDs of work items in left project which counterparts from right project to be found",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "linkRole": {
+            "description": "The role of the link connecting work item pairs",
+            "type": "string"
+          },
+          "rightProjectId": {
+            "description": "Identifier for the right project",
+            "type": "string"
           }
         },
         "type": "object"

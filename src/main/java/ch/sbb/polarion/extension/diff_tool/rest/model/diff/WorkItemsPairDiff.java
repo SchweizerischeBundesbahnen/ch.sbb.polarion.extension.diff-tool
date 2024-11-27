@@ -16,7 +16,7 @@ import java.util.Set;
 
 @Data
 @Schema(description = "Represents the differences between two WorkItems")
-public class WorkItemsDiff {
+public class WorkItemsPairDiff {
     @Schema(description = "Left side WorkItem in the comparison", implementation = WorkItem.class)
     private WorkItem leftWorkItem;
 
@@ -26,8 +26,8 @@ public class WorkItemsDiff {
     @JsonIgnore
     private Map<String, FieldDiff> fieldDiffsMap = new HashMap<>();
 
-    public static WorkItemsDiff of(@NotNull WorkItemsPair workItemsPair, Set<String> fieldIds) {
-        WorkItemsDiff diff = new WorkItemsDiff();
+    public static WorkItemsPairDiff of(@NotNull WorkItemsPair workItemsPair, Set<String> fieldIds) {
+        WorkItemsPairDiff diff = new WorkItemsPairDiff();
         diff.leftWorkItem = workItemsPair.getLeftWorkItem();
         diff.rightWorkItem = workItemsPair.getRightWorkItem();
 

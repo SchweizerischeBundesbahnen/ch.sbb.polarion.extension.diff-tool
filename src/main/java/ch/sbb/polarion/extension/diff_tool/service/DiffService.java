@@ -4,7 +4,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.*;
 import ch.sbb.polarion.extension.diff_tool.util.OutlineNumberComparator;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import ch.sbb.polarion.extension.generic.fields.model.FieldMetadata;
-import ch.sbb.polarion.extension.generic.util.ExtensionInfo;
 import ch.sbb.polarion.extension.generic.util.ObjectUtils;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
@@ -270,61 +269,61 @@ public class DiffService {
                     && potentialParent.getOutlineNumber().equals(potentialInlined.getOutlineNumber().substring(0, potentialInlined.getOutlineNumber().indexOf("-"))));
     }
 
-    public MultipleWorkItemsDiff getMultipleWorkItemsDiff(@NotNull MultipleWorkItemsDiffParams multipleWorkItemsDiffParams) {
-        ILinkRoleOpt linkRole = polarionService.getLinkRoleById(multipleWorkItemsDiffParams.getLinkRole(), polarionService.getTrackerProject(multipleWorkItemsDiffParams.getLeftProjectId()));
+    public WorkItemsPairs findWorkItemsPairs(@NotNull WorkItemsPairsParams workItemsPairsParams) {
+        ILinkRoleOpt linkRole = polarionService.getLinkRoleById(workItemsPairsParams.getLinkRole(), polarionService.getTrackerProject(workItemsPairsParams.getLeftProjectId()));
         if (linkRole == null) {
-            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", multipleWorkItemsDiffParams.getLinkRole()));
+            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", workItemsPairsParams.getLinkRole()));
         }
-        IProject leftProject = polarionService.getProject(multipleWorkItemsDiffParams.getLeftProjectId());
-        IProject rightProject = polarionService.getProject(multipleWorkItemsDiffParams.getRightProjectId());
+        IProject leftProject = polarionService.getProject(workItemsPairsParams.getLeftProjectId());
+        IProject rightProject = polarionService.getProject(workItemsPairsParams.getRightProjectId());
 
-        List<IWorkItem> leftWorkItems = polarionService.getWorkItems(multipleWorkItemsDiffParams.getLeftProjectId(), multipleWorkItemsDiffParams.getWorkItemIds());
+        List<IWorkItem> leftWorkItems = polarionService.getWorkItems(workItemsPairsParams.getLeftProjectId(), workItemsPairsParams.getLeftWorkItemIds());
         Collection<WorkItemsPair> pairedWorkItems = new ArrayList<>();
         leftWorkItems.forEach(leftWorkItem -> {
-            List<IWorkItem> paired = polarionService.getPairedWorkItems(leftWorkItem, multipleWorkItemsDiffParams.getRightProjectId(), multipleWorkItemsDiffParams.getLinkRole());
+            List<IWorkItem> paired = polarionService.getPairedWorkItems(leftWorkItem, workItemsPairsParams.getRightProjectId(), workItemsPairsParams.getLinkRole());
             if (paired != null && paired.size() == 1) {
                 pairedWorkItems.add(WorkItemsPair.of(leftWorkItem, paired.get(0)));
             }
         });
 
-        return MultipleWorkItemsDiff.builder()
+        return WorkItemsPairs.builder()
                 .leftProjectName(leftProject.getName())
                 .rightProjectName(rightProject.getName())
                 .pairedWorkItems(pairedWorkItems)
                 .build();
     }
 
-    public WorkItemsDiff getWorkItemsDiff(@NotNull WorkItemsDiffParams workItemsDiffParams) {
-        DocumentReference leftDocumentReference = getDocumentReference(workItemsDiffParams.getLeftWorkItem());
-        DocumentReference rightDocumentReference = getDocumentReference(workItemsDiffParams.getRightWorkItem());
+    public WorkItemsPairDiff getWorkItemsPairDiff(@NotNull WorkItemsPairDiffParams workItemsPairDiffParams) {
+        DocumentReference leftDocumentReference = getDocumentReference(workItemsPairDiffParams.getLeftWorkItem());
+        DocumentReference rightDocumentReference = getDocumentReference(workItemsPairDiffParams.getRightWorkItem());
 
         Pair<IModule, IModule> modules = ObjectUtils.requireNotNull(TransactionalExecutor.executeSafelyInReadOnlyTransaction(transaction -> Pair.of(
                 Optional.ofNullable(leftDocumentReference).map(reference -> reference.get(transaction).getOldApi()).orElse(null),
                 Optional.ofNullable(rightDocumentReference).map(reference -> reference.get(transaction).getOldApi()).orElse(null))
         ));
 
-        IWorkItem leftWorkItem = getWorkItem(workItemsDiffParams.getLeftWorkItem(), modules.getLeft());
-        IWorkItem rightWorkItem = getWorkItem(workItemsDiffParams.getRightWorkItem(), modules.getRight());
+        IWorkItem leftWorkItem = getWorkItem(workItemsPairDiffParams.getLeftWorkItem(), modules.getLeft());
+        IWorkItem rightWorkItem = getWorkItem(workItemsPairDiffParams.getRightWorkItem(), modules.getRight());
 
-        Set<String> fieldIds = getFieldsToDiff(workItemsDiffParams.getConfigName(), workItemsDiffParams.getConfigCacheBucketId(), workItemsDiffParams.getLeftProjectId(), leftWorkItem, rightWorkItem);
+        Set<String> fieldIds = getFieldsToDiff(workItemsPairDiffParams.getConfigName(), workItemsPairDiffParams.getConfigCacheBucketId(), workItemsPairDiffParams.getLeftProjectId(), leftWorkItem, rightWorkItem);
 
         WorkItemsPair workItemsPair = new WorkItemsPair();
         if (leftWorkItem != null) {
             workItemsPair.setLeftWorkItem(buildWorkItem(leftWorkItem, fieldIds,
                     modules.getLeft().getOutlineNumberOfWorkitem(leftWorkItem),
                     modules.getLeft().getExternalWorkItems().contains(leftWorkItem),
-                    leftDocumentReference, workItemsDiffParams.isCompareEnumsById()));
+                    leftDocumentReference, workItemsPairDiffParams.isCompareEnumsById()));
         }
         if (rightWorkItem != null) {
             workItemsPair.setRightWorkItem(buildWorkItem(rightWorkItem, fieldIds,
                     modules.getRight().getOutlineNumberOfWorkitem(rightWorkItem),
                     modules.getRight().getExternalWorkItems().contains(rightWorkItem),
-                    rightDocumentReference, workItemsDiffParams.isCompareEnumsById()));
+                    rightDocumentReference, workItemsPairDiffParams.isCompareEnumsById()));
         }
 
-        fillHtmlDiffs(workItemsPair, fieldIds, workItemsDiffParams);
+        fillHtmlDiffs(workItemsPair, fieldIds, workItemsPairDiffParams);
 
-        return WorkItemsDiff.of(workItemsPair, fieldIds);
+        return WorkItemsPairDiff.of(workItemsPair, fieldIds);
     }
 
     private IWorkItem getWorkItem(@Nullable DocumentWorkItem workItemInDocument, IModule document) {
@@ -428,7 +427,7 @@ public class DiffService {
     }
 
     @VisibleForTesting
-    void fillHtmlDiffs(@NotNull WorkItemsPair workItemsPair, @NotNull Set<String> fieldIds, @NotNull WorkItemsDiffParams workItemsDiffParams) {
+    void fillHtmlDiffs(@NotNull WorkItemsPair workItemsPair, @NotNull Set<String> fieldIds, @NotNull WorkItemsPairDiffParams workItemsPairDiffParams) {
         // We will execute diff operation twice: using direct & reverse order.
         // this allows to show better visual result in case of style changes.
         // IMPORTANT: as a required non-obvious step for this approach - we have to swap
@@ -448,8 +447,8 @@ public class DiffService {
         };
 
         fieldIds.forEach(fieldId -> {
-            DiffContext contextA = new DiffContext(workItemsPair.getLeftWorkItem(), workItemsPair.getRightWorkItem(), fieldId, workItemsDiffParams, polarionService);
-            DiffContext contextB = new DiffContext(workItemsPair.getRightWorkItem(), workItemsPair.getLeftWorkItem(), fieldId, workItemsDiffParams, polarionService).reverseStyles(true);
+            DiffContext contextA = new DiffContext(workItemsPair.getLeftWorkItem(), workItemsPair.getRightWorkItem(), fieldId, workItemsPairDiffParams, polarionService);
+            DiffContext contextB = new DiffContext(workItemsPair.getRightWorkItem(), workItemsPair.getLeftWorkItem(), fieldId, workItemsPairDiffParams, polarionService).reverseStyles(true);
             differ.accept(contextA);
             differ.accept(contextB);
 

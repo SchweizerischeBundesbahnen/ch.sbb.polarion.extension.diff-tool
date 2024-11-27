@@ -3,7 +3,7 @@ import {useSearchParams} from "next/navigation";
 import AppContext from "../AppContext";
 import Error from "@/components/Error";
 import Loading from "@/components/Loading";
-import WorkItemsDiff from "@/components/documents/workitems/WorkItemsDiff";
+import WorkItemsPairDiff from "@/components/documents/workitems/WorkItemsPairDiff";
 import DocumentHeader from "@/components/documents/DocumentHeader";
 import ProgressBar from "@/components/documents/ProgressBar";
 import {v4 as uuidv4} from 'uuid';
@@ -251,14 +251,14 @@ export default function DocumentsDiff() {
     </Modal>
 
     {loadingContext.pairs.map((pair, index) => {
-      return <WorkItemsDiff key={index} leftDocument={docsData.leftDocument} rightDocument={docsData.rightDocument}
-                            workItemsPair={pair} pairedWorkItemsLinkRole={searchParams.get('linkRole')}
-                            configCacheId={configCacheId} dataLoadedCallback={dataLoadedCallback}
-                            leftChaptersDiffMarkers={leftChaptersDiffMarkers} rightChaptersDiffMarkers={rightChaptersDiffMarkers}
-                            currentIndex={index} loadingContext={loadingContext} mergingContext={mergingContext}
-                            unSelectionAllowedCallback={unSelectionAllowed} selectChildrenCallback={selectChildren}
-                            setMirroredPairSelectedCallback={setMirroredPairSelected}
-                            createdReportEntries={mergeReport.created || []} modifiedReportEntries={mergeReport.modified || []}/>;
+      return <WorkItemsPairDiff key={index} leftDocument={docsData.leftDocument} rightDocument={docsData.rightDocument}
+                                workItemsPair={pair} pairedWorkItemsLinkRole={searchParams.get('linkRole')}
+                                configCacheId={configCacheId} dataLoadedCallback={dataLoadedCallback}
+                                leftChaptersDiffMarkers={leftChaptersDiffMarkers} rightChaptersDiffMarkers={rightChaptersDiffMarkers}
+                                currentIndex={index} loadingContext={loadingContext} mergingContext={mergingContext}
+                                unSelectionAllowedCallback={unSelectionAllowed} selectChildrenCallback={selectChildren}
+                                setMirroredPairSelectedCallback={setMirroredPairSelected}
+                                createdReportEntries={mergeReport.created || []} modifiedReportEntries={mergeReport.modified || []}/>;
 
     })}
   </div>;
