@@ -4,6 +4,7 @@ import ch.sbb.polarion.extension.diff_tool.report.MergeReportEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
@@ -62,13 +63,14 @@ public class MergeService {
         this.polarionService = polarionService;
     }
 
-    public MergeResult mergeWorkItems(@NotNull DocumentIdentifier documentIdentifier1, @NotNull DocumentIdentifier documentIdentifier2, @NotNull MergeDirection direction,
-                                      @NotNull String linkRole, @NotNull List<WorkItemsPair> pairs, @Nullable String configName, @Nullable String configCacheBucketId, boolean allowReferencedWorkItemMerge) {
+    public MergeResult mergeWorkItems(@NotNull MergeParams mergeParams) {
+        DocumentIdentifier documentIdentifier1 = mergeParams.getLeftDocument();
+        DocumentIdentifier documentIdentifier2 = mergeParams.getRightDocument();
         // Evict cache of work items of specified documents before merging their work items, as after merge cache can become invalid
         polarionService.evictDocumentsCache(documentIdentifier1, documentIdentifier2);
 
-        DiffModel diffModel = DiffModelCachedResource.get(documentIdentifier1.getProjectId(), configName, configCacheBucketId);
-        MergeContext context = new MergeContext(polarionService, documentIdentifier1, documentIdentifier2, direction, linkRole, diffModel, allowReferencedWorkItemMerge);
+        DiffModel diffModel = DiffModelCachedResource.get(documentIdentifier1.getProjectId(), mergeParams.getConfigName(), mergeParams.getConfigCacheBucketId());
+        MergeContext context = new MergeContext(polarionService, documentIdentifier1, documentIdentifier2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, mergeParams.isAllowedReferencedWorkItemMerge());
         if (!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision())) {
             return MergeResult.builder().success(false).targetModuleHasStructuralChanges(true).build();
         }
@@ -76,6 +78,7 @@ public class MergeService {
             return MergeResult.builder().success(false).mergeNotAuthorized(true).build();
         }
 
+        List<WorkItemsPair> pairs = mergeParams.getPairs();
         removeDuplicatedOrConflictingPairs(pairs, context);
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
@@ -85,7 +88,7 @@ public class MergeService {
                 updateAndMoveItem(pair, context);
             }
 
-            if (allowReferencedWorkItemMerge) {
+            if (mergeParams.isAllowedReferencedWorkItemMerge()) {
                 pairs.removeIf(pair -> moveWorkItemOutOfDocument(pair, context));
             }
             reloadModule(context.getTargetModule());
@@ -101,9 +104,9 @@ public class MergeService {
             });
         }
 
-        if (!context.getModifiedModules().isEmpty()) {
+        if (!context.getAffectedModules().isEmpty()) {
             TransactionalExecutor.executeInWriteTransaction(transaction -> {
-                context.getModifiedModules().forEach(module -> {
+                context.getAffectedModules().forEach(module -> {
                     polarionService.insertWorkItem(module.getWorkItem(), module.getModule(), module.getParentNode(), module.getDestinationIndex(), true );
                     reloadModule(module.getModule());
                 });
@@ -180,7 +183,7 @@ public class MergeService {
             if (!target.getProjectId().equals(context.getTargetModule().getProjectId())) {
                 polarionService.fixReferencedWorkItem(target, context.getTargetModule(), context.linkRoleObject);
                 reloadModule(context.getTargetModule());
-            } else if (!moveRequested && !context.allowReferencedWorkItemMerge) {
+            } else if (!moveRequested && !context.isAllowedReferencedWorkItemMerge()) {
                 context.reportEntry(PROHIBITED, pair, "can't merge into referenced workitem '%s' in target document '%s'".formatted(target.getId(), context.getTargetModule()));
             }
         }
@@ -414,17 +417,17 @@ public class MergeService {
             IModule.IStructureNode destinationParentNode = context.getTargetModule().getStructureNodeOfWI(destinationParentWorkItem);
             int destinationIndex = sourceParentNode.getChildren().indexOf(sourceNode);
 
-            if (workItemToInsert.getModule() != null && !workItemToInsert.getModule().equals(context.modifiedModules)) {
+            if (workItemToInsert.getModule() != null && !workItemToInsert.getModule().equals(context.affectedModules)) {
                 IModule.IStructureNode sourceExternalNode = workItemToInsert.getModule().getStructureNodeOfWI(workItemToInsert);
                 IModule.IStructureNode sourceExternalParentNode = sourceExternalNode.getParent();
 
-                MergeContext.ModifiedModule modifiedModule = MergeContext.ModifiedModule.builder()
+                MergeContext.AffectedModule affectedModule = MergeContext.AffectedModule.builder()
                         .module(workItemToInsert.getModule())
                         .workItem(workItemToInsert)
                         .parentNode(sourceExternalParentNode)
                         .destinationIndex(sourceExternalParentNode.getChildren().indexOf(sourceExternalNode))
                         .build();
-                context.getModifiedModules().add(modifiedModule);
+                context.getAffectedModules().add(affectedModule);
             }
             polarionService.insertWorkItem(workItemToInsert, context.getTargetModule(), destinationParentNode, destinationIndex, referenced);
         }

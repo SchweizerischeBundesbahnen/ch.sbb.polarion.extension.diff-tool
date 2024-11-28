@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.settings.DiffSettings;
 import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
@@ -20,7 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -62,8 +64,9 @@ public class MergeServiceTest {
         when(polarionService.getModule(documentIdentifier2)).thenReturn(module2);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
 
-        MergeResult mergeResult = mergeService.mergeWorkItems(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
-                "any", Collections.emptyList(), null, "any", false);
+        MergeParams mergeParams = new MergeParams(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
+                "any", null, "any", Collections.emptyList(), false);
+        MergeResult mergeResult = mergeService.mergeWorkItems(mergeParams);
         assertFalse(mergeResult.isSuccess());
         assertTrue(mergeResult.isTargetModuleHasStructuralChanges());
     }
@@ -91,8 +94,9 @@ public class MergeServiceTest {
 
         when(polarionService.userAuthorizedForMerge(any())).thenReturn(false);
 
-        MergeResult mergeResult = mergeService.mergeWorkItems(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
-                "any", Collections.emptyList(), null, "any", false);
+        MergeParams mergeParams = new MergeParams(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
+                "any", null, "any", Collections.emptyList(), false);
+        MergeResult mergeResult = mergeService.mergeWorkItems(mergeParams);
         assertFalse(mergeResult.isSuccess());
         assertTrue(mergeResult.isMergeNotAuthorized());
     }

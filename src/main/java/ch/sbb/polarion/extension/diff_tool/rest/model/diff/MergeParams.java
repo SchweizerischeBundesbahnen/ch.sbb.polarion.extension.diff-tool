@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,4 +40,9 @@ public class MergeParams {
 
     @Schema(description = "Indicates if merging referenced Work Item allowed")
     private Boolean allowReferencedWorkItemMerge;
+
+    @JsonIgnore
+    public boolean isAllowedReferencedWorkItemMerge() {
+        return Boolean.TRUE.equals(allowReferencedWorkItemMerge);
+    }
 }
