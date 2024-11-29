@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
+import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,11 +31,15 @@ public class WorkItemsDiffParams {
     @Schema(description = "Indicates if enums must be compared by their ID")
     private Boolean compareEnumsById;
 
-    @Schema(description = "Name of the configuration used for comparison")
+    @Schema(description = "Name of the configuration used for comparison", defaultValue = NamedSettings.DEFAULT_NAME)
     private String configName;
 
     @Schema(description = "Cache bucket Id")
     private String configCacheBucketId;
+
+    public String getConfigName() {
+        return configName != null ? configName : NamedSettings.DEFAULT_NAME;
+    }
 
     public boolean isPairedWorkItemsDiffer() {
         return Boolean.TRUE.equals(pairedWorkItemsDiffer);
