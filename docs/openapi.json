@@ -954,6 +954,7 @@
         "description": "Parameters to create a document duplicated from another one",
         "properties": {
           "configName": {
+            "default": "Default",
             "description": "The configuration name to use for the duplication, which specifies which fields of work items to copy",
             "type": "string"
           },
@@ -1068,6 +1069,7 @@
             "type": "string"
           },
           "configName": {
+            "default": "Default",
             "description": "The configuration name to use for the comparison",
             "type": "string"
           },
@@ -1225,6 +1227,7 @@
             "type": "string"
           },
           "configName": {
+            "default": "Default",
             "description": "The configuration name to use for the merge operation",
             "type": "string"
           },
@@ -1612,6 +1615,7 @@
             "type": "string"
           },
           "configName": {
+            "default": "Default",
             "description": "Name of the configuration used for comparison",
             "type": "string"
           },
