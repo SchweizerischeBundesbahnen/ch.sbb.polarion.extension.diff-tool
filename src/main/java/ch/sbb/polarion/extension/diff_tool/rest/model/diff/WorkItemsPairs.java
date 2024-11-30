@@ -11,13 +11,12 @@ import java.util.Collection;
 @Schema(description = "Represents starting point of diffing multiple work items - their project names and pairs of work items to be diffed")
 public class WorkItemsPairs {
 
-    @Schema(description = "The left project name")
-    private String leftProjectName;
+    @Schema(description = "The left project information")
+    private Project leftProject;
 
-    @Schema(description = "The right project name")
-    private String rightProjectName;
+    @Schema(description = "The right project information")
+    private Project rightProject;
 
     @Schema(description = "A collection of paired WorkItems to be diffed", implementation = WorkItemsPair.class)
     private Collection<WorkItemsPair> pairedWorkItems;
-
 }

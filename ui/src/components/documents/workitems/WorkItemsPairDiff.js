@@ -9,17 +9,19 @@ import {useSearchParams} from "next/navigation";
 import MergeTicker from "@/components/documents/workitems/MergeTicker";
 import Modal from "@/components/Modal";
 import useDiffService from "@/services/useDiffService";
-
-const CODES_TO_RETRY = [500, 502, 503, 504]; // 500 - Internal Server Error, 502 - Bad Gateway, 503 - Service Unavailable, 504 - Gateway Timeout
-const RETRY_MARKER = "RETRY";
+import useImageUtils from "@/utils/useImageUtils";
 
 export default function WorkItemsPairDiff({ leftDocument, rightDocument, workItemsPair, pairedWorkItemsLinkRole, configCacheId, dataLoadedCallback,
                                             leftChaptersDiffMarkers, rightChaptersDiffMarkers, currentIndex, loadingContext, mergingContext,
                                             unSelectionAllowedCallback, selectChildrenCallback, setMirroredPairSelectedCallback, createdReportEntries, modifiedReportEntries }) {
+  const CODES_TO_RETRY = [500, 502, 503, 504]; // 500 - Internal Server Error, 502 - Bad Gateway, 503 - Service Unavailable, 504 - Gateway Timeout
+  const RETRY_MARKER = "RETRY";
+
   const context = useContext(AppContext);
   const searchParams = useSearchParams();
   const remote = useRemote();
   const diffService = useDiffService();
+  const imageUtils = useImageUtils();
   const [asHeaderInDocument] = useState(workItemsPair.leftWorkItem ?
       workItemsPair.leftWorkItem.outlineNumber && !workItemsPair.leftWorkItem.outlineNumber.includes('-') :
       workItemsPair.rightWorkItem.outlineNumber && !workItemsPair.rightWorkItem.outlineNumber.includes('-'));
@@ -117,8 +119,8 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
       newDiffs.push({
         id: fieldDiff.id,
         name: fieldDiff.name,
-        oldValue: fixImagesPath(fieldDiff.diffLeft, workItemsPair.leftWorkItem, leftDocument),
-        newValue: fixImagesPath(fieldDiff.diffRight, workItemsPair.rightWorkItem, rightDocument),
+        oldValue: imageUtils.fixImagesPathInDocumentWorkItem(fieldDiff.diffLeft, workItemsPair.leftWorkItem, leftDocument),
+        newValue: imageUtils.fixImagesPathInDocumentWorkItem(fieldDiff.diffRight, workItemsPair.rightWorkItem, rightDocument),
         issues: fieldDiff.issues
       });
     });
@@ -193,7 +195,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
     setDataLoadedFired(false);
     remote.sendRequest({
       method: "POST",
-      url: `/diff/workitems`,
+      url: `/diff/document-workitems`,
       body: JSON.stringify(body),
       contentType: "application/json"
     }).then(response => {
@@ -237,17 +239,6 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
   const getChapter = (workItem) => {
     const outlineNumberParts = workItem && workItem.outlineNumber && workItem.outlineNumber.split('-');
     return outlineNumberParts && outlineNumberParts.length > 0 && outlineNumberParts[0];
-  };
-
-  const fixImagesPath = function (diffValue, workItem, document) {
-    let res = diffValue;
-    if (res.includes('<img src="workitemimg:')) {
-      res = res.replaceAll('<img src="workitemimg:', `<img src="/polarion/wi-attachment/${document.projectId}/${workItem && workItem.id}/`)
-    }
-    if (diffValue.includes('<img src="attachment:')) {
-      res = res.replaceAll('<img src="attachment:', `<img src="/polarion/module-attachment/${document.projectId}/${document.spaceId}/${document.id}/`)
-    }
-    return res;
   };
 
   const expandHandler = () => {

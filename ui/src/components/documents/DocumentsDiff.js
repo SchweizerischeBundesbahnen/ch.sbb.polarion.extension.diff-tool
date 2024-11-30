@@ -195,7 +195,7 @@ export default function DocumentsDiff() {
       </div>
 
       <ProgressBar loadingContext={loadingContext} />
-      <MergePane leftDocument={docsData.leftDocument} rightDocument={docsData.rightDocument} mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
+      <MergePane leftContext={docsData.leftDocument} rightContext={docsData.rightDocument} mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
     </div>
 
     <ErrorsOverlay loadingContext={loadingContext} />

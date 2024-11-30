@@ -200,7 +200,7 @@ public class WorkItemsDiffWidgetRenderer extends AbstractWidgetRenderer {
         Collection<SettingName> configurations = NamedSettingsRegistry.INSTANCE.getByFeatureName(DiffSettings.FEATURE_NAME).readNames(ScopeUtils.getScopeFromProject(projectId));
         for (SettingName configuration : configurations) {
             HtmlTagBuilder option = configurationSelect.append().tag().byName("option");
-            option.attributes().byName("value", configuration.getId());
+            option.attributes().byName("value", configuration.getName());
             option.append().text(configuration.getName());
             if (configuration.getId().equals(this.configuration)) {
                 option.attributes().booleanAttribute("selected");

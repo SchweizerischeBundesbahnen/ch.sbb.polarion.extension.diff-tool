@@ -19,8 +19,8 @@ public class DiffApiController extends DiffInternalController {
     }
 
     @Override
-    public WorkItemsPairDiff getWorkItemsPairDiff(WorkItemsPairDiffParams workItemsPairDiffParams) {
-        return polarionService.callPrivileged(() -> super.getWorkItemsPairDiff(workItemsPairDiffParams));
+    public WorkItemsPairDiff getDocumentWorkItemsPairDiff(DocumentWorkItemsPairDiffParams documentWorkItemsPairDiffParams) {
+        return polarionService.callPrivileged(() -> super.getDocumentWorkItemsPairDiff(documentWorkItemsPairDiffParams));
     }
 
     @Override

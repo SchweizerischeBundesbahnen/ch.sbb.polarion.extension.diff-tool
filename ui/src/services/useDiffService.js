@@ -54,12 +54,13 @@ export default function useDiffService() {
       } else if (filter.includes(" ")) {
         filter = filter.split(" ");
       }
-
+/*
       window.addEventListener("beforeunload", function() {
         // Clear local storage on page/tab close
         localStorage.removeItem(filterKey);
         localStorage.removeItem(typeKey);
       });
+ */
       if (localStorage.getItem(typeKey) === "exclude") {
         return pairs.filter(pair => !pair.leftWorkItem || !filter.includes(pair.leftWorkItem.id));
       } else if (localStorage.getItem(typeKey) === "include") {
@@ -109,10 +110,12 @@ export default function useDiffService() {
     const idsHash = searchParams.get("ids");
     let idsKey = idsHash && (idsHash + "_ids");
     if (idsHash && localStorage && localStorage.getItem(idsKey)) {
+      /*
       window.addEventListener("beforeunload", function() {
         // Clear local storage on page/tab close
         localStorage.removeItem(idsKey);
       });
+       */
       return localStorage.getItem(idsKey).split(",");
     }
     return [];

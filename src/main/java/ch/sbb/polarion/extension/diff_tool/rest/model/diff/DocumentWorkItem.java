@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "WorkItem in document data")
+@Schema(description = "Details of WorkItem contained in a document")
 public class DocumentWorkItem {
     @Schema(description = "Unique identifier of the WorkItem")
     private String id;

@@ -1,12 +1,13 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DetachedWorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairs;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.StringsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiff;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.DiffService;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
@@ -97,15 +98,15 @@ public class DiffInternalController {
     }
 
     @POST
-    @Path("/diff/workitems")
+    @Path("/diff/document-workitems")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Gets difference of two WorkItems",
+    @Operation(summary = "Gets difference of two WorkItems contained in LiveDoc",
             parameters = {
                     @Parameter(
                             description = "Parameters for getting differences of two WorkItems",
                             required = true,
-                            schema = @Schema(implementation = WorkItemsPairDiffParams.class)
+                            schema = @Schema(implementation = DocumentWorkItemsPairDiffParams.class)
                     )
             },
             responses = {
@@ -119,11 +120,41 @@ public class DiffInternalController {
                     )
             }
     )
-    public WorkItemsPairDiff getWorkItemsPairDiff(@Parameter(required = true) WorkItemsPairDiffParams workItemsPairDiffParams) {
-        if (workItemsPairDiffParams == null || (workItemsPairDiffParams.getLeftWorkItem() == null && workItemsPairDiffParams.getRightWorkItem() == null)) {
+    public WorkItemsPairDiff getDocumentWorkItemsPairDiff(@Parameter(required = true) DocumentWorkItemsPairDiffParams documentWorkItemsPairDiffParams) {
+        if (documentWorkItemsPairDiffParams == null || (documentWorkItemsPairDiffParams.getLeftWorkItem() == null && documentWorkItemsPairDiffParams.getRightWorkItem() == null)) {
             throw new BadRequestException("Either parameter 'leftWorkItem' or 'rightWorkItem' should be provided");
         }
-        return diffService.getWorkItemsPairDiff(workItemsPairDiffParams);
+        return diffService.getDocumentWorkItemsPairDiff(documentWorkItemsPairDiffParams);
+    }
+
+    @POST
+    @Path("/diff/detached-workitems")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Gets difference of two WorkItems not necessarily contained in a document",
+            parameters = {
+                    @Parameter(
+                            description = "Parameters for getting differences of two WorkItems",
+                            required = true,
+                            schema = @Schema(implementation = DocumentWorkItemsPairDiffParams.class)
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Successfully retrieved the differences between the provided WorkItems",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = WorkItemsPairDiff.class)
+                            )
+                    )
+            }
+    )
+    public WorkItemsPairDiff getDetachedWorkItemsPairDiff(@Parameter(required = true) DetachedWorkItemsPairDiffParams detachedWorkItemsPairDiffParams) {
+        if (detachedWorkItemsPairDiffParams == null || detachedWorkItemsPairDiffParams.getLeftWorkItem() == null) {
+            throw new BadRequestException("'leftWorkItem' is required");
+        }
+        return diffService.getDetachedWorkItemsPairDiff(detachedWorkItemsPairDiffParams);
     }
 
     @POST
