@@ -34,10 +34,10 @@ public final class MergeContext {
     final MergeReport mergeReport = new MergeReport();
     final String linkRole;
     final ILinkRoleOpt linkRoleObject;
+    @Getter
     final DiffModel diffModel;
     @Getter
-    final List<ModifiedModule> modifiedModules = new ArrayList<>();
-    @Getter
+    final List<AffectedModule> affectedModules = new ArrayList<>();
     final boolean allowReferencedWorkItemMerge;
 
     public MergeContext(@NotNull PolarionService polarionService, @NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier,
@@ -131,9 +131,13 @@ public final class MergeContext {
         return linked.get();
     }
 
+    public boolean isAllowedReferencedWorkItemMerge() {
+        return Boolean.TRUE.equals(allowReferencedWorkItemMerge);
+    }
+
     @Builder
     @Getter
-    public static class ModifiedModule {
+    public static class AffectedModule {
         @NotNull private final IModule module;
         @NotNull private final IWorkItem workItem;
         @NotNull private final IModule.IStructureNode parentNode;

@@ -76,6 +76,9 @@
         <div id="statuses-load-error" class="diff-fields-error" style="display: none; margin-bottom: 15px">
             There was an error loading list of available statuses.
         </div>
+        <div id="hyperlink-roles-load-error" class="diff-fields-error" style="display: none; margin-bottom: 15px">
+            There was an error loading list of available hyperlink roles.
+        </div>
 
         <div class="flex-container">
             <div class="column select-column">
@@ -97,7 +100,18 @@
         <div class="flex-container" style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #cccccc">
             <div class="column select-column">
                 <label for="statuses-to-ignore">Statuses of WorkItems in a source document to ignore when diffing:</label>
-                <select id="statuses-to-ignore" multiple size="10" style="height: 200px">
+                <select id="statuses-to-ignore" multiple size="10" style="height: 230px">
+                </select>
+            </div>
+
+            <div class="column buttons-column">
+                <%-- fake component. used just to emulate same gap betweeen areas in the top block--%>
+            </div>
+
+            <div id="hyperlink-settings-container" class="column select-column">
+                <label for="hyperlink-roles">Hyperlink roles to diff and merge</label>
+                <input type="text" id="search-hyperlink-roles-input" placeholder="Filter items">
+                <select id="hyperlink-roles" multiple size="10" style="height: 200px">
                 </select>
             </div>
         </div>

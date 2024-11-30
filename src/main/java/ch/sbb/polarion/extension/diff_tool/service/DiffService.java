@@ -329,7 +329,7 @@ public class DiffService {
                     rightDocumentReference, documentWorkItemsPairDiffParams.isCompareEnumsById()));
         }
 
-        fillHtmlDiffs(workItemsPair, fieldIds, documentWorkItemsPairDiffParams.getPairedWorkItemsLinkRole(), documentWorkItemsPairDiffParams.getPairedWorkItemsDiffer());
+        fillHtmlDiffs(workItemsPair, fieldIds, documentWorkItemsPairDiffParams);
 
         return WorkItemsPairDiff.of(workItemsPair, fieldIds);
     }
@@ -349,7 +349,7 @@ public class DiffService {
             workItemsPair.setRightWorkItem(buildWorkItem(rightWorkItem, fieldIds, null, false, null, detachedWorkItemsPairDiffParams.isCompareEnumsById()));
         }
 
-        fillHtmlDiffs(workItemsPair, fieldIds, detachedWorkItemsPairDiffParams.getPairedWorkItemsLinkRole(), detachedWorkItemsPairDiffParams.getPairedWorkItemsDiffer());
+        fillHtmlDiffs(workItemsPair, fieldIds, detachedWorkItemsPairDiffParams);
 
         return WorkItemsPairDiff.of(workItemsPair, fieldIds);
     }
@@ -371,7 +371,7 @@ public class DiffService {
         return workItem;
     }
 
-    private IWorkItem getWorkItem(@Nullable WorkItem detachedWorkItem) {
+    private IWorkItem getWorkItem(@Nullable ProjectWorkItem detachedWorkItem) {
         IWorkItem workItem = null;
         if (detachedWorkItem != null) {
             workItem = polarionService.getWorkItem(detachedWorkItem.getProjectId(), detachedWorkItem.getId(), detachedWorkItem.getRevision());
@@ -464,7 +464,7 @@ public class DiffService {
     }
 
     @VisibleForTesting
-    void fillHtmlDiffs(@NotNull WorkItemsPair workItemsPair, @NotNull Set<String> fieldIds, @NotNull String pairedWorkItemsLinkRole, boolean pairedWorkItemsDiffer) {
+    void fillHtmlDiffs(@NotNull WorkItemsPair workItemsPair, @NotNull Set<String> fieldIds, @NotNull WorkItemsPairDiffParams<?> workItemsPairDiffParams) {
         // We will execute diff operation twice: using direct & reverse order.
         // this allows to show better visual result in case of style changes.
         // IMPORTANT: as a required non-obvious step for this approach - we have to swap
@@ -484,8 +484,8 @@ public class DiffService {
         };
 
         fieldIds.forEach(fieldId -> {
-            DiffContext contextA = new DiffContext(workItemsPair.getLeftWorkItem(), workItemsPair.getRightWorkItem(), fieldId, pairedWorkItemsLinkRole, pairedWorkItemsDiffer, polarionService);
-            DiffContext contextB = new DiffContext(workItemsPair.getRightWorkItem(), workItemsPair.getLeftWorkItem(), fieldId, pairedWorkItemsLinkRole, pairedWorkItemsDiffer, polarionService).reverseStyles(true);
+            DiffContext contextA = new DiffContext(workItemsPair.getLeftWorkItem(), workItemsPair.getRightWorkItem(), fieldId, workItemsPairDiffParams, polarionService);
+            DiffContext contextB = new DiffContext(workItemsPair.getRightWorkItem(), workItemsPair.getLeftWorkItem(), fieldId, workItemsPairDiffParams, polarionService).reverseStyles(true);
             differ.accept(contextA);
             differ.accept(contextB);
 

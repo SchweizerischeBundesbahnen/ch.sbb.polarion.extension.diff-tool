@@ -354,6 +354,37 @@
         ]
       }
     },
+    "/api/projects/{projectId}/hyperlink-roles": {
+      "get": {
+        "operationId": "getAllHyperlinkRoles",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HyperlinkRole"
+                }
+              }
+            },
+            "description": "List of all hyperlink roles for the specified project"
+          }
+        },
+        "summary": "Gets list of all hyperlink roles in the specified project",
+        "tags": [
+          "Utility API"
+        ]
+      }
+    },
     "/api/projects/{projectId}/spaces": {
       "get": {
         "operationId": "getSpaces",
@@ -973,7 +1004,7 @@
             "type": "string"
           },
           "leftWorkItem": {
-            "$ref": "#/components/schemas/WorkItem"
+            "$ref": "#/components/schemas/ProjectWorkItem"
           },
           "pairedWorkItemsDiffer": {
             "description": "Indicates if the paired WorkItems differ",
@@ -984,7 +1015,7 @@
             "type": "string"
           },
           "rightWorkItem": {
-            "$ref": "#/components/schemas/WorkItem"
+            "$ref": "#/components/schemas/ProjectWorkItem"
           }
         },
         "type": "object"
@@ -1042,6 +1073,7 @@
         "description": "Parameters to create a document duplicated from another one",
         "properties": {
           "configName": {
+            "default": "Default",
             "description": "The configuration name to use for the duplication, which specifies which fields of work items to copy",
             "type": "string"
           },
@@ -1188,6 +1220,7 @@
             "type": "string"
           },
           "configName": {
+            "default": "Default",
             "description": "The configuration name to use for the comparison",
             "type": "string"
           },
@@ -1284,6 +1317,26 @@
         },
         "type": "object"
       },
+      "HyperlinkRole": {
+        "properties": {
+          "combinedId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "workItemTypeId": {
+            "type": "string"
+          },
+          "workItemTypeName": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "IStatusOpt": {
         "properties": {
           "default": {
@@ -1336,6 +1389,7 @@
             "type": "string"
           },
           "configName": {
+            "default": "Default",
             "description": "The configuration name to use for the merge operation",
             "type": "string"
           },
@@ -1434,6 +1488,12 @@
               "$ref": "#/components/schemas/MergeReportEntry"
             },
             "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -1454,7 +1514,8 @@
               "MOVE_SKIPPED",
               "MOVE_FAILED",
               "MOVED_FROM",
-              "PROHIBITED"
+              "PROHIBITED",
+              "WARNING"
             ],
             "type": "string"
           },
@@ -1498,6 +1559,24 @@
           },
           "name": {
             "description": "The project name",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectWorkItem": {
+        "description": "Details of WorkItem belonging to a project",
+        "properties": {
+          "id": {
+            "description": "Unique identifier of the WorkItem",
+            "type": "string"
+          },
+          "projectId": {
+            "description": "WorkItem's project ID, it can differ from document's project ID in case of referenced WorkItems",
+            "type": "string"
+          },
+          "revision": {
+            "description": "The revision of the WorkItem. Referenced WorkItem's can be frozen in document in certain revision",
             "type": "string"
           }
         },

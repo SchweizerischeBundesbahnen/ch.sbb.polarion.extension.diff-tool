@@ -2,10 +2,14 @@ package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
+import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
 import com.polarion.alm.tracker.model.IWorkItem;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,6 +26,16 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LinksHandlerTest {
+
+    @BeforeEach
+    public void init() {
+        TestUtils.mockDiffSettings();
+    }
+
+    @AfterEach
+    public void teardown() {
+        TestUtils.clearSettings();
+    }
 
     @Test
     @SneakyThrows
@@ -54,7 +68,7 @@ class LinksHandlerTest {
 
             String result = new LinksHandler().appendPairedWorkItemId(unprocessedHtml,
                     projectId, projectId, new DiffContext(WorkItem.of(mock(IWorkItem.class), "wi_outline_number", false, false), WorkItem.of(mock(IWorkItem.class), "wi_outline_number", false, false),
-                            "testFieldId", "roleId", false, polarionService));
+                            "testFieldId", WorkItemsPairDiffParams.builder().pairedWorkItemsLinkRole("roleId").build(), polarionService));
 
             assertEquals(expectedHtml, result);
         }

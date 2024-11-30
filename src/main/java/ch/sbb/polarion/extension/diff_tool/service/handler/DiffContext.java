@@ -2,7 +2,10 @@ package ch.sbb.polarion.extension.diff_tool.service.handler;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
+import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -26,6 +29,8 @@ public class DiffContext {
     @NotNull
     public final String pairedWorkItemsLinkRole;
     public final boolean pairedWorkItemsDiffer;
+    public final String leftProjectId;
+    public final DiffModel diffModel;
 
     @Accessors(fluent = true)
     @Getter
@@ -33,7 +38,7 @@ public class DiffContext {
     private boolean reverseStyles;
 
     public DiffContext(@Nullable WorkItem workItemA, @Nullable WorkItem workItemB, @NotNull String fieldId,
-                       @NotNull String pairedWorkItemsLinkRole, boolean pairedWorkItemsDiffer, @NotNull PolarionService polarionService) {
+                       @NotNull WorkItemsPairDiffParams<?> workItemsPairDiffParams, @NotNull PolarionService polarionService) {
         WorkItem.Field stub = WorkItem.Field.builder().html("").build();
 
         this.workItemA = workItemA;
@@ -44,8 +49,11 @@ public class DiffContext {
 
         this.polarionService = polarionService;
 
-        this.pairedWorkItemsLinkRole = pairedWorkItemsLinkRole;
-        this.pairedWorkItemsDiffer = pairedWorkItemsDiffer;
+        this.pairedWorkItemsLinkRole = workItemsPairDiffParams.getPairedWorkItemsLinkRole();
+        this.pairedWorkItemsDiffer = workItemsPairDiffParams.isPairedWorkItemsDiffer();
+
+        leftProjectId = workItemsPairDiffParams.getLeftProjectId();
+        diffModel = DiffModelCachedResource.get(workItemsPairDiffParams.getLeftProjectId(), workItemsPairDiffParams.getConfigName(), workItemsPairDiffParams.getConfigCacheBucketId());
     }
 
     public void addIssue(String issue) {

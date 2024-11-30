@@ -2,9 +2,12 @@ package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
+import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +32,13 @@ class IdsHandlerTest {
 
     @BeforeEach
     public void init() {
+        TestUtils.mockDiffSettings();
         handler = new IdsHandler();
+    }
+
+    @AfterEach
+    public void teardown() {
+        TestUtils.clearSettings();
     }
 
     @Test
@@ -37,7 +46,7 @@ class IdsHandlerTest {
         when(workItemA.getField(ID)).thenReturn(WorkItem.Field.builder().id(ID).html("EL-1").build());
         when(workItemB.getField(ID)).thenReturn(WorkItem.Field.builder().id(ID).html("EL-2").build());
 
-        DiffContext context = new DiffContext(workItemA, workItemB, ID, "", false, mock(PolarionService.class));
+        DiffContext context = new DiffContext(workItemA, workItemB, ID, WorkItemsPairDiffParams.builder().build(), mock(PolarionService.class));
 
         Pair<String, String> preProcessed = handler.preProcess(Pair.of(workItemA.getField(ID).getHtml(), workItemB.getField(ID).getHtml()), context);//NOSONAR
         assertEquals("EL-1", preProcessed.getLeft());
@@ -53,7 +62,7 @@ class IdsHandlerTest {
         when(workItemA.getField(ID)).thenReturn(WorkItem.Field.builder().id(ID).html("EL-1").build());
         when(workItemB.getField(ID)).thenReturn(WorkItem.Field.builder().id(ID).html("EL-2").build());
 
-        DiffContext context = new DiffContext(workItemA, workItemB, ID, "", true, mock(PolarionService.class));
+        DiffContext context = new DiffContext(workItemA, workItemB, ID, WorkItemsPairDiffParams.builder().pairedWorkItemsDiffer(true).build(), mock(PolarionService.class));
 
         Pair<String, String> preProcessed = handler.preProcess(Pair.of(workItemA.getField(ID).getHtml(), workItemB.getField(ID).getHtml()), context);//NOSONAR
         assertEquals("EL-1", preProcessed.getLeft());
@@ -68,7 +77,7 @@ class IdsHandlerTest {
     void testDifferWhenOnlyLeft() {
         when(workItemA.getField(ID)).thenReturn(WorkItem.Field.builder().id(ID).html("EL-1").build());
 
-        DiffContext context = new DiffContext(workItemA, null, ID, "", false, mock(PolarionService.class));
+        DiffContext context = new DiffContext(workItemA, null, ID, WorkItemsPairDiffParams.builder().build(), mock(PolarionService.class));
 
         Pair<String, String> preProcessed = handler.preProcess(Pair.of(workItemA.getField(ID).getHtml(), ""), context);//NOSONAR
         assertEquals("EL-1", preProcessed.getLeft());
@@ -83,7 +92,7 @@ class IdsHandlerTest {
     void testDifferWhenOnlyRight() {
         when(workItemB.getField(ID)).thenReturn(WorkItem.Field.builder().id(ID).html("EL-2").build());
 
-        DiffContext context = new DiffContext(null, workItemB, ID, "", false, mock(PolarionService.class));
+        DiffContext context = new DiffContext(null, workItemB, ID, WorkItemsPairDiffParams.builder().build(), mock(PolarionService.class));
 
         Pair<String, String> preProcessed = handler.preProcess(Pair.of("", workItemB.getField(ID).getHtml()), context);//NOSONAR
         assertEquals("", preProcessed.getLeft());

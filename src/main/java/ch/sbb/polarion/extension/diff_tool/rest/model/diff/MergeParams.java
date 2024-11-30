@@ -1,6 +1,8 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.generic.settings.NamedSettings;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,7 +30,7 @@ public class MergeParams {
     @Schema(description = "The role of the link connecting the two documents")
     private String linkRole;
 
-    @Schema(description = "The configuration name to use for the merge operation")
+    @Schema(description = "The configuration name to use for the merge operation", defaultValue = NamedSettings.DEFAULT_NAME)
     private String configName;
 
     @Schema(description = "The ID of the configuration cache bucket")
@@ -39,4 +41,13 @@ public class MergeParams {
 
     @Schema(description = "Indicates if merging referenced Work Item allowed")
     private Boolean allowReferencedWorkItemMerge;
+
+    @JsonIgnore
+    public boolean isAllowedReferencedWorkItemMerge() {
+        return Boolean.TRUE.equals(allowReferencedWorkItemMerge);
+    }
+
+    public String getConfigName() {
+        return configName != null ? configName : NamedSettings.DEFAULT_NAME;
+    }
 }

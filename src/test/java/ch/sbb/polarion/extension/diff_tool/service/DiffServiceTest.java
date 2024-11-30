@@ -4,13 +4,16 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeMoveDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.ImageHandler;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 
+import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
 import com.polarion.alm.tracker.model.IWorkItem;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,7 +41,13 @@ class DiffServiceTest {
 
     @BeforeEach
     void init() {
+        TestUtils.mockDiffSettings();
         diffService = new DiffService(polarionService);
+    }
+
+    @AfterEach
+    public void teardown() {
+        TestUtils.clearSettings();
     }
 
     @Test
@@ -49,7 +58,7 @@ class DiffServiceTest {
 
             String unprocessedHtml = new String(Objects.requireNonNull(isUnprocessedHtml).readAllBytes(), StandardCharsets.UTF_8);
 
-            String processedHtml = new ImageHandler().postProcess(unprocessedHtml, new DiffContext(null, null, "", "", false, polarionService));
+            String processedHtml = new ImageHandler().postProcess(unprocessedHtml, new DiffContext(null, null, "", WorkItemsPairDiffParams.builder().build(), polarionService));
             String expectedHtml = new String(Objects.requireNonNull(isExpectedResultHtml).readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(expectedHtml, processedHtml);
         }
@@ -87,7 +96,7 @@ class DiffServiceTest {
         when(workItemA.getProjectId()).thenReturn("someProject");
         when(workItemB.getProjectId()).thenReturn("someProject");
 
-        diffService.fillHtmlDiffs(WorkItemsPair.builder().leftWorkItem(workItemA).rightWorkItem(workItemB).build(), Set.of("testField"), "", false);
+        diffService.fillHtmlDiffs(WorkItemsPair.builder().leftWorkItem(workItemA).rightWorkItem(workItemB).build(), Set.of("testField"), WorkItemsPairDiffParams.builder().build());
 
         assertNull(fieldA.getHtmlDiff());
         assertNull(fieldB.getHtmlDiff());

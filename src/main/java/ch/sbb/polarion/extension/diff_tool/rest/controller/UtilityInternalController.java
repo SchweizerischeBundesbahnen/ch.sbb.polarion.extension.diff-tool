@@ -8,9 +8,11 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Document;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.HyperlinkRole;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.generic.util.ExtensionInfo;
 import com.polarion.alm.projects.model.IProject;
+import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.IStatusOpt;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -179,6 +181,28 @@ public class UtilityInternalController {
             throw new BadRequestException(MISSING_PROJECT_ID_MESSAGE);
         }
         return polarionService.getWorkItemStatuses(projectId);
+    }
+
+    @GET
+    @Path("/projects/{projectId}/hyperlink-roles")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Gets list of all hyperlink roles in the specified project",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "List of all hyperlink roles for the specified project",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = HyperlinkRole.class)
+                            )
+                    )
+            }
+    )
+    public Collection<HyperlinkRole> getAllHyperlinkRoles(@PathParam("projectId") String projectId) {
+        if (StringUtils.isBlank(projectId)) {
+            throw new BadRequestException(MISSING_PROJECT_ID_MESSAGE);
+        }
+        return polarionService.getHyperlinkRoles(projectId);
     }
 
     @GET

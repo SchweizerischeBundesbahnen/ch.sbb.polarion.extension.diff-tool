@@ -2,9 +2,12 @@ package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
+import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +32,13 @@ class OuterWrapperHandlerTest {
 
     @BeforeEach
     public void init() {
+        TestUtils.mockDiffSettings();
         handler = new OuterWrapperHandler();
+    }
+
+    @AfterEach
+    public void teardown() {
+        TestUtils.clearSettings();
     }
 
     @Test
@@ -37,7 +46,7 @@ class OuterWrapperHandlerTest {
         when(workItemA.getField(STATUS)).thenReturn(WorkItem.Field.builder().id(STATUS).html("val1").build());
         when(workItemB.getField(STATUS)).thenReturn(WorkItem.Field.builder().id(STATUS).html("val2").build());
 
-        DiffContext context = new DiffContext(workItemA, workItemB, STATUS, "", false, mock(PolarionService.class));
+        DiffContext context = new DiffContext(workItemA, workItemB, STATUS, WorkItemsPairDiffParams.builder().build(), mock(PolarionService.class));
 
         Pair<String, String> preProcessed = handler.preProcess(Pair.of(workItemA.getField(STATUS).getHtml(), workItemB.getField(STATUS).getHtml()), context);//NOSONAR
         assertEquals("<outer_surrogate_tag>val1</outer_surrogate_tag>", preProcessed.getLeft());

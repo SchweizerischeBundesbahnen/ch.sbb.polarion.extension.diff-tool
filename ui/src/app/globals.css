@@ -533,10 +533,10 @@ a:hover {
   background: #FDC6C6;
 }
 
-.diff-lwi-container {
+.diff-lwi-container, .diff-hl-container {
   display: flex;
 }
-.diff-lwi {
+.diff-lwi, .diff-hl {
   display: inline;
   white-space: nowrap;
   overflow: hidden;
