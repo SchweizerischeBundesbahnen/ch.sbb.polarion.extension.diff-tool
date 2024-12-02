@@ -32,6 +32,7 @@ public final class MergeContext {
     final MergeDirection direction;
     @Getter
     final MergeReport mergeReport = new MergeReport();
+    @Getter
     final String linkRole;
     final ILinkRoleOpt linkRoleObject;
     @Getter
