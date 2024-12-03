@@ -2,18 +2,18 @@ import {useContext, useEffect, useState} from "react";
 import {useSearchParams} from "next/navigation";
 import AppContext from "../AppContext";
 import Error from "@/components/Error";
-import Loading from "@/components/Loading";
+import Loading from "@/components/loading/Loading";
 import WorkItemsPairDiff from "@/components/documents/workitems/WorkItemsPairDiff";
 import DocumentHeader from "@/components/documents/DocumentHeader";
-import ProgressBar from "@/components/documents/ProgressBar";
+import ProgressBar from "@/components/loading/ProgressBar";
 import {v4 as uuidv4} from 'uuid';
-import ErrorsOverlay from "@/components/documents/ErrorsOverlay";
-import useLoadingContext from "@/components/useLoadingContext";
-import {useMergingContext} from "@/components/documents/useMergingContext";
-import MergePane from "@/components/documents/MergePane";
+import ErrorsOverlay from "@/components/ErrorsOverlay";
+import useLoadingContext from "@/components/loading/useLoadingContext";
+import {useMergingContext} from "@/components/merge/useMergingContext";
+import MergePane from "@/components/merge/MergePane";
 import useDiffService from "@/services/useDiffService";
 import Modal from "@/components/Modal";
-import MergeInProgressOverlay from "@/components/documents/MergeInProgressOverlay";
+import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument', 'linkRole'];
 
@@ -92,7 +92,7 @@ export default function DocumentsDiff() {
 
   const mergeCallback = (direction) => {
     setMergeInProgress(true);
-    diffService.sendMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, context.state.allowReferencedWorkItemMerge)
+    diffService.sendDocumentsMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, context.state.allowReferencedWorkItemMerge)
         .then((data) => {
           setMergeReport(data.mergeReport);
           setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);

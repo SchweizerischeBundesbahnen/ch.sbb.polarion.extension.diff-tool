@@ -145,14 +145,17 @@ DiffTool = {
       path += `&targetRevision=${targetRevision}`;
     }
 
-    if (document.getElementById("use-work-items-filter").checked && localStorage) {
-      const filterHash = this.generateUuid();
-      localStorage.setItem(filterHash + "_filter", document.getElementById("work-items-filter-input").value);
-      localStorage.setItem(filterHash + "_type", document.getElementById("include-work-items").checked ? "include" : "exclude");
-      path += `&filter=${filterHash}`;
+    if (document.getElementById("use-work-items-filter").checked) {
+      const filter = document.getElementById("work-items-filter-input").value;
+      this.digestMessage(filter).then(digestHex => {
+        localStorage.setItem(digestHex + "_filter", filter);
+        localStorage.setItem(digestHex + "_type", document.getElementById("include-work-items").checked ? "include" : "exclude");
+        path += `&filter=${digestHex}`;
+        window.open(path, '_blank');
+      });
+    } else {
+      window.open(path, '_blank');
     }
-
-    window.open(path, '_blank');
   },
 
   compareSameDocument: function () {
@@ -236,17 +239,19 @@ DiffTool = {
     let path = `/polarion/diff-tool-app/ui/app/workitems.html`
         + `?sourceProjectId=${sourceProjectId}&targetProjectId=${targetProjectId}&linkRole=${linkRole}&config=${config}`;
 
-    const workItemIdsHash = this.generateUuid();
+    // const workItemIdsHash = this.generateUuid();
     const selectedIds = [];
     diffWidget.querySelectorAll('input[type="checkbox"]:checked').forEach((checkbox) => {
       if (checkbox.dataset.id) {
         selectedIds.push(checkbox.dataset.id);
       }
     });
-    localStorage.setItem(workItemIdsHash + "_ids", selectedIds.join(","));
-    path += `&ids=${workItemIdsHash}`;
-
-    window.open(path, '_blank');
+    const selectedIdsString = selectedIds.join(",");
+    this.digestMessage(selectedIdsString).then(digestHex => {
+      localStorage.setItem(digestHex + "_ids", selectedIdsString);
+      path += `&ids=${digestHex}`;
+      window.open(path, '_blank');
+    });
   },
 
   replaceUrlParam: function (url, paramName, paramValue){
@@ -272,4 +277,13 @@ DiffTool = {
     });
   },
 
+  digestMessage: async function(message) {
+    const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
+    const hashBuffer = await window.crypto.subtle.digest("SHA-1", msgUint8); // hash the message
+    const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+     // convert bytes to hex string
+    return hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+  }
 }

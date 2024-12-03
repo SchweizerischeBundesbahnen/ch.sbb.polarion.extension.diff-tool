@@ -1,12 +1,13 @@
-import MergeTicker from "@/components/documents/workitems/MergeTicker";
-import {LEFT, RIGHT, WorkItemHeader} from "@/components/documents/workitems/WorkItemHeader";
+import MergeTicker from "@/components/merge/MergeTicker";
+import {LEFT, RIGHT, WorkItemHeader} from "@/components/WorkItemHeader";
 import {useContext, useEffect, useState} from "react";
 import useImageUtils from "@/utils/useImageUtils";
-import DiffContent from "@/components/documents/workitems/DiffContent";
+import DiffContent from "@/components/diff/DiffContent";
 import useRemote from "@/services/useRemote";
 import AppContext from "@/components/AppContext";
 import FloatingButton from "@/components/FloatingButton";
 import {faChevronDown, faChevronUp, faEquals, faQuestion} from "@fortawesome/free-solid-svg-icons";
+import useDiffService from "@/services/useDiffService";
 
 export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightProject, pairedWorkItemsLinkRole, configName, configCacheId, dataLoadedCallback,
                                             currentIndex, loadingContext, mergingContext, createdReportEntries, modifiedReportEntries}) {
@@ -15,6 +16,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
 
   const context = useContext(AppContext);
   const remote = useRemote();
+  const diffService = useDiffService();
   const imageUtils = useImageUtils();
 
   const [expanded, setExpanded] = useState(true);
@@ -118,15 +120,13 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
   useEffect(() => {
     // selectAllTrigger of 0 value is initial value which should be ignored
     if (mergingContext.selectAllTrigger > 0 && mergingContext.selectAll !== selected && diffService.diffsExist(workItemsPair, diffs)) {
-      pairSelected(mergingContext.selectAll, true);
+      pairSelected(mergingContext.selectAll);
     }
   }, [mergingContext.selectAllTrigger]);
 
-  const pairSelected = (selected, force) => {
+  const pairSelected = (selected) => {
     if (workItemsPair) {
-      if (selected || force) {
-        mergingContext.setPairSelected(currentIndex, workItemsPair, selected);
-      }
+      mergingContext.setPairSelected(currentIndex, workItemsPair, selected);
     }
   };
 
@@ -193,7 +193,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
             backgroundColor: "#f6f6f6",
             display: 'flex'
           }} className="header row g-0">
-            <MergeTicker workItemsPair={workItemsPair} diffs={{}} selected={false} pairSelectedCallback={() => {}} />
+            <MergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />
             <WorkItemHeader workItem={workItemsPair.leftWorkItem} side={LEFT} selected={false}/>
 
             {diffs && diffs.length > 0

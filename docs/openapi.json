@@ -323,14 +323,14 @@
         ]
       }
     },
-    "/api/merge/workitems": {
+    "/api/merge/documents": {
       "post": {
-        "operationId": "mergeWorkItems",
+        "operationId": "mergeDocuments",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MergeParams"
+                "$ref": "#/components/schemas/DocumentsMergeParams"
               }
             }
           },
@@ -348,7 +348,38 @@
             "description": "Merge result"
           }
         },
-        "summary": "Merge WorkItems",
+        "summary": "Merge Documents and their WorkItems",
+        "tags": [
+          "Merge"
+        ]
+      }
+    },
+    "/api/merge/workitems": {
+      "post": {
+        "operationId": "mergeWorkItems",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkItemsMergeParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergeResult"
+                }
+              }
+            },
+            "description": "Merge result"
+          }
+        },
+        "summary": "Merge WorkItems out of documents scope",
         "tags": [
           "Merge"
         ]
@@ -1237,6 +1268,46 @@
         },
         "type": "object"
       },
+      "DocumentsMergeParams": {
+        "description": "Documents merge input data",
+        "properties": {
+          "allowReferencedWorkItemMerge": {
+            "description": "Indicates if merging referenced Work Item allowed",
+            "type": "boolean"
+          },
+          "configCacheBucketId": {
+            "description": "The ID of the configuration cache bucket",
+            "type": "string"
+          },
+          "configName": {
+            "default": "Default",
+            "description": "The configuration name to use for the merge operation",
+            "type": "string"
+          },
+          "direction": {
+            "description": "Enum representing the direction of a merge operation",
+            "enum": [
+              "LEFT_TO_RIGHT",
+              "RIGHT_TO_LEFT"
+            ],
+            "type": "string"
+          },
+          "leftDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
+          },
+          "linkRole": {
+            "description": "The role of the link connecting work item pairs",
+            "type": "string"
+          },
+          "pairs": {
+            "$ref": "#/components/schemas/WorkItemsPair"
+          },
+          "rightDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
+          }
+        },
+        "type": "object"
+      },
       "ExtensionInfo": {
         "properties": {
           "context": {
@@ -1380,10 +1451,6 @@
       "MergeParams": {
         "description": "Merge input data",
         "properties": {
-          "allowReferencedWorkItemMerge": {
-            "description": "Indicates if merging referenced Work Item allowed",
-            "type": "boolean"
-          },
           "configCacheBucketId": {
             "description": "The ID of the configuration cache bucket",
             "type": "string"
@@ -1401,18 +1468,12 @@
             ],
             "type": "string"
           },
-          "leftDocument": {
-            "$ref": "#/components/schemas/DocumentIdentifier"
-          },
           "linkRole": {
-            "description": "The role of the link connecting the two documents",
+            "description": "The role of the link connecting work item pairs",
             "type": "string"
           },
           "pairs": {
             "$ref": "#/components/schemas/WorkItemsPair"
-          },
-          "rightDocument": {
-            "$ref": "#/components/schemas/DocumentIdentifier"
           }
         },
         "type": "object"
@@ -1547,7 +1608,7 @@
         "type": "object"
       },
       "Project": {
-        "description": "Represents a Polarion project with its ID and name",
+        "description": "Represents a Polarion project with its ID, name and information about merge authorization",
         "properties": {
           "authorizedForMerge": {
             "description": "Indicates whether the user is authorized for merge operations into this project",
@@ -1779,6 +1840,42 @@
           "wiTypeName": {
             "description": "WorkItem type name",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "WorkItemsMergeParams": {
+        "description": "Work items merge input data",
+        "properties": {
+          "configCacheBucketId": {
+            "description": "The ID of the configuration cache bucket",
+            "type": "string"
+          },
+          "configName": {
+            "default": "Default",
+            "description": "The configuration name to use for the merge operation",
+            "type": "string"
+          },
+          "direction": {
+            "description": "Enum representing the direction of a merge operation",
+            "enum": [
+              "LEFT_TO_RIGHT",
+              "RIGHT_TO_LEFT"
+            ],
+            "type": "string"
+          },
+          "leftProject": {
+            "$ref": "#/components/schemas/Project"
+          },
+          "linkRole": {
+            "description": "The role of the link connecting work item pairs",
+            "type": "string"
+          },
+          "pairs": {
+            "$ref": "#/components/schemas/WorkItemsPair"
+          },
+          "rightProject": {
+            "$ref": "#/components/schemas/Project"
           }
         },
         "type": "object"

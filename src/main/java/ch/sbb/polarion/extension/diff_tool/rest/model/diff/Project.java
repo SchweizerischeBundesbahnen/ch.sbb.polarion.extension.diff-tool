@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @Builder
-@Schema(description = "Represents a Polarion project with its ID and name")
+@Schema(description = "Represents a Polarion project with its ID, name and information about merge authorization")
 public class Project {
     @Schema(description = "The project ID")
     private String id;

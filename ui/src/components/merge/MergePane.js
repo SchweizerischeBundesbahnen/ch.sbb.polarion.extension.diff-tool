@@ -1,9 +1,9 @@
 import {faArrowLeftLong, faArrowRightLong} from "@fortawesome/free-solid-svg-icons";
-import MergeButton from "@/components/documents/MergeButton";
+import MergeButton from "@/components/merge/MergeButton";
 import {useContext, useEffect, useState} from "react";
 import Modal from "@/components/Modal";
 import AppContext from "@/components/AppContext";
-import {LEFT_TO_RIGHT, RIGHT_TO_LEFT} from "@/components/documents/useMergingContext";
+import {LEFT_TO_RIGHT, RIGHT_TO_LEFT} from "@/components/merge/useMergingContext";
 
 export default function MergePane({leftContext, rightContext, mergingContext, mergeCallback, loadingContext}) {
   const context = useContext(AppContext);

@@ -1,12 +1,12 @@
-import DiffContent from "@/components/documents/workitems/DiffContent";
+import DiffContent from "@/components/diff/DiffContent";
 import {useContext, useEffect, useState} from "react";
-import {WorkItemHeader, LEFT, RIGHT} from "@/components/documents/workitems/WorkItemHeader";
+import {WorkItemHeader, LEFT, RIGHT} from "@/components/WorkItemHeader";
 import FloatingButton from "@/components/FloatingButton";
 import {faChevronDown, faChevronUp, faEquals, faQuestion} from "@fortawesome/free-solid-svg-icons";
 import useRemote from "@/services/useRemote";
 import AppContext from "@/components/AppContext";
 import {useSearchParams} from "next/navigation";
-import MergeTicker from "@/components/documents/workitems/MergeTicker";
+import MergeTicker from "@/components/merge/MergeTicker";
 import Modal from "@/components/Modal";
 import useDiffService from "@/services/useDiffService";
 import useImageUtils from "@/utils/useImageUtils";

@@ -3,17 +3,17 @@ import AppContext from "@/components/AppContext";
 import {useSearchParams} from "next/navigation";
 import {v4 as uuidv4} from "uuid";
 import ProjectHeader from "@/components/workitems/ProjectHeader";
-import Loading from "@/components/Loading";
+import Loading from "@/components/loading/Loading";
 import Error from "@/components/Error";
-import useLoadingContext from "@/components/useLoadingContext";
+import useLoadingContext from "@/components/loading/useLoadingContext";
 import useDiffService from "@/services/useDiffService";
 import WorkItemsPairDiff from "@/components/workitems/WorkItemsPairDiff";
-import {useMergingContext, LEFT_TO_RIGHT, RIGHT_TO_LEFT} from "@/components/documents/useMergingContext";
-import ProgressBar from "@/components/documents/ProgressBar";
-import ErrorsOverlay from "@/components/documents/ErrorsOverlay";
-import MergeInProgressOverlay from "@/components/documents/MergeInProgressOverlay";
+import {useMergingContext, LEFT_TO_RIGHT, RIGHT_TO_LEFT} from "@/components/merge/useMergingContext";
+import ProgressBar from "@/components/loading/ProgressBar";
+import ErrorsOverlay from "@/components/ErrorsOverlay";
+import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";
 import Modal from "@/components/Modal";
-import MergePane from "@/components/documents/MergePane";
+import MergePane from "@/components/merge/MergePane";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'targetProjectId', 'linkRole', 'ids'];
 
@@ -38,11 +38,22 @@ export default function WorkItemsDiff() {
   const [mergeLogsVisible, setMergeLogsVisible] = useState(false);
 
   const mergeCallback = (direction) => {
-    if (direction === LEFT_TO_RIGHT) {
-      console.log("Merging from left to right");
-    } else if (direction === RIGHT_TO_LEFT) {
-      console.log("Merging from right to left");
-    }
+    setMergeInProgress(true);
+    diffService.sendMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, context.state.allowReferencedWorkItemMerge)
+        .then((data) => {
+          setMergeReport(data.mergeReport);
+          setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);
+          setMergeNotAuthorizedWarning(!data.success && data.mergeNotAuthorized);
+          setStructuralChangesWarning(data.success && data.targetModuleHasStructuralChanges);
+          setMergeLogsVisible(false);
+          setMergeReportModalVisible(true);
+        })
+        .catch((error) => {
+          console.log(error);
+          setMergeError(error && (typeof error === 'string' || error instanceof String) && !error.includes("<html")
+              ? error : "Error occurred merging selected work items, please contact system administrator to diagnose the problem");
+          setMergeErrorModalVisible(true);
+        }).finally(() => setMergeInProgress(false));
   };
 
   useEffect(() => {

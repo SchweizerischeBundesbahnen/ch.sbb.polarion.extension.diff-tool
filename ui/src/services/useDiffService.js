@@ -54,13 +54,6 @@ export default function useDiffService() {
       } else if (filter.includes(" ")) {
         filter = filter.split(" ");
       }
-/*
-      window.addEventListener("beforeunload", function() {
-        // Clear local storage on page/tab close
-        localStorage.removeItem(filterKey);
-        localStorage.removeItem(typeKey);
-      });
- */
       if (localStorage.getItem(typeKey) === "exclude") {
         return pairs.filter(pair => !pair.leftWorkItem || !filter.includes(pair.leftWorkItem.id));
       } else if (localStorage.getItem(typeKey) === "include") {
@@ -109,19 +102,13 @@ export default function useDiffService() {
   const getWorkItemIds = (searchParams) => {
     const idsHash = searchParams.get("ids");
     let idsKey = idsHash && (idsHash + "_ids");
-    if (idsHash && localStorage && localStorage.getItem(idsKey)) {
-      /*
-      window.addEventListener("beforeunload", function() {
-        // Clear local storage on page/tab close
-        localStorage.removeItem(idsKey);
-      });
-       */
+    if (idsHash && localStorage.getItem(idsKey)) {
       return localStorage.getItem(idsKey).split(",");
     }
     return [];
   };
 
-  const sendMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, allowReferencedWorkItemMerge) => {
+  const sendDocumentsMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, allowReferencedWorkItemMerge) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
     leftDocument.moduleXmlRevision = docsData.leftDocument.moduleXmlRevision;
@@ -130,7 +117,7 @@ export default function useDiffService() {
     return new Promise((resolve, reject) => {
       remote.sendRequest({
         method: "POST",
-        url: `/merge/workitems`,
+        url: `/merge/documents`,
         body: JSON.stringify({
           leftDocument: leftDocument,
           rightDocument: rightDocument,
@@ -211,5 +198,5 @@ export default function useDiffService() {
     }
   };
 
-  return { sendDocumentsDiffRequest, sendFindWorkItemsPairsRequest, sendMergeRequest, diffsExist };
+  return { sendDocumentsDiffRequest, sendFindWorkItemsPairsRequest, sendDocumentsMergeRequest, diffsExist };
 }
