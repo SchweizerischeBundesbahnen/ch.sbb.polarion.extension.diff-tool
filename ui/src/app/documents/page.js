@@ -3,6 +3,7 @@
 import ControlPane from "@/components/ControlPane";
 import DocumentsDiff from "@/components/documents/DocumentsDiff";
 import ExtensionInfo from "@/components/ExtensionInfo";
+import * as DiffTypes from "@/DiffTypes";
 
 export default function DocumentsPage() {
   return <>
@@ -12,7 +13,7 @@ export default function DocumentsPage() {
       </div>
       <ExtensionInfo />
     </div>
-    <ControlPane/>
+    <ControlPane diff_type={DiffTypes.DOCUMENTS_DIFF} />
     <DocumentsDiff />
   </>;
 }

@@ -3,6 +3,7 @@
 import ControlPane from "@/components/ControlPane";
 import ExtensionInfo from "@/components/ExtensionInfo";
 import WorkItemsDiff from "@/components/workitems/WorkItemsDiff";
+import * as DiffTypes from "@/DiffTypes";
 
 export default function WorkItemsPage() {
   return <>
@@ -12,7 +13,7 @@ export default function WorkItemsPage() {
       </div>
       <ExtensionInfo />
     </div>
-    <ControlPane/>
+    <ControlPane diff_type={DiffTypes.WORK_ITEMS_DIFF} />
     <WorkItemsDiff />
   </>;
 }

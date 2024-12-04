@@ -156,6 +156,7 @@ public class MergeService {
 
         return MergeResult.builder()
                 .success(true)
+                .mergeReport(context.getMergeReport())
                 .build();
     }
 

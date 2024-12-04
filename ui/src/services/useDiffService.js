@@ -154,6 +154,51 @@ export default function useDiffService() {
     });
   };
 
+  const sendWorkItemsMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext) => {
+
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/merge/workitems`,
+        body: JSON.stringify({
+          leftProject: {
+            id: searchParams.get(`sourceProjectId`)
+          },
+          rightProject: {
+            id: searchParams.get(`targetProjectId`)
+          },
+          direction: direction,
+          linkRole: searchParams.get('linkRole'),
+          configName: searchParams.get('config'),
+          configCacheBucketId: configCacheId,
+          pairs: mergingContext.getSelectedValues()
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
+              Promise.resolve().then(() => {
+                return reject("Your session has expired. Please refresh the page to log in. Note that any unsaved changes will be lost.");
+              });
+            }
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw response.json();
+            }
+          })
+          .then((data) =>  {
+            loadingContext.reload(mergingContext.getSelectedIndexes());
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            Promise.resolve(errorResponse).then((error) => {
+              return reject(error && error.message);
+            });
+          });
+    });
+  };
+
   const filterRedundant = (selectedPairs) => {
     const filteredPairs = [];
     selectedPairs.forEach(pair => {
@@ -198,5 +243,5 @@ export default function useDiffService() {
     }
   };
 
-  return { sendDocumentsDiffRequest, sendFindWorkItemsPairsRequest, sendDocumentsMergeRequest, diffsExist };
+  return { sendDocumentsDiffRequest, sendFindWorkItemsPairsRequest, sendDocumentsMergeRequest, sendWorkItemsMergeRequest, diffsExist };
 }

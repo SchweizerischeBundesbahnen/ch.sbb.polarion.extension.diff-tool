@@ -5,8 +5,9 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {usePathname, useRouter, useSearchParams} from "next/navigation";
 import useRemote from "@/services/useRemote";
 import usePdf from "@/services/usePdf";
+import * as DiffTypes from "@/DiffTypes";
 
-export default function ControlPane() {
+export default function ControlPane({diff_type}) {
   const context = useContext(AppContext);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -103,32 +104,38 @@ export default function ControlPane() {
           }
         </div>
         <div className="controls">
-          <div style={{
-            marginBottom: "6px"
-          }} className="select-set">
-            <label htmlFor="configuration">
-              Configuration:
-            </label>
-            <select id="configuration" className="form-select" value={selectedConfiguration} onChange={(event) => setSelectedConfiguration(event.target.value)}>
-              {configurations.map((configuration, index) => {
-                return <option key={index} value={configuration}>{configuration}</option>
-              })}
-            </select>
-          </div>
-          <div className="form-check">
-            <input className="form-check-input" type="checkbox" value="" id="outline-numbers"
-                   onChange={() => context.state.setShowOutlineNumbersDiff(!context.state.showOutlineNumbersDiff)}/>
-            <label className="form-check-label" htmlFor="outline-numbers">
-              Show difference in outline numbers
-            </label>
-          </div>
-          <div className="form-check">
-            <input className="form-check-input" type="checkbox" value="" id="counterparts-differ"
-                   onChange={() => context.state.setCounterpartWorkItemsDiffer(!context.state.counterpartWorkItemsDiffer)}/>
-            <label className="form-check-label" htmlFor="counterparts-differ">
-              Counterpart WorkItems differ
-            </label>
-          </div>
+          {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF &&
+              <div style={{
+                marginBottom: "6px"
+              }} className="select-set">
+                <label htmlFor="configuration">
+                  Configuration:
+                </label>
+                <select id="configuration" className="form-select" value={selectedConfiguration} onChange={(event) => setSelectedConfiguration(event.target.value)}>
+                  {configurations.map((configuration, index) => {
+                    return <option key={index} value={configuration}>{configuration}</option>
+                  })}
+                </select>
+              </div>
+          }
+          {diff_type === DiffTypes.DOCUMENTS_DIFF &&
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" value="" id="outline-numbers"
+                       onChange={() => context.state.setShowOutlineNumbersDiff(!context.state.showOutlineNumbersDiff)}/>
+                <label className="form-check-label" htmlFor="outline-numbers">
+                  Show difference in outline numbers
+                </label>
+              </div>
+          }
+          {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF &&
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" value="" id="counterparts-differ"
+                       onChange={() => context.state.setCounterpartWorkItemsDiffer(!context.state.counterpartWorkItemsDiffer)}/>
+                <label className="form-check-label" htmlFor="counterparts-differ">
+                  Counterpart WorkItems differ
+                </label>
+              </div>
+          }
           <div className="form-check">
             <input className="form-check-input" type="checkbox" value="" id="compare-enums-by-id"
                    onChange={() => context.state.setCompareEnumsById(!context.state.compareEnumsById)}/>
@@ -136,20 +143,24 @@ export default function ControlPane() {
               Compare enums by ID
             </label>
           </div>
-          <div className="form-check">
-            <input className="form-check-input" type="checkbox" value="" id="allow-reference-wi-merge"
-                   onChange={() => context.state.setAllowReferencedWorkItemMerge(!context.state.allowReferencedWorkItemMerge)}/>
-            <label className="form-check-label" htmlFor="allow-reference-wi-merge">
-              Allow reference work item merge
-            </label>
-          </div>
-          <div className="form-check">
-            <input className="form-check-input" type="checkbox" value="" checked={context.state.hideChaptersIfNoDifference} id="hide-chapters"
-                   onChange={() => context.state.setHideChaptersIfNoDifference(!context.state.hideChaptersIfNoDifference)}/>
-            <label className="form-check-label" htmlFor="hide-chapters">
-              Hide chapters if no difference
-            </label>
-          </div>
+          {diff_type === DiffTypes.DOCUMENTS_DIFF &&
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" value="" id="allow-reference-wi-merge"
+                       onChange={() => context.state.setAllowReferencedWorkItemMerge(!context.state.allowReferencedWorkItemMerge)}/>
+                <label className="form-check-label" htmlFor="allow-reference-wi-merge">
+                  Allow reference work item merge
+                </label>
+              </div>
+          }
+          {diff_type === DiffTypes.DOCUMENTS_DIFF &&
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" value="" checked={context.state.hideChaptersIfNoDifference} id="hide-chapters"
+                       onChange={() => context.state.setHideChaptersIfNoDifference(!context.state.hideChaptersIfNoDifference)}/>
+                <label className="form-check-label" htmlFor="hide-chapters">
+                  Hide chapters if no difference
+                </label>
+              </div>
+          }
           <div className="export-controls">
             <h1>Export to PDF</h1>
             <div className="select-set">
