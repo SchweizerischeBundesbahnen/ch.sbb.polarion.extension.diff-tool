@@ -1916,6 +1916,9 @@
           "leftProject": {
             "$ref": "#/components/schemas/Project"
           },
+          "leftWorkItemIdsWithRedundancy": {
+            "$ref": "#/components/schemas/WorkItemsPair"
+          },
           "pairedWorkItems": {
             "$ref": "#/components/schemas/WorkItemsPair"
           },

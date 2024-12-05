@@ -24,6 +24,7 @@ import com.polarion.core.util.xml.HTMLCleaner;
 import com.polarion.platform.persistence.IEnumOption;
 import com.polarion.platform.persistence.model.ITypedList;
 import com.polarion.subterra.base.data.model.IType;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -279,10 +280,15 @@ public class DiffService {
 
         List<IWorkItem> leftWorkItems = polarionService.getWorkItems(workItemsPairsParams.getLeftProjectId(), workItemsPairsParams.getLeftWorkItemIds());
         Collection<WorkItemsPair> pairedWorkItems = new ArrayList<>();
+        Collection<String> leftWorkItemIdsWithRedundancy = new ArrayList<>();
         leftWorkItems.forEach(leftWorkItem -> {
             List<IWorkItem> paired = polarionService.getPairedWorkItems(leftWorkItem, workItemsPairsParams.getRightProjectId(), workItemsPairsParams.getLinkRole());
-            if (paired != null && paired.size() == 1) {
+            if (CollectionUtils.isEmpty(paired)) {
+                pairedWorkItems.add(WorkItemsPair.of(leftWorkItem, null));
+            } else if (paired.size() == 1) {
                 pairedWorkItems.add(WorkItemsPair.of(leftWorkItem, paired.get(0)));
+            } else {
+                leftWorkItemIdsWithRedundancy.add(leftWorkItem.getId());
             }
         });
 
@@ -298,6 +304,7 @@ public class DiffService {
                         .authorizedForMerge(polarionService.userAuthorizedForMerge(rightProject.getId()))
                         .build())
                 .pairedWorkItems(pairedWorkItems)
+                .leftWorkItemIdsWithRedundancy(leftWorkItemIdsWithRedundancy)
                 .build();
     }
 
@@ -427,7 +434,7 @@ public class DiffService {
             // So in order to cover all cases it is better to request it from outer document.
             return workItem.getOutlineNumber();
         } else if (DiffField.EXTERNAL_PROJECT_WORK_ITEM.getKey().equals(fieldId) && workItem.isExternalProjectWorkItem()) {
-                return Boolean.TRUE.toString();
+            return Boolean.TRUE.toString();
         }
         return polarionService.renderField(iWorkItem.getProjectId(), iWorkItem.getId(), workItem.getRevision(), fieldId, documentReference);
     }

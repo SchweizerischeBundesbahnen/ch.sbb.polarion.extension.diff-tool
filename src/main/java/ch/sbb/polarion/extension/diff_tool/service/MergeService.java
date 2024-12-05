@@ -28,6 +28,7 @@ import com.polarion.alm.tracker.internal.model.HyperlinkStruct;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
 import com.polarion.alm.tracker.internal.model.module.Module;
+import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
@@ -135,20 +136,29 @@ public class MergeService {
         List<WorkItemsPair> pairs = mergeParams.getPairs();
         removeDuplicatedOrConflictingPairs(pairs, context);
 
+        ILinkRoleOpt linkRoleObj = polarionService.getLinkRoleById(context.linkRole, polarionService.getTrackerProject(context.getTargetProject().getId()));
+
+        List<String> createdWorkItemIds = new ArrayList<>();
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
             for (WorkItemsPair pair : pairs) {
-                IWorkItem createdTarget = createItem(pair, context);
+                IWorkItem createdTarget = createItem(pair, linkRoleObj, context);
                 if (createdTarget != null) {
                     context.putTargetWorkItem(pair, createdTarget);
+                    createdWorkItemIds.add(createdTarget.getId());
                 }
             }
 
             pairs.removeIf(pair -> deleteItem(pair, context));
 
-            for (WorkItemsPair pair : pairs) {
-                updateItem(pair, context);
-            }
+            return null;
+        });
 
+        TransactionalExecutor.executeInWriteTransaction(transaction -> {
+            for (WorkItemsPair pair : pairs) {
+                WorkItem target = context.getTargetWorkItem(pair);
+                boolean reportModification = !createdWorkItemIds.contains(target.getId());
+                updateItem(pair, context, reportModification);
+            }
             return null;
         });
 
@@ -202,12 +212,14 @@ public class MergeService {
         return false;
     }
 
-    private IWorkItem createItem(WorkItemsPair pair, WorkItemsMergeContext context) {
+    private IWorkItem createItem(WorkItemsPair pair, ILinkRoleOpt linkRoleObj, WorkItemsMergeContext context) {
         if (context.getSourceWorkItem(pair) != null && context.getTargetWorkItem(pair) == null) {
             IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
-            IWorkItem createdTarget = polarionService.getTrackerProject(context.getTargetProject().getId()).createWorkItem(Objects.requireNonNull(source.getType()).getId());
-            createdTarget.save();
-            return createdTarget;
+            IWorkItem newWorkItem = polarionService.getTrackerProject(context.getTargetProject().getId()).createWorkItem(Objects.requireNonNull(source.getType()).getId());
+            newWorkItem.addLinkedItem(source, linkRoleObj, null, false);
+            newWorkItem.save();
+            context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId()));
+            return newWorkItem;
         }
         return null;
     }
@@ -256,16 +268,19 @@ public class MergeService {
         }
     }
 
-    private void updateItem(WorkItemsPair pair, WorkItemsMergeContext context) {
+    private void updateItem(WorkItemsPair pair, WorkItemsMergeContext context, boolean reportModification) {
         IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
         IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
 
-        if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
+        String targetLastRevision = context.getTargetWorkItem(pair).getLastRevision();
+        if (targetLastRevision != null && !targetLastRevision.equals(target.getLastRevision())) {
             context.reportEntry(CONFLICTED, pair, "merge is not allowed: target workitem '%s' revision '%s' has been already changed to '%s'"
-                    .formatted(target.getId(), context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision()));
+                    .formatted(target.getId(), targetLastRevision, target.getLastRevision()));
         } else {
             merge(source, target, context, pair);
-            context.reportEntry(MODIFIED, pair, "workitem '%s' modified with info from '%s'".formatted(target.getId(), source.getId()));
+            if (reportModification) {
+                context.reportEntry(MODIFIED, pair, "workitem '%s' modified with info from '%s'".formatted(target.getId(), source.getId()));
+            }
         }
     }
 

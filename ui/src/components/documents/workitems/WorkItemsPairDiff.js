@@ -227,7 +227,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
     }).catch(errorResponse => {
       Promise.resolve(errorResponse).then((error) => {
         if (RETRY_MARKER !== error) {
-          setError(error && error.message);
+          setError(error && error.message ? error.message : "Error occurred loading diff data");
           setLoading(false);
         } else {
           // Retry caught, swallow

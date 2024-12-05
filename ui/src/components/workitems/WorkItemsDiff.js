@@ -27,6 +27,7 @@ export default function WorkItemsDiff() {
 
   const [configCacheId, setConfigCacheId] = useState("");
   const [workItemsData, setWorkItemsData] = useState(null);
+  const [redundancyModalVisible, setRedundancyModalVisible] = useState(false);
   const [mergeInProgress, setMergeInProgress] = useState(false);
   const [mergeError, setMergeError] = useState("");
   const [mergeErrorModalVisible, setMergeErrorModalVisible] = useState(false);
@@ -66,14 +67,23 @@ export default function WorkItemsDiff() {
     setConfigCacheId(uuidv4());
 
     diffService.sendFindWorkItemsPairsRequest(searchParams, loadingContext)
-        .then((data) => setWorkItemsData(data));
+        .then((data) => {
+          setWorkItemsData(data);
+          setRedundancyModalVisible(!!data.leftWorkItemIdsWithRedundancy);
+        });
   }, [searchParams]);
+
+  useEffect(() => {
+    if (workItemsData && workItemsData.pairedWorkItems && workItemsData.pairedWorkItems.length > 0) {
+      loadingContext.resetDiffsLoadingState(workItemsData.pairedWorkItems.slice());
+      mergingContext.resetSelection();
+    }
+  }, [context.state.counterpartWorkItemsDiffer, context.state.compareEnumsById]); // Reload diff of all work item pairs if specified properties changed
 
   const dataLoadedCallback = (index, error, diffExists) => {
     diffExists && context.state.setDiffsExist(true);
     loadingContext.diffLoadingFinished(index, error);
   };
-
 
   if (loadingContext.pairsLoading) return <Loading message="Loading paired WorkItems" />;
 
@@ -97,6 +107,14 @@ export default function WorkItemsDiff() {
     <ErrorsOverlay loadingContext={loadingContext} />
     <MergeInProgressOverlay mergeInProgress={mergeInProgress} />
 
+    <Modal title="Redundant counterpart WorkItems" cancelButtonTitle="Close" visible={redundancyModalVisible} setVisible={setRedundancyModalVisible} className="modal-md">
+      <p>Following WorkItems in source project have multiple counterpart WorkItems in target project by selected link role, and therefor single counterpart can not be chosen:</p>
+      <ul>
+        {workItemsData.leftWorkItemIdsWithRedundancy.map((id, index) => {
+          return <li key={index}>{id}</li>
+        })}
+      </ul>
+    </Modal>
     <Modal title="Merge error" cancelButtonTitle="Close" visible={mergeErrorModalVisible} setVisible={setMergeErrorModalVisible} className="modal-md error">
       <p>{mergeError}</p>
     </Modal>
@@ -147,11 +165,7 @@ export default function WorkItemsDiff() {
     </Modal>
 
     {workItemsData.pairedWorkItems.map((pair, index) => {
-      return <WorkItemsPairDiff
-        key={index}
-        workItemsPair={pair}
-        leftProject={workItemsData.leftProject}
-        rightProject={workItemsData.rightProject}
+      return <WorkItemsPairDiff key={index} workItemsPair={pair} leftProject={workItemsData.leftProject} rightProject={workItemsData.rightProject}
         pairedWorkItemsLinkRole={searchParams.get('linkRole')} configName={searchParams.get('config')} configCacheId={configCacheId} dataLoadedCallback={dataLoadedCallback}
         currentIndex={index} loadingContext={loadingContext} mergingContext={mergingContext}
         createdReportEntries={mergeReport.created || []} modifiedReportEntries={mergeReport.modified || []} />

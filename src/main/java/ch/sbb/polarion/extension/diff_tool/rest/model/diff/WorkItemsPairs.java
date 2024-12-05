@@ -19,4 +19,8 @@ public class WorkItemsPairs {
 
     @Schema(description = "A collection of paired WorkItems to be diffed", implementation = WorkItemsPair.class)
     private Collection<WorkItemsPair> pairedWorkItems;
+
+    @Schema(description = "A collection of WorkItem IDs from left project which contain more than 1 counterpart WorkItem from right project and certain link role", implementation = WorkItemsPair.class)
+    private Collection<String> leftWorkItemIdsWithRedundancy;
+
 }

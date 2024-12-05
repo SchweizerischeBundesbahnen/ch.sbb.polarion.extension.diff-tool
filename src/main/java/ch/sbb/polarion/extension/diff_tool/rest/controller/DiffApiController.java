@@ -24,6 +24,11 @@ public class DiffApiController extends DiffInternalController {
     }
 
     @Override
+    public WorkItemsPairDiff getDetachedWorkItemsPairDiff(DetachedWorkItemsPairDiffParams detachedWorkItemsPairDiffParams) {
+        return polarionService.callPrivileged(() -> super.getDetachedWorkItemsPairDiff(detachedWorkItemsPairDiffParams));
+    }
+
+    @Override
     public StringsDiff diffHtml(String html1, String html2) {
         return polarionService.callPrivileged(() -> super.diffHtml(html1, html2));
     }
