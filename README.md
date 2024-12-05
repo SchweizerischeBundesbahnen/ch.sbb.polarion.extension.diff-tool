@@ -48,11 +48,11 @@ Changes only take effect after restart of Polarion.
 
 ## Polarion configuration
 
-### Page comparison form to appear on a Document's properties pane
+### Documents comparison form to appear on a Document's properties pane
 
-1. Open a project where you wish Page comparison to be available
+1. Open a project where you wish Documents comparison to be available
 2. On the top of the project's navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Project's administration page will be opened.
-3. On the administration's navigation pane select Page & Pages ➙ Document Properties Sidebar.
+3. On the administration's navigation pane select Documents & Pages ➙ Document Properties Sidebar.
 4. In opened Edit Project Configuration editor find `sections`-element:
    ```xml
    …
@@ -65,16 +65,16 @@ Changes only take effect after restart of Polarion.
 5. And insert following new line inside this element:
    ```xml
    …
-   <extension id="diff-tool" label="Page Comparison" />
+   <extension id="diff-tool" label="Documents Comparison" />
    …
    ```
 6. Save changes by clicking 💾 Save
 
-### Page copy form to appear on a Document's properties pane
+### Documents copy form to appear on a Document's properties pane
 Repeat the instructions above except that on the step 5 use the following line:
    ```xml
    …
-   <extension id="copy-tool" label="Page Copy" />
+   <extension id="copy-tool" label="Documents Copy" />
    …
    ```
 
