@@ -12,7 +12,6 @@ import com.polarion.alm.shared.api.utils.html.HtmlFragmentBuilder;
 import com.polarion.alm.shared.api.utils.html.RichTextRenderTarget;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
-import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.platform.persistence.IEnumOption;
 import lombok.NoArgsConstructor;
@@ -20,7 +19,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -28,6 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils.*;
 import static ch.sbb.polarion.extension.diff_tool.util.ModificationType.*;
 import static com.polarion.alm.tracker.model.IWorkItem.KEY_LINKED_WORK_ITEMS;
 
@@ -45,64 +44,73 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
 
     @Override
     public @NotNull String postProcess(@NotNull String diff, @NotNull DiffContext context) {
-        if (isInappropriateCaseForHandler(context) || context.workItemA == null || context.workItemB == null) {
+        if (isInappropriateCaseForHandler(context)) {
             return diff;
         }
 
         List<String> resultRows = new ArrayList<>();
 
-        IWorkItem workItemA = context.workItemA.getUnderlyingObject();
-        IWorkItem workItemB = context.workItemB.getUnderlyingObject();
+        IWorkItem workItemA = context.workItemA == null ? null : context.workItemA.getUnderlyingObject();
+        List<ILinkedWorkItemStruct> linksA = getLinks(workItemA, false);
+        List<ILinkedWorkItemStruct> linksABack = getLinks(workItemA, true);
 
-        List<ILinkedWorkItemStruct> linksA = sortLinks(workItemA.getLinkedWorkItemsStructsDirect());
-        List<ILinkedWorkItemStruct> linksABack = sortLinks(workItemA.getLinkedWorkItemsStructsBack());
-        List<ILinkedWorkItemStruct> linksB = sortLinks(workItemB.getLinkedWorkItemsStructsDirect());
-        List<ILinkedWorkItemStruct> linksBBack = sortLinks(workItemB.getLinkedWorkItemsStructsBack());
-        List<ILinkRoleOpt> allRoles = Stream.concat(Stream.concat(linksA.stream(), linksABack.stream()), Stream.concat(linksB.stream(), linksBBack.stream())).map(ILinkedWorkItemStruct::getLinkRole).distinct().sorted(Comparator.comparing(IEnumOption::getName)).toList();
+        IWorkItem workItemB = context.workItemB == null ? null : context.workItemB.getUnderlyingObject();
+        List<ILinkedWorkItemStruct> linksB = getLinks(workItemB, false);
+        List<ILinkedWorkItemStruct> linksBBack = getLinks(workItemB, true);
 
-        List<ILinkedWorkItemStruct> toRemove = new ArrayList<>();
+        List<ILinkRoleOpt> allRoles = Stream.concat(Stream.concat(linksA.stream(), linksABack.stream()), Stream.concat(linksB.stream(), linksBBack.stream()))
+                .map(ILinkedWorkItemStruct::getLinkRole).distinct().sorted(Comparator.comparing(IEnumOption::getName)).toList();
 
-        // first, we attempt to find all items that interlinked or have links to the same work item
-        allRoles.forEach(linkRole -> {
-            linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
-                if (sameWorkItem(link, workItemA)) {
-                    resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), NONE));
-                    toRemove.add(link);
-                }
+        if (workItemA != null && workItemB != null) {
+            List<ILinkedWorkItemStruct> toRemove = new ArrayList<>();
+
+            // first, we attempt to find all items that interlinked or have links to the same work item
+            allRoles.forEach(linkRole -> {
+                linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
+                    if (sameWorkItem(link, workItemA)) {
+                        resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), NONE));
+                        toRemove.add(link);
+                    }
+                });
+                linksBBack.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
+                    if (sameWorkItem(link, workItemA)) {
+                        resultRows.add(markChanged(renderLinkedItem(link, workItemB, true), NONE));
+                        toRemove.add(link);
+                    }
+                });
+
+                linksA.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(linkA ->
+                        linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(linkB -> {
+                            if (sameWorkItem(linkA, linkB.getLinkedItem())) {
+                                resultRows.add(markChanged(renderLinkedItem(linkB, workItemB, false),
+                                        // show links as same when it's a link to some 3rd project
+                                        !sameProjectItems(workItemA, workItemB) && !sameProjectItems(workItemA, linkB.getLinkedItem()) && !sameProjectItems(workItemB, linkB.getLinkedItem()) ||
+                                        // or we compare work items from same project and link leads to the same revision
+                                        Objects.equals(linkA.getRevision(), linkB.getRevision()) && sameProjectItems(workItemA, workItemB) ? NONE : MODIFIED));
+                                toRemove.add(linkA);
+                                toRemove.add(linkB);
+                            }
+                        }));
             });
-            linksBBack.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
-                if (sameWorkItem(link, workItemA)) {
-                    resultRows.add(markChanged(renderLinkedItem(link, workItemB, true), NONE));
-                    toRemove.add(link);
-                }
-            });
+            linksA.removeAll(toRemove);
+            linksB.removeAll(toRemove);
+            toRemove.clear();
 
-            linksA.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(linkA -> linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(linkB -> {
-                if (sameWorkItem(linkA, linkB.getLinkedItem())) {
-                    resultRows.add(markChanged(renderLinkedItem(linkB, workItemB, false), Objects.equals(linkA.getRevision(), linkB.getRevision()) ? NONE : MODIFIED));
-                    toRemove.add(linkA);
-                    toRemove.add(linkB);
+            // next we mark as the same counterparts (items which are linked to the interlinked work items)
+            allRoles.forEach(linkRole -> linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
+                Set<String> oppositeWorkItems = linksA.stream()
+                        .filter(l -> notFromModule(l.getLinkedItem(), workItemB.getModule())) // filter out direct links to work item B
+                        .map(l -> l.getLinkedItem().getId()).collect(Collectors.toSet());
+                if (sameProjectItems(workItemB, link.getLinkedItem())) {
+                    List<IWorkItem> pairedWorkItems = context.polarionService.getPairedWorkItems(link.getLinkedItem(), workItemA.getProjectId(), context.pairedWorkItemsLinkRole);
+                    if (pairedWorkItems.stream().anyMatch(w -> oppositeWorkItems.contains(w.getId()))) {
+                        resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), NONE));
+                        toRemove.add(link);
+                    }
                 }
             }));
-        });
-        linksA.removeAll(toRemove);
-        linksB.removeAll(toRemove);
-        toRemove.clear();
-
-        // next we mark as the same counterparts (items which are linked to the interlinked work items)
-        allRoles.forEach(linkRole -> linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
-            Set<String> oppositeWorkItems = linksA.stream()
-                    .filter(l -> !belongsToModule(l.getLinkedItem(), workItemB.getModule())) // filter out direct links to work item B
-                    .map(l -> l.getLinkedItem().getId()).collect(Collectors.toSet());
-            if (sameProjectItems(workItemB, link.getLinkedItem())) {
-                List<IWorkItem> pairedWorkItems = context.polarionService.getPairedWorkItems(link.getLinkedItem(), workItemA.getProjectId(), context.pairedWorkItemsLinkRole);
-                if (pairedWorkItems.stream().anyMatch(w -> oppositeWorkItems.contains(w.getId()))) {
-                    resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), NONE));
-                    toRemove.add(link);
-                }
-            }
-        }));
-        linksB.removeAll(toRemove);
+            linksB.removeAll(toRemove);
+        }
 
         // rest items we mark as added/removed
         allRoles.forEach(linkRole -> linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
@@ -120,29 +128,11 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
         });
     }
 
-    private boolean belongsToModule(IWorkItem linkedItem, IModule module) {
-        return Objects.equals(linkedItem.getProjectId(), module.getProjectId()) &&
-                linkedItem.getModule() != null && // work item may exist outside any document
-                linkedItem.getModule().getModuleLocation().removeRevision().equals(module.getModuleLocation().removeRevision());
-    }
-
     private String markChanged(String text, @NotNull ModificationType modificationType) {
         return "<div class=\"diff-lwi-container\"><div class=\"%s diff-lwi\">%s</div></div>".formatted(modificationType.getStyleName(), text);
     }
 
-    private List<ILinkedWorkItemStruct> sortLinks(Collection<ILinkedWorkItemStruct> links) {
-        return new ArrayList<>(links.stream().sorted(Comparator.comparing(o -> o.getLinkedItem().getId())).toList());
-    }
-
-    private boolean sameWorkItem(ILinkedWorkItemStruct linkA, IWorkItem itemB) {
-        return sameProjectItems(linkA.getLinkedItem(), itemB) && Objects.equals(linkA.getLinkedItem().getId(), itemB.getId());
-    }
-
-    private boolean sameProjectItems(IWorkItem itemA, IWorkItem itemB) {
-        return Objects.equals(itemA.getProjectId(), itemB.getProjectId());
-    }
-
     private boolean isInappropriateCaseForHandler(DiffContext context) {
-        return context.pairedWorkItemsDiffer || !Objects.equals(context.fieldA.getId(), KEY_LINKED_WORK_ITEMS) || !Objects.equals(context.fieldB.getId(), KEY_LINKED_WORK_ITEMS);
+        return context.pairedWorkItemsDiffer || !Stream.of(context.fieldA.getId(), context.fieldB.getId()).filter(Objects::nonNull).distinct().toList().equals(List.of(KEY_LINKED_WORK_ITEMS));
     }
 }

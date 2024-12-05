@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.7.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.6.0...v4.7.0) (2024-12-02)
+
+
+### Features
+
+* sync of linked WI items ([#187](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/187)) ([6c987d4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/6c987d46c825b89b71c96ce013d9f6be103cce01)), closes [#143](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/143)
+* use 'Default' as a default value for the 'configName' in reques… ([#185](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/185)) ([49359a8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/49359a82bc847d4b8568f5e9ae6ec2323a5b42e1)), closes [#180](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/180)
+* use 'Default' as a default value for the 'configName' in request params ([49359a8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/49359a82bc847d4b8568f5e9ae6ec2323a5b42e1))
+
 ## [4.6.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.5.4...v4.6.0) (2024-11-21)
 
 

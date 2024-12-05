@@ -15,6 +15,7 @@ public class MergeContext {
     final MergeDirection direction;
     @Getter
     final MergeReport mergeReport = new MergeReport();
+    @Getter
     final String linkRole;
     @Getter
     final DiffModel diffModel;

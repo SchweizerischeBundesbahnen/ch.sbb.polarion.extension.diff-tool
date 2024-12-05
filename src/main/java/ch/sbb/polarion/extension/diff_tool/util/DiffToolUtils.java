@@ -3,6 +3,9 @@ package ch.sbb.polarion.extension.diff_tool.util;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.StringsDiff;
 import ch.sbb.polarion.extension.diff_tool.service.ModifiedHtmlSaxDiffOutput;
+import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
+import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
@@ -27,9 +30,14 @@ import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @UtilityClass
 public class DiffToolUtils {
@@ -144,5 +152,27 @@ public class DiffToolUtils {
             case "diff-html-changed" -> "border: 1px dashed magenta; padding: 2px; margin: 2px;";
             default -> "";
         };
+    }
+
+    /**
+     * Get mutable list of linked work items sorted by ID
+     */
+    public List<ILinkedWorkItemStruct> getLinks(@Nullable IWorkItem workItem, boolean back) {
+        return workItem == null ? new ArrayList<>() : (back ? workItem.getLinkedWorkItemsStructsBack() : workItem.getLinkedWorkItemsStructsDirect()).stream()
+                .sorted(Comparator.comparing(o -> o.getLinkedItem().getId())).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public boolean notFromModule(IWorkItem workItem, IModule module) {
+        return !Objects.equals(workItem.getProjectId(), module.getProjectId()) ||
+                workItem.getModule() == null || // work item may exist outside any document
+                !workItem.getModule().getModuleLocation().removeRevision().equals(module.getModuleLocation().removeRevision());
+    }
+
+    public boolean sameWorkItem(ILinkedWorkItemStruct linkA, @Nullable IWorkItem itemB) {
+        return itemB != null && sameProjectItems(linkA.getLinkedItem(), itemB) && Objects.equals(linkA.getLinkedItem().getId(), itemB.getId());
+    }
+
+    public boolean sameProjectItems(@Nullable IWorkItem itemA, @Nullable IWorkItem itemB) {
+        return itemA != null && itemB != null && Objects.equals(itemA.getProjectId(), itemB.getProjectId());
     }
 }
