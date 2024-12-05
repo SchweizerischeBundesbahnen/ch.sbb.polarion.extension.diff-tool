@@ -69,7 +69,7 @@ export default function WorkItemsDiff() {
     diffService.sendFindWorkItemsPairsRequest(searchParams, loadingContext)
         .then((data) => {
           setWorkItemsData(data);
-          setRedundancyModalVisible(!!data.leftWorkItemIdsWithRedundancy);
+          setRedundancyModalVisible(data.leftWorkItemIdsWithRedundancy && data.leftWorkItemIdsWithRedundancy.length > 0);
         });
   }, [searchParams]);
 
