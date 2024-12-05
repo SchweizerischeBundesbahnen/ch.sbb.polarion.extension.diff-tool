@@ -6,6 +6,6 @@ public class CopyToolFormExtension extends BaseFormExtension {
 
     @Inject
     public CopyToolFormExtension() {
-        super(CopyToolModule.DOCUMENTS_COPY_FORM_EXTENSION_ID, "Page Copy");
+        super(CopyToolModule.DOCUMENTS_COPY_FORM_EXTENSION_ID, "Documents Copy");
     }
 }

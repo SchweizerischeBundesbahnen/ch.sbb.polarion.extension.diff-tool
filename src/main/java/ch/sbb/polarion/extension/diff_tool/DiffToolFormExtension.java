@@ -6,6 +6,6 @@ public class DiffToolFormExtension extends BaseFormExtension {
 
     @Inject
     public DiffToolFormExtension() {
-        super(DiffToolModule.DOCUMENTS_COMPARISON_FORM_EXTENSION_ID, "Page Comparison");
+        super(DiffToolModule.DOCUMENTS_COMPARISON_FORM_EXTENSION_ID, "Documents Comparison");
     }
 }
