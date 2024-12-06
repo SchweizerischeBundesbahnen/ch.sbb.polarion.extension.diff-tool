@@ -1,4 +1,4 @@
-import {LEFT, RIGHT} from "@/components/documents/workitems/WorkItemHeader";
+import {LEFT, RIGHT} from "@/components/WorkItemHeader";
 
 const MOVED_UP = 0;
 const MOVED_DOWN = 1;

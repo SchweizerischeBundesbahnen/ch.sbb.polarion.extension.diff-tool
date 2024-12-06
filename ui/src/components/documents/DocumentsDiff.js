@@ -2,18 +2,18 @@ import {useContext, useEffect, useState} from "react";
 import {useSearchParams} from "next/navigation";
 import AppContext from "../AppContext";
 import Error from "@/components/Error";
-import Loading from "@/components/Loading";
-import WorkItemsDiff from "@/components/documents/workitems/WorkItemsDiff";
+import Loading from "@/components/loading/Loading";
+import WorkItemsPairDiff from "@/components/documents/workitems/WorkItemsPairDiff";
 import DocumentHeader from "@/components/documents/DocumentHeader";
-import ProgressBar from "@/components/documents/ProgressBar";
+import ProgressBar from "@/components/loading/ProgressBar";
 import {v4 as uuidv4} from 'uuid';
-import ErrorsOverlay from "@/components/documents/ErrorsOverlay";
-import useLoadingContext from "@/components/documents/useLoadingContext";
-import {useMergingContext} from "@/components/documents/useMergingContext";
-import MergePane from "@/components/documents/MergePane";
+import ErrorsOverlay from "@/components/ErrorsOverlay";
+import useLoadingContext from "@/components/loading/useLoadingContext";
+import {useMergingContext} from "@/components/merge/useMergingContext";
+import MergePane from "@/components/merge/MergePane";
 import useDiffService from "@/services/useDiffService";
 import Modal from "@/components/Modal";
-import MergeInProgressOverlay from "@/components/documents/MergeInProgressOverlay";
+import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument', 'linkRole'];
 
@@ -54,12 +54,6 @@ export default function DocumentsDiff() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (docsData) {
-       context.state.setExtensionInfo(docsData.extensionInfo)
-    }
-  }, [docsData]);
-
-  useEffect(() => {
     if (docsData && docsData.pairedWorkItems && docsData.pairedWorkItems.length > 0) {
       loadingContext.resetDiffsLoadingState(docsData.pairedWorkItems.slice());
       mergingContext.resetSelection();
@@ -98,7 +92,7 @@ export default function DocumentsDiff() {
 
   const mergeCallback = (direction) => {
     setMergeInProgress(true);
-    diffService.sendMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, context.state.allowReferencedWorkItemMerge)
+    diffService.sendDocumentsMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, context.state.allowReferencedWorkItemMerge)
         .then((data) => {
           setMergeReport(data.mergeReport);
           setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);
@@ -187,9 +181,10 @@ export default function DocumentsDiff() {
   if (loadingContext.pairsLoading) return <Loading message="Loading paired WorkItems" />;
 
   if (loadingContext.pairsLoadingError || !docsData || !docsData.leftDocument || !docsData.rightDocument || !docsData.pairedWorkItems) {
-    return <Error message={loadingContext.pairsLoadingError && !loadingContext.pairsLoadingError.includes("<html")
-        ? loadingContext.pairsLoadingError
-        : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
+    return <Error title="Error occurred loading diff data!"
+                  message={loadingContext.pairsLoadingError && !loadingContext.pairsLoadingError.includes("<html")
+                      ? loadingContext.pairsLoadingError
+                      : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
   }
 
   return <div id="diff-body" className={`doc-diff ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
@@ -200,7 +195,7 @@ export default function DocumentsDiff() {
       </div>
 
       <ProgressBar loadingContext={loadingContext} />
-      <MergePane leftDocument={docsData.leftDocument} rightDocument={docsData.rightDocument} mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
+      <MergePane leftContext={docsData.leftDocument} rightContext={docsData.rightDocument} mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
     </div>
 
     <ErrorsOverlay loadingContext={loadingContext} />
@@ -220,22 +215,22 @@ export default function DocumentsDiff() {
             <>
               <p>
                 Merge operation completed with following result:
-                <ul>
-                  {mergeReport.created?.length > 0 && <li><strong>{mergeReport.created.length}</strong> items were created.</li>}
-                  {mergeReport.deleted?.length > 0 && <li><strong>{mergeReport.deleted.length}</strong> items were deleted.</li>}
-                  {mergeReport.modified?.length > 0 && <li>Content of <strong>{mergeReport.modified.length}</strong> items were modified.</li>}
-                  {mergeReport.moved?.length > 0 && <li><strong>{mergeReport.moved.length}</strong> items were moved (structural changes).</li>}
-                  {mergeReport.moveFailed?.length > 0 && <li><strong>{mergeReport.moveFailed.length}</strong> items were not moved because target document
-                    does not contain destination chapter. Please, merge first parent nodes of mentioned work items.</li>}
-                  {mergeReport.conflicted?.length > 0 && <li><strong>{mergeReport.conflicted.length}</strong> items were not merged because of concurrent modifications.</li>}
-                  {mergeReport.prohibited?.length > 0 && <li><strong>{mergeReport.prohibited.length}</strong> items were not merged because such operation is logically prohibited.</li>}
-                  {mergeReport.creationFailed?.length > 0 && <li><strong>{mergeReport.creationFailed.length}</strong> items were not merged because work items referenced in source document
-                    do not have counterparts in target project.</li>}
-                  {mergeReport.detached?.length > 0 && <li><strong>{mergeReport.detached.length}</strong> items were moved out of documents.</li>}
-                  {mergeReport.warnings?.length > 0 && <li><strong>{mergeReport.warnings.length}</strong> warnings.</li>}
-                </ul>
               </p>
-              {mergeReport.logs && !mergeLogsVisible && <a href="#" onClick={() => setMergeLogsVisible(true)}>See full log</a>}
+              <ul>
+                {mergeReport.created?.length > 0 && <li><strong>{mergeReport.created.length}</strong> items were created.</li>}
+                {mergeReport.deleted?.length > 0 && <li><strong>{mergeReport.deleted.length}</strong> items were deleted.</li>}
+                {mergeReport.modified?.length > 0 && <li>Content of <strong>{mergeReport.modified.length}</strong> items were modified.</li>}
+                {mergeReport.moved?.length > 0 && <li><strong>{mergeReport.moved.length}</strong> items were moved (structural changes).</li>}
+                {mergeReport.moveFailed?.length > 0 && <li><strong>{mergeReport.moveFailed.length}</strong> items were not moved because target document
+                  does not contain destination chapter. Please, merge first parent nodes of mentioned work items.</li>}
+                {mergeReport.conflicted?.length > 0 && <li><strong>{mergeReport.conflicted.length}</strong> items were not merged because of concurrent modifications.</li>}
+                {mergeReport.prohibited?.length > 0 && <li><strong>{mergeReport.prohibited.length}</strong> items were not merged because such operation is logically prohibited.</li>}
+                {mergeReport.creationFailed?.length > 0 && <li><strong>{mergeReport.creationFailed.length}</strong> items were not merged because work items referenced in source document
+                  do not have counterparts in target project.</li>}
+                {mergeReport.detached?.length > 0 && <li><strong>{mergeReport.detached.length}</strong> items were moved out of documents.</li>}
+                {mergeReport.warnings?.length > 0 && <li><strong>{mergeReport.warnings.length}</strong> warnings.</li>}
+              </ul>
+              {mergeReport.logs && !mergeLogsVisible && <p><a href="#" onClick={() => setMergeLogsVisible(true)}>See full log</a></p>}
               {mergeReport.logs && mergeLogsVisible && <pre style={{
                 padding: "10px",
                 background: "#444",
@@ -257,14 +252,14 @@ export default function DocumentsDiff() {
     </Modal>
 
     {loadingContext.pairs.map((pair, index) => {
-      return <WorkItemsDiff key={index} leftDocument={docsData.leftDocument} rightDocument={docsData.rightDocument}
-                            workItemsPair={pair} pairedWorkItemsLinkRole={searchParams.get('linkRole')}
-                            configCacheId={configCacheId} dataLoadedCallback={dataLoadedCallback}
-                            leftChaptersDiffMarkers={leftChaptersDiffMarkers} rightChaptersDiffMarkers={rightChaptersDiffMarkers}
-                            currentIndex={index} loadingContext={loadingContext} mergingContext={mergingContext}
-                            unSelectionAllowedCallback={unSelectionAllowed} selectChildrenCallback={selectChildren}
-                            setMirroredPairSelectedCallback={setMirroredPairSelected}
-                            createdReportEntries={mergeReport.created || []} modifiedReportEntries={mergeReport.modified || []}/>;
+      return <WorkItemsPairDiff key={index} leftDocument={docsData.leftDocument} rightDocument={docsData.rightDocument}
+                                workItemsPair={pair} pairedWorkItemsLinkRole={searchParams.get('linkRole')}
+                                configCacheId={configCacheId} dataLoadedCallback={dataLoadedCallback}
+                                leftChaptersDiffMarkers={leftChaptersDiffMarkers} rightChaptersDiffMarkers={rightChaptersDiffMarkers}
+                                currentIndex={index} loadingContext={loadingContext} mergingContext={mergingContext}
+                                unSelectionAllowedCallback={unSelectionAllowed} selectChildrenCallback={selectChildren}
+                                setMirroredPairSelectedCallback={setMirroredPairSelected}
+                                createdReportEntries={mergeReport.created || []} modifiedReportEntries={mergeReport.modified || []}/>;
 
     })}
   </div>;

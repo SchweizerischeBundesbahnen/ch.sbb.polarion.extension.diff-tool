@@ -1,4 +1,4 @@
-export default function Error({message}) {
+export default function Error({title, message}) {
   return (
       <div style={{
         marginTop: "5em",
@@ -8,7 +8,7 @@ export default function Error({message}) {
           color: "rgba(0,0,0,0.6)",
           fontWeight: "300"
         }}>
-          Error occurred loading diff data!
+          {title}
         </h2>
         {message &&
             <p style={{

@@ -44,16 +44,19 @@ export default function useDiffService() {
 
   const getFilteredPairs = (pairs, searchParams) => {
     const filterHash = searchParams.get("filter");
-    if (filterHash && localStorage && localStorage.getItem(filterHash + "_filter")) {
-      let filter = localStorage.getItem(filterHash + "_filter");
+    const filterKey = filterHash && (filterHash + "_filter");
+    if (filterKey && localStorage && localStorage.getItem(filterKey)) {
+      const typeKey = filterHash + "_type";
+
+      let filter = localStorage.getItem(filterKey);
       if (filter.includes(",")) {
         filter = filter.split(",");
       } else if (filter.includes(" ")) {
         filter = filter.split(" ");
       }
-      if (localStorage.getItem(filterHash + "_type") === "exclude") {
+      if (localStorage.getItem(typeKey) === "exclude") {
         return pairs.filter(pair => !pair.leftWorkItem || !filter.includes(pair.leftWorkItem.id));
-      } else if (localStorage.getItem(filterHash + "_type") === "include") {
+      } else if (localStorage.getItem(typeKey) === "include") {
         return pairs.filter(pair => pair.leftWorkItem && filter.includes(pair.leftWorkItem.id))
       }
     }
@@ -61,7 +64,51 @@ export default function useDiffService() {
     return pairs;
   };
 
-  const sendMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, allowReferencedWorkItemMerge) => {
+  const sendFindWorkItemsPairsRequest = (searchParams, loadingContext) => {
+    loadingContext.pairsLoadingStarted(true); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
+
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/diff/workitems-pairs`,
+        body: JSON.stringify({
+          leftProjectId: searchParams.get('sourceProjectId'),
+          rightProjectId: searchParams.get('targetProjectId'),
+          leftWorkItemIds: getWorkItemIds(searchParams),
+          linkRole: searchParams.get('linkRole'),
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw response.json();
+            }
+          })
+          .then(data =>  {
+            loadingContext.pairsLoadingFinished(data.pairedWorkItems.slice());
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            Promise.resolve(errorResponse).then((error) => {
+              loadingContext.pairsLoadingFinishedWithError(error && error.message);
+              reject(error);
+            });
+          });
+    });
+  };
+
+  const getWorkItemIds = (searchParams) => {
+    const idsHash = searchParams.get("ids");
+    let idsKey = idsHash && (idsHash + "_ids");
+    if (idsHash && localStorage.getItem(idsKey)) {
+      return localStorage.getItem(idsKey).split(",");
+    }
+    return [];
+  };
+
+  const sendDocumentsMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, allowReferencedWorkItemMerge) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
     leftDocument.moduleXmlRevision = docsData.leftDocument.moduleXmlRevision;
@@ -70,7 +117,7 @@ export default function useDiffService() {
     return new Promise((resolve, reject) => {
       remote.sendRequest({
         method: "POST",
-        url: `/merge/workitems`,
+        url: `/merge/documents`,
         body: JSON.stringify({
           leftDocument: leftDocument,
           rightDocument: rightDocument,
@@ -80,6 +127,51 @@ export default function useDiffService() {
           configCacheBucketId: configCacheId,
           pairs: filterRedundant(mergingContext.getSelectedValues()),
           allowReferencedWorkItemMerge: allowReferencedWorkItemMerge
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
+              Promise.resolve().then(() => {
+                return reject("Your session has expired. Please refresh the page to log in. Note that any unsaved changes will be lost.");
+              });
+            }
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw response.json();
+            }
+          })
+          .then((data) =>  {
+            loadingContext.reload(mergingContext.getSelectedIndexes());
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            Promise.resolve(errorResponse).then((error) => {
+              return reject(error && error.message);
+            });
+          });
+    });
+  };
+
+  const sendWorkItemsMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext) => {
+
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/merge/workitems`,
+        body: JSON.stringify({
+          leftProject: {
+            id: searchParams.get(`sourceProjectId`)
+          },
+          rightProject: {
+            id: searchParams.get(`targetProjectId`)
+          },
+          direction: direction,
+          linkRole: searchParams.get('linkRole'),
+          configName: searchParams.get('config'),
+          configCacheBucketId: configCacheId,
+          pairs: mergingContext.getSelectedValues()
         }),
         contentType: "application/json"
       })
@@ -151,5 +243,5 @@ export default function useDiffService() {
     }
   };
 
-  return { sendDocumentsDiffRequest, sendMergeRequest, diffsExist };
+  return { sendDocumentsDiffRequest, sendFindWorkItemsPairsRequest, sendDocumentsMergeRequest, sendWorkItemsMergeRequest, diffsExist };
 }

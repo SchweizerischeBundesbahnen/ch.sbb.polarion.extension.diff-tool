@@ -6,6 +6,7 @@ import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.subterra.base.data.model.IType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -22,7 +23,9 @@ import java.util.Objects;
 import java.util.Set;
 
 @Data
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "Represents a WorkItem")
 public final class WorkItem {
     @JsonIgnore
@@ -85,6 +88,10 @@ public final class WorkItem {
 
     public static WorkItem of(@Nullable IWorkItem iWorkItem, String outlineNumber, boolean referenced, boolean externalProjectWorkItem) {
         return iWorkItem == null ? null : new WorkItem(iWorkItem, outlineNumber, referenced, externalProjectWorkItem);
+    }
+
+    public static WorkItem of(@Nullable IWorkItem iWorkItem) {
+        return iWorkItem == null ? null : new WorkItem(iWorkItem, null, false, false);
     }
 
     public static WorkItem of(@NotNull WorkItem workItem) {

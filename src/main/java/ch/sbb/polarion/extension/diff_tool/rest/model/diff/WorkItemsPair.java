@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Data
 @Builder
@@ -22,6 +23,10 @@ public class WorkItemsPair {
 
     @Schema(description = "The right WorkItem in the pair", implementation = WorkItem.class)
     private WorkItem rightWorkItem;
+
+    public static WorkItemsPair of(@NotNull IWorkItem leftWorkItem, @Nullable IWorkItem rightWorkItem) {
+        return WorkItemsPair.builder().leftWorkItem(WorkItem.of(leftWorkItem)).rightWorkItem(WorkItem.of(rightWorkItem)).build();
+    }
 
     public static WorkItemsPair of(@NotNull Pair<IWorkItem, IWorkItem> pair, @NotNull CalculatePairsContext context) {
         WorkItem left = WorkItem.of(

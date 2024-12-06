@@ -1,11 +1,11 @@
 import {faArrowLeftLong, faArrowRightLong} from "@fortawesome/free-solid-svg-icons";
-import MergeButton from "@/components/documents/MergeButton";
+import MergeButton from "@/components/merge/MergeButton";
 import {useContext, useEffect, useState} from "react";
 import Modal from "@/components/Modal";
 import AppContext from "@/components/AppContext";
-import {LEFT_TO_RIGHT, RIGHT_TO_LEFT} from "@/components/documents/useMergingContext";
+import {LEFT_TO_RIGHT, RIGHT_TO_LEFT} from "@/components/merge/useMergingContext";
 
-export default function MergePane({leftDocument, rightDocument, mergingContext, mergeCallback, loadingContext}) {
+export default function MergePane({leftContext, rightContext, mergingContext, mergeCallback, loadingContext}) {
   const context = useContext(AppContext);
 
   const [display, setDisplay] = useState('none');
@@ -70,16 +70,16 @@ export default function MergePane({leftDocument, rightDocument, mergingContext, 
                 select all
               </label>
             </div>
-            {!rightDocument || rightDocument.revision && <span>Target document not in HEAD, which locks merging into it</span>}
-            {rightDocument && !rightDocument.authorizedForMerge && <span>You are not authorized to merge into target document</span>}
+            {!rightContext || rightContext.revision && <span>Target document not in HEAD, which locks merging into it</span>}
+            {rightContext && !rightContext.authorizedForMerge && <span>You are not authorized to merge into target project</span>}
             <MergeButton fontAwesomeIcon={faArrowRightLong} clickHandler={() => confirmMerge(LEFT_TO_RIGHT)}
-                         style={{justifyContent: "right"}} disabled={!rightDocument || rightDocument.revision || !rightDocument.authorizedForMerge || mergingContext.selectionCount === 0}/>
+                         style={{justifyContent: "right"}} disabled={!rightContext || rightContext.revision || !rightContext.authorizedForMerge || mergingContext.selectionCount === 0}/>
           </div>
           <div className="col collapsed-border merge-button-container">
             <MergeButton fontAwesomeIcon={faArrowLeftLong} clickHandler={() => confirmMerge(RIGHT_TO_LEFT)}
-                         style={{justifyContent: "left"}} disabled={!leftDocument || leftDocument.revision || !leftDocument.authorizedForMerge || mergingContext.selectionCount === 0}/>
-            {!leftDocument || leftDocument.revision && <span>Source document not in HEAD, which locks merging into it</span>}
-            {leftDocument && !leftDocument.authorizedForMerge && <span>You are not authorized to merge into source document</span>}
+                         style={{justifyContent: "left"}} disabled={!leftContext || leftContext.revision || !leftContext.authorizedForMerge || mergingContext.selectionCount === 0}/>
+            {!leftContext || leftContext.revision && <span>Source document not in HEAD, which locks merging into it</span>}
+            {leftContext && !leftContext.authorizedForMerge && <span>You are not authorized to merge into source project</span>}
           </div>
         </div>
         <Modal title="Merge confirmation" cancelButtonTitle="Cancel" actionButtonTitle="Merge" actionButtonHandler={merge}

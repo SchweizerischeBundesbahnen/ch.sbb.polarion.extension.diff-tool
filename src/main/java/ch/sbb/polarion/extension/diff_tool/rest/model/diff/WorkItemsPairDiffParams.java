@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
-import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,16 +10,16 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Comparison input data")
-public class WorkItemsDiffParams {
+@Schema(description = "Input data to compare WorkItems")
+public class WorkItemsPairDiffParams<T extends ProjectWorkItem> {
     @Schema(description = "ID of the left project")
     private String leftProjectId; // This value is needed to load diff-configuration (see configName attribute below) even if leftWorkItem is not available
 
-    @Schema(description = "Left WorkItem used in the comparison", implementation = DocumentWorkItem.class)
-    private DocumentWorkItem leftWorkItem;
+    @Schema(description = "Left WorkItem used in the comparison", implementation = ProjectWorkItem.class)
+    private T leftWorkItem;
 
-    @Schema(description = "Right WorkItem used in the comparison", implementation = DocumentWorkItem.class)
-    private DocumentWorkItem rightWorkItem;
+    @Schema(description = "Right WorkItem used in the comparison", implementation = ProjectWorkItem.class)
+    private T rightWorkItem;
 
     @Schema(description = "Link role between paired WorkItems")
     private String pairedWorkItemsLinkRole;
@@ -31,15 +30,11 @@ public class WorkItemsDiffParams {
     @Schema(description = "Indicates if enums must be compared by their ID")
     private Boolean compareEnumsById;
 
-    @Schema(description = "Name of the configuration used for comparison", defaultValue = NamedSettings.DEFAULT_NAME)
+    @Schema(description = "Name of the configuration used for comparison")
     private String configName;
 
     @Schema(description = "Cache bucket Id")
     private String configCacheBucketId;
-
-    public String getConfigName() {
-        return configName != null ? configName : NamedSettings.DEFAULT_NAME;
-    }
 
     public boolean isPairedWorkItemsDiffer() {
         return Boolean.TRUE.equals(pairedWorkItemsDiffer);

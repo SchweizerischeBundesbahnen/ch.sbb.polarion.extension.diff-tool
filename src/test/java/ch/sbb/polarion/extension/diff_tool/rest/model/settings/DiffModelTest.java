@@ -3,7 +3,7 @@ package ch.sbb.polarion.extension.diff_tool.rest.model.settings;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
-import ch.sbb.polarion.extension.diff_tool.service.MergeContext;
+import ch.sbb.polarion.extension.diff_tool.service.DocumentsMergeContext;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import com.polarion.alm.tracker.model.IModule;
 import org.junit.jupiter.api.Test;
@@ -106,7 +106,7 @@ class DiffModelTest {
 
         DiffModel model = mock(DiffModel.class);
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                new MergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model, true));
+                new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model, true));
         assertEquals("No link role could be found by ID 'someLinkRole'", exception.getMessage());
     }
 }
