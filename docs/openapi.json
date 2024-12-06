@@ -102,6 +102,68 @@
         ]
       }
     },
+    "/api/diff/detached-workitems": {
+      "post": {
+        "operationId": "getDetachedWorkItemsPairDiff",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DetachedWorkItemsPairDiffParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItemsPairDiff"
+                }
+              }
+            },
+            "description": "Successfully retrieved the differences between the provided WorkItems"
+          }
+        },
+        "summary": "Gets difference of two WorkItems not necessarily contained in a document",
+        "tags": [
+          "Difference"
+        ]
+      }
+    },
+    "/api/diff/document-workitems": {
+      "post": {
+        "operationId": "getDocumentWorkItemsPairDiff",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentWorkItemsPairDiffParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItemsPairDiff"
+                }
+              }
+            },
+            "description": "Successfully retrieved the differences between the provided WorkItems"
+          }
+        },
+        "summary": "Gets difference of two WorkItems contained in LiveDoc",
+        "tags": [
+          "Difference"
+        ]
+      }
+    },
     "/api/diff/documents": {
       "post": {
         "operationId": "getDocumentsDiff",
@@ -209,14 +271,14 @@
         ]
       }
     },
-    "/api/diff/workitems": {
+    "/api/diff/workitems-pairs": {
       "post": {
-        "operationId": "getWorkItemsDiff",
+        "operationId": "findWorkItemsPairs",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WorkItemsDiffParams"
+                "$ref": "#/components/schemas/WorkItemsPairsParams"
               }
             }
           },
@@ -227,27 +289,48 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WorkItemsDiff"
+                  "$ref": "#/components/schemas/WorkItemsPairs"
                 }
               }
             },
-            "description": "Successfully retrieved the differences between the provided WorkItems"
+            "description": "Successfully retrieved pairs of specified WorkItems to be later diffed"
           }
         },
-        "summary": "Gets difference of two WorkItems",
+        "summary": "Finds pairs to specified WorkItems, for later diff",
         "tags": [
           "Difference"
         ]
       }
     },
-    "/api/merge/workitems": {
+    "/api/extension/info": {
+      "get": {
+        "operationId": "getExtensionInfo",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtensionInfo"
+                }
+              }
+            },
+            "description": "Extension information in JSON format"
+          }
+        },
+        "summary": "Gets extension information",
+        "tags": [
+          "Utility API"
+        ]
+      }
+    },
+    "/api/merge/documents": {
       "post": {
-        "operationId": "mergeWorkItems",
+        "operationId": "mergeDocuments",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MergeParams"
+                "$ref": "#/components/schemas/DocumentsMergeParams"
               }
             }
           },
@@ -265,7 +348,38 @@
             "description": "Merge result"
           }
         },
-        "summary": "Merge WorkItems",
+        "summary": "Merge Documents and their WorkItems",
+        "tags": [
+          "Merge"
+        ]
+      }
+    },
+    "/api/merge/workitems": {
+      "post": {
+        "operationId": "mergeWorkItems",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkItemsMergeParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergeResult"
+                }
+              }
+            },
+            "description": "Merge result"
+          }
+        },
+        "summary": "Merge WorkItems out of documents scope",
         "tags": [
           "Merge"
         ]
@@ -901,6 +1015,42 @@
         },
         "type": "object"
       },
+      "DetachedWorkItemsPairDiffParams": {
+        "description": "Input data to compare detached WorkItems",
+        "properties": {
+          "compareEnumsById": {
+            "description": "Indicates if enums must be compared by their ID",
+            "type": "boolean"
+          },
+          "configCacheBucketId": {
+            "description": "Cache bucket Id",
+            "type": "string"
+          },
+          "configName": {
+            "description": "Name of the configuration used for comparison",
+            "type": "string"
+          },
+          "leftProjectId": {
+            "description": "ID of the left project",
+            "type": "string"
+          },
+          "leftWorkItem": {
+            "$ref": "#/components/schemas/ProjectWorkItem"
+          },
+          "pairedWorkItemsDiffer": {
+            "description": "Indicates if the paired WorkItems differ",
+            "type": "boolean"
+          },
+          "pairedWorkItemsLinkRole": {
+            "description": "Link role between paired WorkItems",
+            "type": "string"
+          },
+          "rightWorkItem": {
+            "$ref": "#/components/schemas/ProjectWorkItem"
+          }
+        },
+        "type": "object"
+      },
       "Document": {
         "description": "Represents a document within a project, including metadata such as projectID, space ID, and revision details",
         "properties": {
@@ -1013,7 +1163,7 @@
         "type": "object"
       },
       "DocumentWorkItem": {
-        "description": "WorkItem in document data",
+        "description": "Details of WorkItem contained in a document",
         "properties": {
           "documentLocationPath": {
             "description": "The location path of the document containing the WorkItem",
@@ -1042,13 +1192,45 @@
         },
         "type": "object"
       },
+      "DocumentWorkItemsPairDiffParams": {
+        "description": "Input data to compare WorkItems contained in a document",
+        "properties": {
+          "compareEnumsById": {
+            "description": "Indicates if enums must be compared by their ID",
+            "type": "boolean"
+          },
+          "configCacheBucketId": {
+            "description": "Cache bucket Id",
+            "type": "string"
+          },
+          "configName": {
+            "description": "Name of the configuration used for comparison",
+            "type": "string"
+          },
+          "leftProjectId": {
+            "description": "ID of the left project",
+            "type": "string"
+          },
+          "leftWorkItem": {
+            "$ref": "#/components/schemas/DocumentWorkItem"
+          },
+          "pairedWorkItemsDiffer": {
+            "description": "Indicates if the paired WorkItems differ",
+            "type": "boolean"
+          },
+          "pairedWorkItemsLinkRole": {
+            "description": "Link role between paired WorkItems",
+            "type": "string"
+          },
+          "rightWorkItem": {
+            "$ref": "#/components/schemas/DocumentWorkItem"
+          }
+        },
+        "type": "object"
+      },
       "DocumentsDiff": {
         "description": "Represents the difference between two documents",
         "properties": {
-          "extensionInfo": {
-            "description": "Information about extension (version, build timestamp)",
-            "type": "string"
-          },
           "leftDocument": {
             "$ref": "#/components/schemas/Document"
           },
@@ -1082,6 +1264,57 @@
           },
           "rightDocument": {
             "$ref": "#/components/schemas/DocumentIdentifier"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentsMergeParams": {
+        "description": "Documents merge input data",
+        "properties": {
+          "allowReferencedWorkItemMerge": {
+            "description": "Indicates if merging referenced Work Item allowed",
+            "type": "boolean"
+          },
+          "configCacheBucketId": {
+            "description": "The ID of the configuration cache bucket",
+            "type": "string"
+          },
+          "configName": {
+            "default": "Default",
+            "description": "The configuration name to use for the merge operation",
+            "type": "string"
+          },
+          "direction": {
+            "description": "Enum representing the direction of a merge operation",
+            "enum": [
+              "LEFT_TO_RIGHT",
+              "RIGHT_TO_LEFT"
+            ],
+            "type": "string"
+          },
+          "leftDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
+          },
+          "linkRole": {
+            "description": "The role of the link connecting work item pairs",
+            "type": "string"
+          },
+          "pairs": {
+            "$ref": "#/components/schemas/WorkItemsPair"
+          },
+          "rightDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
+          }
+        },
+        "type": "object"
+      },
+      "ExtensionInfo": {
+        "properties": {
+          "context": {
+            "$ref": "#/components/schemas/Context"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Version"
           }
         },
         "type": "object"
@@ -1218,10 +1451,6 @@
       "MergeParams": {
         "description": "Merge input data",
         "properties": {
-          "allowReferencedWorkItemMerge": {
-            "description": "Indicates if merging referenced Work Item allowed",
-            "type": "boolean"
-          },
           "configCacheBucketId": {
             "description": "The ID of the configuration cache bucket",
             "type": "string"
@@ -1239,18 +1468,12 @@
             ],
             "type": "string"
           },
-          "leftDocument": {
-            "$ref": "#/components/schemas/DocumentIdentifier"
-          },
           "linkRole": {
-            "description": "The role of the link connecting the two documents",
+            "description": "The role of the link connecting work item pairs",
             "type": "string"
           },
           "pairs": {
             "$ref": "#/components/schemas/WorkItemsPair"
-          },
-          "rightDocument": {
-            "$ref": "#/components/schemas/DocumentIdentifier"
           }
         },
         "type": "object"
@@ -1380,6 +1603,42 @@
           "targetModuleHasStructuralChanges": {
             "description": "Indicates whether the target module has structural changes",
             "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "Project": {
+        "description": "Represents a Polarion project with its ID, name and information about merge authorization",
+        "properties": {
+          "authorizedForMerge": {
+            "description": "Indicates whether the user is authorized for merge operations into this project",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "The project ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "The project name",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectWorkItem": {
+        "description": "Details of WorkItem belonging to a project",
+        "properties": {
+          "id": {
+            "description": "Unique identifier of the WorkItem",
+            "type": "string"
+          },
+          "projectId": {
+            "description": "WorkItem's project ID, it can differ from document's project ID in case of referenced WorkItems",
+            "type": "string"
+          },
+          "revision": {
+            "description": "The revision of the WorkItem. Referenced WorkItem's can be frozen in document in certain revision",
+            "type": "string"
           }
         },
         "type": "object"
@@ -1585,7 +1844,55 @@
         },
         "type": "object"
       },
-      "WorkItemsDiff": {
+      "WorkItemsMergeParams": {
+        "description": "Work items merge input data",
+        "properties": {
+          "configCacheBucketId": {
+            "description": "The ID of the configuration cache bucket",
+            "type": "string"
+          },
+          "configName": {
+            "default": "Default",
+            "description": "The configuration name to use for the merge operation",
+            "type": "string"
+          },
+          "direction": {
+            "description": "Enum representing the direction of a merge operation",
+            "enum": [
+              "LEFT_TO_RIGHT",
+              "RIGHT_TO_LEFT"
+            ],
+            "type": "string"
+          },
+          "leftProject": {
+            "$ref": "#/components/schemas/Project"
+          },
+          "linkRole": {
+            "description": "The role of the link connecting work item pairs",
+            "type": "string"
+          },
+          "pairs": {
+            "$ref": "#/components/schemas/WorkItemsPair"
+          },
+          "rightProject": {
+            "$ref": "#/components/schemas/Project"
+          }
+        },
+        "type": "object"
+      },
+      "WorkItemsPair": {
+        "description": "Represents a pair of WorkItems for comparison",
+        "properties": {
+          "leftWorkItem": {
+            "$ref": "#/components/schemas/WorkItem"
+          },
+          "rightWorkItem": {
+            "$ref": "#/components/schemas/WorkItem"
+          }
+        },
+        "type": "object"
+      },
+      "WorkItemsPairDiff": {
         "description": "Represents the differences between two WorkItems",
         "properties": {
           "fieldDiffs": {
@@ -1603,51 +1910,46 @@
         },
         "type": "object"
       },
-      "WorkItemsDiffParams": {
-        "description": "Comparison input data",
+      "WorkItemsPairs": {
+        "description": "Represents starting point of diffing multiple work items - their project names and pairs of work items to be diffed",
         "properties": {
-          "compareEnumsById": {
-            "description": "Indicates if enums must be compared by their ID",
-            "type": "boolean"
+          "leftProject": {
+            "$ref": "#/components/schemas/Project"
           },
-          "configCacheBucketId": {
-            "description": "Cache bucket Id",
-            "type": "string"
+          "leftWorkItemIdsWithRedundancy": {
+            "$ref": "#/components/schemas/WorkItemsPair"
           },
-          "configName": {
-            "default": "Default",
-            "description": "Name of the configuration used for comparison",
-            "type": "string"
+          "pairedWorkItems": {
+            "$ref": "#/components/schemas/WorkItemsPair"
           },
-          "leftProjectId": {
-            "description": "ID of the left project",
-            "type": "string"
-          },
-          "leftWorkItem": {
-            "$ref": "#/components/schemas/DocumentWorkItem"
-          },
-          "pairedWorkItemsDiffer": {
-            "description": "Indicates if the paired WorkItems differ",
-            "type": "boolean"
-          },
-          "pairedWorkItemsLinkRole": {
-            "description": "Link role between paired WorkItems",
-            "type": "string"
-          },
-          "rightWorkItem": {
-            "$ref": "#/components/schemas/DocumentWorkItem"
+          "rightProject": {
+            "$ref": "#/components/schemas/Project"
           }
         },
         "type": "object"
       },
-      "WorkItemsPair": {
-        "description": "Represents a pair of WorkItems for comparison",
+      "WorkItemsPairsParams": {
+        "description": "Input data for finding work items pairs",
         "properties": {
-          "leftWorkItem": {
-            "$ref": "#/components/schemas/WorkItem"
+          "leftProjectId": {
+            "description": "Identifier for the left project",
+            "type": "string"
           },
-          "rightWorkItem": {
-            "$ref": "#/components/schemas/WorkItem"
+          "leftWorkItemIds": {
+            "description": "IDs of work items in left project which counterparts from right project to be found",
+            "items": {
+              "description": "IDs of work items in left project which counterparts from right project to be found",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "linkRole": {
+            "description": "The role of the link connecting work item pairs",
+            "type": "string"
+          },
+          "rightProjectId": {
+            "description": "Identifier for the right project",
+            "type": "string"
           }
         },
         "type": "object"

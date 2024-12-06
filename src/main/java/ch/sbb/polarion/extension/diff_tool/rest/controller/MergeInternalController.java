@@ -1,7 +1,9 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.service.MergeService;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -27,13 +29,43 @@ public class MergeInternalController {
     protected final MergeService mergeService = new MergeService(polarionService);
 
     @POST
+    @Path("/merge/documents")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Merge Documents and their WorkItems",
+            parameters = {
+                    @Parameter(
+                            description = "Parameters for merging Documents and their WorkItems",
+                            required = true,
+                            schema = @Schema(implementation = DocumentsMergeParams.class)
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Merge result",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = MergeResult.class)
+                            )
+                    )
+            }
+    )
+    public MergeResult mergeDocuments(@Parameter(required = true) DocumentsMergeParams mergeParams) {
+        if (mergeParams == null || mergeParams.getLeftDocument() == null || mergeParams.getRightDocument() == null || mergeParams.getDirection() == null) {
+            throw new BadRequestException("Parameters 'leftDocument', 'rightDocument' and 'direction' should be provided");
+        }
+        return mergeService.mergeDocuments(mergeParams);
+    }
+
+    @POST
     @Path("/merge/workitems")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Merge WorkItems",
+    @Operation(summary = "Merge WorkItems out of documents scope",
             parameters = {
                     @Parameter(
-                            description = "Parameters for merging WorkItems",
+                            description = "Parameters for merging WorkItems out of documents scope",
                             required = true,
                             schema = @Schema(implementation = MergeParams.class)
                     )
@@ -49,9 +81,9 @@ public class MergeInternalController {
                     )
             }
     )
-    public MergeResult mergeWorkItems(@Parameter(required = true) MergeParams mergeParams) {
-        if (mergeParams == null || mergeParams.getLeftDocument() == null || mergeParams.getRightDocument() == null || mergeParams.getDirection() == null) {
-            throw new BadRequestException("Parameters 'leftDocument', 'rightDocument' and 'direction' should be provided");
+    public MergeResult mergeWorkItems(@Parameter(required = true) WorkItemsMergeParams mergeParams) {
+        if (mergeParams == null || mergeParams.getLeftProject() == null || mergeParams.getRightProject() == null || mergeParams.getDirection() == null) {
+            throw new BadRequestException("Parameters 'leftProject', 'rightProject' and 'direction' should be provided");
         }
         return mergeService.mergeWorkItems(mergeParams);
     }

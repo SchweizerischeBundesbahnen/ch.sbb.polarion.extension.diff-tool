@@ -1,7 +1,8 @@
 package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
@@ -67,7 +68,7 @@ class LinksHandlerTest {
 
             String result = new LinksHandler().appendPairedWorkItemId(unprocessedHtml,
                     projectId, projectId, new DiffContext(WorkItem.of(mock(IWorkItem.class), "wi_outline_number", false, false), WorkItem.of(mock(IWorkItem.class), "wi_outline_number", false, false),
-                            "testFieldId", WorkItemsDiffParams.builder().pairedWorkItemsLinkRole("roleId").build(), polarionService));
+                            "testFieldId", WorkItemsPairDiffParams.builder().pairedWorkItemsLinkRole("roleId").build(), polarionService));
 
             assertEquals(expectedHtml, result);
         }

@@ -1,5 +1,5 @@
 import {useContext, useEffect, useRef, useState} from "react";
-import FieldsDiff from "@/components/documents/workitems/fields/FieldsDiff";
+import FieldsDiff from "@/components/diff/FieldsDiff";
 import AppContext from "@/components/AppContext";
 
 export default function DiffContent({diffs, expanded}) {

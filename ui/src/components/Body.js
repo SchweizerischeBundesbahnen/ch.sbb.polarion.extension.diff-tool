@@ -2,8 +2,8 @@
 
 import {useEffect, useState} from "react";
 import {Inter} from "next/font/google";
-import AppContext from "../components/AppContext";
-import useSessionRenewal from './SessionRenewal';
+import AppContext from "./AppContext";
+import useSessionRenewal from '../services/useSessionRenewal';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,7 +18,6 @@ export default function Body({ children }) {
   const [hideChaptersIfNoDifference, setHideChaptersIfNoDifference] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [diffsExist, setDiffsExist] = useState(false);
-  const [extensionInfo, setExtensionInfo] = useState(false);
 
   const handleScroll = event => {
     setHeaderPinned(event.currentTarget.scrollTop > 60);
@@ -54,9 +53,7 @@ export default function Body({ children }) {
           dataLoaded: dataLoaded,
           setDataLoaded: setDataLoaded,
           diffsExist: diffsExist,
-          setDiffsExist: setDiffsExist,
-          extensionInfo: extensionInfo,
-          setExtensionInfo: setExtensionInfo
+          setDiffsExist: setDiffsExist
         }
       }}
   >

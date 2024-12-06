@@ -134,7 +134,7 @@ DiffTool = {
     const linkRole = document.getElementById("comparison-link-role-selector").value;
     const config = document.getElementById("comparison-config-selector").value;
 
-    let path = `/polarion/diff-tool-app/ui/app/index.html`
+    let path = `/polarion/diff-tool-app/ui/app/documents.html`
         + `?sourceProjectId=${this.sourceProjectId}&sourceSpaceId=${this.sourceSpace}&sourceDocument=${this.sourceDocument}`
         + `&targetProjectId=${targetProjectId}&targetSpaceId=${targetSpace}&targetDocument=${targetDocument}`
         + `&linkRole=${linkRole}&config=${config}`;
@@ -145,25 +145,17 @@ DiffTool = {
       path += `&targetRevision=${targetRevision}`;
     }
 
-    if (document.getElementById("use-work-items-filter").checked && localStorage) {
-      const filterHash = this.generateUuid();
-      localStorage.setItem(filterHash + "_filter", document.getElementById("work-items-filter-input").value);
-      localStorage.setItem(filterHash + "_type", document.getElementById("include-work-items").checked ? "include" : "exclude");
-      path += `&filter=${filterHash}`;
+    if (document.getElementById("use-work-items-filter").checked) {
+      const filter = document.getElementById("work-items-filter-input").value;
+      this.digestMessage(filter).then(digestHex => {
+        localStorage.setItem(digestHex + "_filter", filter);
+        localStorage.setItem(digestHex + "_type", document.getElementById("include-work-items").checked ? "include" : "exclude");
+        path += `&filter=${digestHex}`;
+        window.open(path, '_blank');
+      });
+    } else {
+      window.open(path, '_blank');
     }
-
-    window.open(path, '_blank');
-  },
-
-  generateUuid : function() {
-    return (
-        String('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx')
-    ).replace(/[xy]/g, (character) => {
-      const random = (Math.random() * 16) | 0;
-      const value = character === "x" ? random : (random & 0x3) | 0x8;
-
-      return value.toString(16);
-    });
   },
 
   compareSameDocument: function () {
@@ -204,4 +196,94 @@ DiffTool = {
   toggleWorkItemsFilter: function () {
     document.getElementById("work-items-filter-pane").style.display = document.getElementById("use-work-items-filter").checked ? "block" : "none";
   },
+
+  updateWorkItemsDiffButton: function (clickedElement, sourceProjectId) {
+    const DISABLED_BUTTON_CLASS= "polarion-TestsExecutionButton-buttons-defaultCursor";
+
+    const diffWidget = clickedElement?.closest("div.polarion-DiffTool");
+    const button = diffWidget?.querySelector(".polarion-TestsExecutionButton-buttons");
+    if (button) {
+      if (button.classList.contains(DISABLED_BUTTON_CLASS) && diffWidget.querySelectorAll('input[type="checkbox"]:checked').length > 0) {
+        button.classList.remove(DISABLED_BUTTON_CLASS);
+        // We need to remember click listener to remove it from button later
+        this.registeredButtonClickListener = () => DiffTool.openWorkItemsDiffApplication(diffWidget, sourceProjectId);
+        button.addEventListener("click", this.registeredButtonClickListener);
+      }
+      if (!button.classList.contains(DISABLED_BUTTON_CLASS) && diffWidget.querySelectorAll('input[type="checkbox"]:checked').length === 0) {
+        button.classList.add(DISABLED_BUTTON_CLASS);
+        button.removeEventListener("click", this.registeredButtonClickListener);
+      }
+      if (diffWidget.querySelectorAll('input[type="checkbox"]:not(.export-all):not(:checked)').length > 0) {
+        const exportAllCheckbox = diffWidget.querySelector('input[type="checkbox"].export-all');
+        if (exportAllCheckbox) {
+          exportAllCheckbox.checked = false;
+        }
+      }
+    }
+  },
+
+  selectAllItems: function (clickedElement) {
+    const diffWidget = clickedElement?.closest("div.polarion-DiffTool");
+    if (diffWidget) {
+      diffWidget.querySelectorAll('input[type="checkbox"]:not(.export-all)').forEach(checkbox => {
+        checkbox.checked = clickedElement.checked;
+      });
+    }
+  },
+
+  openWorkItemsDiffApplication: function (diffWidget, sourceProjectId) {
+    const targetProjectId = document.getElementById("comparison-target-project-selector").value;
+    const linkRole = document.getElementById("comparison-link-role-selector").value;
+    const config = document.getElementById("comparison-config-selector").value;
+
+    let path = `/polarion/diff-tool-app/ui/app/workitems.html`
+        + `?sourceProjectId=${sourceProjectId}&targetProjectId=${targetProjectId}&linkRole=${linkRole}&config=${config}`;
+
+    // const workItemIdsHash = this.generateUuid();
+    const selectedIds = [];
+    diffWidget.querySelectorAll('input[type="checkbox"]:checked').forEach((checkbox) => {
+      if (checkbox.dataset.id) {
+        selectedIds.push(checkbox.dataset.id);
+      }
+    });
+    const selectedIdsString = selectedIds.join(",");
+    this.digestMessage(selectedIdsString).then(digestHex => {
+      localStorage.setItem(digestHex + "_ids", selectedIdsString);
+      path += `&ids=${digestHex}`;
+      window.open(path, '_blank');
+    });
+  },
+
+  replaceUrlParam: function (url, paramName, paramValue){
+    if (paramValue == null) {
+      paramValue = '';
+    }
+    const pattern = new RegExp('\\b('+paramName+'=).*?(&|#|$)');
+    if (url.search(pattern) >= 0) {
+      return url.replace(pattern,'$1' + paramValue + '$2');
+    }
+    url = url.replace(/[?#]$/,'');
+    return url + (url.indexOf('?')> 0 ? '&' : '?') + paramName + '=' + paramValue;
+  },
+
+  generateUuid : function() {
+    return (
+        String('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx')
+    ).replace(/[xy]/g, (character) => {
+      const random = (Math.random() * 16) | 0;
+      const value = character === "x" ? random : (random & 0x3) | 0x8;
+
+      return value.toString(16);
+    });
+  },
+
+  digestMessage: async function(message) {
+    const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
+    const hashBuffer = await window.crypto.subtle.digest("SHA-1", msgUint8); // hash the message
+    const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+     // convert bytes to hex string
+    return hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+  }
 }

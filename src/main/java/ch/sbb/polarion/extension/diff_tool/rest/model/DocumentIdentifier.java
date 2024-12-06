@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "Unique document identifier data with optional revision information, if revision is not specified this means document is in HEAD revision")
-public class DocumentIdentifier extends BaseDocumentIdentifier{
+public class DocumentIdentifier extends BaseDocumentIdentifier {
 
     @Schema(description = "Revision number of the document")
     private String revision;

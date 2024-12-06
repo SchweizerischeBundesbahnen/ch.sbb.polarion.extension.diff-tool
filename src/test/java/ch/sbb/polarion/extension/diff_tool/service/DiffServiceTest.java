@@ -1,14 +1,20 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeMoveDirection;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Project;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairs;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairsParams;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.ImageHandler;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 
 import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
+import com.polarion.alm.projects.model.IProject;
+import com.polarion.alm.tracker.model.ILinkRoleOpt;
+import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.IWorkItem;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
@@ -22,6 +28,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -57,7 +65,7 @@ class DiffServiceTest {
 
             String unprocessedHtml = new String(Objects.requireNonNull(isUnprocessedHtml).readAllBytes(), StandardCharsets.UTF_8);
 
-            String processedHtml = new ImageHandler().postProcess(unprocessedHtml, new DiffContext(null, null, "", WorkItemsDiffParams.builder().build(), polarionService));
+            String processedHtml = new ImageHandler().postProcess(unprocessedHtml, new DiffContext(null, null, "", WorkItemsPairDiffParams.builder().build(), polarionService));
             String expectedHtml = new String(Objects.requireNonNull(isExpectedResultHtml).readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(expectedHtml, processedHtml);
         }
@@ -95,8 +103,7 @@ class DiffServiceTest {
         when(workItemA.getProjectId()).thenReturn("someProject");
         when(workItemB.getProjectId()).thenReturn("someProject");
 
-        diffService.fillHtmlDiffs(WorkItemsPair.builder().leftWorkItem(workItemA).rightWorkItem(workItemB).build(), Set.of("testField"),
-                WorkItemsDiffParams.builder().build());
+        diffService.fillHtmlDiffs(WorkItemsPair.builder().leftWorkItem(workItemA).rightWorkItem(workItemB).build(), Set.of("testField"), WorkItemsPairDiffParams.builder().build());
 
         assertNull(fieldA.getHtmlDiff());
         assertNull(fieldB.getHtmlDiff());
@@ -192,6 +199,87 @@ class DiffServiceTest {
             assertItemsEqual(i, "LEFT", expectedPair.getLeftWorkItem(), actualPair.getLeftWorkItem());
             assertItemsEqual(i, "RIGHT", expectedPair.getRightWorkItem(), actualPair.getRightWorkItem());
         }
+    }
+
+    @Test
+    void testFindWorkItemsPairs() {
+        String leftProjectId = "left-project";
+        String leftProjectName = "Left project";
+        String rightProjectId = "right-project";
+        String rightProjectName = "Right project";
+        List<String> leftWorkItemIds = List.of("LP-1", "LP-2", "LP-3", "LP-4", "LP-5");
+        String linkRole = "link-role";
+
+        ITrackerProject leftTrackerProjectMock = mock(ITrackerProject.class);
+        when(polarionService.getTrackerProject(leftProjectId)).thenReturn(leftTrackerProjectMock);
+
+        ILinkRoleOpt linkRoleObjectMock = mock(ILinkRoleOpt.class);
+        when(polarionService.getLinkRoleById(linkRole, leftTrackerProjectMock)).thenReturn(linkRoleObjectMock);
+
+        IProject leftProjectMock = mock(IProject.class);
+        when(leftProjectMock.getId()).thenReturn(leftProjectId);
+        when(leftProjectMock.getName()).thenReturn(leftProjectName);
+        when(polarionService.getProject(leftProjectId)).thenReturn(leftProjectMock);
+        when(polarionService.userAuthorizedForMerge(leftProjectId)).thenReturn(true);
+
+        IProject rightProjectMock = mock(IProject.class);
+        when(rightProjectMock.getId()).thenReturn(rightProjectId);
+        when(rightProjectMock.getName()).thenReturn(rightProjectName);
+        when(polarionService.getProject(rightProjectId)).thenReturn(rightProjectMock);
+        when(polarionService.userAuthorizedForMerge(rightProjectId)).thenReturn(false);
+
+        IWorkItem lp1Mock = mock(IWorkItem.class);
+        when(lp1Mock.getId()).thenReturn("LP-1");
+        IWorkItem lp2Mock = mock(IWorkItem.class);
+        when(lp2Mock.getId()).thenReturn("LP-2");
+        IWorkItem lp3Mock = mock(IWorkItem.class);
+        when(lp3Mock.getId()).thenReturn("LP-3");
+        IWorkItem lp4Mock = mock(IWorkItem.class);
+        when(lp4Mock.getId()).thenReturn("LP-4");
+        IWorkItem lp5Mock = mock(IWorkItem.class);
+        when(lp5Mock.getId()).thenReturn("LP-5");
+        List<IWorkItem> leftWorkItems = List.of(lp1Mock, lp2Mock, lp3Mock, lp4Mock, lp5Mock);
+        when(polarionService.getWorkItems(leftProjectId, leftWorkItemIds)).thenReturn(leftWorkItems);
+
+        IWorkItem rp1Mock = mock(IWorkItem.class);
+        when(rp1Mock.getId()).thenReturn("RP-1");
+        when(polarionService.getPairedWorkItems(lp1Mock, rightProjectId, linkRole)).thenReturn(List.of(rp1Mock));
+
+        when(polarionService.getPairedWorkItems(lp2Mock, rightProjectId, linkRole)).thenReturn(Collections.emptyList());
+        when(polarionService.getPairedWorkItems(lp3Mock, rightProjectId, linkRole)).thenReturn(Collections.emptyList());
+
+        IWorkItem rp2Mock = mock(IWorkItem.class);
+        IWorkItem rp3Mock = mock(IWorkItem.class);
+        when(polarionService.getPairedWorkItems(lp4Mock, rightProjectId, linkRole)).thenReturn(List.of(rp2Mock, rp3Mock));
+
+        IWorkItem rp4Mock = mock(IWorkItem.class);
+        when(rp4Mock.getId()).thenReturn("RP-4");
+        when(polarionService.getPairedWorkItems(lp5Mock, rightProjectId, linkRole)).thenReturn(List.of(rp4Mock));
+
+        WorkItemsPairs realResult = diffService.findWorkItemsPairs(new WorkItemsPairsParams(leftProjectId, rightProjectId, leftWorkItemIds, linkRole));
+
+        Collection<WorkItemsPair> pairedWorkItems = new ArrayList<>();
+        pairedWorkItems.add(WorkItemsPair.of(lp1Mock, rp1Mock));
+        pairedWorkItems.add(WorkItemsPair.of(lp2Mock, null));
+        pairedWorkItems.add(WorkItemsPair.of(lp3Mock, null));
+        pairedWorkItems.add(WorkItemsPair.of(lp5Mock, rp4Mock));
+
+        WorkItemsPairs expectedResult = WorkItemsPairs.builder()
+                .leftProject(Project.builder()
+                        .id(leftProjectId)
+                        .name(leftProjectName)
+                        .authorizedForMerge(true)
+                        .build())
+                .rightProject(Project.builder()
+                        .id(rightProjectId)
+                        .name(rightProjectName)
+                        .authorizedForMerge(false)
+                        .build())
+                .pairedWorkItems(pairedWorkItems)
+                .leftWorkItemIdsWithRedundancy(List.of("LP-4"))
+                .build();
+
+        assertEquals(expectedResult, realResult);
     }
 
     private void assertItemsEqual(int index, String side, WorkItem expected, WorkItem actual) {

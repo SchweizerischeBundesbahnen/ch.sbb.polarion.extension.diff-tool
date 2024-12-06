@@ -121,6 +121,7 @@ a:hover {
 .app-header {
   display: flex;
   width: 100%;
+  height: 4rem;
   justify-content: center;
   padding: 1rem;
   background-color: #22272E;
@@ -130,12 +131,15 @@ a:hover {
   z-index: 10;
 }
 
+.app-title {
+  position: absolute;
+  top: 1rem
+}
+
 .extension-info {
   position: absolute;
-  top: 0;
-  right: 0;
-  padding-right: 1rem;
-  padding-top: 0.5rem;
+  top: 1.6rem;
+  right: 1.6rem;
   font-size: 10px;
   color: #888;
 }
@@ -204,19 +208,6 @@ a:hover {
   z-index: 5 !important;
 }
 
-.sticky-top.pinned {
-  font-size: .9em;
-  line-height: 1.4;
-}
-
-.sticky-top.pinned .col {
-  padding: .4rem 2rem;
-}
-
-.sticky-top.pinned .col.merge-button-container {
-  padding: .6rem;
-}
-
 .control-pane {
   position: fixed;
   top: 0;
@@ -226,14 +217,10 @@ a:hover {
   background-color: #22272E;
   color: white;
   border-right: 1px solid rgba(200, 200, 200, 0.1);
-  padding: 70px 40px 20px 20px;
+  padding: 10px 40px 20px 20px;
   vertical-align: top;
   z-index: 6;
   transition: all .1s linear;
-}
-
-.control-pane.no-app-header {
-  padding-top: 10px;
 }
 
 .control-pane.expanded {
@@ -322,19 +309,19 @@ a:hover {
   box-shadow: 0 3px 7px rgba(0,0,0,0.6);
 }
 
-.doc-path {
+.path {
   display: flex;
   column-gap: 2rem;
 }
 
-.doc-path .path-label {
+.path .path-label {
   display: inline-block;
   padding-right: .4em;
   font-size: .8em;
   font-weight: 300;
 }
 
-.doc-path .path-value {
+.path .path-value {
   display: inline-block;
 }
 

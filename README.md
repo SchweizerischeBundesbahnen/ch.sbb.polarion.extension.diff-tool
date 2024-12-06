@@ -1,6 +1,14 @@
 # Polarion ALM extension to compare objects of different types
 
-This Polarion extension provides functionality of diffing content of 2 documents (either different or the same in different revisions) and later to merge selected diffs in both directions.
+This Polarion extension provides functionality of diffing:
+* fields of 2 documents (either different or the same in different revisions)
+* work items of 2 documents (also either of different documents or of the same in different revisions)
+* arbitrary set of work items in one project with their counterpart work items from another project
+
+...and then to merge selected diffs in any direction.
+
+In case of diffing work items, appropriate counterpart work items (from another document or another project) are always seeking
+by selected link role.
 
 ## Quick start
 
@@ -11,9 +19,10 @@ The extension should be copied to `<polarion_home>/polarion/extensions/ch.sbb.po
 
 ## Compatibility
 
-This extension is compatible with Polarion 2404.
-This extension is compatible with Java 17.
-This extension is compatible with [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v7. (If you are using [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v6, please use version 3.x.x of this extension.)
+This extension is compatible with:
+* Polarion 2404
+* Java 17
+* [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v7 (If you are using [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v6, please use version 3.x.x of this extension)
 
 ## Build
 
@@ -97,46 +106,6 @@ Default value is `2`. Increasing this value may speed up the process but can als
 ## REST API
 
 This extension provides REST API. OpenAPI Specification can be obtained [here](docs/openapi.json).
-
-## Calling REST endpoints from a Live Report Page
-
-```html
-<script>
-function compare() {
-    const projectId1 = document.getElementById('projectId1').value;
-    const space1 = document.getElementById('space1').value;
-    const name1 = document.getElementById('name1').value;
-    const projectId2 = document.getElementById('projectId2').value;
-    const space2 = document.getElementById('space2').value;
-    const name2 = document.getElementById('name2').value;
-    const requestBody = JSON.stringify({'module1': {"projectId": projectId1, "space": space1, "name": name1}, 'module2': {"projectId": projectId2, "space": space2, "name": name2}});
-    fetch('/polarion/diff-tool/rest/internal/comparison/documents', {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: requestBody
-    }).then(response => {
-        if (response.ok) {
-            return response.json().then(data => data.equal ? "Equal!" : "Not equal!")
-        } else {
-            return response.text()
-        }
-    }).then(text => {
-        alert(text)
-    });
-}
-</script>
-
-<input id='projectId1' type='text' value='elibrary'/>
-<input id='space1' type='text' value='_default'/>
-<input id='name1' type='text' value='Doc1'/><br/>
-<input id='projectId2' type='text' value='elibrary'/>
-<input id='space2' type='text' value='_default'/>
-<input id='name2' type='text' value='Doc2'/><br/>
-<button onclick='compare()'>Compare</button>
-```
 
 ## Calling diff methods from Velocity Context
 

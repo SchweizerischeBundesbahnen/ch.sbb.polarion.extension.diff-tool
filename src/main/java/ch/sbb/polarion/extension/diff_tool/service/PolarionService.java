@@ -455,8 +455,10 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             RichTextRenderTarget renderTarget = RichTextRenderTarget.PDF_EXPORT;
             InternalReadOnlyTransaction transaction = (InternalReadOnlyTransaction) trx;
 
+            WorkItemReference workItemReference = new WorkItemReference(projectId, workItemId, revision, null);
+
             RichTextRenderingContext renderingContext = new RichTextRenderingContext(transaction.context(), renderTarget);
-            renderingContext.setMainObjectReference(mainObjectReference); //optional but sometimes it's important (e.g. links rendering inside rich texts)
+            renderingContext.setMainObjectReference(mainObjectReference != null ? mainObjectReference : workItemReference); //optional but sometimes it's important (e.g. links rendering inside rich texts)
             renderingContext.setTransaction(transaction);
             renderingContext.setDocumentOutlineNumber(true);
 
@@ -464,7 +466,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             renderer.setRichTextRenderingContext(renderingContext);
 
             HtmlFragmentBuilder fragmentBuilder = renderTarget.selectBuilderTarget(transaction.context().createHtmlFragmentBuilderFor());
-            renderer.renderField(fragmentBuilder.html(""), new WorkItemFieldReference(new WorkItemReference(projectId, workItemId, revision, null), fieldId,
+            renderer.renderField(fragmentBuilder.html(""), new WorkItemFieldReference(workItemReference, fieldId,
                     IWorkItem.KEY_LINKED_WORK_ITEMS.equals(fieldId) ? FieldRenderType.LINKED_WI_IN_DOC : FieldRenderType.IMGTXT));
             return fragmentBuilder.toString();
         });
@@ -569,6 +571,14 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         }
         matcher.appendTail(buf);
         return buf.toString();
+    }
+
+    public @NotNull List<IWorkItem> getWorkItems(@NotNull String projectId, @NotNull List<String> workItemIds) {
+        ITrackerProject trackerProject = this.getTrackerProject(projectId);
+        return workItemIds.stream()
+                .filter(id -> !StringUtils.isEmptyTrimmed(id))
+                .map(trackerProject::getWorkItem)
+                .filter(workItem -> !workItem.isUnresolvable()).toList();
     }
 
     @SuppressWarnings("squid:S1166") // Initial exception swallowed intentionally

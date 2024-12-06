@@ -4,7 +4,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.*;
 import ch.sbb.polarion.extension.diff_tool.util.OutlineNumberComparator;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import ch.sbb.polarion.extension.generic.fields.model.FieldMetadata;
-import ch.sbb.polarion.extension.generic.util.ExtensionInfo;
 import ch.sbb.polarion.extension.generic.util.ObjectUtils;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
@@ -14,6 +13,7 @@ import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import ch.sbb.polarion.extension.diff_tool.util.RequestContextUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
@@ -24,6 +24,7 @@ import com.polarion.core.util.xml.HTMLCleaner;
 import com.polarion.platform.persistence.IEnumOption;
 import com.polarion.platform.persistence.model.ITypedList;
 import com.polarion.subterra.base.data.model.IType;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -77,7 +78,6 @@ public class DiffService {
                 .leftDocument(Document.from(leftDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(leftDocumentIdentifier.getProjectId())))
                 .rightDocument(Document.from(rightDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(rightDocumentIdentifier.getProjectId())))
                 .pairedWorkItems(pairedWorkItems)
-                .extensionInfo(String.format("v%s (%s)", ExtensionInfo.getInstance().getVersion().getBundleVersion(), ExtensionInfo.getInstance().getVersion().getBundleBuildTimestamp()))
                 .build();
     }
 
@@ -270,37 +270,95 @@ public class DiffService {
                     && potentialParent.getOutlineNumber().equals(potentialInlined.getOutlineNumber().substring(0, potentialInlined.getOutlineNumber().indexOf("-"))));
     }
 
-    public WorkItemsDiff getWorkItemsDiff(@NotNull WorkItemsDiffParams workItemsDiffParams) {
-        DocumentReference leftDocumentReference = getDocumentReference(workItemsDiffParams.getLeftWorkItem());
-        DocumentReference rightDocumentReference = getDocumentReference(workItemsDiffParams.getRightWorkItem());
+    public WorkItemsPairs findWorkItemsPairs(@NotNull WorkItemsPairsParams workItemsPairsParams) {
+        ILinkRoleOpt linkRole = polarionService.getLinkRoleById(workItemsPairsParams.getLinkRole(), polarionService.getTrackerProject(workItemsPairsParams.getLeftProjectId()));
+        if (linkRole == null) {
+            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", workItemsPairsParams.getLinkRole()));
+        }
+        IProject leftProject = polarionService.getProject(workItemsPairsParams.getLeftProjectId());
+        IProject rightProject = polarionService.getProject(workItemsPairsParams.getRightProjectId());
+
+        List<IWorkItem> leftWorkItems = polarionService.getWorkItems(workItemsPairsParams.getLeftProjectId(), workItemsPairsParams.getLeftWorkItemIds());
+        Collection<WorkItemsPair> pairedWorkItems = new ArrayList<>();
+        Collection<String> leftWorkItemIdsWithRedundancy = new ArrayList<>();
+        leftWorkItems.forEach(leftWorkItem -> {
+            List<IWorkItem> paired = polarionService.getPairedWorkItems(leftWorkItem, workItemsPairsParams.getRightProjectId(), workItemsPairsParams.getLinkRole());
+            if (CollectionUtils.isEmpty(paired)) {
+                pairedWorkItems.add(WorkItemsPair.of(leftWorkItem, null));
+            } else if (paired.size() == 1) {
+                pairedWorkItems.add(WorkItemsPair.of(leftWorkItem, paired.get(0)));
+            } else {
+                leftWorkItemIdsWithRedundancy.add(leftWorkItem.getId());
+            }
+        });
+
+        return WorkItemsPairs.builder()
+                .leftProject(Project.builder()
+                        .id(leftProject.getId())
+                        .name(leftProject.getName())
+                        .authorizedForMerge(polarionService.userAuthorizedForMerge(leftProject.getId()))
+                        .build())
+                .rightProject(Project.builder()
+                        .id(rightProject.getId())
+                        .name(rightProject.getName())
+                        .authorizedForMerge(polarionService.userAuthorizedForMerge(rightProject.getId()))
+                        .build())
+                .pairedWorkItems(pairedWorkItems)
+                .leftWorkItemIdsWithRedundancy(leftWorkItemIdsWithRedundancy)
+                .build();
+    }
+
+    public WorkItemsPairDiff getDocumentWorkItemsPairDiff(@NotNull DocumentWorkItemsPairDiffParams documentWorkItemsPairDiffParams) {
+        DocumentReference leftDocumentReference = getDocumentReference(documentWorkItemsPairDiffParams.getLeftWorkItem());
+        DocumentReference rightDocumentReference = getDocumentReference(documentWorkItemsPairDiffParams.getRightWorkItem());
 
         Pair<IModule, IModule> modules = ObjectUtils.requireNotNull(TransactionalExecutor.executeSafelyInReadOnlyTransaction(transaction -> Pair.of(
                 Optional.ofNullable(leftDocumentReference).map(reference -> reference.get(transaction).getOldApi()).orElse(null),
                 Optional.ofNullable(rightDocumentReference).map(reference -> reference.get(transaction).getOldApi()).orElse(null))
         ));
 
-        IWorkItem leftWorkItem = getWorkItem(workItemsDiffParams.getLeftWorkItem(), modules.getLeft());
-        IWorkItem rightWorkItem = getWorkItem(workItemsDiffParams.getRightWorkItem(), modules.getRight());
+        IWorkItem leftWorkItem = getWorkItem(documentWorkItemsPairDiffParams.getLeftWorkItem(), modules.getLeft());
+        IWorkItem rightWorkItem = getWorkItem(documentWorkItemsPairDiffParams.getRightWorkItem(), modules.getRight());
 
-        Set<String> fieldIds = getFieldsToDiff(workItemsDiffParams.getConfigName(), workItemsDiffParams.getConfigCacheBucketId(), workItemsDiffParams.getLeftProjectId(), leftWorkItem, rightWorkItem);
+        Set<String> fieldIds = getFieldsToDiff(documentWorkItemsPairDiffParams.getConfigName(), documentWorkItemsPairDiffParams.getConfigCacheBucketId(), documentWorkItemsPairDiffParams.getLeftProjectId(), leftWorkItem, rightWorkItem);
 
         WorkItemsPair workItemsPair = new WorkItemsPair();
         if (leftWorkItem != null) {
             workItemsPair.setLeftWorkItem(buildWorkItem(leftWorkItem, fieldIds,
                     modules.getLeft().getOutlineNumberOfWorkitem(leftWorkItem),
                     modules.getLeft().getExternalWorkItems().contains(leftWorkItem),
-                    leftDocumentReference, workItemsDiffParams.isCompareEnumsById()));
+                    leftDocumentReference, documentWorkItemsPairDiffParams.isCompareEnumsById()));
         }
         if (rightWorkItem != null) {
             workItemsPair.setRightWorkItem(buildWorkItem(rightWorkItem, fieldIds,
                     modules.getRight().getOutlineNumberOfWorkitem(rightWorkItem),
                     modules.getRight().getExternalWorkItems().contains(rightWorkItem),
-                    rightDocumentReference, workItemsDiffParams.isCompareEnumsById()));
+                    rightDocumentReference, documentWorkItemsPairDiffParams.isCompareEnumsById()));
         }
 
-        fillHtmlDiffs(workItemsPair, fieldIds, workItemsDiffParams);
+        fillHtmlDiffs(workItemsPair, fieldIds, documentWorkItemsPairDiffParams);
 
-        return WorkItemsDiff.of(workItemsPair, fieldIds);
+        return WorkItemsPairDiff.of(workItemsPair, fieldIds);
+    }
+
+    public WorkItemsPairDiff getDetachedWorkItemsPairDiff(@NotNull DetachedWorkItemsPairDiffParams detachedWorkItemsPairDiffParams) {
+        IWorkItem leftWorkItem = getWorkItem(detachedWorkItemsPairDiffParams.getLeftWorkItem());
+        IWorkItem rightWorkItem = getWorkItem(detachedWorkItemsPairDiffParams.getRightWorkItem());
+
+        Set<String> fieldIds = getFieldsToDiff(detachedWorkItemsPairDiffParams.getConfigName(), detachedWorkItemsPairDiffParams.getConfigCacheBucketId(),
+                detachedWorkItemsPairDiffParams.getLeftProjectId(), leftWorkItem, rightWorkItem);
+
+        WorkItemsPair workItemsPair = new WorkItemsPair();
+        if (leftWorkItem != null) {
+            workItemsPair.setLeftWorkItem(buildWorkItem(leftWorkItem, fieldIds, null, false, null, detachedWorkItemsPairDiffParams.isCompareEnumsById()));
+        }
+        if (rightWorkItem != null) {
+            workItemsPair.setRightWorkItem(buildWorkItem(rightWorkItem, fieldIds, null, false, null, detachedWorkItemsPairDiffParams.isCompareEnumsById()));
+        }
+
+        fillHtmlDiffs(workItemsPair, fieldIds, detachedWorkItemsPairDiffParams);
+
+        return WorkItemsPairDiff.of(workItemsPair, fieldIds);
     }
 
     private IWorkItem getWorkItem(@Nullable DocumentWorkItem workItemInDocument, IModule document) {
@@ -317,6 +375,14 @@ public class DiffService {
             }
         }
 
+        return workItem;
+    }
+
+    private IWorkItem getWorkItem(@Nullable ProjectWorkItem detachedWorkItem) {
+        IWorkItem workItem = null;
+        if (detachedWorkItem != null) {
+            workItem = polarionService.getWorkItem(detachedWorkItem.getProjectId(), detachedWorkItem.getId(), detachedWorkItem.getRevision());
+        }
         return workItem;
     }
 
@@ -342,8 +408,9 @@ public class DiffService {
                 DocumentReference.fromModuleLocation(workItemInDocument.getDocumentProjectId(), workItemInDocument.getDocumentLocationPath(), workItemInDocument.getDocumentRevision());
     }
 
-    private WorkItem buildWorkItem(IWorkItem iWorkItem, Set<String> fieldIds, String outlineNumber, boolean referenced, DocumentReference documentReference, boolean compareEnumsById) {
-        WorkItem workItem = WorkItem.of(iWorkItem, outlineNumber, referenced, !iWorkItem.getProjectId().equals(documentReference.projectId()));
+    private WorkItem buildWorkItem(@NotNull IWorkItem iWorkItem, @NotNull Set<String> fieldIds, @Nullable String outlineNumber,
+                                   boolean referenced, @Nullable DocumentReference documentReference, boolean compareEnumsById) {
+        WorkItem workItem = WorkItem.of(iWorkItem, outlineNumber, referenced, (documentReference != null && !iWorkItem.getProjectId().equals(documentReference.projectId())));
         Set<FieldMetadata> fields = Sets.union(polarionService.getGeneralFields(IWorkItem.PROTO, iWorkItem.getContextId()),
                 polarionService.getCustomFields(IWorkItem.PROTO, iWorkItem.getContextId(), Optional.ofNullable(iWorkItem.getType()).map(IEnumOption::getId).orElse(null)));
         for (String fieldId : fieldIds) {
@@ -367,7 +434,7 @@ public class DiffService {
             // So in order to cover all cases it is better to request it from outer document.
             return workItem.getOutlineNumber();
         } else if (DiffField.EXTERNAL_PROJECT_WORK_ITEM.getKey().equals(fieldId) && workItem.isExternalProjectWorkItem()) {
-                return Boolean.TRUE.toString();
+            return Boolean.TRUE.toString();
         }
         return polarionService.renderField(iWorkItem.getProjectId(), iWorkItem.getId(), workItem.getRevision(), fieldId, documentReference);
     }
@@ -404,7 +471,7 @@ public class DiffService {
     }
 
     @VisibleForTesting
-    void fillHtmlDiffs(@NotNull WorkItemsPair workItemsPair, @NotNull Set<String> fieldIds, @NotNull WorkItemsDiffParams workItemsDiffParams) {
+    void fillHtmlDiffs(@NotNull WorkItemsPair workItemsPair, @NotNull Set<String> fieldIds, @NotNull WorkItemsPairDiffParams<?> workItemsPairDiffParams) {
         // We will execute diff operation twice: using direct & reverse order.
         // this allows to show better visual result in case of style changes.
         // IMPORTANT: as a required non-obvious step for this approach - we have to swap
@@ -424,8 +491,8 @@ public class DiffService {
         };
 
         fieldIds.forEach(fieldId -> {
-            DiffContext contextA = new DiffContext(workItemsPair.getLeftWorkItem(), workItemsPair.getRightWorkItem(), fieldId, workItemsDiffParams, polarionService);
-            DiffContext contextB = new DiffContext(workItemsPair.getRightWorkItem(), workItemsPair.getLeftWorkItem(), fieldId, workItemsDiffParams, polarionService).reverseStyles(true);
+            DiffContext contextA = new DiffContext(workItemsPair.getLeftWorkItem(), workItemsPair.getRightWorkItem(), fieldId, workItemsPairDiffParams, polarionService);
+            DiffContext contextB = new DiffContext(workItemsPair.getRightWorkItem(), workItemsPair.getLeftWorkItem(), fieldId, workItemsPairDiffParams, polarionService).reverseStyles(true);
             differ.accept(contextA);
             differ.accept(contextB);
 
