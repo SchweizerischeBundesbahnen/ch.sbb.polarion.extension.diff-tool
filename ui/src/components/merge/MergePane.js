@@ -39,6 +39,10 @@ export default function MergePane({leftContext, rightContext, mergingContext, me
 
   const containsStructuralChanges = (pairsToMerge) => {
     for (const pair of pairsToMerge) {
+      // In case of comparing documents  fields we keep fieldIds in the 'pair' variable
+      if (typeof pair === 'string') {
+        return false;
+      }
       // If left/right item is missing then it's creation/deletion action. If 'movedOutlineNumber' filled - move action.
       if (!pair.leftWorkItem || !pair.rightWorkItem || pair.leftWorkItem.movedOutlineNumber || pair.rightWorkItem.movedOutlineNumber) {
         return true;

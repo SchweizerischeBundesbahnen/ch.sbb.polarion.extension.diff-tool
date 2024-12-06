@@ -4,7 +4,7 @@ import DiffViewer from "@/components/diff/DiffViewer";
 import { usePopperTooltip } from 'react-popper-tooltip';
 import 'react-popper-tooltip/dist/styles.css';
 
-export default function FieldsDiff({fieldId, fieldName, oldValue, newValue, issues}) {
+export default function FieldsDiff({fieldId, fieldName, oldValue, newValue, issues, fieldsDiff}) {
   const context = useContext(AppContext);
 
   const [display, setDisplay] = useState(true);
@@ -22,7 +22,7 @@ export default function FieldsDiff({fieldId, fieldName, oldValue, newValue, issu
   }, [fieldId, context.state.showOutlineNumbersDiff]);
 
   return (
-      <div className={`container-fluid g-0 diff-wrapper ${display ? "d-block" : "d-none"}`}>
+      <div className={`container-fluid g-0 ${fieldsDiff ? "fields-diff-wrapper" : "diff-wrapper"} ${display ? "d-block" : "d-none"}`}>
         <div className={`diff-header ${issues && issues.length > 0 ? "diff-issues" : ""}`} ref={setTriggerRef}>
           {fieldName}
         </div>

@@ -15,6 +15,7 @@ export default function ControlPane({diff_type}) {
   const remote = useRemote();
   const pdf = usePdf();
   const [projectId] = useState(searchParams.get('sourceProjectId'));
+  const [selectedTargetType, setSelectedTargetType] = useState(searchParams.get("targetType") || 'Workitems');
   const [configurations, setConfigurations] = useState([]);
   const [selectedConfiguration, setSelectedConfiguration] = useState(searchParams.get("config") || 'Default');
   const [paperSize, setPaperSize] = useState("A4");
@@ -42,6 +43,24 @@ export default function ControlPane({diff_type}) {
   }, [projectId]);
 
   useEffect(() => {
+    if (searchParams.get('targetType') !== selectedTargetType) {
+      const params = [];
+      for (const [key, value] of searchParams.entries()) {
+        if (key === 'targetType') {
+          params.push(`${key}=${selectedTargetType}`); // update 'targetType' parameter
+        } else {
+          params.push(`${key}=${value}`); // ...and leave other as they are
+        }
+      }
+      if (!searchParams.get('targetType')) {
+        params.push(`targetType=${selectedTargetType}`);
+      }
+
+      router.push(pathname + '?' + params.join('&'));
+    }
+  }, [selectedTargetType]);
+
+  useEffect(() => {
     if (searchParams.get('config') !== selectedConfiguration) {
       const params = [];
       for (const [key, value] of searchParams.entries()) {
@@ -50,6 +69,9 @@ export default function ControlPane({diff_type}) {
         } else {
           params.push(`${key}=${value}`); // ...and leave other as they are
         }
+      }
+      if (!searchParams.get('config')) {
+        params.push(`config=${selectedConfiguration}`);
       }
 
       router.push(pathname + '?' + params.join('&'));
@@ -104,6 +126,20 @@ export default function ControlPane({diff_type}) {
           }
         </div>
         <div className="controls">
+          {diff_type !== DiffTypes.WORK_ITEMS_DIFF &&
+              <div style={{
+                marginBottom: "6px"
+              }} className="select-set">
+                <label htmlFor="target-type">
+                  Target type:
+                </label>
+                <select id="target-type" className="form-select" value={selectedTargetType} onChange={(event) => setSelectedTargetType(event.target.value)}>
+                  {["Workitems", "Fields"].map((targetType, index) => {
+                    return <option key={index} value={targetType}>{targetType}</option>
+                  })}
+                </select>
+              </div>
+          }
           {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF &&
               <div style={{
                 marginBottom: "6px"
@@ -133,6 +169,15 @@ export default function ControlPane({diff_type}) {
                        onChange={() => context.state.setCounterpartWorkItemsDiffer(!context.state.counterpartWorkItemsDiffer)}/>
                 <label className="form-check-label" htmlFor="counterparts-differ">
                   Counterpart WorkItems differ
+                </label>
+              </div>
+          }
+          {diff_type === DiffTypes.DOCUMENTS_FIELDS_DIFF &&
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" checked={context.state.compareOnlyMutualFields} id="compare-only-mutual-fields"
+                       onChange={() => context.state.setCompareOnlyMutualFields(!context.state.compareOnlyMutualFields)}/>
+                <label className="form-check-label" htmlFor="compare-only-mutual-fields">
+                  Compare only mutual fields
                 </label>
               </div>
           }

@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeParams;
@@ -56,6 +57,37 @@ public class MergeInternalController {
             throw new BadRequestException("Parameters 'leftDocument', 'rightDocument' and 'direction' should be provided");
         }
         return mergeService.mergeDocuments(mergeParams);
+    }
+
+    @POST
+    @Path("/merge/documents-fields")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Merge fields of documents",
+            parameters = {
+                    @Parameter(
+                            description = "Parameters for merging documents fields",
+                            required = true,
+                            schema = @Schema(implementation = MergeParams.class)
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Merge result",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = MergeResult.class)
+                            )
+                    )
+            }
+    )
+    public MergeResult mergeDocumentsFields(@Parameter(required = true) DocumentsFieldsMergeParams mergeParams) {
+        if (mergeParams == null || mergeParams.getLeftDocument() == null || mergeParams.getRightDocument() == null || mergeParams.getDirection() == null
+                || mergeParams.getFieldIds() == null || mergeParams.getFieldIds().isEmpty()) {
+            throw new BadRequestException("Parameters 'leftDocument', 'rightDocument', 'direction' and 'fieldIds' should be provided");
+        }
+        return mergeService.mergeDocumentsFields(mergeParams);
     }
 
     @POST

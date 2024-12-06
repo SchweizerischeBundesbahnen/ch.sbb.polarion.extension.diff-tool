@@ -182,7 +182,7 @@ public class MergeServiceTest {
             testContext.polarionServiceConsumer.accept(polarionService);
         }
 
-        MergeContext context = mock(MergeContext.class);
+        PObjectMergeContext context = mock(PObjectMergeContext.class);
         lenient().when(context.getLinkRole()).thenReturn("role1");
 
         mergeService.mergeLinkedWorkItems(source, target, context, new WorkItemsPair());
@@ -203,6 +203,24 @@ public class MergeServiceTest {
                         eq(invocation.linkRevision), anyBoolean());
             }
         }
+    }
+
+    @Test
+    void testRoleNotFound() {
+        PolarionService polarionService = mock(PolarionService.class);
+
+        DocumentIdentifier leftIdentifier = mock(DocumentIdentifier.class);
+        DocumentIdentifier rightIdentifier = mock(DocumentIdentifier.class);
+
+        IModule leftModule = mock(IModule.class);
+        IModule rightModule = mock(IModule.class);
+        when(polarionService.getModule(leftIdentifier)).thenReturn(leftModule);
+        when(polarionService.getModule(rightIdentifier)).thenReturn(rightModule);
+
+        DiffModel model = mock(DiffModel.class);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model, true));
+        assertEquals("No link role could be found by ID 'someLinkRole'", exception.getMessage());
     }
 
     private static MergeTestContext sameProject() {
