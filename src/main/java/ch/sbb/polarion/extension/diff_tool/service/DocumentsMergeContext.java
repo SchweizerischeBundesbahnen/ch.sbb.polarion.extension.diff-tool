@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class DocumentsMergeContext extends PObjectMergeContext {
+public final class DocumentsMergeContext extends SettingsAwareMergeContext {
     final DocumentIdentifier leftDocumentIdentifier;
     final DocumentIdentifier rightDocumentIdentifier;
     final IModule leftModule;

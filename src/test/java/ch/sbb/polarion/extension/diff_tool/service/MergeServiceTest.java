@@ -213,7 +213,7 @@ public class MergeServiceTest {
             testContext.polarionServiceConsumer.accept(polarionService);
         }
 
-        PObjectMergeContext context = mock(PObjectMergeContext.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class);
         lenient().when(context.getLinkRole()).thenReturn("role1");
 
         mergeService.mergeLinkedWorkItems(source, target, context, new WorkItemsPair());

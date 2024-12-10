@@ -11,11 +11,11 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
-public abstract class PObjectMergeContext extends MergeContext {
+public abstract class SettingsAwareMergeContext extends MergeContext {
     protected final String linkRole;
     protected final DiffModel diffModel;
 
-    protected PObjectMergeContext(@NotNull MergeDirection direction, @NotNull String linkRole, @NotNull DiffModel diffModel) {
+    protected SettingsAwareMergeContext(@NotNull MergeDirection direction, @NotNull String linkRole, @NotNull DiffModel diffModel) {
         super(direction);
         this.linkRole = linkRole;
         this.diffModel = diffModel;

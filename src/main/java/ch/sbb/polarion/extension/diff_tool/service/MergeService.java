@@ -345,7 +345,7 @@ public class MergeService {
         return sourceReferenced != targetReferenced;
     }
 
-    private void updateModifiedItemsRevisions(PObjectMergeContext context) {
+    private void updateModifiedItemsRevisions(SettingsAwareMergeContext context) {
         for (MergeReportEntry mergeReportEntry : context.getMergeReport().getModified()) {
             WorkItem targetWorkItem = context.getTargetWorkItem(mergeReportEntry.getWorkItemsPair());
             targetWorkItem.setLastRevision(getWorkItem(targetWorkItem).getLastRevision());
@@ -403,7 +403,7 @@ public class MergeService {
      * b) several pairs which have particular work item as a source/target but different value as a counterpart
      * I these cases we must leave only the first pair in the list.
      */
-    private void removeDuplicatedOrConflictingPairs(List<WorkItemsPair> pairs, PObjectMergeContext context) {
+    private void removeDuplicatedOrConflictingPairs(List<WorkItemsPair> pairs, SettingsAwareMergeContext context) {
         Set<String> processedSourceIds = new HashSet<>();
         Set<String> processedTargetIds = new HashSet<>();
         pairs.removeIf(pair -> {
@@ -516,7 +516,7 @@ public class MergeService {
                 Objects.equals(role.getWorkItemTypeId(), (type == null ? "" : type.getId())) && Objects.equals(role.getId(), link.getRole().getId()));
     }
 
-    private boolean isHyperlinkRoleAllowedInConfiguration(HyperlinkStruct link, ITypeOpt type, PObjectMergeContext context) {
+    private boolean isHyperlinkRoleAllowedInConfiguration(HyperlinkStruct link, ITypeOpt type, SettingsAwareMergeContext context) {
         return context.getDiffModel().getHyperlinkRoles().isEmpty() ||
                 context.getDiffModel().getHyperlinkRoles().contains((type == null ? "" : type.getId()) + "#" + link.getRole().getId());
     }
@@ -595,7 +595,7 @@ public class MergeService {
         module.save();
     }
 
-    private void merge(IWorkItem source, IWorkItem target, PObjectMergeContext context, WorkItemsPair pair) {
+    private void merge(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, WorkItemsPair pair) {
         for (DiffField field : context.diffModel.getDiffFields()) {
             Object fieldValue = polarionService.getFieldValue(source, field.getKey());
             if (IWorkItem.KEY_HYPERLINKS.equals(field.getKey()) && (fieldValue == null || fieldValue instanceof Collection<?>)) {
@@ -613,7 +613,7 @@ public class MergeService {
         target.save();
     }
 
-    private void mergeHyperlinks(IWorkItem workItem, @Nullable Collection<?> linksList, PObjectMergeContext context, WorkItemsPair pair) {
+    private void mergeHyperlinks(IWorkItem workItem, @Nullable Collection<?> linksList, SettingsAwareMergeContext context, WorkItemsPair pair) {
         List<HyperlinkStruct> existingList = ((Collection<?>) workItem.getHyperlinks()).stream()
                 .filter(HyperlinkStruct.class::isInstance).map(HyperlinkStruct.class::cast)
                 .filter(h -> isHyperlinkRoleAllowedInConfiguration(h, workItem.getType(), context))
@@ -644,7 +644,7 @@ public class MergeService {
     }
 
     @VisibleForTesting
-    void mergeLinkedWorkItems(IWorkItem source, IWorkItem target, PObjectMergeContext context, WorkItemsPair pair) {
+    void mergeLinkedWorkItems(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, WorkItemsPair pair) {
 
         Collection<ILinkedWorkItemStruct> srcLinks = getLinks(source, false);
         Collection<ILinkedWorkItemStruct> targetLinks = getLinks(target, false);

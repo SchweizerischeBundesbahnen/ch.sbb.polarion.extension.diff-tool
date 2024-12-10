@@ -5,7 +5,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Project;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import org.jetbrains.annotations.NotNull;
 
-public class WorkItemsMergeContext extends PObjectMergeContext {
+public class WorkItemsMergeContext extends SettingsAwareMergeContext {
 
     final Project leftProject;
     final Project rightProject;
