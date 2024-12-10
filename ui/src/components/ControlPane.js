@@ -15,7 +15,7 @@ export default function ControlPane({diff_type}) {
   const remote = useRemote();
   const pdf = usePdf();
   const [projectId] = useState(searchParams.get('sourceProjectId'));
-  const [selectedTargetType, setSelectedTargetType] = useState(searchParams.get("targetType") || 'Workitems');
+  const [selectedCompareAs, setSelectedCompareAs] = useState(searchParams.get("compareAs") || 'Workitems');
   const [configurations, setConfigurations] = useState([]);
   const [selectedConfiguration, setSelectedConfiguration] = useState(searchParams.get("config") || 'Default');
   const [paperSize, setPaperSize] = useState("A4");
@@ -43,22 +43,22 @@ export default function ControlPane({diff_type}) {
   }, [projectId]);
 
   useEffect(() => {
-    if (searchParams.get('targetType') !== selectedTargetType) {
+    if (searchParams.get('compareAs') !== selectedCompareAs) {
       const params = [];
       for (const [key, value] of searchParams.entries()) {
-        if (key === 'targetType') {
-          params.push(`${key}=${selectedTargetType}`); // update 'targetType' parameter
+        if (key === 'compareAs') {
+          params.push(`${key}=${selectedCompareAs}`); // update 'compareAs' parameter
         } else {
           params.push(`${key}=${value}`); // ...and leave other as they are
         }
       }
-      if (!searchParams.get('targetType')) {
-        params.push(`targetType=${selectedTargetType}`);
+      if (!searchParams.get('compareAs')) {
+        params.push(`compareAs=${selectedCompareAs}`);
       }
 
       router.push(pathname + '?' + params.join('&'));
     }
-  }, [selectedTargetType]);
+  }, [selectedCompareAs]);
 
   useEffect(() => {
     if (searchParams.get('config') !== selectedConfiguration) {
@@ -133,9 +133,9 @@ export default function ControlPane({diff_type}) {
                 <label htmlFor="target-type">
                   Compare as:
                 </label>
-                <select id="target-type" className="form-select" value={selectedTargetType} onChange={(event) => setSelectedTargetType(event.target.value)}>
-                  {["Workitems", "Fields"].map((targetType, index) => {
-                    return <option key={index} value={targetType}>{targetType}</option>
+                <select id="target-type" className="form-select" value={selectedCompareAs} onChange={(event) => setSelectedCompareAs(event.target.value)}>
+                  {["Workitems", "Fields"].map((compareAs, index) => {
+                    return <option key={index} value={compareAs}>{compareAs}</option>
                   })}
                 </select>
               </div>

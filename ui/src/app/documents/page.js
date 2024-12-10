@@ -10,8 +10,8 @@ import * as DiffTypes from "@/DiffTypes";
 export default function DocumentsPage() {
   const searchParams = useSearchParams();
 
-  const isWorkitemsTargetType = () => {
-    return searchParams.get('targetType') === 'Workitems';
+  const isCompareAsWorkitems = () => {
+    return searchParams.get('compareAs') === 'Workitems';
   }
 
   return <>
@@ -21,8 +21,8 @@ export default function DocumentsPage() {
       </div>
       <ExtensionInfo />
     </div>
-    <ControlPane diff_type={isWorkitemsTargetType() ? DiffTypes.DOCUMENTS_DIFF : DiffTypes.DOCUMENTS_FIELDS_DIFF}/>
-    {isWorkitemsTargetType() && <DocumentsDiff/>}
-    {!isWorkitemsTargetType() && <DocumentsFieldsDiff/>}
+    <ControlPane diff_type={isCompareAsWorkitems() ? DiffTypes.DOCUMENTS_DIFF : DiffTypes.DOCUMENTS_FIELDS_DIFF}/>
+    {isCompareAsWorkitems() && <DocumentsDiff/>}
+    {!isCompareAsWorkitems() && <DocumentsFieldsDiff/>}
   </>;
 }
