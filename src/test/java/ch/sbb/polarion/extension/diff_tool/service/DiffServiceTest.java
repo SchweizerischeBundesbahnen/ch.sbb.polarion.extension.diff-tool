@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeMoveDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Project;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
@@ -14,8 +15,10 @@ import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
+import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.IWorkItem;
+import com.polarion.subterra.base.data.model.ICustomField;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
@@ -24,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +39,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -199,6 +205,31 @@ class DiffServiceTest {
             assertItemsEqual(i, "LEFT", expectedPair.getLeftWorkItem(), actualPair.getLeftWorkItem());
             assertItemsEqual(i, "RIGHT", expectedPair.getRightWorkItem(), actualPair.getRightWorkItem());
         }
+    }
+
+    @Test
+    void testGetFieldsDiff() {
+        IModule left = mock(IModule.class);
+        IModule right = mock(IModule.class);
+
+        when(left.getCustomFieldsList()).thenReturn(List.of("C1", "C2", "C3", "L1", "L2", "L3"));
+        when(right.getCustomFieldsList()).thenReturn(List.of("R1", "R2", "R3", "C1", "C2", "C3"));
+
+        when(left.getFieldLabel(anyString())).thenAnswer((Answer<String>) i -> (String) i.getArguments()[0]);
+        when(right.getFieldLabel(anyString())).thenAnswer((Answer<String>) i -> (String) i.getArguments()[0]);
+
+        when(right.getCustomFieldPrototype(anyString())).thenReturn(mock(ICustomField.class));
+        when(left.getCustomFieldPrototype(anyString())).thenReturn(mock(ICustomField.class));
+
+        when(left.getProjectId()).thenReturn("projectId");
+
+        when(polarionService.getFieldValue(any(), anyString(), any())).thenAnswer((Answer<String>) i -> (String) i.getArguments()[1]);
+
+        Collection<DocumentsFieldsPair> result = diffService.getFieldsDiff(left, right, false, true);
+        assertEquals(3, result.size());
+
+        result = diffService.getFieldsDiff(left, right, false, false);
+        assertEquals(9, result.size());
     }
 
     @Test

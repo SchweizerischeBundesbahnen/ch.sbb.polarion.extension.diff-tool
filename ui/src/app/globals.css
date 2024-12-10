@@ -152,6 +152,7 @@ a:hover {
   width: 21px;
   height: 100%;
   padding: 0 3px;
+  z-index: 1;
 }
 
 .merge-ticker .form-check {
@@ -457,11 +458,6 @@ a:hover {
 .diff-wrapper {
   position: relative;
   background-color: white;
-  border-top: 1px solid rgba(0,0,0,.1);
-}
-
-.fields-diff-wrapper {
-  /* 21px - merge-ticker width */
   border-top: 1px solid rgba(0,0,0,.1);
 }
 

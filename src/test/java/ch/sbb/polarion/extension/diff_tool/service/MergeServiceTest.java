@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
@@ -12,6 +13,9 @@ import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
 import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
+import com.polarion.alm.shared.api.transaction.RunnableInWriteTransaction;
+import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
+import com.polarion.alm.shared.api.transaction.WriteTransaction;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
@@ -116,6 +120,33 @@ public class MergeServiceTest {
             MergeResult mergeResult = mergeService.mergeDocuments(mergeParams);
             assertFalse(mergeResult.isSuccess());
             assertTrue(mergeResult.isMergeNotAuthorized());
+        }
+    }
+
+    @Test
+    void testMergeDocumentsFields() {
+        IModule source = mock(IModule.class);
+        IModule target = mock(IModule.class);
+        when(polarionService.getModule(any())).thenReturn(source, target);
+
+        when(polarionService.userAuthorizedForMerge(any())).thenReturn(false);
+        MergeResult mergeResult = mergeService.mergeDocumentsFields(new DocumentsFieldsMergeParams(mock(DocumentIdentifier.class), mock(DocumentIdentifier.class),
+                MergeDirection.LEFT_TO_RIGHT, List.of("a", "b", "c")));
+        assertFalse(mergeResult.isSuccess());
+        assertTrue(mergeResult.isMergeNotAuthorized());
+
+        try (MockedStatic<TransactionalExecutor> transactionalExecutorMockedStatic = mockStatic(TransactionalExecutor.class)) {
+            transactionalExecutorMockedStatic.when(() -> TransactionalExecutor.executeInWriteTransaction(any())).thenAnswer(arg -> {
+                RunnableInWriteTransaction<?> runnable = arg.getArgument(0);
+                runnable.run(mock(WriteTransaction.class));
+                return runnable;
+            });
+            when(polarionService.userAuthorizedForMerge(any())).thenReturn(true);
+
+            mergeResult = mergeService.mergeDocumentsFields(new DocumentsFieldsMergeParams(mock(DocumentIdentifier.class), mock(DocumentIdentifier.class),
+                    MergeDirection.LEFT_TO_RIGHT, List.of("a", "b", "c")));
+            assertTrue(mergeResult.isSuccess());
+            assertEquals(3, mergeResult.getMergeReport().getCopied().size());
         }
     }
 

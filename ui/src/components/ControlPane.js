@@ -131,7 +131,7 @@ export default function ControlPane({diff_type}) {
                 marginBottom: "6px"
               }} className="select-set">
                 <label htmlFor="target-type">
-                  Target type:
+                  Compare as:
                 </label>
                 <select id="target-type" className="form-select" value={selectedTargetType} onChange={(event) => setSelectedTargetType(event.target.value)}>
                   {["Workitems", "Fields"].map((targetType, index) => {

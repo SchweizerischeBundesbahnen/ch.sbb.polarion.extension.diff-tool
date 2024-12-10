@@ -1,7 +1,8 @@
-export default function Modal({title, cancelButtonTitle, actionButtonTitle, actionButtonHandler, visible, setVisible, className, children}) {
+export default function Modal({title, cancelButtonTitle, actionButtonTitle, actionButtonHandler, onClose, visible, setVisible, className, children}) {
 
   const closeModal = () => {
     setVisible(false);
+    onClose ? onClose() : null;
   }
 
   return (

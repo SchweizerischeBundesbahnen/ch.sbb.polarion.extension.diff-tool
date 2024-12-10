@@ -1,8 +1,8 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -12,6 +12,7 @@ import java.util.List;
 
 @Data
 @SuperBuilder
+@AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
 @Schema(description = "Documents fields merge input data")

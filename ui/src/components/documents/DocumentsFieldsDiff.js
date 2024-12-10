@@ -13,7 +13,7 @@ import MergePane from "@/components/merge/MergePane";
 import useDiffService from "@/services/useDiffService";
 import Modal from "@/components/Modal";
 import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";
-import useImageUtils from "@/utils/useImageUtils";
+import MergeResultModal from "@/components/merge/MergeResultModal";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument'];
 
@@ -33,8 +33,6 @@ export default function DocumentsFieldsDiff() {
   const [mergeReport, setMergeReport] = useState({});
   const [mergeNotAuthorizedWarning, setMergeNotAuthorizedWarning] = useState(false);  // means that merge to target document is not authorized for current user
   const [mergeReportModalVisible, setMergeReportModalVisible] = useState(false);
-  const [mergeLogsVisible, setMergeLogsVisible] = useState(false);
-  const imageUtils = useImageUtils();
 
   useEffect(() => {
     const missingParams = REQUIRED_PARAMS.filter(param => !searchParams.get(param));
@@ -59,9 +57,8 @@ export default function DocumentsFieldsDiff() {
                 return {
                   id: fieldDiff.leftField.id,
                   name: !rightName || leftName === rightName ? leftName : !leftName ? rightName : (leftName + ' / ' + rightName),
-                  // TODO does fixImagesPathInDocumentWorkItem work for document field images???
-                  oldValue: imageUtils.fixImagesPathInDocumentWorkItem(fieldDiff.leftField.htmlDiff || "", null, data.leftDocument),
-                  newValue: imageUtils.fixImagesPathInDocumentWorkItem(fieldDiff.rightField.htmlDiff || "", null, data.rightDocument),
+                  oldValue: fieldDiff.leftField.htmlDiff || "",
+                  newValue: fieldDiff.rightField.htmlDiff || "",
                   issues: fieldDiff.issues
                 }
               });
@@ -91,7 +88,6 @@ export default function DocumentsFieldsDiff() {
         .then((data) => {
           setMergeReport(data.mergeReport);
           setMergeNotAuthorizedWarning(!data.success && data.mergeNotAuthorized);
-          setMergeLogsVisible(false);
           setMergeReportModalVisible(true);
         })
         .catch((error) => {
@@ -143,56 +139,18 @@ export default function DocumentsFieldsDiff() {
     <Modal title="Merge error" cancelButtonTitle="Close" visible={mergeErrorModalVisible} setVisible={setMergeErrorModalVisible} className="modal-md error">
       <p>{mergeError}</p>
     </Modal>
-    <Modal title="Merge Report" cancelButtonTitle="Close" visible={mergeReportModalVisible}
-           setVisible={setWarningModalVisibleAndReloadIfNeeded} className="modal-xl">
-      <div style={{
-        marginBottom: "10px"
-      }}>
-        {mergeNotAuthorizedWarning && <p>You are not authorized to execute such merge request.</p>}
-        {!mergeNotAuthorizedWarning &&
-            <>
-              <p>
-                Merge operation completed with following result:
-              </p>
-              <ul>
-                {mergeReport.created?.length > 0 && <li><strong>{mergeReport.created.length}</strong> items were created.</li>}
-                {mergeReport.copied?.length > 0 && <li><strong>{mergeReport.copied.length}</strong> items were copied.</li>}
-                {mergeReport.deleted?.length > 0 && <li><strong>{mergeReport.deleted.length}</strong> items were deleted.</li>}
-                {mergeReport.modified?.length > 0 && <li>Content of <strong>{mergeReport.modified.length}</strong> items were modified.</li>}
-                {mergeReport.moved?.length > 0 && <li><strong>{mergeReport.moved.length}</strong> items were moved (structural changes).</li>}
-                {mergeReport.moveFailed?.length > 0 && <li><strong>{mergeReport.moveFailed.length}</strong> items were not moved because target document
-                  does not contain destination chapter. Please, merge first parent nodes of mentioned work items.</li>}
-                {mergeReport.conflicted?.length > 0 && <li><strong>{mergeReport.conflicted.length}</strong> items were not merged because of concurrent modifications.</li>}
-                {mergeReport.prohibited?.length > 0 && <li><strong>{mergeReport.prohibited.length}</strong> items were not merged because such operation is logically prohibited.</li>}
-                {mergeReport.creationFailed?.length > 0 && <li><strong>{mergeReport.creationFailed.length}</strong> items were not merged because work items referenced in source document
-                  do not have counterparts in target project.</li>}
-                {mergeReport.detached?.length > 0 && <li><strong>{mergeReport.detached.length}</strong> items were moved out of documents.</li>}
-                {mergeReport.warnings?.length > 0 && <li><strong>{mergeReport.warnings.length}</strong> warnings.</li>}
-              </ul>
-              {mergeReport.logs && !mergeLogsVisible && <p><a href="#" onClick={() => setMergeLogsVisible(true)}>See full log</a></p>}
-              {mergeReport.logs && mergeLogsVisible && <pre style={{
-                padding: "10px",
-                background: "#444",
-                color: "#eee",
-                overflow: "auto",
-                borderRadius: "5px",
-                fontSize: ".8em",
-                height: "400px",
-                textWrap: "wrap"
-              }}>{mergeReport.logs}</pre>}
-            </>
-        }
-      </div>
-    </Modal>
-    {/* style={{position: 'relative', height: 'auto'}}*/}
+
+    <MergeResultModal visible={mergeReportModalVisible} visibilityCallback={setWarningModalVisibleAndReloadIfNeeded}
+                      mergeNotAuthorizedWarning={mergeNotAuthorizedWarning} mergeReport={mergeReport}/>
+
     {fieldsDiffs && fieldsDiffs.map((diff, index) => (
-        <div className="row g-0" key={index} style={{position: 'relative'}}>
+        <div className="wi-diff row g-0" key={index} style={{position: 'relative'}}>
           <div className="merge-ticker">
             <div className="form-check">
               <input className="form-check-input" type="checkbox" checked={mergingContext.isIndexSelected(index)} onChange={changeSelected(diff.id)}/>
             </div>
           </div>
-          <FieldsDiff fieldId={diff.id} fieldName={diff.name} oldValue={diff.oldValue} newValue={diff.newValue} issues={diff.issues} fieldsDiff={true}/>
+          <FieldsDiff fieldId={diff.id} fieldName={diff.name} oldValue={diff.oldValue} newValue={diff.newValue} issues={diff.issues}/>
         </div>
     ))
     }
