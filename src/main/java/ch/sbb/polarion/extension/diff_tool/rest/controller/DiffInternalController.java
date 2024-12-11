@@ -3,6 +3,8 @@ package ch.sbb.polarion.extension.diff_tool.rest.controller;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DetachedWorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairs;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.StringsDiff;
@@ -155,6 +157,37 @@ public class DiffInternalController {
             throw new BadRequestException("'leftWorkItem' is required");
         }
         return diffService.getDetachedWorkItemsPairDiff(detachedWorkItemsPairDiffParams);
+    }
+
+    @POST
+    @Path("/diff/documents-fields")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Gets difference between fields of two live documents",
+            parameters = {
+                    @Parameter(
+                            description = "Parameters for getting the documents fields differences",
+                            required = true,
+                            schema = @Schema(implementation = DocumentsFieldsDiffParams.class)
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Successfully retrieved the differences between fields of the provided documents",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = DocumentsFieldsDiff.class)
+                            )
+                    )
+            }
+    )
+    public DocumentsFieldsDiff getDocumentsFieldsDiff(@Parameter(required = true) DocumentsFieldsDiffParams params) {
+        if (params == null || params.getLeftDocument() == null || params.getRightDocument() == null) {
+            throw new BadRequestException("Parameters 'leftDocument' and 'rightDocument' should be provided");
+        }
+        return diffService.getDocumentsFieldsDiff(params.getLeftDocument(), params.getRightDocument(),
+                Boolean.TRUE.equals(params.getCompareEnumsById()), Boolean.TRUE.equals(params.getCompareOnlyMutualFields()));
     }
 
     @POST

@@ -3,6 +3,7 @@ package ch.sbb.polarion.extension.diff_tool.service;
 import ch.sbb.polarion.extension.diff_tool.report.MergeReportEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
@@ -123,6 +124,38 @@ public class MergeService {
                 .success(true)
                 .mergeReport(context.getMergeReport())
                 .targetModuleHasStructuralChanges(!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision()))
+                .build();
+    }
+
+    public MergeResult mergeDocumentsFields(@NotNull DocumentsFieldsMergeParams mergeParams) {
+
+        DocumentsFieldsMergeContext context = new DocumentsFieldsMergeContext(mergeParams.getDirection(), mergeParams.getLeftDocument(), mergeParams.getRightDocument());
+
+        IModule source = polarionService.getModule(context.getSourceDocumentIdentifier());
+        IModule target = polarionService.getModule(context.getTargetDocumentIdentifier());
+
+        if (!polarionService.userAuthorizedForMerge(target.getProjectId())) {
+            return MergeResult.builder().success(false).mergeNotAuthorized(true).build();
+        }
+
+        TransactionalExecutor.executeInWriteTransaction(transaction -> {
+            for (String fieldId : mergeParams.getFieldIds()) {
+                try {
+                    target.setValue(fieldId, source.getValue(fieldId));
+                    context.reportEntry(COPIED, fieldId, "value successfully copied");
+                } catch (Exception e) {
+                    context.reportEntry(WARNING, fieldId, "cannot copy value (%s)".formatted(e.getMessage()));
+                }
+            }
+            if (!context.getMergeReport().getCopied().isEmpty()) {
+                target.save();
+            }
+            return null;
+        });
+
+        return MergeResult.builder()
+                .success(!context.getMergeReport().getCopied().isEmpty())
+                .mergeReport(context.getMergeReport())
                 .build();
     }
 
@@ -312,7 +345,7 @@ public class MergeService {
         return sourceReferenced != targetReferenced;
     }
 
-    private void updateModifiedItemsRevisions(MergeContext context) {
+    private void updateModifiedItemsRevisions(SettingsAwareMergeContext context) {
         for (MergeReportEntry mergeReportEntry : context.getMergeReport().getModified()) {
             WorkItem targetWorkItem = context.getTargetWorkItem(mergeReportEntry.getWorkItemsPair());
             targetWorkItem.setLastRevision(getWorkItem(targetWorkItem).getLastRevision());
@@ -370,7 +403,7 @@ public class MergeService {
      * b) several pairs which have particular work item as a source/target but different value as a counterpart
      * I these cases we must leave only the first pair in the list.
      */
-    private void removeDuplicatedOrConflictingPairs(List<WorkItemsPair> pairs, MergeContext context) {
+    private void removeDuplicatedOrConflictingPairs(List<WorkItemsPair> pairs, SettingsAwareMergeContext context) {
         Set<String> processedSourceIds = new HashSet<>();
         Set<String> processedTargetIds = new HashSet<>();
         pairs.removeIf(pair -> {
@@ -483,7 +516,7 @@ public class MergeService {
                 Objects.equals(role.getWorkItemTypeId(), (type == null ? "" : type.getId())) && Objects.equals(role.getId(), link.getRole().getId()));
     }
 
-    private boolean isHyperlinkRoleAllowedInConfiguration(HyperlinkStruct link, ITypeOpt type, MergeContext context) {
+    private boolean isHyperlinkRoleAllowedInConfiguration(HyperlinkStruct link, ITypeOpt type, SettingsAwareMergeContext context) {
         return context.getDiffModel().getHyperlinkRoles().isEmpty() ||
                 context.getDiffModel().getHyperlinkRoles().contains((type == null ? "" : type.getId()) + "#" + link.getRole().getId());
     }
@@ -562,7 +595,7 @@ public class MergeService {
         module.save();
     }
 
-    private void merge(IWorkItem source, IWorkItem target, MergeContext context, WorkItemsPair pair) {
+    private void merge(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, WorkItemsPair pair) {
         for (DiffField field : context.diffModel.getDiffFields()) {
             Object fieldValue = polarionService.getFieldValue(source, field.getKey());
             if (IWorkItem.KEY_HYPERLINKS.equals(field.getKey()) && (fieldValue == null || fieldValue instanceof Collection<?>)) {
@@ -580,7 +613,7 @@ public class MergeService {
         target.save();
     }
 
-    private void mergeHyperlinks(IWorkItem workItem, @Nullable Collection<?> linksList, MergeContext context, WorkItemsPair pair) {
+    private void mergeHyperlinks(IWorkItem workItem, @Nullable Collection<?> linksList, SettingsAwareMergeContext context, WorkItemsPair pair) {
         List<HyperlinkStruct> existingList = ((Collection<?>) workItem.getHyperlinks()).stream()
                 .filter(HyperlinkStruct.class::isInstance).map(HyperlinkStruct.class::cast)
                 .filter(h -> isHyperlinkRoleAllowedInConfiguration(h, workItem.getType(), context))
@@ -611,7 +644,7 @@ public class MergeService {
     }
 
     @VisibleForTesting
-    void mergeLinkedWorkItems(IWorkItem source, IWorkItem target, MergeContext context, WorkItemsPair pair) {
+    void mergeLinkedWorkItems(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, WorkItemsPair pair) {
 
         Collection<ILinkedWorkItemStruct> srcLinks = getLinks(source, false);
         Collection<ILinkedWorkItemStruct> targetLinks = getLinks(target, false);

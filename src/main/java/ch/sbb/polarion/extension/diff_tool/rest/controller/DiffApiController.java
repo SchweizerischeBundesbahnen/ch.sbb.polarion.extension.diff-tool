@@ -29,6 +29,11 @@ public class DiffApiController extends DiffInternalController {
     }
 
     @Override
+    public DocumentsFieldsDiff getDocumentsFieldsDiff(DocumentsFieldsDiffParams params) {
+        return polarionService.callPrivileged(() -> super.getDocumentsFieldsDiff(params));
+    }
+
+    @Override
     public StringsDiff diffHtml(String html1, String html2) {
         return polarionService.callPrivileged(() -> super.diffHtml(html1, html2));
     }

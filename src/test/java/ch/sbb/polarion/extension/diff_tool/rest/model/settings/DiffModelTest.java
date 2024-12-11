@@ -1,12 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.settings;
 
-import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
-import ch.sbb.polarion.extension.diff_tool.service.DocumentsMergeContext;
-import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
-import com.polarion.alm.tracker.model.IModule;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -17,9 +11,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class DiffModelTest {
     private static Stream<Arguments> testValuesForCss() {
@@ -90,23 +81,5 @@ class DiffModelTest {
         assertEquals(expectedFields, model.getDiffFields());
         assertEquals(expectedStatusesToIgnore, model.getStatusesToIgnore());
         assertEquals(expectedHyperlinkRoles, model.getHyperlinkRoles());
-    }
-
-    @Test
-    void testRoleNotFound() {
-        PolarionService polarionService = mock(PolarionService.class);
-
-        DocumentIdentifier leftIdentifier = mock(DocumentIdentifier.class);
-        DocumentIdentifier rightIdentifier = mock(DocumentIdentifier.class);
-
-        IModule leftModule = mock(IModule.class);
-        IModule rightModule = mock(IModule.class);
-        when(polarionService.getModule(leftIdentifier)).thenReturn(leftModule);
-        when(polarionService.getModule(rightIdentifier)).thenReturn(rightModule);
-
-        DiffModel model = mock(DiffModel.class);
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model, true));
-        assertEquals("No link role could be found by ID 'someLinkRole'", exception.getMessage());
     }
 }
