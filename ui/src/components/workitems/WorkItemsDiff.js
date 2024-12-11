@@ -8,7 +8,7 @@ import Error from "@/components/Error";
 import useLoadingContext from "@/components/loading/useLoadingContext";
 import useDiffService from "@/services/useDiffService";
 import WorkItemsPairDiff from "@/components/workitems/WorkItemsPairDiff";
-import {useMergingContext, LEFT_TO_RIGHT, RIGHT_TO_LEFT} from "@/components/merge/useMergingContext";
+import {useMergingContext} from "@/components/merge/useMergingContext";
 import ProgressBar from "@/components/loading/ProgressBar";
 import ErrorsOverlay from "@/components/ErrorsOverlay";
 import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";

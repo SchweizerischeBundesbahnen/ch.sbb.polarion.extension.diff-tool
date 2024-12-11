@@ -222,6 +222,31 @@ DiffTool = {
     }
   },
 
+  updateCollectionsDiffButton: function (clickedElement, sourceProjectId) {
+    const DISABLED_BUTTON_CLASS= "polarion-TestsExecutionButton-buttons-defaultCursor";
+
+    const diffWidget = clickedElement?.closest("div.polarion-DiffTool");
+    const button = diffWidget?.querySelector(".polarion-TestsExecutionButton-buttons");
+    if (button) {
+      console.log(button);
+      const leftCollectionSelected = diffWidget.querySelector('input[type="radio"][name="source-collection"]:checked');
+      console.log(leftCollectionSelected);
+      const rightCollectionSelected = diffWidget.querySelector('input[type="radio"][name="target-collection"]:checked');
+      console.log(rightCollectionSelected);
+
+      if (button.classList.contains(DISABLED_BUTTON_CLASS) && leftCollectionSelected && rightCollectionSelected) {
+        button.classList.remove(DISABLED_BUTTON_CLASS);
+        // We need to remember click listener to remove it from button later
+        this.registeredButtonClickListener = () => DiffTool.openCollectionsDiffApplication(diffWidget, sourceProjectId);
+        button.addEventListener("click", this.registeredButtonClickListener);
+      }
+      if (!button.classList.contains(DISABLED_BUTTON_CLASS) && !(leftCollectionSelected || rightCollectionSelected)) {
+        button.classList.add(DISABLED_BUTTON_CLASS);
+        button.removeEventListener("click", this.registeredButtonClickListener);
+      }
+    }
+  },
+
   selectAllItems: function (clickedElement) {
     const diffWidget = clickedElement?.closest("div.polarion-DiffTool");
     if (diffWidget) {
@@ -232,9 +257,9 @@ DiffTool = {
   },
 
   openWorkItemsDiffApplication: function (diffWidget, sourceProjectId) {
-    const targetProjectId = document.getElementById("comparison-target-project-selector").value;
-    const linkRole = document.getElementById("comparison-link-role-selector").value;
-    const config = document.getElementById("comparison-config-selector").value;
+    const targetProjectId = document.getElementById("target-project-selector").value;
+    const linkRole = document.getElementById("link-role-selector").value;
+    const config = document.getElementById("config-selector").value;
 
     let path = `/polarion/diff-tool-app/ui/app/workitems.html`
         + `?sourceProjectId=${sourceProjectId}&targetProjectId=${targetProjectId}&linkRole=${linkRole}&config=${config}`;
@@ -254,6 +279,21 @@ DiffTool = {
     });
   },
 
+  openCollectionsDiffApplication: function (diffWidget, sourceProjectId) {
+    const linkRole = document.getElementById("link-role-selector").value;
+    const config = document.getElementById("config-selector").value;
+    const targetProjectId = document.getElementById("target-project-selector").value;
+    const sourceCollectionSelected = diffWidget.querySelector('input[type="radio"][name="source-collection"]:checked');
+    const targetCollectionSelected = diffWidget.querySelector('input[type="radio"][name="target-collection"]:checked');
+
+    let path = `/polarion/diff-tool-app/ui/app/collections.html`
+        + `?sourceProjectId=${sourceProjectId}&sourceCollectionId=${sourceCollectionSelected.dataset.id}`
+        + `&targetProjectId=${targetProjectId}&targetCollectionId=${targetCollectionSelected.dataset.id}`
+        + `&linkRole=${linkRole}&config=${config}`;
+
+    window.open(path, '_blank');
+  },
+
   replaceUrlParam: function (url, paramName, paramValue){
     if (paramValue == null) {
       paramValue = '';
@@ -264,17 +304,6 @@ DiffTool = {
     }
     url = url.replace(/[?#]$/,'');
     return url + (url.indexOf('?')> 0 ? '&' : '?') + paramName + '=' + paramValue;
-  },
-
-  generateUuid : function() {
-    return (
-        String('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx')
-    ).replace(/[xy]/g, (character) => {
-      const random = (Math.random() * 16) | 0;
-      const value = character === "x" ? random : (random & 0x3) | 0x8;
-
-      return value.toString(16);
-    });
   },
 
   digestMessage: async function(message) {

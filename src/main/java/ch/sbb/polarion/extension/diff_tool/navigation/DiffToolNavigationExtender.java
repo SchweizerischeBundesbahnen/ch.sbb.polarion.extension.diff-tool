@@ -1,14 +1,11 @@
-package ch.sbb.polarion.extension.diff_tool;
+package ch.sbb.polarion.extension.diff_tool.navigation;
 
-import com.polarion.alm.shared.api.impl.ScopeImpl;
 import com.polarion.alm.ui.server.navigation.NavigationExtender;
 import com.polarion.alm.ui.server.navigation.NavigationExtenderNode;
-import com.polarion.portal.shared.navigation.IScope;
 import com.polarion.subterra.base.data.identification.IContextId;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class DiffToolNavigationExtender extends NavigationExtender {
@@ -35,8 +32,7 @@ public class DiffToolNavigationExtender extends NavigationExtender {
     @Nullable
     @Override
     public String getPageUrl(@NotNull IContextId contextId) {
-        String contextName = contextId.getContextName();
-        return "/polarion/diff-tool/pages/diff-tool.jsp?projectId=" + (contextName == null || contextName.startsWith("-") ? "" : contextName) + "&buildId=" + System.getProperty("polarion.build.id");
+        return "/polarion/diff-tool/pages/diff-tool.jsp";
     }
 
     @Override
@@ -47,6 +43,6 @@ public class DiffToolNavigationExtender extends NavigationExtender {
     @NotNull
     @Override
     public List<NavigationExtenderNode> getRootNodes(@NotNull IContextId contextId) {
-        return new ArrayList<>();
+        return List.of(new MultipleWorkItemsNode(), new CollectionsNode());
     }
 }

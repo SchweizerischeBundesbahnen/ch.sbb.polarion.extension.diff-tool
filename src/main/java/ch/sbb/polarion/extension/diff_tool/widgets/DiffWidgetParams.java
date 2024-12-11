@@ -7,11 +7,9 @@ import lombok.experimental.Accessors;
 @Data
 @Builder
 @Accessors(fluent = true)
-public class WorkItemsDiffWidgetParams {
-    private String targetProject;
+public class DiffWidgetParams {
     private String linkRole;
     private String configuration;
-    private String query;
-    private String page;
-    private String recordsPerPage;
+    private DataSetWidgetParams sourceParams;
+    private DataSetWidgetParams targetParams;
 }
