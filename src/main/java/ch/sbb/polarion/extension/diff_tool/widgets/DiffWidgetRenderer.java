@@ -114,7 +114,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         Collection<SettingName> configurations = NamedSettingsRegistry.INSTANCE.getByFeatureName(DiffSettings.FEATURE_NAME).readNames(ScopeUtils.getScopeFromProject(getProjectId()));
         for (SettingName configuration : configurations) {
             HtmlTagBuilder option = configurationSelect.append().tag().byName("option");
-            option.attributes().byName("value", configuration.getName());
+            option.attributes().byName("value", configuration.getId());
             option.append().text(configuration.getName());
             if (configuration.getId().equals(this.getConfiguration())) {
                 option.attributes().booleanAttribute("selected");
@@ -148,8 +148,8 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
                 top.location.href = DiffTool.replaceUrlParam(top.location.href, 'targetProjectId', document.getElementById('target-project-selector').value);
                 top.location.href = DiffTool.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role-selector').value);
                 top.location.href = DiffTool.replaceUrlParam(top.location.href, 'configuration', document.getElementById('config-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>query', document.getElementById('<SIDE>-query-input').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>recordsPerPage', document.getElementById('<SIDE>-records-per-page-input').value);
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>Query', document.getElementById('<SIDE>-query-input').value);
+                top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>RecordsPerPage', document.getElementById('<SIDE>-records-per-page-input').value);
                 top.location.reload()"""
                 .replace("<SIDE>", dataSetParams.side().toString());
         applyButton.attributes().onClick(applyButtonScript);

@@ -82,7 +82,7 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
         //language=JS
         outerTable.attributes().onClick(String.format("DiffTool.updateWorkItemsDiffButton(this, '%s');", params.sourceParams().projectId()));
 
-        HtmlTagBuilder contentTable = outerTable.append().tag().table();
+        HtmlTagBuilder contentTable = outerTable.append().tag().tr().append().tag().td().append().tag().table();
         contentTable.attributes().className("polarion-rpw-table-content");
 
         renderHeaderRow(contentTable.append(), true);
