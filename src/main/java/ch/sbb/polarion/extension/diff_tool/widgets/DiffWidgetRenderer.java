@@ -26,6 +26,7 @@ import com.polarion.alm.shared.api.utils.html.HtmlContentBuilder;
 import com.polarion.alm.shared.api.utils.html.HtmlTagBuilder;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.ui.shared.LinearGradientColor;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,10 +37,24 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
 
     private final PolarionService polarionService = new PolarionService();
     private final FieldsParameter columnsParameter;
+    private final DiffWidgetParams diffWidgetParams;
 
-    protected DiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull FieldsParameter columnsParameter) {
+    protected DiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull FieldsParameter columnsParameter, @NotNull DiffWidgetParams diffWidgetParams) {
         super(context);
         this.columnsParameter = columnsParameter;
+        this.diffWidgetParams = diffWidgetParams;
+    }
+
+    protected String getProjectId() {
+        return diffWidgetParams.sourceParams().projectId();
+    }
+
+    protected String getLinkRole() {
+        return diffWidgetParams.linkRole();
+    }
+
+    protected String getConfiguration() {
+        return diffWidgetParams.configuration();
     }
 
     protected DataSet initDataSet(@NotNull String widgetId, @NotNull PrototypeEnum allowedPrototype, @NotNull Scope scope,
@@ -89,7 +104,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         HtmlTagBuilder linkRoleSelect = linkRolePane.append().tag().byName("select");
         linkRoleSelect.attributes().id("link-role-selector");
 
-        if (getProjectId() != null) {
+        if (StringUtils.isNotBlank(getProjectId())) {
             Collection<ILinkRoleOpt> linkRoles = polarionService.getLinkRoles(getProjectId());
             for (ILinkRoleOpt linkRole : linkRoles) {
                 HtmlTagBuilder option = linkRoleSelect.append().tag().byName("option");
@@ -168,7 +183,11 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         resetButton.attributes().onClick(resetButtonScript);
     }
 
-    protected void renderTargetProject(@NotNull HtmlTagBuilder parent, @NotNull DataSetWidgetParams dataSetParams) {
+    protected void renderTargetProject(@NotNull HtmlTagBuilder parent) {
+        renderTargetProject(parent, null);
+    }
+
+    private void renderTargetProject(@NotNull HtmlTagBuilder parent, @Nullable DataSetWidgetParams dataSetParams) {
         HtmlTagBuilder targetProjectPane = parent.append().tag().div();
         targetProjectPane.attributes().className("target-project");
 
@@ -187,12 +206,12 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
             HtmlTagBuilder option = targetProjectSelect.append().tag().byName("option");
             option.attributes().byName("value", project.getId());
             option.append().text(project.getName());
-            if (project.getId().equals(dataSetParams.projectId())) {
+            if (dataSetParams != null && project.getId().equals(dataSetParams.projectId())) {
                 preDefined = true;
                 option.attributes().booleanAttribute("selected");
             }
         }
-        if (!preDefined && firstProjectInList != null) {
+        if (dataSetParams != null && !preDefined && firstProjectInList != null) {
             dataSetParams.projectId(firstProjectInList.getId());
         }
     }
@@ -312,7 +331,4 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
     }
 
     protected abstract void renderItem(@NotNull HtmlContentBuilder builder, @NotNull ModelObject item, @NotNull DataSetWidgetParams dataSetParams);
-    protected abstract String getProjectId();
-    protected abstract String getLinkRole();
-    protected abstract String getConfiguration();
 }

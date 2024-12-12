@@ -1,41 +1,21 @@
 package ch.sbb.polarion.extension.diff_tool.widgets;
 
-import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
-import ch.sbb.polarion.extension.diff_tool.settings.DiffSettings;
-import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
-import ch.sbb.polarion.extension.generic.settings.SettingName;
-import ch.sbb.polarion.extension.generic.util.ScopeUtils;
-import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.PrototypeEnum;
-import com.polarion.alm.shared.api.model.rp.parameter.impl.HierarchicalUrlParametersResolver;
-import com.polarion.alm.shared.api.model.rp.parameter.impl.dataset.DataSetParameterBuilder;
-import com.polarion.alm.server.api.model.rp.widget.AbstractWidgetRenderer;
-import com.polarion.alm.server.api.model.rp.widget.BottomQueryLinksBuilder;
-import com.polarion.alm.shared.api.model.rp.parameter.DataSet;
 import com.polarion.alm.shared.api.model.rp.parameter.Field;
 import com.polarion.alm.shared.api.model.rp.parameter.FieldsParameter;
 import com.polarion.alm.shared.api.model.rp.parameter.SortingParameter;
-import com.polarion.alm.shared.api.model.rp.parameter.impl.dataset.DataSetParameterImpl;
 import com.polarion.alm.shared.api.model.rp.parameter.impl.dataset.FieldsParameterImpl;
 import com.polarion.alm.shared.api.model.rp.parameter.impl.dataset.SortingParameterImpl;
-import com.polarion.alm.shared.api.model.rp.parameter.impl.init.HtmlRichPageParameterInitializer;
 import com.polarion.alm.shared.api.model.rp.widget.RichPageWidgetCommonContext;
-import com.polarion.alm.shared.api.utils.collections.IterableWithSize;
-import com.polarion.alm.shared.api.utils.collections.StrictMapImpl;
 import com.polarion.alm.shared.api.utils.html.HtmlContentBuilder;
 import com.polarion.alm.shared.api.utils.html.HtmlFragmentBuilder;
 import com.polarion.alm.shared.api.utils.html.HtmlTagBuilder;
-import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IRichPage;
 import com.polarion.alm.tracker.model.IWorkItem;
-import com.polarion.alm.ui.shared.LinearGradientColor;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.List;
 
 public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
@@ -48,7 +28,7 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
     private final DiffWidgetParams params;
 
     public WorkItemsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params) {
-        super(context, COLUMNS_PARAMETER);
+        super(context, COLUMNS_PARAMETER, params);
 
         this.params = params;
         if (!context.getDisplayedScope().isGlobal()) {
@@ -67,7 +47,7 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
         HtmlTagBuilder description = topPane.append().tag().div();
         description.append().tag().p().append().text("Please select diff configuration, link role and work items below which you want to compare and click button above");
 
-        renderTargetProject(wrap, params.sourceParams());
+        renderTargetProject(wrap);
         renderLinkRole(wrap);
         renderConfiguration(wrap);
 
@@ -126,20 +106,5 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
                 column.render(item.fields()).withLinks(true).htmlTo(td.append());
             }
         }
-    }
-
-    @Override
-    protected String getProjectId() {
-        return params.sourceParams().projectId();
-    }
-
-    @Override
-    protected String getLinkRole() {
-        return params.linkRole();
-    }
-
-    @Override
-    protected String getConfiguration() {
-        return params.configuration();
     }
 }

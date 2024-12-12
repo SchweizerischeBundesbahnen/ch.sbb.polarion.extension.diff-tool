@@ -33,7 +33,7 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
     private final DiffWidgetParams params;
 
     public CollectionsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params) {
-        super(context, COLUMNS_PARAMETER);
+        super(context, COLUMNS_PARAMETER, params);
 
         this.params = params;
     }
@@ -115,18 +115,4 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
         }
     }
 
-    @Override
-    protected String getProjectId() {
-        return params.sourceParams().projectId();
-    }
-
-    @Override
-    protected String getLinkRole() {
-        return params.linkRole();
-    }
-
-    @Override
-    protected String getConfiguration() {
-        return params.configuration();
-    }
 }
