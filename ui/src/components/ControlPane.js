@@ -43,7 +43,7 @@ export default function ControlPane({diff_type}) {
   }, [projectId]);
 
   useEffect(() => {
-    if (searchParams.get('compareAs') !== selectedCompareAs) {
+    if (diff_type !== DiffTypes.WORK_ITEMS_DIFF && searchParams.get('compareAs') !== selectedCompareAs) {
       const params = [];
       for (const [key, value] of searchParams.entries()) {
         if (key === 'compareAs') {
