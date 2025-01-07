@@ -1,7 +1,7 @@
 import {useContext, useEffect, useState} from "react";
 import {useSearchParams} from "next/navigation";
 import AppContext from "../AppContext";
-import Error from "@/components/Error";
+import AppAlert from "@/components/AppAlert";
 import FieldsDiff from "@/components/diff/FieldsDiff";
 import Loading from "@/components/loading/Loading";
 import DocumentHeader from "@/components/documents/DocumentHeader";
@@ -14,10 +14,12 @@ import useDiffService from "@/services/useDiffService";
 import Modal from "@/components/Modal";
 import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";
 import MergeResultModal from "@/components/merge/MergeResultModal";
+import CollectionHeader from "@/components/collections/CollectionHeader";
+import DocumentProjectHeader from "@/components/documents/DocumentProjectHeader";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument'];
 
-export default function DocumentsFieldsDiff() {
+export default function DocumentsFieldsDiff({ enclosingCollections }) {
   const context = useContext(AppContext);
   const searchParams = useSearchParams();
   const diffService = useDiffService();
@@ -108,7 +110,7 @@ export default function DocumentsFieldsDiff() {
   if (loadingContext.fieldsDiffLoading) return <Loading message="Loading fields diff" />;
 
   if (loadingContext.fieldsDiffLoadingError || !fieldsData || !fieldsData.leftDocument || !fieldsData.rightDocument) {
-    return <Error title="Error occurred loading diff data!"
+    return <AppAlert title="Error occurred loading diff data!"
                   message={loadingContext.fieldsDiffLoadingError && !loadingContext.fieldsDiffLoadingError.includes("<html")
                       ? loadingContext.fieldsDiffLoadingError
                       : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
@@ -125,16 +127,26 @@ export default function DocumentsFieldsDiff() {
   return <div id="diff-body" className={`doc-diff ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
     <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>
       <div className="row g-0">
+        {enclosingCollections && <>
+          <CollectionHeader collection={enclosingCollections.leftCollection}/>
+          <CollectionHeader collection={enclosingCollections.rightCollection}/>
+        </>}
+        {!enclosingCollections && <>
+          <DocumentProjectHeader document={fieldsData.leftDocument}/>
+          <DocumentProjectHeader document={fieldsData.rightDocument}/>
+        </>}
+      </div>
+      <div className="row g-0">
         <DocumentHeader document={fieldsData.leftDocument} />
         <DocumentHeader document={fieldsData.rightDocument} />
       </div>
 
-      <ProgressBar loadingContext={loadingContext} />
-      <MergePane leftContext={fieldsData.leftDocument} rightContext={fieldsData.rightDocument} mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
+      <ProgressBar loadingContext={loadingContext}/>
+      <MergePane leftContext={fieldsData.leftDocument} rightContext={fieldsData.rightDocument} mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext}/>
     </div>
 
-    <ErrorsOverlay loadingContext={loadingContext} />
-    <MergeInProgressOverlay mergeInProgress={mergeInProgress} />
+    <ErrorsOverlay loadingContext={loadingContext}/>
+    <MergeInProgressOverlay mergeInProgress={mergeInProgress}/>
 
     <Modal title="Merge error" cancelButtonTitle="Close" visible={mergeErrorModalVisible} setVisible={setMergeErrorModalVisible} className="modal-md error">
       <p>{mergeError}</p>
@@ -152,8 +164,6 @@ export default function DocumentsFieldsDiff() {
           </div>
           <FieldsDiff fieldId={diff.id} fieldName={diff.name} oldValue={diff.oldValue} newValue={diff.newValue} issues={diff.issues}/>
         </div>
-    ))
-    }
-
-</div>
+    ))}
+  </div>;
 }

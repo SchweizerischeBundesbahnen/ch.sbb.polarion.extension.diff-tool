@@ -20,7 +20,7 @@ import MergeResultModal from "@/components/merge/MergeResultModal";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument', 'linkRole'];
 
-export default function DocumentsDiff({enclosingCollections}) {
+export default function DocumentsDiff({ enclosingCollections }) {
   const context = useContext(AppContext);
   const searchParams = useSearchParams();
   const diffService = useDiffService();
@@ -206,8 +206,8 @@ export default function DocumentsDiff({enclosingCollections}) {
         </>}
       </div>
       <div className="row g-0">
-        <DocumentHeader document={docsData.leftDocument} enclosingCollections={enclosingCollections}/>
-        <DocumentHeader document={docsData.rightDocument} enclosingCollections={enclosingCollections} />
+        <DocumentHeader document={docsData.leftDocument} />
+        <DocumentHeader document={docsData.rightDocument} />
       </div>
 
       <ProgressBar loadingContext={loadingContext} />

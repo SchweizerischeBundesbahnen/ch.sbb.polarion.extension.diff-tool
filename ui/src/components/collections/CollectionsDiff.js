@@ -11,6 +11,7 @@ import DocumentHeader from "@/components/documents/DocumentHeader";
 import CollectionHeader from "@/components/collections/CollectionHeader";
 import useRemote from "@/services/useRemote";
 import Modal from "@/components/Modal";
+import DocumentsFieldsDiff from "@/components/documents/DocumentsFieldsDiff";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceCollectionId', 'targetProjectId', 'targetCollectionId'];
 
@@ -22,6 +23,7 @@ export default function CollectionsDiff() {
   const diffService = useDiffService();
   const remote = useRemote();
 
+  const [compareAsWorkItems] = useState(searchParams.get('compareAs') === 'Workitems');
   const [loading, setLoading] = useState(true);
   const [loadingError, setLoadingError] = useState(null);
   const [collectionsData, setCollectionsData] = useState({});
@@ -181,5 +183,9 @@ export default function CollectionsDiff() {
     </div>;
   }
 
-  return <DocumentsDiff enclosingCollections={collectionsData} />
+  if (compareAsWorkItems) {
+    return <DocumentsDiff enclosingCollections={collectionsData} />;
+  } else {
+    return <DocumentsFieldsDiff enclosingCollections={collectionsData} />;
+  }
 }

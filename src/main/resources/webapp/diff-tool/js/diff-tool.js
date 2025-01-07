@@ -286,7 +286,7 @@ DiffTool = {
     let path = `/polarion/diff-tool-app/ui/app/collections.html`
         + `?sourceProjectId=${sourceProjectId}&sourceCollectionId=${sourceCollectionSelected.dataset.id}`
         + `&targetProjectId=${targetProjectId}&targetCollectionId=${targetCollectionSelected.dataset.id}`
-        + `&linkRole=${linkRole}&config=${config}`;
+        + `&linkRole=${linkRole}&config=${config}&compareAs=Workitems`;
 
     window.open(path, '_blank');
   },

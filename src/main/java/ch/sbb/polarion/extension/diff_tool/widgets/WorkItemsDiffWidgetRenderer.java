@@ -47,7 +47,7 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
         HtmlTagBuilder description = topPane.append().tag().div();
         description.append().tag().p().append().text("Please select diff configuration, link role and work items below which you want to compare and click button above");
 
-        renderTargetProject(wrap);
+        renderTargetProject(wrap, params.targetParams());
         renderLinkRole(wrap);
         renderConfiguration(wrap);
 

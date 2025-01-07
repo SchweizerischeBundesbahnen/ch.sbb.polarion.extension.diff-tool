@@ -1,10 +1,8 @@
 'use client'
 
 import ControlPane from "@/components/ControlPane";
-import DocumentsDiff from "@/components/documents/DocumentsDiff";
 import ExtensionInfo from "@/components/ExtensionInfo";
 import * as DiffTypes from "@/DiffTypes";
-import {COLLECTIONS_DIFF} from "@/DiffTypes";
 import CollectionsDiff from "@/components/collections/CollectionsDiff";
 
 export default function CollectionsPage() {

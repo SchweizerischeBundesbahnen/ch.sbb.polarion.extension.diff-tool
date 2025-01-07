@@ -183,11 +183,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         resetButton.attributes().onClick(resetButtonScript);
     }
 
-    protected void renderTargetProject(@NotNull HtmlTagBuilder parent) {
-        renderTargetProject(parent, null);
-    }
-
-    private void renderTargetProject(@NotNull HtmlTagBuilder parent, @Nullable DataSetWidgetParams dataSetParams) {
+    protected void renderTargetProject(@NotNull HtmlTagBuilder parent, @Nullable DataSetWidgetParams dataSetParams) {
         HtmlTagBuilder targetProjectPane = parent.append().tag().div();
         targetProjectPane.attributes().className("target-project");
 
