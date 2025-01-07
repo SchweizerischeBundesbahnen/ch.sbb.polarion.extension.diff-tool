@@ -137,7 +137,7 @@ DiffTool = {
     let path = `/polarion/diff-tool-app/ui/app/documents.html`
         + `?sourceProjectId=${this.sourceProjectId}&sourceSpaceId=${this.sourceSpace}&sourceDocument=${this.sourceDocument}`
         + `&targetProjectId=${targetProjectId}&targetSpaceId=${targetSpace}&targetDocument=${targetDocument}`
-        + `&linkRole=${linkRole}&config=${config}`;
+        + `&linkRole=${linkRole}&config=${config}&compareAs=Workitems`;
     if (this.sourceRevision) {
       path += `&sourceRevision=${this.sourceRevision}`;
     }
