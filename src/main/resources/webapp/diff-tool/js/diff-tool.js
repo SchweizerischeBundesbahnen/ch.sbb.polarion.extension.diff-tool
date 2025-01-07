@@ -228,11 +228,8 @@ DiffTool = {
     const diffWidget = clickedElement?.closest("div.polarion-DiffTool");
     const button = diffWidget?.querySelector(".polarion-TestsExecutionButton-buttons");
     if (button) {
-      console.log(button);
       const leftCollectionSelected = diffWidget.querySelector('input[type="radio"][name="source-collection"]:checked');
-      console.log(leftCollectionSelected);
       const rightCollectionSelected = diffWidget.querySelector('input[type="radio"][name="target-collection"]:checked');
-      console.log(rightCollectionSelected);
 
       if (button.classList.contains(DISABLED_BUTTON_CLASS) && leftCollectionSelected && rightCollectionSelected) {
         button.classList.remove(DISABLED_BUTTON_CLASS);

@@ -129,9 +129,9 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         Collection<SettingName> configurations = NamedSettingsRegistry.INSTANCE.getByFeatureName(DiffSettings.FEATURE_NAME).readNames(ScopeUtils.getScopeFromProject(getProjectId()));
         for (SettingName configuration : configurations) {
             HtmlTagBuilder option = configurationSelect.append().tag().byName("option");
-            option.attributes().byName("value", configuration.getId());
+            option.attributes().byName("value", configuration.getName());
             option.append().text(configuration.getName());
-            if (configuration.getId().equals(this.getConfiguration())) {
+            if (configuration.getName().equals(this.getConfiguration())) {
                 option.attributes().booleanAttribute("selected");
             }
         }

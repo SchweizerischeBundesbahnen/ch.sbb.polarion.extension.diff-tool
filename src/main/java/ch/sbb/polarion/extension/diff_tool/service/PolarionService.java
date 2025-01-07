@@ -192,6 +192,15 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             throw new IllegalArgumentException("Target 'documentName' should be provided");
         }
 
+        if (!trackerService.getFolderManager().existFolder(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(), documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId())) {
+            IFolder sourceSpace = trackerService.getFolderManager().getFolder(sourceProjectId, sourceSpaceId);
+            TransactionalExecutor.executeInWriteTransaction(transaction -> {
+                trackerService.getFolderManager().createFolder(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(),
+                        documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId(), sourceSpace.getTitleOrName());
+                return null;
+            });
+        }
+
         IProject targetProject = getProject(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId());
         ITrackerProject targetTrackerProject = trackerService.getTrackerProject(targetProject);
         IContextId targetProjectContextId = targetTrackerProject.getContextId();

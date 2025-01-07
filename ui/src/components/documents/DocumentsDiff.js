@@ -1,7 +1,7 @@
 import {useContext, useEffect, useState} from "react";
 import {useSearchParams} from "next/navigation";
 import AppContext from "../AppContext";
-import Error from "@/components/Error";
+import AppAlert from "@/components/AppAlert";
 import Loading from "@/components/loading/Loading";
 import WorkItemsPairDiff from "@/components/documents/workitems/WorkItemsPairDiff";
 import DocumentHeader from "@/components/documents/DocumentHeader";
@@ -14,10 +14,12 @@ import MergePane from "@/components/merge/MergePane";
 import useDiffService from "@/services/useDiffService";
 import Modal from "@/components/Modal";
 import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";
+import CollectionHeader from "@/components/collections/CollectionHeader";
+import DocumentProjectHeader from "@/components/documents/DocumentProjectHeader";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument', 'linkRole'];
 
-export default function DocumentsDiff() {
+export default function DocumentsDiff({enclosingCollections}) {
   const context = useContext(AppContext);
   const searchParams = useSearchParams();
   const diffService = useDiffService();
@@ -61,6 +63,10 @@ export default function DocumentsDiff() {
       setRightChaptersDiffMarkers(new Map());
     }
   }, [context.state.counterpartWorkItemsDiffer, context.state.compareEnumsById, context.state.allowReferencedWorkItemMerge]); // Reload diff of all work item pairs if specified properties changed
+
+  useEffect(() => {
+    context.state.setSelectedItemsCount(mergingContext.selectionCount);
+  }, [mergingContext.selectionCount]);
 
   const dataLoadedCallback = (index, error, diffExists, resetDiffMarker, leftChapter, rightChapter, leftWiId, rightWiId) => {
     diffExists && context.state.setDiffsExist(true);
@@ -181,17 +187,28 @@ export default function DocumentsDiff() {
   if (loadingContext.pairsLoading) return <Loading message="Loading paired WorkItems" />;
 
   if (loadingContext.pairsLoadingError || !docsData || !docsData.leftDocument || !docsData.rightDocument || !docsData.pairedWorkItems) {
-    return <Error title="Error occurred loading diff data!"
-                  message={loadingContext.pairsLoadingError && !loadingContext.pairsLoadingError.includes("<html")
+    return <AppAlert title="Error occurred loading diff data!"
+                     message={loadingContext.pairsLoadingError && !loadingContext.pairsLoadingError.includes("<html")
                       ? loadingContext.pairsLoadingError
                       : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
   }
 
   return <div id="diff-body" className={`doc-diff ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
     <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>
+
       <div className="row g-0">
-        <DocumentHeader document={docsData.leftDocument} />
-        <DocumentHeader document={docsData.rightDocument} />
+        {enclosingCollections && <>
+          <CollectionHeader collection={enclosingCollections.leftCollection} />
+          <CollectionHeader collection={enclosingCollections.rightCollection} />
+        </>}
+        {!enclosingCollections && <>
+          <DocumentProjectHeader document={docsData.leftDocument} />
+          <DocumentProjectHeader document={docsData.rightDocument} />
+        </>}
+      </div>
+      <div className="row g-0">
+        <DocumentHeader document={docsData.leftDocument} enclosingCollections={enclosingCollections}/>
+        <DocumentHeader document={docsData.rightDocument} enclosingCollections={enclosingCollections} />
       </div>
 
       <ProgressBar loadingContext={loadingContext} />

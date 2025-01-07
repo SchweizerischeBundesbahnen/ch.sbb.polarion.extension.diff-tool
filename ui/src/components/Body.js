@@ -11,6 +11,7 @@ export default function Body({ children }) {
   const [headerPinned, setHeaderPinned] = useState(false);
   const [controlPaneAccessible, setControlPaneAccessible] = useState(false);
   const [controlPaneExpanded, setControlPaneExpanded] = useState(false);
+  const [leftCollectionDocuments, setLeftCollectionDocuments] = useState([]);
   const [showOutlineNumbersDiff, setShowOutlineNumbersDiff] = useState(false);
   const [counterpartWorkItemsDiffer, setCounterpartWorkItemsDiffer] = useState(false);
   const [compareEnumsById, setCompareEnumsById] = useState(false);
@@ -18,6 +19,7 @@ export default function Body({ children }) {
   const [hideChaptersIfNoDifference, setHideChaptersIfNoDifference] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [diffsExist, setDiffsExist] = useState(false);
+  const [selectedItemsCount, setSelectedItemsCount] = useState(0);
 
   const handleScroll = event => {
     setHeaderPinned(event.currentTarget.scrollTop > 60);
@@ -40,6 +42,8 @@ export default function Body({ children }) {
           setControlPaneAccessible: setControlPaneAccessible,
           controlPaneExpanded: controlPaneExpanded,
           setControlPaneExpanded: setControlPaneExpanded,
+          leftCollectionDocuments: leftCollectionDocuments,
+          setLeftCollectionDocuments: setLeftCollectionDocuments,
           showOutlineNumbersDiff: showOutlineNumbersDiff,
           setShowOutlineNumbersDiff: setShowOutlineNumbersDiff,
           counterpartWorkItemsDiffer: counterpartWorkItemsDiffer,
@@ -53,7 +57,9 @@ export default function Body({ children }) {
           dataLoaded: dataLoaded,
           setDataLoaded: setDataLoaded,
           diffsExist: diffsExist,
-          setDiffsExist: setDiffsExist
+          setDiffsExist: setDiffsExist,
+          selectedItemsCount: selectedItemsCount,
+          setSelectedItemsCount: setSelectedItemsCount
         }
       }}
   >

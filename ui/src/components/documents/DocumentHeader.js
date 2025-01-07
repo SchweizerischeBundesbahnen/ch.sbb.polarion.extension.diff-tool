@@ -3,7 +3,6 @@ import PathPart from "@/components/PathPart";
 export default function DocumentHeader({document}) {
   return <div className="col collapsed-border">
     <div className="path">
-      <PathPart label="project" value={document.projectName}/>
       <PathPart label="space" value={document.spaceName}/>
     </div>
     <div className="doc-title">
