@@ -24,6 +24,7 @@ import com.polarion.alm.tracker.model.baselinecollection.IBaselineCollectionElem
 import com.polarion.core.util.types.Text;
 import com.polarion.core.util.xml.HTMLCleaner;
 import com.polarion.platform.persistence.IEnumOption;
+import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.ITypedList;
 import com.polarion.subterra.base.data.model.IType;
 import org.apache.commons.collections4.CollectionUtils;
@@ -411,6 +412,19 @@ public class DiffService {
         return WorkItemsPairDiff.of(workItemsPair, fieldIds);
     }
 
+    public DocumentsFieldsDiff getDocumentsFieldsDiff(DocumentIdentifier leftDocumentIdentifier, DocumentIdentifier rightDocumentIdentifier, boolean compareEnumsById, boolean compareOnlyMutualFields) {
+        IModule leftDocument = polarionService.getDocumentWithFilledRevision(leftDocumentIdentifier.getProjectId(), leftDocumentIdentifier.getSpaceId(),
+                leftDocumentIdentifier.getName(), leftDocumentIdentifier.getRevision());
+        IModule rightDocument = polarionService.getDocumentWithFilledRevision(rightDocumentIdentifier.getProjectId(), rightDocumentIdentifier.getSpaceId(),
+                rightDocumentIdentifier.getName(), rightDocumentIdentifier.getRevision());
+
+        return DocumentsFieldsDiff.builder()
+                .leftDocument(Document.from(leftDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(leftDocumentIdentifier.getProjectId())))
+                .rightDocument(Document.from(rightDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(rightDocumentIdentifier.getProjectId())))
+                .pairedFields(getFieldsDiff(leftDocument, rightDocument, compareEnumsById, compareOnlyMutualFields))
+                .build();
+    }
+
     private IWorkItem getWorkItem(@Nullable DocumentWorkItem workItemInDocument, IModule document) {
         IWorkItem workItem = null;
         if (workItemInDocument != null) {
@@ -489,20 +503,20 @@ public class DiffService {
         return polarionService.renderField(iWorkItem.getProjectId(), iWorkItem.getId(), workItem.getRevision(), fieldId, documentReference);
     }
 
-    private Object getFieldValue(IWorkItem iWorkItem, String fieldId, WorkItem workItem, IType fieldType, boolean compareEnumsById) {
+    private Object getFieldValue(IPObject ipObject, String fieldId, WorkItem workItem, IType fieldType, boolean compareEnumsById) {
         boolean enumIdComparisonMode = compareEnumsById && DiffToolUtils.isEnumContainingType(fieldType);
-        Object value = polarionService.getFieldValue(iWorkItem, fieldId, enumIdComparisonMode ? Object.class : String.class);
+        Object value = polarionService.getFieldValue(ipObject, fieldId, enumIdComparisonMode ? Object.class : String.class);
         if (IWorkItem.KEY_DESCRIPTION.equals(fieldId)) {
             // Sometimes during work item duplication the description is 'cleaned' (see WorkItem#setValue method).
             // This results in slight differences between initial & copied description values.
             // Using the code below we try to 'harmonize' both descriptions reducing non-important diffs count,
             // also this code will remove comments because they shouldn't be treated as difference
             value = HTMLCleaner.cleanWiDesc(Text.html((String) value), true, true).getContent();
-        } else if (IWorkItem.KEY_OUTLINE_NUMBER.equals(fieldId)) {
+        } else if (IWorkItem.KEY_OUTLINE_NUMBER.equals(fieldId) && workItem != null) {
             // Work item may either do not contain outline number or it may be invalid in case when it is referenced (for referenced work items its outline number stored on document level).
             // So in order to cover all cases it is better to request it from outer document.
             value = workItem.getOutlineNumber();
-        } else if (fieldId.equals(DiffField.EXTERNAL_PROJECT_WORK_ITEM.getKey())) {
+        } else if (fieldId.equals(DiffField.EXTERNAL_PROJECT_WORK_ITEM.getKey()) && workItem != null) {
             value = workItem.isExternalProjectWorkItem();
         } else if (enumIdComparisonMode) {
             if (value instanceof IEnumOption) {
@@ -557,6 +571,69 @@ public class DiffService {
                 contextB.fieldB.setHtmlDiff(null);
             }
         });
+    }
+
+    @VisibleForTesting
+    Collection<DocumentsFieldsPair> getFieldsDiff(@NotNull IModule leftDocument, @NotNull IModule rightDocument, boolean compareEnumsById, boolean compareOnlyMutualFields) {
+        // We will execute diff operation twice: using direct & reverse order.
+        // this allows to show better visual result in case of style changes.
+        // IMPORTANT: as a required non-obvious step for this approach - we have to swap
+        // styles in the reversed diff to display it properly (this swap implemented using ReverseStylesHandler).
+        Consumer<DiffContext> differ = context -> {
+            if (Objects.equals(context.fieldA.getValue(), context.fieldB.getValue())) {
+                // Skip fields with identical content in both WorkItems
+                return;
+            }
+
+            List<DiffLifecycleHandler> handlers = DiffLifecycleHandler.getHandlers();
+            Pair<String, String> pairToDiff = preparePairToDiff(context, handlers);
+            String diff = DiffToolUtils.computeDiff(pairToDiff);
+            diff = postProcessDiff(diff, context, handlers);
+            // Note that the resulted diff is placed to the second/B field only (coz opposite field will be filled by the reversed operation)
+            context.fieldB.setHtmlDiff(diff);
+        };
+
+        Set<String> fieldIds = new LinkedHashSet<>(leftDocument.getCustomFieldsList());
+        if (compareOnlyMutualFields) {
+            fieldIds.retainAll(rightDocument.getCustomFieldsList());
+        } else {
+            fieldIds.addAll(rightDocument.getCustomFieldsList());
+        }
+        return fieldIds.stream().map(fieldId -> {
+
+            WorkItem.Field leftField = WorkItem.Field.builder()
+                    .id(fieldId)
+                    .name(leftDocument.getFieldLabel(fieldId))
+                    .type(leftDocument.getCustomFieldPrototype(fieldId).getType())
+                    .value(getFieldValue(leftDocument, fieldId, null, leftDocument.getCustomFieldPrototype(fieldId).getType(), compareEnumsById))
+                    .html(polarionService.renderField(leftDocument, fieldId))
+                    .build();
+
+            WorkItem.Field rightField = WorkItem.Field.builder()
+                    .id(fieldId)
+                    .name(rightDocument.getFieldLabel(fieldId))
+                    .type(rightDocument.getCustomFieldPrototype(fieldId).getType())
+                    .value(getFieldValue(rightDocument, fieldId, null, rightDocument.getCustomFieldPrototype(fieldId).getType(), compareEnumsById))
+                    .html(polarionService.renderField(rightDocument, fieldId))
+                    .build();
+
+            DiffContext contextA = new DiffContext(leftDocument, rightDocument, leftField, rightField, fieldId, leftDocument.getProjectId(), polarionService);
+            DiffContext contextB = new DiffContext(rightDocument, leftDocument, rightField, leftField, fieldId, leftDocument.getProjectId(), polarionService).reverseStyles(true);
+            differ.accept(contextA);
+            differ.accept(contextB);
+
+            //Sometimes values aren't the same by calling equals() method but the resulting diff doesn't contain any changes.
+            //Workaround below is pretty simple - we just check whether diff contains specific piece of html which DaisyDiff
+            //adds for changed parts and if there is no such things - we treat situation as "no diff".
+            if (Stream.of(contextA.fieldA.getHtmlDiff(), contextA.fieldB.getHtmlDiff(), contextB.fieldA.getHtmlDiff(), contextB.fieldB.getHtmlDiff())
+                    .filter(Objects::nonNull).noneMatch(diff -> diff.contains(DAISY_DIFF_CHANGED_FRAGMENT))) {
+                contextA.fieldA.setHtmlDiff(null);
+                contextA.fieldB.setHtmlDiff(null);
+                contextB.fieldA.setHtmlDiff(null);
+                contextB.fieldB.setHtmlDiff(null);
+            }
+            return new DocumentsFieldsPair(leftField, rightField);
+        }).toList();
     }
 
     private Pair<String, String> preparePairToDiff(DiffContext context, List<DiffLifecycleHandler> handlers) {

@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
@@ -12,6 +13,9 @@ import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
 import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
+import com.polarion.alm.shared.api.transaction.RunnableInWriteTransaction;
+import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
+import com.polarion.alm.shared.api.transaction.WriteTransaction;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
@@ -119,6 +123,33 @@ public class MergeServiceTest {
         }
     }
 
+    @Test
+    void testMergeDocumentsFields() {
+        IModule source = mock(IModule.class);
+        IModule target = mock(IModule.class);
+        when(polarionService.getModule(any())).thenReturn(source, target);
+
+        when(polarionService.userAuthorizedForMerge(any())).thenReturn(false);
+        MergeResult mergeResult = mergeService.mergeDocumentsFields(new DocumentsFieldsMergeParams(mock(DocumentIdentifier.class), mock(DocumentIdentifier.class),
+                MergeDirection.LEFT_TO_RIGHT, List.of("a", "b", "c")));
+        assertFalse(mergeResult.isSuccess());
+        assertTrue(mergeResult.isMergeNotAuthorized());
+
+        try (MockedStatic<TransactionalExecutor> transactionalExecutorMockedStatic = mockStatic(TransactionalExecutor.class)) {
+            transactionalExecutorMockedStatic.when(() -> TransactionalExecutor.executeInWriteTransaction(any())).thenAnswer(arg -> {
+                RunnableInWriteTransaction<?> runnable = arg.getArgument(0);
+                runnable.run(mock(WriteTransaction.class));
+                return runnable;
+            });
+            when(polarionService.userAuthorizedForMerge(any())).thenReturn(true);
+
+            mergeResult = mergeService.mergeDocumentsFields(new DocumentsFieldsMergeParams(mock(DocumentIdentifier.class), mock(DocumentIdentifier.class),
+                    MergeDirection.LEFT_TO_RIGHT, List.of("a", "b", "c")));
+            assertTrue(mergeResult.isSuccess());
+            assertEquals(3, mergeResult.getMergeReport().getCopied().size());
+        }
+    }
+
     private static Stream<Arguments> testValuesForMergeLinkedWorkItems() {
         ILinkedWorkItemStruct a1rev1role1 = mockLink("projA", "A-1", "1", "role1", ParentModule.SRC);
         ILinkedWorkItemStruct a1rev1role2 = mockLink("projA", "A-1", "2", "role2", ParentModule.SRC);
@@ -182,7 +213,7 @@ public class MergeServiceTest {
             testContext.polarionServiceConsumer.accept(polarionService);
         }
 
-        MergeContext context = mock(MergeContext.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class);
         lenient().when(context.getLinkRole()).thenReturn("role1");
 
         mergeService.mergeLinkedWorkItems(source, target, context, new WorkItemsPair());
@@ -203,6 +234,24 @@ public class MergeServiceTest {
                         eq(invocation.linkRevision), anyBoolean());
             }
         }
+    }
+
+    @Test
+    void testRoleNotFound() {
+        PolarionService polarionService = mock(PolarionService.class);
+
+        DocumentIdentifier leftIdentifier = mock(DocumentIdentifier.class);
+        DocumentIdentifier rightIdentifier = mock(DocumentIdentifier.class);
+
+        IModule leftModule = mock(IModule.class);
+        IModule rightModule = mock(IModule.class);
+        when(polarionService.getModule(leftIdentifier)).thenReturn(leftModule);
+        when(polarionService.getModule(rightIdentifier)).thenReturn(rightModule);
+
+        DiffModel model = mock(DiffModel.class);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model, true));
+        assertEquals("No link role could be found by ID 'someLinkRole'", exception.getMessage());
     }
 
     private static MergeTestContext sameProject() {

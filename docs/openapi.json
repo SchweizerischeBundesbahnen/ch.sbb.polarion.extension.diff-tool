@@ -226,6 +226,37 @@
         ]
       }
     },
+    "/api/diff/documents-fields": {
+      "post": {
+        "operationId": "getDocumentsFieldsDiff",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentsFieldsDiffParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentsFieldsDiff"
+                }
+              }
+            },
+            "description": "Successfully retrieved the differences between fields of the provided documents"
+          }
+        },
+        "summary": "Gets difference between fields of two live documents",
+        "tags": [
+          "Difference"
+        ]
+      }
+    },
     "/api/diff/html": {
       "post": {
         "operationId": "diffHtml",
@@ -380,6 +411,37 @@
           }
         },
         "summary": "Merge Documents and their WorkItems",
+        "tags": [
+          "Merge"
+        ]
+      }
+    },
+    "/api/merge/documents-fields": {
+      "post": {
+        "operationId": "mergeDocumentsFields",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentsFieldsMergeParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergeResult"
+                }
+              }
+            },
+            "description": "Merge result"
+          }
+        },
+        "summary": "Merge fields of documents",
         "tags": [
           "Merge"
         ]
@@ -1348,6 +1410,81 @@
         },
         "type": "object"
       },
+      "DocumentsFieldsDiff": {
+        "description": "Represents the difference between fields of two documents",
+        "properties": {
+          "leftDocument": {
+            "$ref": "#/components/schemas/Document"
+          },
+          "pairedFields": {
+            "$ref": "#/components/schemas/DocumentsFieldsPair"
+          },
+          "rightDocument": {
+            "$ref": "#/components/schemas/Document"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentsFieldsDiffParams": {
+        "description": "Comparison input data",
+        "properties": {
+          "compareEnumsById": {
+            "description": "Indicates if enums must be compared by their ID",
+            "type": "boolean"
+          },
+          "compareOnlyMutualFields": {
+            "description": "Indicates whether only mutual (declared in both documents) fields must be compared",
+            "type": "boolean"
+          },
+          "leftDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
+          },
+          "rightDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentsFieldsMergeParams": {
+        "description": "Documents fields merge input data",
+        "properties": {
+          "direction": {
+            "description": "Enum representing the direction of a merge operation",
+            "enum": [
+              "LEFT_TO_RIGHT",
+              "RIGHT_TO_LEFT"
+            ],
+            "type": "string"
+          },
+          "fieldIds": {
+            "description": "List of fields IDs to be considered in the merge operation",
+            "items": {
+              "description": "List of fields IDs to be considered in the merge operation",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "leftDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
+          },
+          "rightDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentsFieldsPair": {
+        "description": "Represents a pair of documents fields for comparison",
+        "properties": {
+          "leftField": {
+            "$ref": "#/components/schemas/Field"
+          },
+          "rightField": {
+            "$ref": "#/components/schemas/Field"
+          }
+        },
+        "type": "object"
+      },
       "DocumentsMergeParams": {
         "description": "Documents merge input data",
         "properties": {
@@ -1579,6 +1716,12 @@
             },
             "type": "array"
           },
+          "copied": {
+            "items": {
+              "$ref": "#/components/schemas/MergeReportEntry"
+            },
+            "type": "array"
+          },
           "created": {
             "items": {
               "$ref": "#/components/schemas/MergeReportEntry"
@@ -1653,10 +1796,15 @@
       },
       "MergeReportEntry": {
         "properties": {
+          "fieldId": {
+            "description": "Field id",
+            "type": "string"
+          },
           "operationResultType": {
             "description": "Type of the operation result",
             "enum": [
               "CONFLICTED",
+              "COPIED",
               "CREATED",
               "CREATION_FAILED",
               "DELETED",

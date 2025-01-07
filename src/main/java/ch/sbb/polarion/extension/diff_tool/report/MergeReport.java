@@ -7,8 +7,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 public class MergeReport {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
@@ -39,6 +41,10 @@ public class MergeReport {
 
     public List<MergeReportEntry> getCreated() {
         return getEntriesByType(OperationResultType.CREATED);
+    }
+
+    public List<MergeReportEntry> getCopied() {
+        return getEntriesByType(OperationResultType.COPIED);
     }
 
     public List<MergeReportEntry> getDeleted() {
@@ -81,16 +87,15 @@ public class MergeReport {
     }
 
     private String formatLogEntry(MergeReportEntry entry) {
-        WorkItem leftWorkItem = entry.getWorkItemsPair().getLeftWorkItem();
-        String leftWorkItemId = leftWorkItem == null ? "null" : leftWorkItem.getId();
-        WorkItem rightWorkItem = entry.getWorkItemsPair().getRightWorkItem();
-        String rightWorkItemId = rightWorkItem == null ? "null" : rightWorkItem.getId();
+        String entityInfo = entry.getWorkItemsPair() == null ?
+                "field ID '%s'".formatted(entry.getFieldId()) : "left WI '%s', right WI '%s'".formatted(
+                Optional.ofNullable(entry.getWorkItemsPair().getLeftWorkItem()).map(WorkItem::getId).orElse("null"),
+                Optional.ofNullable(entry.getWorkItemsPair().getRightWorkItem()).map(WorkItem::getId).orElse("null"));
 
-        return String.format("%s: '%s' -- left WI '%s', right WI '%s' -- %s",
+        return String.format("%s: '%s' -- %s -- %s",
                 entry.getOperationTime().format(DATE_TIME_FORMATTER),
                 entry.getOperationResultType(),
-                leftWorkItemId,
-                rightWorkItemId,
+                entityInfo,
                 entry.getDescription());
     }
 
@@ -100,6 +105,7 @@ public class MergeReport {
 
     public enum OperationResultType {
         CONFLICTED,
+        COPIED,
         CREATED,
         CREATION_FAILED,
         DELETED,

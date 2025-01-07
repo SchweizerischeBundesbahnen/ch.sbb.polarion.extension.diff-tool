@@ -1,7 +1,5 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
-import ch.sbb.polarion.extension.diff_tool.report.MergeReport;
-import ch.sbb.polarion.extension.diff_tool.report.MergeReportEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
@@ -21,7 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class DocumentsMergeContext extends MergeContext {
+public final class DocumentsMergeContext extends SettingsAwareMergeContext {
     final DocumentIdentifier leftDocumentIdentifier;
     final DocumentIdentifier rightDocumentIdentifier;
     final IModule leftModule;
@@ -34,7 +32,7 @@ public final class DocumentsMergeContext extends MergeContext {
     final boolean allowReferencedWorkItemMerge;
 
     public DocumentsMergeContext(@NotNull PolarionService polarionService, @NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier,
-                                 @NotNull MergeDirection direction, @NotNull String linkRole, DiffModel diffModel, boolean allowReferencedWorkItemMerge) {
+                                 @NotNull MergeDirection direction, @NotNull String linkRole, @NotNull DiffModel diffModel, boolean allowReferencedWorkItemMerge) {
         super(direction, linkRole, diffModel);
         this.leftDocumentIdentifier = leftDocumentIdentifier;
         this.rightDocumentIdentifier = rightDocumentIdentifier;

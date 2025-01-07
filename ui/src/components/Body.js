@@ -14,6 +14,7 @@ export default function Body({ children }) {
   const [leftCollectionDocuments, setLeftCollectionDocuments] = useState([]);
   const [showOutlineNumbersDiff, setShowOutlineNumbersDiff] = useState(false);
   const [counterpartWorkItemsDiffer, setCounterpartWorkItemsDiffer] = useState(false);
+  const [compareOnlyMutualFields, setCompareOnlyMutualFields] = useState(true);
   const [compareEnumsById, setCompareEnumsById] = useState(false);
   const [allowReferencedWorkItemMerge, setAllowReferencedWorkItemMerge] = useState(false);
   const [hideChaptersIfNoDifference, setHideChaptersIfNoDifference] = useState(true);
@@ -48,6 +49,8 @@ export default function Body({ children }) {
           setShowOutlineNumbersDiff: setShowOutlineNumbersDiff,
           counterpartWorkItemsDiffer: counterpartWorkItemsDiffer,
           setCounterpartWorkItemsDiffer: setCounterpartWorkItemsDiffer,
+          compareOnlyMutualFields: compareOnlyMutualFields,
+          setCompareOnlyMutualFields: setCompareOnlyMutualFields,
           compareEnumsById: compareEnumsById,
           setCompareEnumsById: setCompareEnumsById,
           allowReferencedWorkItemMerge: allowReferencedWorkItemMerge,

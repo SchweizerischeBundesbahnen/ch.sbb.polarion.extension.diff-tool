@@ -16,6 +16,7 @@ export default function ControlPane({diff_type}) {
   const remote = useRemote();
   const pdf = usePdf();
   const [projectId] = useState(searchParams.get('sourceProjectId'));
+  const [selectedCompareAs, setSelectedCompareAs] = useState(searchParams.get("compareAs") || 'Workitems');
   const [configurations, setConfigurations] = useState([]);
   const [selectedConfiguration, setSelectedConfiguration] = useState(searchParams.get("config") || 'Default');
   const [documentSelectionToBeConfirmed, setDocumentSelectionToBeConfirmed] = useState("");
@@ -46,6 +47,24 @@ export default function ControlPane({diff_type}) {
   }, [projectId]);
 
   useEffect(() => {
+    if (diff_type !== DiffTypes.WORK_ITEMS_DIFF && searchParams.get('compareAs') !== selectedCompareAs) {
+      const params = [];
+      for (const [key, value] of searchParams.entries()) {
+        if (key === 'compareAs') {
+          params.push(`${key}=${selectedCompareAs}`); // update 'compareAs' parameter
+        } else {
+          params.push(`${key}=${value}`); // ...and leave other as they are
+        }
+      }
+      if (!searchParams.get('compareAs')) {
+        params.push(`compareAs=${selectedCompareAs}`);
+      }
+
+      router.push(pathname + '?' + params.join('&'));
+    }
+  }, [selectedCompareAs]);
+
+  useEffect(() => {
     if (searchParams.get('config') !== selectedConfiguration) {
       const params = [];
       for (const [key, value] of searchParams.entries()) {
@@ -54,6 +73,9 @@ export default function ControlPane({diff_type}) {
         } else {
           params.push(`${key}=${value}`); // ...and leave other as they are
         }
+      }
+      if (!searchParams.get('config')) {
+        params.push(`config=${selectedConfiguration}`);
       }
 
       router.push(pathname + '?' + params.join('&'));
@@ -153,6 +175,20 @@ export default function ControlPane({diff_type}) {
                 </select>
               </div>
           }
+          {diff_type !== DiffTypes.WORK_ITEMS_DIFF &&
+              <div style={{
+                marginBottom: "6px"
+              }} className="select-set">
+                <label htmlFor="target-type">
+                  Compare as:
+                </label>
+                <select id="target-type" className="form-select" value={selectedCompareAs} onChange={(event) => setSelectedCompareAs(event.target.value)}>
+                  {["Workitems", "Fields"].map((compareAs, index) => {
+                    return <option key={index} value={compareAs}>{compareAs}</option>
+                  })}
+                </select>
+              </div>
+          }
           {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF &&
               <div style={{
                 marginBottom: "6px"
@@ -182,6 +218,15 @@ export default function ControlPane({diff_type}) {
                        onChange={() => context.state.setCounterpartWorkItemsDiffer(!context.state.counterpartWorkItemsDiffer)}/>
                 <label className="form-check-label" htmlFor="counterparts-differ">
                   Counterpart WorkItems differ
+                </label>
+              </div>
+          }
+          {diff_type === DiffTypes.DOCUMENTS_FIELDS_DIFF &&
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" checked={context.state.compareOnlyMutualFields} id="compare-only-mutual-fields"
+                       onChange={() => context.state.setCompareOnlyMutualFields(!context.state.compareOnlyMutualFields)}/>
+                <label className="form-check-label" htmlFor="compare-only-mutual-fields">
+                  Compare only mutual fields
                 </label>
               </div>
           }
