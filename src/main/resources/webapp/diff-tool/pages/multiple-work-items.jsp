@@ -2,8 +2,6 @@
 <%@ page import="ch.sbb.polarion.extension.generic.rest.model.Version" %>
 <%@ page import="com.polarion.core.config.Configuration" %>
 <%@ page import="com.polarion.core.config.IProduct" %>
-<%@ page import="ch.sbb.polarion.extension.diff_tool.navigation.MultipleWorkItemsNode" %>
-<%@ page import="ch.sbb.polarion.extension.diff_tool.navigation.CollectionsNode" %>
 <%! IProduct product = Configuration.getInstance().getProduct(); %>
 <%! Version extensionVersion = ExtensionInfo.getInstance().getVersion(); %>
 <!DOCTYPE html>
@@ -11,8 +9,15 @@
 <head>
     <link rel="stylesheet" type="text/css" href="/polarion/gwt/gwt/polarion/polarion.css?buildId=<%= product.buildNumber() %>">
     <link rel="stylesheet" type="text/css" href="../css/common.css?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>">
+    <script type="text/javascript" src="../js/diff-tool.js?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>"></script>
 </head>
-<body>
+<body onload="document.getElementById('source-query-input').addEventListener('keydown', (event) => {
+    if (event.code === 'Enter') { // Apply query by pressing Enter key being in input field
+        const newValue = document.getElementById('source-query-input').value;
+        top.location.href = DiffTool.replaceUrlParam(top.location.href, 'sourceQuery', newValue);
+        top.location.reload()
+    }
+});">
 <div class="polarion-rpe-content">
     <div class="polarion-rp-column">
         <div class="polarion-rp-column-container">
@@ -20,13 +25,9 @@
                 <div class="polarion-rp-widget-content">
                     <div class="polarion-DiffTool">
                         <div class="header">
-                            <h3>Diff Tool</h3>
-                            <p>Please, select below what you wish to compare:</p>
-                            <ul>
-                                <li><a href="#" onclick="top.location.href += '/<%= MultipleWorkItemsNode.NODE_ID %>'; top.location.reload();">Compare multiple Work Items</a></li>
-                                <li><a href="#" onclick="top.location.href += '/<%= CollectionsNode.NODE_ID %>'; top.location.reload();">Compare Collections</a></li>
-                            </ul>
+                            <h3>Compare work items</h3>
                         </div>
+                        <jsp:include page="work-items-diff-widget.jsp"/>
                     </div>
                 </div>
             </div>

@@ -4,11 +4,11 @@ import {useSearchParams} from "next/navigation";
 import {v4 as uuidv4} from "uuid";
 import ProjectHeader from "@/components/workitems/ProjectHeader";
 import Loading from "@/components/loading/Loading";
-import Error from "@/components/Error";
+import AppAlert from "@/components/AppAlert";
+import {useMergingContext} from "@/components/merge/useMergingContext";
 import useLoadingContext from "@/components/loading/useLoadingContext";
 import useDiffService from "@/services/useDiffService";
 import WorkItemsPairDiff from "@/components/workitems/WorkItemsPairDiff";
-import {useMergingContext, LEFT_TO_RIGHT, RIGHT_TO_LEFT} from "@/components/merge/useMergingContext";
 import ProgressBar from "@/components/loading/ProgressBar";
 import ErrorsOverlay from "@/components/ErrorsOverlay";
 import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";
@@ -87,8 +87,8 @@ export default function WorkItemsDiff() {
   if (loadingContext.pairsLoading) return <Loading message="Loading paired WorkItems" />;
 
   if (loadingContext.pairsLoadingError || !workItemsData || !workItemsData.leftProject || !workItemsData.rightProject /*|| !workItemsData.pairedWorkItems*/) {
-    return <Error title="Error occurred loading diff data!"
-                  message={loadingContext.pairsLoadingError && !loadingContext.pairsLoadingError.includes("<html")
+    return <AppAlert title="Error occurred loading diff data!"
+                     message={loadingContext.pairsLoadingError && !loadingContext.pairsLoadingError.includes("<html")
                       ? loadingContext.pairsLoadingError
                       : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
   }

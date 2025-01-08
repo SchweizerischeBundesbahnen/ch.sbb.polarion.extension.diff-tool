@@ -6,13 +6,12 @@ import DocumentsDiff from "@/components/documents/DocumentsDiff";
 import DocumentsFieldsDiff from "@/components/documents/DocumentsFieldsDiff";
 import ExtensionInfo from "@/components/ExtensionInfo";
 import * as DiffTypes from "@/DiffTypes";
+import {useState} from "react";
 
 export default function DocumentsPage() {
   const searchParams = useSearchParams();
 
-  const isCompareAsWorkitems = () => {
-    return searchParams.get('compareAs') === 'Workitems';
-  }
+  const [compareAsWorkItems] = useState(searchParams.get('compareAs') === 'Workitems');
 
   return <>
     <div id="app-header" className="app-header">
@@ -21,8 +20,8 @@ export default function DocumentsPage() {
       </div>
       <ExtensionInfo />
     </div>
-    <ControlPane diff_type={isCompareAsWorkitems() ? DiffTypes.DOCUMENTS_DIFF : DiffTypes.DOCUMENTS_FIELDS_DIFF}/>
-    {isCompareAsWorkitems() && <DocumentsDiff/>}
-    {!isCompareAsWorkitems() && <DocumentsFieldsDiff/>}
+    <ControlPane diff_type={compareAsWorkItems ? DiffTypes.DOCUMENTS_DIFF : DiffTypes.DOCUMENTS_FIELDS_DIFF}/>
+    {compareAsWorkItems && <DocumentsDiff/>}
+    {!compareAsWorkItems && <DocumentsFieldsDiff/>}
   </>;
 }

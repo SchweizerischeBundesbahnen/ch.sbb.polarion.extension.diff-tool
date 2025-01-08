@@ -19,6 +19,8 @@ import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
+import com.polarion.alm.tracker.model.baselinecollection.IBaselineCollection;
+import com.polarion.alm.tracker.model.baselinecollection.IBaselineCollectionElement;
 import com.polarion.core.util.types.Text;
 import com.polarion.core.util.xml.HTMLCleaner;
 import com.polarion.platform.persistence.IEnumOption;
@@ -306,6 +308,54 @@ public class DiffService {
                         .build())
                 .pairedWorkItems(pairedWorkItems)
                 .leftWorkItemIdsWithRedundancy(leftWorkItemIdsWithRedundancy)
+                .build();
+    }
+
+    public CollectionsDiff getCollectionsDiff(@NotNull CollectionsDiffParams diffParams) {
+        IBaselineCollection leftCollection = polarionService.getCollection(diffParams.getLeftCollection().getProjectId(), diffParams.getLeftCollection().getId());
+        IBaselineCollection rightCollection = polarionService.getCollection(diffParams.getRightCollection().getProjectId(), diffParams.getRightCollection().getId());
+
+        List<IModule> leftDocuments = leftCollection.getElements().stream()
+                .map(IBaselineCollectionElement::getObjectWithRevision)
+                .filter(IModule.class::isInstance)
+                .map(IModule.class::cast)
+                .toList();
+
+        List<IModule> rightDocuments = rightCollection.getElements().stream()
+                .map(IBaselineCollectionElement::getObjectWithRevision)
+                .filter(IModule.class::isInstance)
+                .map(IModule.class::cast)
+                .toList();
+
+        Collection<DocumentsPair> pairedDocuments = new ArrayList<>();
+        leftDocuments.forEach(leftDocument -> {
+            // We first look for the document with the same name and in same space...
+            IModule counterpartDocument = rightDocuments.stream()
+                    .filter(rightDocument -> Objects.equals(rightDocument.getId(), leftDocument.getId()) && Objects.equals(rightDocument.getModuleFolder(), leftDocument.getModuleFolder()))
+                    .findFirst().orElse(null);
+            if (counterpartDocument == null) {
+                // ... If not found, we look for the document with the same name regardless of it's space
+                counterpartDocument = rightDocuments.stream()
+                        .filter(rightDocument -> Objects.equals(rightDocument.getId(), leftDocument.getId()))
+                        .findFirst().orElse(null);
+            }
+            pairedDocuments.add(DocumentsPair.of(leftDocument, counterpartDocument));
+        });
+
+        return CollectionsDiff.builder()
+                .leftCollection(DocumentsCollection.builder()
+                        .projectId(leftCollection.getProjectId())
+                        .projectName(leftCollection.getProject().getName())
+                        .id(leftCollection.getId())
+                        .name(leftCollection.getName())
+                        .build())
+                .rightCollection(DocumentsCollection.builder()
+                        .projectId(rightCollection.getProjectId())
+                        .projectName(rightCollection.getProject().getName())
+                        .id(rightCollection.getId())
+                        .name(rightCollection.getName())
+                        .build())
+                .pairedDocuments(pairedDocuments)
                 .build();
     }
 

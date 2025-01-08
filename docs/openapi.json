@@ -102,6 +102,37 @@
         ]
       }
     },
+    "/api/diff/collections": {
+      "post": {
+        "operationId": "getCollectionsDiff",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CollectionsDiffParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionsDiff"
+                }
+              }
+            },
+            "description": "Successfully retrieved the differences between the provided collections"
+          }
+        },
+        "summary": "Gets difference of two live document collections",
+        "tags": [
+          "Difference"
+        ]
+      }
+    },
     "/api/diff/detached-workitems": {
       "post": {
         "operationId": "getDetachedWorkItemsPairDiff",
@@ -1041,6 +1072,33 @@
         },
         "type": "object"
       },
+      "CollectionsDiff": {
+        "description": "Represents the difference between two collections",
+        "properties": {
+          "leftCollection": {
+            "$ref": "#/components/schemas/DocumentsCollection"
+          },
+          "pairedDocuments": {
+            "$ref": "#/components/schemas/DocumentsPair"
+          },
+          "rightCollection": {
+            "$ref": "#/components/schemas/DocumentsCollection"
+          }
+        },
+        "type": "object"
+      },
+      "CollectionsDiffParams": {
+        "description": "Collections comparison input data",
+        "properties": {
+          "leftCollection": {
+            "$ref": "#/components/schemas/DocumentsCollection"
+          },
+          "rightCollection": {
+            "$ref": "#/components/schemas/DocumentsCollection"
+          }
+        },
+        "type": "object"
+      },
       "CommunicationSettings": {
         "description": "Communication settings for JS client",
         "properties": {
@@ -1290,6 +1348,28 @@
         },
         "type": "object"
       },
+      "DocumentsCollection": {
+        "description": "Represents a collection of live documents",
+        "properties": {
+          "id": {
+            "description": "Unique identifier of the collection",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the collection",
+            "type": "string"
+          },
+          "projectId": {
+            "description": "ID of a project in which collection resides",
+            "type": "string"
+          },
+          "projectName": {
+            "description": "Name of a project in which collection resides",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "DocumentsDiff": {
         "description": "Represents the difference between two documents",
         "properties": {
@@ -1441,6 +1521,18 @@
           },
           "rightDocument": {
             "$ref": "#/components/schemas/DocumentIdentifier"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentsPair": {
+        "description": "Represents a pair of Documents for comparison",
+        "properties": {
+          "leftDocument": {
+            "$ref": "#/components/schemas/Document"
+          },
+          "rightDocument": {
+            "$ref": "#/components/schemas/Document"
           }
         },
         "type": "object"

@@ -53,7 +53,7 @@
 
     <service-point id="diffToolNavigationExtender" interface="com.polarion.alm.ui.server.navigation.NavigationExtender">
         <invoke-factory>
-            <construct class="ch.sbb.polarion.extension.diff_tool.DiffToolNavigationExtender"/>
+            <construct class="ch.sbb.polarion.extension.diff_tool.navigation.DiffToolNavigationExtender"/>
         </invoke-factory>
     </service-point>
 </module>

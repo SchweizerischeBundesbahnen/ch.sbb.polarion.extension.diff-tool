@@ -1,4 +1,4 @@
-export default function Error({title, message}) {
+export default function AppAlert({title, message}) {
   return (
       <div style={{
         marginTop: "5em",

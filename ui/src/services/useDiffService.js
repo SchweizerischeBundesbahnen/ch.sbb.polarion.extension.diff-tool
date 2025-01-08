@@ -138,6 +138,78 @@ export default function useDiffService() {
     });
   };
 
+  const sendCollectionsDiffRequest = (searchParams) => {
+    const leftCollection = getCollectionFromSearchParams(searchParams, 'source');
+    const rightCollection = getCollectionFromSearchParams(searchParams, 'target');
+
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/diff/collections`,
+        body: JSON.stringify({
+          leftCollection: leftCollection,
+          rightCollection: rightCollection,
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw response.json();
+            }
+          })
+          .then(data =>  {
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            Promise.resolve(errorResponse).then((error) => {
+              reject(error);
+            });
+          });
+    });
+  };
+
+  const sendCreateTargetDocumentRequest = (sourceDocument, targetProjectId, targetConfiguration, linkRole) => {
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/projects/${sourceDocument.projectId}/spaces/${sourceDocument.spaceId}/documents/${sourceDocument.id}/duplicate`,
+        body: JSON.stringify({
+          targetDocumentIdentifier: {
+            projectId: targetProjectId,
+            spaceId: sourceDocument.spaceId,
+            name: sourceDocument.id
+          },
+          targetDocumentTitle: sourceDocument.title,
+          configName: targetConfiguration,
+          linkRoleId: linkRole,
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
+              Promise.resolve().then(() => {
+                return reject("Your session has expired. Please refresh the page to log in.");
+              });
+            }
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw response.json();
+            }
+          })
+          .then((data) =>  {
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            Promise.resolve(errorResponse).then((error) => {
+              return reject(error && error.message);
+            });
+          });
+    });
+  };
+
   const getWorkItemIds = (searchParams) => {
     const idsHash = searchParams.get("ids");
     let idsKey = idsHash && (idsHash + "_ids");
@@ -192,7 +264,6 @@ export default function useDiffService() {
           });
     });
   };
-
 
   const sendDocumentsFieldsMergeRequest = (searchParams, direction, loadingContext, mergingContext, docsData) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
@@ -300,6 +371,13 @@ export default function useDiffService() {
     return filteredPairs;
   };
 
+  const getCollectionFromSearchParams = (searchParams, prefix) => {
+    return {
+      projectId: searchParams.get(`${prefix}ProjectId`),
+      id: searchParams.get(`${prefix}CollectionId`),
+    };
+  };
+
   const getDocumentFromSearchParams = (searchParams, prefix) => {
     return {
       projectId: searchParams.get(`${prefix}ProjectId`),
@@ -324,5 +402,15 @@ export default function useDiffService() {
     }
   };
 
-  return { sendDocumentsDiffRequest, sendFindWorkItemsPairsRequest, sendDocumentsMergeRequest, sendWorkItemsMergeRequest, getDocumentsFieldsDiff, sendDocumentsFieldsMergeRequest, diffsExist };
+  return {
+    sendDocumentsDiffRequest,
+    sendFindWorkItemsPairsRequest,
+    sendCollectionsDiffRequest,
+    sendCreateTargetDocumentRequest,
+    sendDocumentsMergeRequest,
+    sendWorkItemsMergeRequest,
+    getDocumentsFieldsDiff,
+    sendDocumentsFieldsMergeRequest,
+    diffsExist
+  };
 }

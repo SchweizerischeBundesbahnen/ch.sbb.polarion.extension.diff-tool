@@ -1,5 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DetachedWorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiffParams;
@@ -97,6 +99,36 @@ public class DiffInternalController {
             throw new BadRequestException("Parameters 'leftProjectId', 'rightProjectId' and 'workItemIds' should be provided");
         }
         return diffService.findWorkItemsPairs(workItemsPairsParams);
+    }
+
+    @POST
+    @Path("/diff/collections")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Gets difference of two live document collections",
+            parameters = {
+                    @Parameter(
+                            description = "Parameters for getting collections differences",
+                            required = true,
+                            schema = @Schema(implementation = CollectionsDiffParams.class)
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Successfully retrieved the differences between the provided collections",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = CollectionsDiff.class)
+                            )
+                    )
+            }
+    )
+    public CollectionsDiff getCollectionsDiff(@Parameter(required = true) CollectionsDiffParams collectionsDiffParams) {
+        if (collectionsDiffParams == null || collectionsDiffParams.getLeftCollection() == null || collectionsDiffParams.getRightCollection() == null) {
+            throw new BadRequestException("Parameters 'leftCollection' and 'rightCollection' should be provided");
+        }
+        return diffService.getCollectionsDiff(collectionsDiffParams);
     }
 
     @POST
