@@ -13,6 +13,10 @@ by selected link role.
 
 Additionally, the extension provides functionality to make a copy of selected document in other location.
 
+> [!IMPORTANT]
+> Starting from version 5.0.0 only latest version of Polarion is supported.
+> Right now it is Polarion 2410.
+
 ## Quick start
 
 The latest version of the extension can be downloaded from the [releases page](../../releases/latest) and installed to Polarion instance without necessity to be compiled from the sources.
@@ -23,9 +27,9 @@ The extension should be copied to `<polarion_home>/polarion/extensions/ch.sbb.po
 ## Compatibility
 
 This extension is compatible with:
-* Polarion 2404
+* Polarion 2410
 * Java 17
-* [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v7 (If you are using [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v6, please use version 3.x.x of this extension)
+* [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v8
 
 ## Build
 
