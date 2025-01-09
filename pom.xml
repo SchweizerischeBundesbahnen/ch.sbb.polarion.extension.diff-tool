@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>7.7.0</version>
+        <version>8.0.0</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
@@ -57,7 +57,7 @@
         <html5diff.version>1.4.4</html5diff.version>
         <ehcache.version>3.8.0</ehcache.version>
 
-        <pdf-exporter.version>7.5.0</pdf-exporter.version>
+        <pdf-exporter.version>8.0.0</pdf-exporter.version>
 
         <swagger-maven-plugin.version>2.2.22</swagger-maven-plugin.version>
 
@@ -66,21 +66,12 @@
     </properties>
 
     <profiles>
-        <!-- default profile: polarion2404 -->
+        <!-- default profile: polarion2410 -->
         <profile>
-            <id>polarion2404</id>
+            <id>polarion2410</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
-            <properties>
-                <commons-collections4.artifactId>commons-collections4-4.4</commons-collections4.artifactId>
-                <commons-lang3.artifactId>commons-lang3-3.12.0</commons-lang3.artifactId>
-                <org.jsoup.artifactId>org.jsoup-1.15.2</org.jsoup.artifactId>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>polarion2410</id>
             <properties>
                 <commons-collections4.artifactId>org.apache.commons.commons-collections4_4.4.0</commons-collections4.artifactId>
                 <commons-lang3.artifactId>org.apache.commons.lang3_3.12.0</commons-lang3.artifactId>
@@ -200,7 +191,8 @@
                 <configuration>
                     <outputFormat>JSON</outputFormat>
                     <resourcePackages>
-                        <package>ch.sbb.polarion.extension.generic.rest.controller</package>
+                        <package>ch.sbb.polarion.extension.generic.rest.controller.info</package>
+                        <package>ch.sbb.polarion.extension.generic.rest.controller.settings</package>
                         <package>ch.sbb.polarion.extension.generic.rest.model</package>
                         <package>ch.sbb.polarion.extension.diff_tool.rest.controller</package>
                         <package>ch.sbb.polarion.extension.diff_tool.rest.model</package>
