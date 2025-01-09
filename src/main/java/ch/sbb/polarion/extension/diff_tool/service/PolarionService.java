@@ -26,7 +26,9 @@ import com.google.common.collect.Streams;
 import com.polarion.alm.projects.IProjectService;
 import com.polarion.alm.projects.model.IFolder;
 import com.polarion.alm.projects.model.IProject;
+import com.polarion.alm.server.rt.parts.Renderer;
 import com.polarion.alm.shared.api.model.ModelObjectReference;
+import com.polarion.alm.shared.api.model.document.DocumentReference;
 import com.polarion.alm.shared.api.model.wi.WorkItemReference;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.internal.InternalReadOnlyTransaction;
@@ -190,6 +192,15 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         }
         if (StringUtils.isEmptyTrimmed(documentDuplicateParams.getTargetDocumentTitle())) {
             throw new IllegalArgumentException("Target 'documentName' should be provided");
+        }
+
+        if (!trackerService.getFolderManager().existFolder(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(), documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId())) {
+            IFolder sourceSpace = trackerService.getFolderManager().getFolder(sourceProjectId, sourceSpaceId);
+            TransactionalExecutor.executeInWriteTransaction(transaction -> {
+                trackerService.getFolderManager().createFolder(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(),
+                        documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId(), sourceSpace.getTitleOrName());
+                return null;
+            });
         }
 
         IProject targetProject = getProject(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId());
@@ -468,6 +479,27 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             HtmlFragmentBuilder fragmentBuilder = renderTarget.selectBuilderTarget(transaction.context().createHtmlFragmentBuilderFor());
             renderer.renderField(fragmentBuilder.html(""), new WorkItemFieldReference(workItemReference, fieldId,
                     IWorkItem.KEY_LINKED_WORK_ITEMS.equals(fieldId) ? FieldRenderType.LINKED_WI_IN_DOC : FieldRenderType.IMGTXT));
+            return fragmentBuilder.toString();
+        });
+    }
+
+    public String renderField(@NotNull IModule module, @NotNull String fieldId) {
+        return TransactionalExecutor.executeSafelyInReadOnlyTransaction(trx -> {
+            RichTextRenderTarget renderTarget = RichTextRenderTarget.PDF_EXPORT;
+            InternalReadOnlyTransaction transaction = (InternalReadOnlyTransaction) trx;
+
+            RichTextRenderingContext renderingContext = new RichTextRenderingContext(transaction.context(), renderTarget);
+            renderingContext.setMainObjectReference(DocumentReference.fromModuleLocation(module.getProjectId(), module.getModuleLocation().getLocationPath(), module.getRevision())); //optional but sometimes it's important (e.g. links rendering inside rich texts)
+            renderingContext.setTransaction(transaction);
+            renderingContext.setDocumentOutlineNumber(true);
+
+            // create a temporary work item instance just to satisfy needs of Renderer constructor
+            // this instance won't be saved because we do not call save() on it
+            IWorkItem dummyInstance = trackerService.createWorkItem(module.getProject());
+
+            HtmlFragmentBuilder fragmentBuilder = renderTarget.selectBuilderTarget(transaction.context().createHtmlFragmentBuilderFor());
+            Renderer renderer = new Renderer(fragmentBuilder.html(""), renderingContext, dummyInstance, FieldRenderType.IMGTXT, "label", "fieldId", false);
+            renderer.renderValue(module.getValue(fieldId));
             return fragmentBuilder.toString();
         });
     }

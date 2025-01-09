@@ -24,6 +24,10 @@ export function useMergingContext() {
     }
   }, [selectionRegistry]);
 
+  const resetRegistry = () => {
+    setSelectionRegistry(new Map());
+  };
+
   const resetRegistryEntry = (index) => {
     setSelectionRegistry(r => {
       const registry = new Map(r);
@@ -94,6 +98,6 @@ export function useMergingContext() {
     setSelectAllTrigger(selectAllTrigger === Number.MAX_SAFE_INTEGER ? 1 : selectAllTrigger + 1);
   };
 
-  return { selectionRegistry, resetRegistryEntry, selectionCount, setPairSelected, isPairSelected, isIndexSelected, resetSelection,
+  return { selectionRegistry, resetRegistry, resetRegistryEntry, selectionCount, setPairSelected, isPairSelected, isIndexSelected, resetSelection,
     getSelectedValues, getSelectedIndexes, selectAll, setSelectAll, selectAllTrigger, setAndApplySelectAll };
 }

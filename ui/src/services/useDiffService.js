@@ -1,4 +1,5 @@
 import useRemote from "@/services/useRemote";
+import {config} from "@fortawesome/fontawesome-svg-core";
 
 export default function useDiffService() {
   const remote = useRemote();
@@ -36,6 +37,44 @@ export default function useDiffService() {
           .catch(errorResponse => {
             Promise.resolve(errorResponse).then((error) => {
               loadingContext.pairsLoadingFinishedWithError(error && error.message);
+              reject(error);
+            });
+          });
+    });
+  };
+
+  const getDocumentsFieldsDiff = (searchParams, compareEnumsById, compareOnlyMutualFields, loadingContext) => {
+    const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
+    const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
+
+    loadingContext.fieldsDiffLoadingStarted(true); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
+
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/diff/documents-fields`,
+        body: JSON.stringify({
+          leftDocument: leftDocument,
+          rightDocument: rightDocument,
+          compareEnumsById: compareEnumsById,
+          compareOnlyMutualFields: compareOnlyMutualFields
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw response.json();
+            }
+          })
+          .then(data =>  {
+            loadingContext.fieldsDiffLoadingFinished();
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            Promise.resolve(errorResponse).then((error) => {
+              loadingContext.fieldsDiffLoadingFinishedWithError(error && error.message);
               reject(error);
             });
           });
@@ -99,6 +138,78 @@ export default function useDiffService() {
     });
   };
 
+  const sendCollectionsDiffRequest = (searchParams) => {
+    const leftCollection = getCollectionFromSearchParams(searchParams, 'source');
+    const rightCollection = getCollectionFromSearchParams(searchParams, 'target');
+
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/diff/collections`,
+        body: JSON.stringify({
+          leftCollection: leftCollection,
+          rightCollection: rightCollection,
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw response.json();
+            }
+          })
+          .then(data =>  {
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            Promise.resolve(errorResponse).then((error) => {
+              reject(error);
+            });
+          });
+    });
+  };
+
+  const sendCreateTargetDocumentRequest = (sourceDocument, targetProjectId, targetConfiguration, linkRole) => {
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/projects/${sourceDocument.projectId}/spaces/${sourceDocument.spaceId}/documents/${sourceDocument.id}/duplicate`,
+        body: JSON.stringify({
+          targetDocumentIdentifier: {
+            projectId: targetProjectId,
+            spaceId: sourceDocument.spaceId,
+            name: sourceDocument.id
+          },
+          targetDocumentTitle: sourceDocument.title,
+          configName: targetConfiguration,
+          linkRoleId: linkRole,
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
+              Promise.resolve().then(() => {
+                return reject("Your session has expired. Please refresh the page to log in.");
+              });
+            }
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw response.json();
+            }
+          })
+          .then((data) =>  {
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            Promise.resolve(errorResponse).then((error) => {
+              return reject(error && error.message);
+            });
+          });
+    });
+  };
+
   const getWorkItemIds = (searchParams) => {
     const idsHash = searchParams.get("ids");
     let idsKey = idsHash && (idsHash + "_ids");
@@ -144,6 +255,47 @@ export default function useDiffService() {
           })
           .then((data) =>  {
             loadingContext.reload(mergingContext.getSelectedIndexes());
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            Promise.resolve(errorResponse).then((error) => {
+              return reject(error && error.message);
+            });
+          });
+    });
+  };
+
+  const sendDocumentsFieldsMergeRequest = (searchParams, direction, loadingContext, mergingContext, docsData) => {
+    const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
+    const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
+    leftDocument.moduleXmlRevision = docsData.leftDocument.moduleXmlRevision;
+    rightDocument.moduleXmlRevision = docsData.rightDocument.moduleXmlRevision;
+
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/merge/documents-fields`,
+        body: JSON.stringify({
+          leftDocument: leftDocument,
+          rightDocument: rightDocument,
+          direction: direction,
+          fieldIds: mergingContext.getSelectedValues()
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
+              Promise.resolve().then(() => {
+                return reject("Your session has expired. Please refresh the page to log in. Note that any unsaved changes will be lost.");
+              });
+            }
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw response.json();
+            }
+          })
+          .then((data) =>  {
             resolve(data);
           })
           .catch(errorResponse => {
@@ -219,6 +371,13 @@ export default function useDiffService() {
     return filteredPairs;
   };
 
+  const getCollectionFromSearchParams = (searchParams, prefix) => {
+    return {
+      projectId: searchParams.get(`${prefix}ProjectId`),
+      id: searchParams.get(`${prefix}CollectionId`),
+    };
+  };
+
   const getDocumentFromSearchParams = (searchParams, prefix) => {
     return {
       projectId: searchParams.get(`${prefix}ProjectId`),
@@ -243,5 +402,15 @@ export default function useDiffService() {
     }
   };
 
-  return { sendDocumentsDiffRequest, sendFindWorkItemsPairsRequest, sendDocumentsMergeRequest, sendWorkItemsMergeRequest, diffsExist };
+  return {
+    sendDocumentsDiffRequest,
+    sendFindWorkItemsPairsRequest,
+    sendCollectionsDiffRequest,
+    sendCreateTargetDocumentRequest,
+    sendDocumentsMergeRequest,
+    sendWorkItemsMergeRequest,
+    getDocumentsFieldsDiff,
+    sendDocumentsFieldsMergeRequest,
+    diffsExist
+  };
 }

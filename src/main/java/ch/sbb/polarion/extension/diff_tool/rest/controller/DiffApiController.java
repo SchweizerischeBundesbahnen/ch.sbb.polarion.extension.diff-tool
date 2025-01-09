@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.*;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
+import io.swagger.v3.oas.annotations.Parameter;
 
 import javax.ws.rs.Path;
 
@@ -19,6 +20,11 @@ public class DiffApiController extends DiffInternalController {
     }
 
     @Override
+    public CollectionsDiff getCollectionsDiff(CollectionsDiffParams collectionsDiffParams) {
+        return polarionService.callPrivileged(() -> super.getCollectionsDiff(collectionsDiffParams));
+    }
+
+    @Override
     public WorkItemsPairDiff getDocumentWorkItemsPairDiff(DocumentWorkItemsPairDiffParams documentWorkItemsPairDiffParams) {
         return polarionService.callPrivileged(() -> super.getDocumentWorkItemsPairDiff(documentWorkItemsPairDiffParams));
     }
@@ -26,6 +32,11 @@ public class DiffApiController extends DiffInternalController {
     @Override
     public WorkItemsPairDiff getDetachedWorkItemsPairDiff(DetachedWorkItemsPairDiffParams detachedWorkItemsPairDiffParams) {
         return polarionService.callPrivileged(() -> super.getDetachedWorkItemsPairDiff(detachedWorkItemsPairDiffParams));
+    }
+
+    @Override
+    public DocumentsFieldsDiff getDocumentsFieldsDiff(DocumentsFieldsDiffParams params) {
+        return polarionService.callPrivileged(() -> super.getDocumentsFieldsDiff(params));
     }
 
     @Override

@@ -152,6 +152,7 @@ a:hover {
   width: 21px;
   height: 100%;
   padding: 0 3px;
+  z-index: 1;
 }
 
 .merge-ticker .form-check {
@@ -206,6 +207,19 @@ a:hover {
 .sticky-top {
   transition: all .1s linear;
   z-index: 5 !important;
+}
+
+.create-document-button {
+  background-color: #eee;
+  color: #888;
+  padding: 4px 10px;
+  margin-left: 20px;
+  box-shadow: 2px 2px 12px rgba(0, 0, 0, .4);
+}
+
+.create-document-button:hover {
+  background-color: #fff;
+  color: #666;
 }
 
 .control-pane {

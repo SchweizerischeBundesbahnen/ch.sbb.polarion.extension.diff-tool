@@ -5,14 +5,21 @@ This Polarion extension provides functionality of diffing:
 * work items of 2 documents (also either of different documents or of the same in different revisions)
 * arbitrary set of work items in one project with their counterpart work items from another project
 
-...and then to merge selected diffs in any direction.
+...and then to merge selected diffs in any direction. First 2 options are available either via selecting 2 certain documents
+or via a collection of documents.
 
 In case of diffing work items, appropriate counterpart work items (from another document or another project) are always seeking
 by selected link role.
 
+Additionally, the extension provides functionality to make a copy of selected document in other location.
+
+> [!IMPORTANT]
+> Starting from version 5.0.0 only latest version of Polarion is supported.
+> Right now it is Polarion 2410.
+
 ## Quick start
 
-The latest version of the extension can be downloaded from the [releases page](../../releases/latest) and installed to Polarion instance without needs to be compiled from the sources.
+The latest version of the extension can be downloaded from the [releases page](../../releases/latest) and installed to Polarion instance without necessity to be compiled from the sources.
 The extension should be copied to `<polarion_home>/polarion/extensions/ch.sbb.polarion.extension.diff-tool/eclipse/plugins` and changes will take effect after Polarion restart.
 > [!IMPORTANT]
 > Don't forget to clear `<polarion_home>/data/workspace/.config` folder after extension installation/update to make it work properly.
@@ -20,9 +27,9 @@ The extension should be copied to `<polarion_home>/polarion/extensions/ch.sbb.po
 ## Compatibility
 
 This extension is compatible with:
-* Polarion 2404
+* Polarion 2410
 * Java 17
-* [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v7 (If you are using [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v6, please use version 3.x.x of this extension)
+* [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v8
 
 ## Build
 
@@ -78,6 +85,19 @@ Repeat the instructions above except that on the step 5 use the following line:
    …
    ```
 
+### Nodes for collections and work items diffing to appear in Polarion's navigation tree
+1. Open a project where you wish these nodes to be available
+2. On the top of the project's navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Project's administration page will be opened.
+3. On the administration's navigation pane select Portal ➙ Topics.
+4. Depending on which view type you are using choose to edit either Default or Admin view.
+5. In opened Topics Configuration editor insert following line inside `topics`-element:
+   ```xml
+   …
+   <topic id="diff-tool"/>
+   …
+   ```
+6. Save changes by clicking 💾 Save
+
 ### Fine-tuning the communication between Polarion and Diff Tool extension
 
 The Diff Tool UI makes numerous requests to Polarion using the REST API to retrieve information about documents and their workitems. These requests can be processed in parallel to improve performance.
@@ -97,11 +117,30 @@ Default value is `2`. Increasing this value may speed up the process but can als
 4. To change configuration of Diff Tool extension just edit corresponding section and press `Save` button.
 
 ## Usage
-
+### Documents diffing
 1. Open a document in Polarion.
-2. In the toolbar choose Show Sidebar ➙ Document Properties.
-3. Choose another document and desired options in the `Diff Tool` block and click `Compare`.
+2. In the toolbar choose Show Sidebar ➙ Document Properties ➙ Documents Comparison.
+3. Choose another document and desired options and click `Compare`.
 4. Another tab will be opened in browser listing documents differences. Later you can select certain differences and merge them in any direction.
+
+### Document copy creation
+1. Open a document in Polarion.
+2. In the toolbar choose Show Sidebar ➙ Document Properties ➙ Documents Copy.
+3. Choose destination of target document, desired options and click `Create Document`.
+4. When document is created you will see success message with a link to it.
+
+### Work items diffing
+1. In Polarion navigation tree choose Diff Tool ➙ Multiple Work Items.
+2. Choose target project, link role by which items to be linked, then select work items from table below to be compared, preliminary filtering them to show ones you need.
+3. Finally, click Compare button.
+4. Another tab will be opened in browser listing selected work items differences. Later you can select certain differences and merge them in any direction.
+
+### Collections diffing
+1. In Polarion navigation tree choose Diff Tool ➙ Collections.
+2. You will see 2 tables listing collections. Left one is displaying collections from current project, right one is displaying collections from project selected in dropdown Target project.
+3. Select one collection from left table and one collection from right table, preliminary filtering them to show ones you need.
+4. Choose link role by which work items to be linked, then click Compare button.
+5. Another tab will be opened in browser listing documents differences. You can change documents from collections to be compared in side pane. Later you can select certain differences and merge them in any direction.
 
 ## REST API
 

@@ -6,6 +6,7 @@ import {usePathname, useRouter, useSearchParams} from "next/navigation";
 import useRemote from "@/services/useRemote";
 import usePdf from "@/services/usePdf";
 import * as DiffTypes from "@/DiffTypes";
+import Modal from "@/components/Modal";
 
 export default function ControlPane({diff_type}) {
   const context = useContext(AppContext);
@@ -15,8 +16,12 @@ export default function ControlPane({diff_type}) {
   const remote = useRemote();
   const pdf = usePdf();
   const [projectId] = useState(searchParams.get('sourceProjectId'));
+  const [selectedCompareAs, setSelectedCompareAs] = useState(searchParams.get("compareAs") || 'Workitems');
   const [configurations, setConfigurations] = useState([]);
   const [selectedConfiguration, setSelectedConfiguration] = useState(searchParams.get("config") || 'Default');
+  const [documentSelectionToBeConfirmed, setDocumentSelectionToBeConfirmed] = useState("");
+  const [selectedDocumentLocationPath] = useState(searchParams.has("sourceSpaceId") && searchParams.has("sourceDocument")
+      ? `${searchParams.get("sourceSpaceId")}/${searchParams.get("sourceDocument")}` : "");
   const [paperSize, setPaperSize] = useState("A4");
   const [orientation, setOrientation] = useState("landscape");
   const [exportInProgress, setExportInProgress] = useState(false);
@@ -42,6 +47,24 @@ export default function ControlPane({diff_type}) {
   }, [projectId]);
 
   useEffect(() => {
+    if (diff_type !== DiffTypes.WORK_ITEMS_DIFF && searchParams.get('compareAs') !== selectedCompareAs) {
+      const params = [];
+      for (const [key, value] of searchParams.entries()) {
+        if (key === 'compareAs') {
+          params.push(`${key}=${selectedCompareAs}`); // update 'compareAs' parameter
+        } else {
+          params.push(`${key}=${value}`); // ...and leave other as they are
+        }
+      }
+      if (!searchParams.get('compareAs')) {
+        params.push(`compareAs=${selectedCompareAs}`);
+      }
+
+      router.push(pathname + '?' + params.join('&'));
+    }
+  }, [selectedCompareAs]);
+
+  useEffect(() => {
     if (searchParams.get('config') !== selectedConfiguration) {
       const params = [];
       for (const [key, value] of searchParams.entries()) {
@@ -51,10 +74,44 @@ export default function ControlPane({diff_type}) {
           params.push(`${key}=${value}`); // ...and leave other as they are
         }
       }
+      if (!searchParams.get('config')) {
+        params.push(`config=${selectedConfiguration}`);
+      }
 
       router.push(pathname + '?' + params.join('&'));
     }
   }, [selectedConfiguration]);
+
+  useEffect(() => {
+    if (!selectedDocumentLocationPath && context.state.leftCollectionDocuments && context.state.leftCollectionDocuments.length > 0) {
+      documentSelected(context.state.leftCollectionDocuments[0].locationPath);
+    }
+  }, [context.state.leftCollectionDocuments]);
+
+  const changeSelectedDocument = (event) => {
+    if (context.state.selectedItemsCount > 0) {
+      setDocumentSelectionToBeConfirmed(event.target.value);
+    } else {
+      documentSelected(event.target.value);
+    }
+  };
+
+  const documentSelected = (locationPath) => {
+    const params = [];
+    for (const [key, value] of searchParams.entries()) {
+      if (key !== "sourceSpaceId" && key !== "sourceDocument") {
+        params.push(`${key}=${value}`);
+      }
+    }
+
+    const selectedDocument = locationPath && context.state.leftCollectionDocuments.find(document => document.locationPath === locationPath);
+    if (selectedDocument) {
+      params.push(`sourceSpaceId=${selectedDocument.spaceId}`);
+      params.push(`sourceDocument=${selectedDocument.id}`);
+    }
+
+    router.push(pathname + '?' + params.join('&'));
+  };
 
   const exportToPDF = () => {
     let body = pdf.preProcess(document.documentElement.innerHTML, paperSize, orientation);
@@ -104,6 +161,34 @@ export default function ControlPane({diff_type}) {
           }
         </div>
         <div className="controls">
+          {diff_type === DiffTypes.COLLECTIONS_DIFF &&
+              <div style={{
+                marginBottom: "6px"
+              }} className="select-set">
+                <label htmlFor="source-document">
+                  Source documents:
+                </label>
+                <select id="source-document" className="form-select" value={selectedDocumentLocationPath} onChange={changeSelectedDocument}>
+                  {context.state.leftCollectionDocuments.map((document, index) => {
+                    return <option key={index} value={document.locationPath}>{document.spaceId === "_default" ? "Default Space" : document.spaceId} / {document.title}</option>
+                  })}
+                </select>
+              </div>
+          }
+          {diff_type !== DiffTypes.WORK_ITEMS_DIFF &&
+              <div style={{
+                marginBottom: "6px"
+              }} className="select-set">
+                <label htmlFor="target-type">
+                  Compare as:
+                </label>
+                <select id="target-type" className="form-select" value={selectedCompareAs} onChange={(event) => setSelectedCompareAs(event.target.value)}>
+                  {["Workitems", "Fields"].map((compareAs, index) => {
+                    return <option key={index} value={compareAs}>{compareAs}</option>
+                  })}
+                </select>
+              </div>
+          }
           {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF &&
               <div style={{
                 marginBottom: "6px"
@@ -118,7 +203,7 @@ export default function ControlPane({diff_type}) {
                 </select>
               </div>
           }
-          {diff_type === DiffTypes.DOCUMENTS_DIFF &&
+          {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.COLLECTIONS_DIFF) &&
               <div className="form-check">
                 <input className="form-check-input" type="checkbox" value="" id="outline-numbers"
                        onChange={() => context.state.setShowOutlineNumbersDiff(!context.state.showOutlineNumbersDiff)}/>
@@ -136,6 +221,15 @@ export default function ControlPane({diff_type}) {
                 </label>
               </div>
           }
+          {diff_type === DiffTypes.DOCUMENTS_FIELDS_DIFF &&
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" checked={context.state.compareOnlyMutualFields} id="compare-only-mutual-fields"
+                       onChange={() => context.state.setCompareOnlyMutualFields(!context.state.compareOnlyMutualFields)}/>
+                <label className="form-check-label" htmlFor="compare-only-mutual-fields">
+                  Compare only mutual fields
+                </label>
+              </div>
+          }
           <div className="form-check">
             <input className="form-check-input" type="checkbox" value="" id="compare-enums-by-id"
                    onChange={() => context.state.setCompareEnumsById(!context.state.compareEnumsById)}/>
@@ -143,7 +237,7 @@ export default function ControlPane({diff_type}) {
               Compare enums by ID
             </label>
           </div>
-          {diff_type === DiffTypes.DOCUMENTS_DIFF &&
+          {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.COLLECTIONS_DIFF) &&
               <div className="form-check">
                 <input className="form-check-input" type="checkbox" value="" id="allow-reference-wi-merge"
                        onChange={() => context.state.setAllowReferencedWorkItemMerge(!context.state.allowReferencedWorkItemMerge)}/>
@@ -152,7 +246,7 @@ export default function ControlPane({diff_type}) {
                 </label>
               </div>
           }
-          {diff_type === DiffTypes.DOCUMENTS_DIFF &&
+          {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.COLLECTIONS_DIFF) &&
               <div className="form-check">
                 <input className="form-check-input" type="checkbox" value="" checked={context.state.hideChaptersIfNoDifference} id="hide-chapters"
                        onChange={() => context.state.setHideChaptersIfNoDifference(!context.state.hideChaptersIfNoDifference)}/>
@@ -188,6 +282,12 @@ export default function ControlPane({diff_type}) {
             </div>
           </div>
         </div>
+
+        <Modal title="Confirm change of documents pair" visible={!!documentSelectionToBeConfirmed} setVisible={() => setDocumentSelectionToBeConfirmed("")} className="modal-md"
+               cancelButtonTitle="Cancel" actionButtonTitle="Confirm" actionButtonHandler={() => documentSelected(documentSelectionToBeConfirmed) }>
+          <p>You have selected some Workitems to be merged but didn&apos;t merge them, changing documents to be diffed/merged you will lose this selection information. Do you wish to continue?</p>
+        </Modal>
+
       </div>
   );
 }

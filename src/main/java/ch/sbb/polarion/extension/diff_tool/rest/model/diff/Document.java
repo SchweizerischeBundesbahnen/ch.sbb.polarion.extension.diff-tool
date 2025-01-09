@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.Nullable;
 
 import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space.DEFAULT_SPACE_ID;
 import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space.DEFAULT_SPACE_NAME;
@@ -56,7 +57,11 @@ public class Document {
         return this;
     }
 
-    public static Document from(IModule module) {
+    public static Document from(@Nullable IModule module) {
+        if (module == null) {
+            return null;
+        }
+
         IProject project = module.getProject();
         return Document.builder()
                 .projectId(project.getId())

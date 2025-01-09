@@ -1,7 +1,7 @@
 import {useContext, useEffect, useState} from "react";
 import {useSearchParams} from "next/navigation";
 import AppContext from "../AppContext";
-import Error from "@/components/Error";
+import AppAlert from "@/components/AppAlert";
 import Loading from "@/components/loading/Loading";
 import WorkItemsPairDiff from "@/components/documents/workitems/WorkItemsPairDiff";
 import DocumentHeader from "@/components/documents/DocumentHeader";
@@ -14,10 +14,13 @@ import MergePane from "@/components/merge/MergePane";
 import useDiffService from "@/services/useDiffService";
 import Modal from "@/components/Modal";
 import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";
+import CollectionHeader from "@/components/collections/CollectionHeader";
+import DocumentProjectHeader from "@/components/documents/DocumentProjectHeader";
+import MergeResultModal from "@/components/merge/MergeResultModal";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument', 'linkRole'];
 
-export default function DocumentsDiff() {
+export default function DocumentsDiff({ enclosingCollections }) {
   const context = useContext(AppContext);
   const searchParams = useSearchParams();
   const diffService = useDiffService();
@@ -37,7 +40,6 @@ export default function DocumentsDiff() {
   const [mergeNotAuthorizedWarning, setMergeNotAuthorizedWarning] = useState(false);  // means that merge to target document is not authorized for current user
   const [structuralChangesWarning, setStructuralChangesWarning] = useState(false);  // means that documents have undergone structural changes as a result of merge operation
   const [mergeReportModalVisible, setMergeReportModalVisible] = useState(false);
-  const [mergeLogsVisible, setMergeLogsVisible] = useState(false);
 
   useEffect(() => {
     const missingParams = REQUIRED_PARAMS.filter(param => !searchParams.get(param));
@@ -61,6 +63,10 @@ export default function DocumentsDiff() {
       setRightChaptersDiffMarkers(new Map());
     }
   }, [context.state.counterpartWorkItemsDiffer, context.state.compareEnumsById, context.state.allowReferencedWorkItemMerge]); // Reload diff of all work item pairs if specified properties changed
+
+  useEffect(() => {
+    context.state.setSelectedItemsCount(mergingContext.selectionCount);
+  }, [mergingContext.selectionCount]);
 
   const dataLoadedCallback = (index, error, diffExists, resetDiffMarker, leftChapter, rightChapter, leftWiId, rightWiId) => {
     diffExists && context.state.setDiffsExist(true);
@@ -98,7 +104,6 @@ export default function DocumentsDiff() {
           setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);
           setMergeNotAuthorizedWarning(!data.success && data.mergeNotAuthorized);
           setStructuralChangesWarning(data.success && data.targetModuleHasStructuralChanges);
-          setMergeLogsVisible(false);
           setMergeReportModalVisible(true);
         })
         .catch((error) => {
@@ -181,14 +186,25 @@ export default function DocumentsDiff() {
   if (loadingContext.pairsLoading) return <Loading message="Loading paired WorkItems" />;
 
   if (loadingContext.pairsLoadingError || !docsData || !docsData.leftDocument || !docsData.rightDocument || !docsData.pairedWorkItems) {
-    return <Error title="Error occurred loading diff data!"
-                  message={loadingContext.pairsLoadingError && !loadingContext.pairsLoadingError.includes("<html")
+    return <AppAlert title="Error occurred loading diff data!"
+                     message={loadingContext.pairsLoadingError && !loadingContext.pairsLoadingError.includes("<html")
                       ? loadingContext.pairsLoadingError
                       : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
   }
 
   return <div id="diff-body" className={`doc-diff ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
     <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>
+
+      <div className="row g-0">
+        {enclosingCollections && <>
+          <CollectionHeader collection={enclosingCollections.leftCollection} />
+          <CollectionHeader collection={enclosingCollections.rightCollection} />
+        </>}
+        {!enclosingCollections && <>
+          <DocumentProjectHeader document={docsData.leftDocument} />
+          <DocumentProjectHeader document={docsData.rightDocument} />
+        </>}
+      </div>
       <div className="row g-0">
         <DocumentHeader document={docsData.leftDocument} />
         <DocumentHeader document={docsData.rightDocument} />
@@ -204,52 +220,9 @@ export default function DocumentsDiff() {
     <Modal title="Merge error" cancelButtonTitle="Close" visible={mergeErrorModalVisible} setVisible={setMergeErrorModalVisible} className="modal-md error">
       <p>{mergeError}</p>
     </Modal>
-    <Modal title="Merge Report" cancelButtonTitle="Close" visible={mergeReportModalVisible}
-           setVisible={setWarningModalVisibleAndReloadIfNeeded} className="modal-xl">
-      <div style={{
-        marginBottom: "10px"
-      }}>
-        {mergeDeniedWarning && <p>Merge was aborted because some structural changes were done in target document meanwhile.</p>}
-        {mergeNotAuthorizedWarning && <p>You are not authorized to execute such merge request.</p>}
-        {!mergeDeniedWarning && !mergeNotAuthorizedWarning &&
-            <>
-              <p>
-                Merge operation completed with following result:
-              </p>
-              <ul>
-                {mergeReport.created?.length > 0 && <li><strong>{mergeReport.created.length}</strong> items were created.</li>}
-                {mergeReport.deleted?.length > 0 && <li><strong>{mergeReport.deleted.length}</strong> items were deleted.</li>}
-                {mergeReport.modified?.length > 0 && <li>Content of <strong>{mergeReport.modified.length}</strong> items were modified.</li>}
-                {mergeReport.moved?.length > 0 && <li><strong>{mergeReport.moved.length}</strong> items were moved (structural changes).</li>}
-                {mergeReport.moveFailed?.length > 0 && <li><strong>{mergeReport.moveFailed.length}</strong> items were not moved because target document
-                  does not contain destination chapter. Please, merge first parent nodes of mentioned work items.</li>}
-                {mergeReport.conflicted?.length > 0 && <li><strong>{mergeReport.conflicted.length}</strong> items were not merged because of concurrent modifications.</li>}
-                {mergeReport.prohibited?.length > 0 && <li><strong>{mergeReport.prohibited.length}</strong> items were not merged because such operation is logically prohibited.</li>}
-                {mergeReport.creationFailed?.length > 0 && <li><strong>{mergeReport.creationFailed.length}</strong> items were not merged because work items referenced in source document
-                  do not have counterparts in target project.</li>}
-                {mergeReport.detached?.length > 0 && <li><strong>{mergeReport.detached.length}</strong> items were moved out of documents.</li>}
-                {mergeReport.warnings?.length > 0 && <li><strong>{mergeReport.warnings.length}</strong> warnings.</li>}
-              </ul>
-              {mergeReport.logs && !mergeLogsVisible && <p><a href="#" onClick={() => setMergeLogsVisible(true)}>See full log</a></p>}
-              {mergeReport.logs && mergeLogsVisible && <pre style={{
-                padding: "10px",
-                background: "#444",
-                color: "#eee",
-                overflow: "auto",
-                borderRadius: "5px",
-                fontSize: ".8em",
-                height: "400px",
-                textWrap: "wrap"
-              }}>{mergeReport.logs}</pre>}
-            </>
-        }
-      </div>
-      <div style={{display: !mergeDeniedWarning && structuralChangesWarning ? 'block' : 'none'}}>
-        <p>The target document has just undergone some structural changes, which mean that no more merge actions are allowed using the current state of the view.
-          The page will automatically be reloaded to actualize documents state.</p>
-      </div>
-      <p style={{display: mergeDeniedWarning || (mergeReport.conflicted && mergeReport.conflicted.length > 0) ? 'block' : 'none'}}>Please, reload the page to actualize the state and try again.</p>
-    </Modal>
+
+    <MergeResultModal visible={mergeReportModalVisible} visibilityCallback={setWarningModalVisibleAndReloadIfNeeded}
+                      mergeDeniedWarning={mergeDeniedWarning} structuralChangesWarning={structuralChangesWarning} mergeNotAuthorizedWarning={mergeNotAuthorizedWarning} mergeReport={mergeReport}/>
 
     {loadingContext.pairs.map((pair, index) => {
       return <WorkItemsPairDiff key={index} leftDocument={docsData.leftDocument} rightDocument={docsData.rightDocument}

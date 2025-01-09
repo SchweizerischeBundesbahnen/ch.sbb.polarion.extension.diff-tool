@@ -40,6 +40,6 @@ class MergeReportTest {
         WorkItem right = new WorkItem();
         right.setId(rightId);
         WorkItemsPair workItemsPair = new WorkItemsPair(left, right);
-        return new MergeReportEntry(operationResultType, workItemsPair, description, operationTime);
+        return new MergeReportEntry(operationResultType, workItemsPair, null, description, operationTime);
     }
 }
