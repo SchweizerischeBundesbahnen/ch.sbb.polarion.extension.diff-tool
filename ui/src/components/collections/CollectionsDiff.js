@@ -17,8 +17,6 @@ const REQUIRED_PARAMS = ['sourceProjectId', 'sourceCollectionId', 'targetProject
 
 export default function CollectionsDiff() {
   const context = useContext(AppContext);
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const diffService = useDiffService();
   const remote = useRemote();
@@ -27,7 +25,6 @@ export default function CollectionsDiff() {
   const [loading, setLoading] = useState(true);
   const [loadingError, setLoadingError] = useState(null);
   const [collectionsData, setCollectionsData] = useState({});
-  const [pairedDocuments, setPairedDocuments] = useState([]);
   const [leftDocumentLocationPath] = useState(`${searchParams.get("sourceSpaceId")}/${searchParams.get("sourceDocument")}`);
   const [selectedDocumentsPair, setSelectedDocumentsPair] = useState(null);
   const [targetConfigurations, setTargetConfigurations] = useState([]);
@@ -48,7 +45,7 @@ export default function CollectionsDiff() {
     diffService.sendCollectionsDiffRequest(searchParams)
         .then((data) => {
           setCollectionsData(data);
-          setPairedDocuments(data.pairedDocuments);
+          context.state.setPairedDocuments(data.pairedDocuments);
           setLoading(false);
           context.state.setDataLoaded(true);
         }).catch((error) => {
@@ -74,32 +71,13 @@ export default function CollectionsDiff() {
   }, []);
 
   useEffect(() => {
-    if (pairedDocuments) {
-      context.state.setLeftCollectionDocuments(pairedDocuments.map(pair => pair.leftDocument));
-
-      if (leftDocumentLocationPath) {
-        const documentsPair = pairedDocuments.find(pair => pair.leftDocument.locationPath === leftDocumentLocationPath);
-
-        if (!(searchParams.has("targetSpaceId") && searchParams.has("targetDocument")) && documentsPair && documentsPair.rightDocument) {
-
-          const params = [];
-          for (const [key, value] of searchParams.entries()) {
-            if (key !== "targetSpaceId" && key !== "targetDocument") {
-              params.push(`${key}=${value}`);
-            }
-          }
-
-          params.push(`targetSpaceId=${documentsPair.rightDocument.spaceId}`);
-          params.push(`targetDocument=${documentsPair.rightDocument.id}`);
-          router.push(pathname + '?' + params.join('&'));
-        }
-
-        setSelectedDocumentsPair(documentsPair);
+    if (leftDocumentLocationPath && context.state.pairedDocuments && context.state.pairedDocuments.length > 0) {
+      const selectedDocumentsPair = leftDocumentLocationPath && context.state.pairedDocuments.find(documentsPair => documentsPair.leftDocument.locationPath === leftDocumentLocationPath);
+      if (selectedDocumentsPair) {
+        setSelectedDocumentsPair(selectedDocumentsPair);
       }
-    } else {
-      context.state.setLeftCollectionDocuments([]);
     }
-  }, [pairedDocuments]);
+  }, [leftDocumentLocationPath, context.state.pairedDocuments]);
 
   const createTargetDocument = (targetConfiguration) => {
     setDocumentCreationError(null);
@@ -124,7 +102,7 @@ export default function CollectionsDiff() {
                       : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
   }
 
-  if (!(selectedDocumentsPair && selectedDocumentsPair.leftDocument)) {
+  if (!selectedDocumentsPair) {
     return <AppAlert title="No source document selected"
                      message="Please, select source document in side pane first" />;
   }
