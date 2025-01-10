@@ -1,5 +1,36 @@
 # Changelog
 
+## [5.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.7.0...v5.0.0) (2025-01-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* support of polarion 2410 only ([#200](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/200))
+* Compare/merge WorkItems ([#192](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/192))
+
+### Features
+
+* Compare/merge WorkItems ([#192](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/192)) ([2f3f3bf](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2f3f3bffdbfb95c3a1706db9b9402f918b3af739)), closes [#31](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/31)
+* Support for collections ([#197](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/197)) ([b32ce4a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/b32ce4aed441f35afcd0ed6b9760319110685583)), closes [#31](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/31)
+* support of polarion 2410 only ([#200](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/200)) ([1137ec7](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/1137ec742d3dc7d55dcf17e7b2a860faf70a79c1)), closes [#189](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/189)
+
+
+### Bug Fixes
+
+* deprication in openapi-validation action ([#198](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/198)) ([d852e5d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d852e5dabd186ce34517d11eb1116a23f1c2c66a))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v7.4.0 ([c5a6023](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/c5a60236e7c12ec4ea14e89e80d03a58eff359d5))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v7.5.0 ([3ece84e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/3ece84e5c5acb34599da90ae15a53efc8be55fb3))
+* **deps:** update dependency uuid to v11.0.4 ([da7c3c2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/da7c3c2df92bb1f4b4075cd8aa460e3c1b2fc4b9))
+* **deps:** update dependency uuid to v11.0.5 ([fd4e9b7](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/fd4e9b70c3f9d7ec2aecca97b56fd85c8b0a4976))
+* **deps:** update font awesome to v6.7.2 ([da60a11](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/da60a116e9474e79f3c759fe60f876946b318b14))
+* **deps:** update nextjs monorepo to v15.1.0 ([da9a277](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/da9a277cbb5bc0ef51b250e9d79662df95d955b2))
+* **deps:** update nextjs monorepo to v15.1.1 ([65331d5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/65331d57c88471abaa938e371de2efc41756ebdc))
+* **deps:** update nextjs monorepo to v15.1.2 ([83b804b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/83b804b921b67e9a0fa35ce529a18cf0f9d66812))
+* **deps:** update nextjs monorepo to v15.1.3 ([3e290d4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/3e290d4b50c9e39a97b12bc802552f22595f91bb))
+* **deps:** update nextjs monorepo to v15.1.4 ([440d8bc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/440d8bc157749063eb20f85a045b41b35c0ef11c))
+* error alert on opening workitems diff ([#196](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/196)) ([954758d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/954758d0bae915042ff0b8290619e80de78c3b88)), closes [#181](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/181)
+* fix UI problem of switching documents when diffing collections ([#203](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/203)) ([4dfa0e9](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/4dfa0e9a090d4ff48a1b817a946f67c81b1fcab9)), closes [#202](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/202)
+
 ## [4.7.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.6.0...v4.7.0) (2024-12-02)
 
 
