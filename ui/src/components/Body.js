@@ -11,7 +11,7 @@ export default function Body({ children }) {
   const [headerPinned, setHeaderPinned] = useState(false);
   const [controlPaneAccessible, setControlPaneAccessible] = useState(false);
   const [controlPaneExpanded, setControlPaneExpanded] = useState(false);
-  const [leftCollectionDocuments, setLeftCollectionDocuments] = useState([]);
+  const [pairedDocuments, setPairedDocuments] = useState([]);
   const [showOutlineNumbersDiff, setShowOutlineNumbersDiff] = useState(false);
   const [counterpartWorkItemsDiffer, setCounterpartWorkItemsDiffer] = useState(false);
   const [compareOnlyMutualFields, setCompareOnlyMutualFields] = useState(true);
@@ -43,8 +43,8 @@ export default function Body({ children }) {
           setControlPaneAccessible: setControlPaneAccessible,
           controlPaneExpanded: controlPaneExpanded,
           setControlPaneExpanded: setControlPaneExpanded,
-          leftCollectionDocuments: leftCollectionDocuments,
-          setLeftCollectionDocuments: setLeftCollectionDocuments,
+          pairedDocuments: pairedDocuments,
+          setPairedDocuments: setPairedDocuments,
           showOutlineNumbersDiff: showOutlineNumbersDiff,
           setShowOutlineNumbersDiff: setShowOutlineNumbersDiff,
           counterpartWorkItemsDiffer: counterpartWorkItemsDiffer,

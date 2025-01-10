@@ -83,10 +83,10 @@ export default function ControlPane({diff_type}) {
   }, [selectedConfiguration]);
 
   useEffect(() => {
-    if (!selectedDocumentLocationPath && context.state.leftCollectionDocuments && context.state.leftCollectionDocuments.length > 0) {
-      documentSelected(context.state.leftCollectionDocuments[0].locationPath);
+    if (!selectedDocumentLocationPath && context.state.pairedDocuments && context.state.pairedDocuments.length > 0) {
+      documentSelected(context.state.pairedDocuments[0].leftDocument.locationPath);
     }
-  }, [context.state.leftCollectionDocuments]);
+  }, [selectedDocumentLocationPath, context.state.pairedDocuments]);
 
   const changeSelectedDocument = (event) => {
     if (context.state.selectedItemsCount > 0) {
@@ -99,15 +99,19 @@ export default function ControlPane({diff_type}) {
   const documentSelected = (locationPath) => {
     const params = [];
     for (const [key, value] of searchParams.entries()) {
-      if (key !== "sourceSpaceId" && key !== "sourceDocument") {
+      if (key !== "sourceSpaceId" && key !== "sourceDocument" && key !== "targetSpaceId" && key !== "targetDocument") {
         params.push(`${key}=${value}`);
       }
     }
 
-    const selectedDocument = locationPath && context.state.leftCollectionDocuments.find(document => document.locationPath === locationPath);
-    if (selectedDocument) {
-      params.push(`sourceSpaceId=${selectedDocument.spaceId}`);
-      params.push(`sourceDocument=${selectedDocument.id}`);
+    const selectedDocumentsPair = locationPath && context.state.pairedDocuments.find(documentsPair => documentsPair.leftDocument.locationPath === locationPath);
+    if (selectedDocumentsPair) {
+      params.push(`sourceSpaceId=${selectedDocumentsPair.leftDocument.spaceId}`);
+      params.push(`sourceDocument=${selectedDocumentsPair.leftDocument.id}`);
+      if (selectedDocumentsPair.rightDocument) {
+        params.push(`targetSpaceId=${selectedDocumentsPair.rightDocument.spaceId}`);
+        params.push(`targetDocument=${selectedDocumentsPair.rightDocument.id}`);
+      }
     }
 
     router.push(pathname + '?' + params.join('&'));
@@ -169,8 +173,8 @@ export default function ControlPane({diff_type}) {
                   Source documents:
                 </label>
                 <select id="source-document" className="form-select" value={selectedDocumentLocationPath} onChange={changeSelectedDocument}>
-                  {context.state.leftCollectionDocuments.map((document, index) => {
-                    return <option key={index} value={document.locationPath}>{document.spaceId === "_default" ? "Default Space" : document.spaceId} / {document.title}</option>
+                  {context.state.pairedDocuments.map((documentsPair, index) => {
+                    return <option key={index} value={documentsPair.leftDocument.locationPath}>{documentsPair.leftDocument.spaceId === "_default" ? "Default Space" : documentsPair.leftDocument.spaceId} / {documentsPair.leftDocument.title}</option>
                   })}
                 </select>
               </div>
