@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.0.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.0.0...v5.0.1) (2025-01-20)
+
+
+### Bug Fixes
+
+* **deps:** update nextjs monorepo to v15.1.5 ([f8b1436](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/f8b143696fda764725e05cf543cf5989bec2080c))
+
 ## [5.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.7.0...v5.0.0) (2025-01-10)
 
 
