@@ -519,13 +519,13 @@ public class DiffService {
         } else if (fieldId.equals(DiffField.EXTERNAL_PROJECT_WORK_ITEM.getKey()) && workItem != null) {
             value = workItem.isExternalProjectWorkItem();
         } else if (enumIdComparisonMode) {
-            if (value instanceof IEnumOption) {
+            if (value instanceof IEnumOption enumOption) {
                 // single enum - just take enum ID
-                value = ((IEnumOption) value).getId();
-            } else if (value instanceof ITypedList<?>) {
+                value = enumOption.getId();
+            } else if (value instanceof ITypedList<?> typedList) {
                 // enum list - get all IDs in order to later compare them properly using Objects.equals()
                 // (note that we are sorting list in order to ignore the values order)
-                value = ((ITypedList<?>) value).stream().filter(i -> i instanceof IEnumOption).map(e -> ((IEnumOption) e).getId()).sorted().toList();
+                value = typedList.stream().filter(i -> i instanceof IEnumOption).map(e -> ((IEnumOption) e).getId()).sorted().toList();
             } else if (value != null) {
                 // theoretically we shouldn't reach this statement, but just in case we convert it to string otherwise we get jackson serialization exception
                 value = String.valueOf(value);
