@@ -4,8 +4,8 @@ import ch.sbb.polarion.extension.diff_tool.report.MergeReportEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
@@ -111,7 +111,7 @@ public class MergeService {
         if (!context.getAffectedModules().isEmpty()) {
             TransactionalExecutor.executeInWriteTransaction(transaction -> {
                 context.getAffectedModules().forEach(module -> {
-                    polarionService.insertWorkItem(module.getWorkItem(), module.getModule(), module.getParentNode(), module.getDestinationIndex(), true );
+                    polarionService.insertWorkItem(module.getWorkItem(), module.getModule(), module.getParentNode(), module.getDestinationIndex(), true);
                     reloadModule(module.getModule());
                 });
                 return null;
@@ -223,16 +223,19 @@ public class MergeService {
                 IWorkItem pairedWorkItem = polarionService.getPairedWorkItems(source, context.getTargetModule().getProjectId(), context.linkRole).stream().findFirst().orElse(null);
                 if (pairedWorkItem != null) {
                     newWorkItem = insertWorkItem(source, context, false);
-                    context.reportEntry(CREATED, pair, "workitem '%s' moved from '%s'".formatted(newWorkItem.getId(), pairedWorkItem.getModule() != null ? pairedWorkItem.getModule().getTitleWithSpace() : "tracker"));
+                    if (newWorkItem != null) {
+                        context.reportEntry(CREATED, pair, "workitem '%s' moved from '%s'".formatted(newWorkItem.getId(), pairedWorkItem.getModule() != null ? pairedWorkItem.getModule().getTitleWithSpace() : "tracker"));
+                    } else {
+                        context.reportEntry(CREATION_FAILED, pair, "new workitem based on source workitem '%s' NOT created".formatted(pairedWorkItem.getModule() != null ? pairedWorkItem.getModule().getTitleWithSpace() : "tracker"));
+                    }
                 } else {
                     newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context, pair);
-                    context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId()));
                 }
                 context.bindCounterpartItem(pair,
                         WorkItem.of(newWorkItem,
                                 context.getTargetModule().getOutlineNumberOfWorkitem(newWorkItem),
-                                source.getId().equals(newWorkItem.getId()),
-                                newWorkItem.getProjectId().equals(context.getTargetModule().getProjectId())
+                                Objects.equals(source.getId(), newWorkItem == null ? "" : newWorkItem.getId()),
+                                Objects.equals(newWorkItem == null ? "" : newWorkItem.getProjectId(), context.getTargetModule().getProjectId())
                         )
                 );
                 reloadModule(context.getTargetModule());
@@ -262,8 +265,10 @@ public class MergeService {
     private boolean deleteItem(WorkItemsPair pair, WorkItemsMergeContext context) {
         if (context.getSourceWorkItem(pair) == null && context.getTargetWorkItem(pair) != null) {
             IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
-            target.delete();
-            return true;
+            if (target != null) {
+                target.delete();
+                return true;
+            }
         }
         return false;
     }
@@ -712,6 +717,7 @@ public class MergeService {
         }
     }
 
+    @Nullable
     private IWorkItem getWorkItem(@Nullable WorkItem workItem) {
         return workItem != null ? polarionService.getWorkItem(workItem.getProjectId(), workItem.getId(), workItem.getRevision()) : null;
     }

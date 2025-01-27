@@ -18,6 +18,7 @@ public class DataSetWidgetParams {
     public enum Side {
         SOURCE, TARGET;
 
+        @Override
         public String toString() {
             return super.toString().toLowerCase();
         }

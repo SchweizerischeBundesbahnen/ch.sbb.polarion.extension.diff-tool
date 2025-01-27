@@ -3,6 +3,7 @@ package ch.sbb.polarion.extension.diff_tool.service.cleaners;
 import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.tracker.model.IApprovalStruct;
 import com.polarion.alm.tracker.model.IWorkItem;
+import com.polarion.alm.tracker.model.IWorkflowObject;
 import com.polarion.alm.tracker.model.signatures.IWorkItemWorkflowSignature;
 import com.polarion.alm.tracker.model.signatures.IWorkflowSignature;
 import com.polarion.alm.tracker.model.signatures.IWorkflowSignaturesManager;
@@ -19,7 +20,7 @@ public final class ListCleanerProvider {
         INSTANCES.put(IWorkItem.KEY_APPROVALS, new ApprovalsCleaner());
         INSTANCES.put(IWorkItem.KEY_ASSIGNEE, new AssigneeCleaner());
         INSTANCES.put(IWorkItem.KEY_COMMENTS, new CommentsCleaner());
-        INSTANCES.put(IWorkItem.KEY_WORKFLOW_SIGNATURES, new WorkflowSignaturesCleaner());
+        INSTANCES.put(IWorkflowObject.KEY_WORKFLOW_SIGNATURES, new WorkflowSignaturesCleaner());
         INSTANCES.put(IWorkItem.KEY_WORK_RECORDS, new WorkRecordsCleaner());
     }
 
