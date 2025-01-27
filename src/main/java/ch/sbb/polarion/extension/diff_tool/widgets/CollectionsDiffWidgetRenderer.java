@@ -38,6 +38,7 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
         this.params = params;
     }
 
+    @Override
     protected void render(@NotNull HtmlFragmentBuilder builder) {
         HtmlTagBuilder wrap = builder.tag().div();
         wrap.attributes().className("main-pane");

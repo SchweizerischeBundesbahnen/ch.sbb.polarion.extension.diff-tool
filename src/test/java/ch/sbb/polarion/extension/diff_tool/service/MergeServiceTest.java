@@ -45,7 +45,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, CurrentContextExtension.class})
 @CurrentContextConfig("diff-tool")
-public class MergeServiceTest {
+class MergeServiceTest {
     @Mock
     private PolarionService polarionService;
     @Mock
@@ -206,6 +206,7 @@ public class MergeServiceTest {
                 case SRC -> when(item.getLinkedItem().getModule()).thenReturn(testContext.srcModule());
                 case TARGET -> when(item.getLinkedItem().getModule()).thenReturn(testContext.targetModule());
                 case OTHER -> when(item.getLinkedItem().getModule()).thenReturn(testContext.otherModule());
+                case NONE -> when(item.getLinkedItem().getModule()).thenReturn(null);
             }
         }
 

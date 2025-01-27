@@ -14,7 +14,7 @@ class MergeReportTest {
     private MergeReport mergeReport;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         mergeReport = new MergeReport();
 
         mergeReport.addEntry(createEntry(MergeReport.OperationResultType.CONFLICTED, "AA-123", "BB-456", "Conflict occurred", LocalDateTime.of(2023, 10, 5, 10, 0)));
@@ -23,7 +23,7 @@ class MergeReportTest {
     }
 
     @Test
-    public void testGetEntriesAsSingleString() {
+    void testGetEntriesAsSingleString() {
         String expected = String.join(System.lineSeparator(),
                 "2023-10-05 10:00:00.000: 'CONFLICTED' -- left WI 'AA-123', right WI 'BB-456' -- Conflict occurred",
                 "2023-10-05 11:00:00.000: 'PROHIBITED' -- left WI 'AA-789', right WI 'BB-012' -- Prohibited action",

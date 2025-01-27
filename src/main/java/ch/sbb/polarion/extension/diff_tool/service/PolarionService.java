@@ -26,6 +26,7 @@ import com.google.common.collect.Streams;
 import com.polarion.alm.projects.IProjectService;
 import com.polarion.alm.projects.model.IFolder;
 import com.polarion.alm.projects.model.IProject;
+import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.server.rt.parts.Renderer;
 import com.polarion.alm.shared.api.model.ModelObjectReference;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
@@ -48,6 +49,7 @@ import com.polarion.alm.tracker.model.IStatusOpt;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
+import com.polarion.alm.tracker.model.IWorkflowObject;
 import com.polarion.alm.tracker.model.ipi.IInternalBaselinesManager;
 import com.polarion.alm.ui.shared.FieldRenderType;
 import com.polarion.core.util.StringUtils;
@@ -99,9 +101,9 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     private static final Logger logger = Logger.getLogger(PolarionService.class);
     private static final Predicate<WorkItemField> deletableFieldsFilter = field -> !field.isReadOnly();
     private static final Set<String> fieldsNotToCleanUp = new HashSet<>(Arrays.asList(
-            IWorkItem.KEY_PROJECT,
+            IUniqueObject.KEY_PROJECT,
             IWorkItem.KEY_MODULE,
-            IWorkItem.KEY_TYPE,
+            IWorkflowObject.KEY_TYPE,
             IWorkItem.KEY_OUTLINE_NUMBER,
             IWorkItem.KEY_RESOLUTION
     ));
