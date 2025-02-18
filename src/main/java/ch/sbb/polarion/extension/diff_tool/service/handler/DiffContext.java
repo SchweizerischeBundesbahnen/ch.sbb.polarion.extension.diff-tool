@@ -18,14 +18,10 @@ import java.util.Optional;
 
 @Getter
 public class DiffContext {
-    public IModule docA;
     public WorkItem workItemA;
     public WorkItem.Field fieldA;
-    public ICustomField docFieldA;
-    public IModule docB;
     public WorkItem workItemB;
     public WorkItem.Field fieldB;
-    public ICustomField docFieldB;
     public final PolarionService polarionService;
     public String pairedWorkItemsLinkRole;
     public boolean pairedWorkItemsDiffer;
@@ -37,17 +33,22 @@ public class DiffContext {
     @Setter
     private boolean reverseStyles;
 
-    public DiffContext(@NotNull IModule docA, @NotNull IModule docB, @NotNull WorkItem.Field fieldA, @NotNull WorkItem.Field fieldB, @NotNull String fieldId, @NotNull String leftProjectId, @NotNull PolarionService polarionService) {
-
-        this.docA = docA;
+    public DiffContext(@NotNull WorkItem.Field fieldA, @NotNull WorkItem.Field fieldB, @NotNull String leftProjectId, @NotNull PolarionService polarionService) {
         this.fieldA = fieldA;
-        this.docFieldA = docA.getCustomFieldPrototype(fieldId);
-
-        this.docB = docB;
         this.fieldB = fieldB;
-        this.docFieldB = docB.getCustomFieldPrototype(fieldId);
 
         this.leftProjectId = leftProjectId;
+        this.polarionService = polarionService;
+    }
+
+    public DiffContext(@NotNull IModule docA, @NotNull IModule docB, @Nullable String contentBlockA, @Nullable String contentBlockB, @NotNull PolarionService polarionService) {
+        this.workItemA = WorkItem.builder().module(docA).projectId(docA.getProjectId()).build();
+        this.fieldA = WorkItem.Field.builder().id("virtual").value(contentBlockA).html(contentBlockA).build();
+
+        this.workItemB = WorkItem.builder().module(docB).projectId(docB.getProjectId()).build();
+        this.fieldB = WorkItem.Field.builder().id("virtual").value(contentBlockB).html(contentBlockB).build();
+
+        this.leftProjectId = docA.getProjectId();
         this.polarionService = polarionService;
     }
 

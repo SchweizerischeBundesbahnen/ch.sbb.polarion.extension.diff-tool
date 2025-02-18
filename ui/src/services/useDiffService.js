@@ -43,7 +43,7 @@ export default function useDiffService() {
     });
   };
 
-  const getDocumentsFieldsDiff = (searchParams, compareEnumsById, compareOnlyMutualFields, loadingContext) => {
+  const sendDocumentsFieldsDiffRequest = (searchParams, compareEnumsById, compareOnlyMutualFields, loadingContext) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
 
@@ -75,6 +75,45 @@ export default function useDiffService() {
           .catch(errorResponse => {
             Promise.resolve(errorResponse).then((error) => {
               loadingContext.fieldsDiffLoadingFinishedWithError(error && error.message);
+              reject(error);
+            });
+          });
+    });
+  };
+
+  const sendDocumentsContentDiffRequest = (searchParams, configCacheId, loadingContext) => {
+    const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
+    const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
+
+    loadingContext.pairsLoadingStarted(true); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
+
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/diff/documents-content`,
+        body: JSON.stringify({
+          leftDocument: leftDocument,
+          rightDocument: rightDocument,
+          linkRole: searchParams.get('linkRole'),
+          configName: searchParams.get('config'),
+          configCacheBucketId: configCacheId
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw response.json();
+            }
+          })
+          .then(data =>  {
+            loadingContext.contentDiffLoadingFinished();
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            Promise.resolve(errorResponse).then((error) => {
+              loadingContext.contentDiffLoadingFinishedWithError(error && error.message);
               reject(error);
             });
           });
@@ -404,12 +443,13 @@ export default function useDiffService() {
 
   return {
     sendDocumentsDiffRequest,
+    sendDocumentsFieldsDiffRequest,
+    sendDocumentsContentDiffRequest,
     sendFindWorkItemsPairsRequest,
     sendCollectionsDiffRequest,
     sendCreateTargetDocumentRequest,
     sendDocumentsMergeRequest,
     sendWorkItemsMergeRequest,
-    getDocumentsFieldsDiff,
     sendDocumentsFieldsMergeRequest,
     diffsExist
   };

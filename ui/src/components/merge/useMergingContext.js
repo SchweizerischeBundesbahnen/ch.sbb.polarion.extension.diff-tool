@@ -10,7 +10,8 @@ export function useMergingContext() {
   const [selectAllTrigger, setSelectAllTrigger] = useState(0);
 
   useEffect(() => {
-    let allSelected = true;
+    console.log(selectionRegistry);
+    let allSelected = selectionRegistry.size > 0;
     let count = 0;
     selectionRegistry.forEach((value) => {
       count += (value ? 1 : 0);

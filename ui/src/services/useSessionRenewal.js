@@ -11,7 +11,7 @@ export default function useSessionRenewal() {
       headers: {'Content-Type': 'application/json'}
     });
     if (!response.ok) {
-      console.error("Session renewal failed");
+      console.log("Session renewal failed");
     }
   };
 

@@ -226,6 +226,37 @@
         ]
       }
     },
+    "/api/diff/documents-content": {
+      "post": {
+        "operationId": "getDocumentsContentDiff",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentsDiffParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentsDiff"
+                }
+              }
+            },
+            "description": "Successfully retrieved the differences between page content of the provided documents"
+          }
+        },
+        "summary": "Gets difference two live documents page content",
+        "tags": [
+          "Difference"
+        ]
+      }
+    },
     "/api/diff/documents-fields": {
       "post": {
         "operationId": "getDocumentsFieldsDiff",
@@ -1220,6 +1251,52 @@
         },
         "type": "object"
       },
+      "DocumentContentAnchor": {
+        "description": "Represents an anchor to which document content blocks are tied",
+        "properties": {
+          "contentAbove": {
+            "description": "Content block above the anchor",
+            "type": "string"
+          },
+          "contentBelow": {
+            "description": "Content block below the anchor",
+            "type": "string"
+          },
+          "diffAbove": {
+            "description": "Diff of content block above the anchor",
+            "type": "string"
+          },
+          "diffBelow": {
+            "description": "Diff of content block below the anchor",
+            "type": "string"
+          },
+          "id": {
+            "description": "ID of the WorkItem which represents the anchor",
+            "type": "string"
+          },
+          "outlineNumber": {
+            "description": "Outline number of the WorkItem",
+            "type": "string"
+          },
+          "title": {
+            "description": "Title of the WorkItem",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentContentAnchorsPair": {
+        "description": "Represents a pair of documents content anchors for diffing/merging content blocks which potentially linked to them",
+        "properties": {
+          "leftAnchor": {
+            "$ref": "#/components/schemas/DocumentContentAnchor"
+          },
+          "rightAnchor": {
+            "$ref": "#/components/schemas/DocumentContentAnchor"
+          }
+        },
+        "type": "object"
+      },
       "DocumentDuplicateParams": {
         "description": "Parameters to create a document duplicated from another one",
         "properties": {
@@ -1366,6 +1443,21 @@
           "projectName": {
             "description": "Name of a project in which collection resides",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentsContentDiff": {
+        "description": "Represents the difference between inline content of two documents",
+        "properties": {
+          "leftDocument": {
+            "$ref": "#/components/schemas/Document"
+          },
+          "pairedContentAnchors": {
+            "$ref": "#/components/schemas/DocumentContentAnchorsPair"
+          },
+          "rightDocument": {
+            "$ref": "#/components/schemas/Document"
           }
         },
         "type": "object"

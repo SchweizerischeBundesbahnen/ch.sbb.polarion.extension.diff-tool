@@ -53,8 +53,85 @@ public class DiffService {
     private static final CharSequence DAISY_DIFF_CHANGED_FRAGMENT = "class=\"diff-html-";
     private final PolarionService polarionService;
 
+    // We will execute diff operation twice: using direct & reverse order.
+    // this allows to show better visual result in case of style changes.
+    // IMPORTANT: as a required non-obvious step for this approach - we have to swap
+    // styles in the reversed diff to display it properly (this swap implemented using ReverseStylesHandler).
+    private final Consumer<DiffContext> defaultDiffer = context -> {
+        if (Objects.equals(context.fieldA.getValue(), context.fieldB.getValue())) {
+            // Skip fields with identical content in both WorkItems
+            return;
+        }
+
+        List<DiffLifecycleHandler> handlers = DiffLifecycleHandler.getHandlers();
+        Pair<String, String> pairToDiff = preparePairToDiff(context, handlers);
+        String diff = DiffToolUtils.computeDiff(pairToDiff);
+        diff = postProcessDiff(diff, context, handlers);
+        // Note that the resulted diff is placed to the second/B field only (coz opposite field will be filled by the reversed operation)
+        context.fieldB.setHtmlDiff(diff);
+    };
+
     public DiffService(PolarionService polarionService) {
         this.polarionService = polarionService;
+    }
+
+    public DocumentsContentDiff getDocumentsContentDiff(DocumentIdentifier leftDocumentIdentifier, DocumentIdentifier rightDocumentIdentifier, String linkRoleId) {
+        IModule leftDocument = polarionService.getDocumentWithFilledRevision(leftDocumentIdentifier.getProjectId(), leftDocumentIdentifier.getSpaceId(),
+                leftDocumentIdentifier.getName(), leftDocumentIdentifier.getRevision());
+        ILinkRoleOpt linkRole = polarionService.getLinkRoleById(linkRoleId, leftDocument.getProject());
+        if (linkRole == null) {
+            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", linkRoleId));
+        }
+
+        IModule rightDocument = polarionService.getDocumentWithFilledRevision(rightDocumentIdentifier.getProjectId(), rightDocumentIdentifier.getSpaceId(),
+                rightDocumentIdentifier.getName(), rightDocumentIdentifier.getRevision());
+
+        List<WorkItemsPair> pairedWorkItems = polarionService.getPairedWorkItems(leftDocument, rightDocument, linkRole, Collections.emptyList());
+        List<DocumentContentAnchorsPair> pairedDocumentContentAnchors = getPairedDocumentContentAnchors(leftDocument, rightDocument, pairedWorkItems);
+
+        return DocumentsContentDiff.builder()
+                .leftDocument(Document.from(leftDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(leftDocumentIdentifier.getProjectId())))
+                .rightDocument(Document.from(rightDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(rightDocumentIdentifier.getProjectId())))
+                .pairedContentAnchors(pairedDocumentContentAnchors)
+                .build();
+    }
+
+    private List<DocumentContentAnchorsPair> getPairedDocumentContentAnchors(IModule leftDocument, IModule rightDocument, List<WorkItemsPair> pairedWorkItems) {
+        List<DocumentContentAnchorsPair> pairedAnchors = Lists.newArrayList();
+        DocumentContentProcessor documentContentProcessor = new DocumentContentProcessor();
+        Map<String, DocumentContentAnchor> leftDocumentAnchors = documentContentProcessor.process(leftDocument.getHomePageContent().getContent());
+        leftDocumentAnchors.values().forEach(anchor -> {
+            anchor.setContentAbove(anchor.getContentAbove() != null ? polarionService.renderDocumentContentBlock(leftDocument, anchor.getContentAbove()) : "");
+            anchor.setContentBelow(anchor.getContentBelow() != null ? polarionService.renderDocumentContentBlock(leftDocument, anchor.getContentBelow()) : "");
+        });
+        Map<String, DocumentContentAnchor> rightDocumentAnchors = documentContentProcessor.process(rightDocument.getHomePageContent().getContent());
+        rightDocumentAnchors.values().forEach(anchor -> {
+            anchor.setContentAbove(anchor.getContentAbove() != null ? polarionService.renderDocumentContentBlock(rightDocument, anchor.getContentAbove()) : "");
+            anchor.setContentBelow(anchor.getContentBelow() != null ? polarionService.renderDocumentContentBlock(rightDocument, anchor.getContentBelow()) : "");
+        });
+        for (WorkItemsPair pairedWorkItem : pairedWorkItems) {
+            DocumentContentAnchor leftAnchor = convertWorkItemIntoAnchor(pairedWorkItem.getLeftWorkItem(), leftDocumentAnchors);
+            DocumentContentAnchor rightAnchor = convertWorkItemIntoAnchor(pairedWorkItem.getRightWorkItem(), rightDocumentAnchors);
+            DocumentContentAnchorsPair anchorsPair = new DocumentContentAnchorsPair(leftAnchor, rightAnchor);
+            fillHtmlDiffs(leftDocument, rightDocument, anchorsPair, DocumentContentAnchor.ContentSide.ABOVE);
+            fillHtmlDiffs(leftDocument, rightDocument, anchorsPair, DocumentContentAnchor.ContentSide.BELOW);
+            pairedAnchors.add(anchorsPair);
+        }
+        return pairedAnchors;
+    }
+
+    private DocumentContentAnchor convertWorkItemIntoAnchor(WorkItem workItem, Map<String, DocumentContentAnchor> documentAnchors) {
+        if (workItem != null) {
+            DocumentContentAnchor anchor = documentAnchors.get(workItem.getId());
+            if (anchor == null) {
+                anchor = DocumentContentAnchor.builder().id(workItem.getId()).build();
+            }
+            anchor.setTitle(workItem.getTitle());
+            anchor.setOutlineNumber(workItem.getOutlineNumber());
+            return anchor;
+        } else {
+            return null;
+        }
     }
 
     public DocumentsDiff getDocumentsDiff(DocumentIdentifier leftDocumentIdentifier, DocumentIdentifier rightDocumentIdentifier, String linkRoleId, String configName, String configCacheBucketId) {
@@ -536,63 +613,28 @@ public class DiffService {
 
     @VisibleForTesting
     void fillHtmlDiffs(@NotNull WorkItemsPair workItemsPair, @NotNull Set<String> fieldIds, @NotNull WorkItemsPairDiffParams<?> workItemsPairDiffParams) {
-        // We will execute diff operation twice: using direct & reverse order.
-        // this allows to show better visual result in case of style changes.
-        // IMPORTANT: as a required non-obvious step for this approach - we have to swap
-        // styles in the reversed diff to display it properly (this swap implemented using ReverseStylesHandler).
-        Consumer<DiffContext> differ = context -> {
-            if (Objects.equals(context.fieldA.getValue(), context.fieldB.getValue())) {
-                // Skip fields with identical content in both WorkItems
-                return;
-            }
-
-            List<DiffLifecycleHandler> handlers = DiffLifecycleHandler.getHandlers();
-            Pair<String, String> pairToDiff = preparePairToDiff(context, handlers);
-            String diff = DiffToolUtils.computeDiff(pairToDiff);
-            diff = postProcessDiff(diff, context, handlers);
-            // Note that the resulted diff is placed to the second/B field only (coz opposite field will be filled by the reversed operation)
-            context.fieldB.setHtmlDiff(diff);
-        };
-
         fieldIds.forEach(fieldId -> {
             DiffContext contextA = new DiffContext(workItemsPair.getLeftWorkItem(), workItemsPair.getRightWorkItem(), fieldId, workItemsPairDiffParams, polarionService);
             DiffContext contextB = new DiffContext(workItemsPair.getRightWorkItem(), workItemsPair.getLeftWorkItem(), fieldId, workItemsPairDiffParams, polarionService).reverseStyles(true);
-            differ.accept(contextA);
-            differ.accept(contextB);
-
-            //Sometimes values aren't the same by calling equals() method but the resulting diff doesn't contain any changes.
-            //Workaround below is pretty simple - we just check whether diff contains specific piece of html which DaisyDiff
-            //adds for changed parts and if there is no such things - we treat situation as "no diff".
-            if (Stream.of(contextA.fieldA.getHtmlDiff(), contextA.fieldB.getHtmlDiff(), contextB.fieldA.getHtmlDiff(), contextB.fieldB.getHtmlDiff())
-                    .filter(Objects::nonNull).noneMatch(diff -> diff.contains(DAISY_DIFF_CHANGED_FRAGMENT))) {
-                contextA.fieldA.setHtmlDiff(null);
-                contextA.fieldB.setHtmlDiff(null);
-                contextB.fieldA.setHtmlDiff(null);
-                contextB.fieldB.setHtmlDiff(null);
-            }
+            defaultDiffer.accept(contextA);
+            defaultDiffer.accept(contextB);
+            cleanDiff(contextA, contextB);
         });
     }
 
     @VisibleForTesting
+    void fillHtmlDiffs(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @NotNull DocumentContentAnchorsPair contentAnchorsPair, @NotNull DocumentContentAnchor.ContentSide contentSide) {
+        DiffContext contextA = new DiffContext(leftDocument, rightDocument, contentAnchorsPair.getLeftContent(contentSide), contentAnchorsPair.getRightContent(contentSide), polarionService);
+        DiffContext contextB = new DiffContext(rightDocument, leftDocument, contentAnchorsPair.getRightContent(contentSide), contentAnchorsPair.getLeftContent(contentSide), polarionService).reverseStyles(true);
+        defaultDiffer.accept(contextA);
+        defaultDiffer.accept(contextB);
+        cleanDiff(contextA, contextB);
+        contentAnchorsPair.setLeftDiff(contextB.fieldB.getHtmlDiff(), contentSide);
+        contentAnchorsPair.setRightDiff(contextA.fieldB.getHtmlDiff(), contentSide);
+    }
+
+    @VisibleForTesting
     Collection<DocumentsFieldsPair> getFieldsDiff(@NotNull IModule leftDocument, @NotNull IModule rightDocument, boolean compareEnumsById, boolean compareOnlyMutualFields) {
-        // We will execute diff operation twice: using direct & reverse order.
-        // this allows to show better visual result in case of style changes.
-        // IMPORTANT: as a required non-obvious step for this approach - we have to swap
-        // styles in the reversed diff to display it properly (this swap implemented using ReverseStylesHandler).
-        Consumer<DiffContext> differ = context -> {
-            if (Objects.equals(context.fieldA.getValue(), context.fieldB.getValue())) {
-                // Skip fields with identical content in both WorkItems
-                return;
-            }
-
-            List<DiffLifecycleHandler> handlers = DiffLifecycleHandler.getHandlers();
-            Pair<String, String> pairToDiff = preparePairToDiff(context, handlers);
-            String diff = DiffToolUtils.computeDiff(pairToDiff);
-            diff = postProcessDiff(diff, context, handlers);
-            // Note that the resulted diff is placed to the second/B field only (coz opposite field will be filled by the reversed operation)
-            context.fieldB.setHtmlDiff(diff);
-        };
-
         Set<String> fieldIds = new LinkedHashSet<>(leftDocument.getCustomFieldsList());
         if (compareOnlyMutualFields) {
             fieldIds.retainAll(rightDocument.getCustomFieldsList());
@@ -617,23 +659,28 @@ public class DiffService {
                     .html(polarionService.renderField(rightDocument, fieldId))
                     .build();
 
-            DiffContext contextA = new DiffContext(leftDocument, rightDocument, leftField, rightField, fieldId, leftDocument.getProjectId(), polarionService);
-            DiffContext contextB = new DiffContext(rightDocument, leftDocument, rightField, leftField, fieldId, leftDocument.getProjectId(), polarionService).reverseStyles(true);
-            differ.accept(contextA);
-            differ.accept(contextB);
+            DiffContext contextA = new DiffContext(leftField, rightField, leftDocument.getProjectId(), polarionService);
+            DiffContext contextB = new DiffContext(rightField, leftField, leftDocument.getProjectId(), polarionService).reverseStyles(true);
+            defaultDiffer.accept(contextA);
+            defaultDiffer.accept(contextB);
+            cleanDiff(contextA, contextB);
 
-            //Sometimes values aren't the same by calling equals() method but the resulting diff doesn't contain any changes.
-            //Workaround below is pretty simple - we just check whether diff contains specific piece of html which DaisyDiff
-            //adds for changed parts and if there is no such things - we treat situation as "no diff".
-            if (Stream.of(contextA.fieldA.getHtmlDiff(), contextA.fieldB.getHtmlDiff(), contextB.fieldA.getHtmlDiff(), contextB.fieldB.getHtmlDiff())
-                    .filter(Objects::nonNull).noneMatch(diff -> diff.contains(DAISY_DIFF_CHANGED_FRAGMENT))) {
-                contextA.fieldA.setHtmlDiff(null);
-                contextA.fieldB.setHtmlDiff(null);
-                contextB.fieldA.setHtmlDiff(null);
-                contextB.fieldB.setHtmlDiff(null);
-            }
             return new DocumentsFieldsPair(leftField, rightField);
         }).toList();
+    }
+
+    private void cleanDiff(DiffContext contextA, DiffContext contextB) {
+        //Sometimes values aren't the same by calling equals() method but the resulting diff doesn't contain any changes.
+        //Workaround below is pretty simple - we just check whether diff contains specific piece of html which DaisyDiff
+        //adds for changed parts and if there is no such things - we treat situation as "no diff".
+        if (Stream.of(contextA.fieldA.getHtmlDiff(), contextA.fieldB.getHtmlDiff(), contextB.fieldA.getHtmlDiff(), contextB.fieldB.getHtmlDiff())
+                .filter(Objects::nonNull).noneMatch(diff -> diff.contains(DAISY_DIFF_CHANGED_FRAGMENT))) {
+            contextA.fieldA.setHtmlDiff(null);
+            contextA.fieldB.setHtmlDiff(null);
+            contextB.fieldA.setHtmlDiff(null);
+            contextB.fieldB.setHtmlDiff(null);
+        }
+
     }
 
     private Pair<String, String> preparePairToDiff(DiffContext context, List<DiffLifecycleHandler> handlers) {
@@ -650,4 +697,5 @@ public class DiffService {
         }
         return diff;
     }
+
 }

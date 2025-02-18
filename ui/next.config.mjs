@@ -12,6 +12,10 @@ export default (phase, { defaultConfig }) => {
           source: '/polarion/ria/:path*',
           destination: `${process.env.NEXT_PUBLIC_BASE_URL}/polarion/ria/:path*`,
         },
+        {
+          source: '/polarion/wiki/:path*',
+          destination: `${process.env.NEXT_PUBLIC_BASE_URL}/polarion/wiki/:path*`,
+        },
       ]
     }
   }
