@@ -98,13 +98,13 @@ public class DiffService {
 
     private List<DocumentContentAnchorsPair> getPairedDocumentContentAnchors(IModule leftDocument, IModule rightDocument, List<WorkItemsPair> pairedWorkItems) {
         List<DocumentContentAnchorsPair> pairedAnchors = Lists.newArrayList();
-        DocumentContentProcessor documentContentProcessor = new DocumentContentProcessor();
-        Map<String, DocumentContentAnchor> leftDocumentAnchors = documentContentProcessor.process(leftDocument.getHomePageContent().getContent());
+        DocumentsContentHandler documentsContentHandler = new DocumentsContentHandler();
+        Map<String, DocumentContentAnchor> leftDocumentAnchors = documentsContentHandler.parse(leftDocument.getHomePageContent().getContent());
         leftDocumentAnchors.values().forEach(anchor -> {
             anchor.setContentAbove(anchor.getContentAbove() != null ? polarionService.renderDocumentContentBlock(leftDocument, anchor.getContentAbove()) : "");
             anchor.setContentBelow(anchor.getContentBelow() != null ? polarionService.renderDocumentContentBlock(leftDocument, anchor.getContentBelow()) : "");
         });
-        Map<String, DocumentContentAnchor> rightDocumentAnchors = documentContentProcessor.process(rightDocument.getHomePageContent().getContent());
+        Map<String, DocumentContentAnchor> rightDocumentAnchors = documentsContentHandler.parse(rightDocument.getHomePageContent().getContent());
         rightDocumentAnchors.values().forEach(anchor -> {
             anchor.setContentAbove(anchor.getContentAbove() != null ? polarionService.renderDocumentContentBlock(rightDocument, anchor.getContentAbove()) : "");
             anchor.setContentBelow(anchor.getContentBelow() != null ? polarionService.renderDocumentContentBlock(rightDocument, anchor.getContentBelow()) : "");

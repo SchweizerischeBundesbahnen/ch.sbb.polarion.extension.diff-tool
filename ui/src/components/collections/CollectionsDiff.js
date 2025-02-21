@@ -53,7 +53,7 @@ export default function CollectionsDiff() {
           context.state.setDataLoaded(true);
         }).catch((error) => {
           setLoading(false);
-          setLoadingError(error && error.message);
+          setLoadingError(error);
         });
 
     remote.sendRequest({

@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
@@ -68,7 +69,7 @@ public class MergeInternalController {
                     @Parameter(
                             description = "Parameters for merging documents fields",
                             required = true,
-                            schema = @Schema(implementation = MergeParams.class)
+                            schema = @Schema(implementation = DocumentsFieldsMergeParams.class)
                     )
             },
             responses = {
@@ -91,6 +92,37 @@ public class MergeInternalController {
     }
 
     @POST
+    @Path("/merge/documents-content")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Merge inline content of documents",
+            parameters = {
+                    @Parameter(
+                            description = "Parameters for merging documents content",
+                            required = true,
+                            schema = @Schema(implementation = DocumentsContentMergeParams.class)
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Merge result",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = MergeResult.class)
+                            )
+                    )
+            }
+    )
+    public MergeResult mergeDocumentsContent(@Parameter(required = true) DocumentsContentMergeParams mergeParams) {
+        if (mergeParams == null || mergeParams.getLeftDocument() == null || mergeParams.getRightDocument() == null || mergeParams.getDirection() == null
+                || mergeParams.getPairs() == null || mergeParams.getPairs().isEmpty()) {
+            throw new BadRequestException("Parameters 'leftDocument', 'rightDocument', 'direction' and 'pairs' should be provided");
+        }
+        return mergeService.mergeDocumentsContent(mergeParams);
+    }
+
+    @POST
     @Path("/merge/workitems")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -99,7 +131,7 @@ public class MergeInternalController {
                     @Parameter(
                             description = "Parameters for merging WorkItems out of documents scope",
                             required = true,
-                            schema = @Schema(implementation = MergeParams.class)
+                            schema = @Schema(implementation = WorkItemsMergeParams.class)
                     )
             },
             responses = {

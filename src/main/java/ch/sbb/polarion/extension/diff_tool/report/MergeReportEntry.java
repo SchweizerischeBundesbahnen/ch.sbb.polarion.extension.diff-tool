@@ -1,5 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.report;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergePair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,6 +21,8 @@ public class MergeReportEntry {
     private WorkItemsPair workItemsPair;
     @Schema(description = "Field id")
     private String fieldId;
+    @Schema(description = "Document content pair")
+    private DocumentsContentMergePair documentsContentPair;
     @Schema(description = "Extended description of the operation")
     @JsonIgnore
     private final @NotNull String description;
@@ -48,4 +52,12 @@ public class MergeReportEntry {
         this.description = description;
         this.operationTime = operationTime;
     }
+
+    public MergeReportEntry(@NotNull MergeReport.OperationResultType operationResultType, @NotNull DocumentsContentMergePair documentsContentPair, @NotNull String description) {
+        this.operationResultType = operationResultType;
+        this.documentsContentPair = documentsContentPair;
+        this.description = description;
+        this.operationTime = LocalDateTime.now();
+    }
+
 }

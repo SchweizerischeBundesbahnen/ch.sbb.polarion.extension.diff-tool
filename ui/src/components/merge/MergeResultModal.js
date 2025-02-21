@@ -17,7 +17,7 @@ export default function MergeResultModal({visible, visibilityCallback, mergeDeni
         }}>
           {mergeDeniedWarning && <p>Merge was aborted because some structural changes were done in target document meanwhile.</p>}
           {mergeNotAuthorizedWarning && <p>You are not authorized to execute such merge request.</p>}
-          {!mergeNotAuthorizedWarning &&
+          {!mergeNotAuthorizedWarning && !mergeDeniedWarning &&
               <>
                 <p>
                   Merge operation completed with following result:
@@ -55,7 +55,7 @@ export default function MergeResultModal({visible, visibilityCallback, mergeDeni
           <p>The target document has just undergone some structural changes, which mean that no more merge actions are allowed using the current state of the view.
             The page will automatically be reloaded to actualize documents state.</p>
         </div>
-        <p style={{display: mergeDeniedWarning || (mergeReport.conflicted && mergeReport.conflicted.length > 0) ? 'block' : 'none'}}>Please, reload the page to actualize the state and try again.</p>
+        <p style={{display: mergeDeniedWarning || (mergeReport && mergeReport.conflicted && mergeReport.conflicted.length > 0) ? 'block' : 'none'}}>Please, reload the page to actualize the state and try again.</p>
       </Modal>
   );
 }

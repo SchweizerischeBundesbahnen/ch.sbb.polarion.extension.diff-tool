@@ -13,8 +13,8 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Schema(description = "Documents fields merge input data")
-public class DocumentsFieldsMergeParams {
+@Schema(description = "Documents content merge input data")
+public class DocumentsContentMergeParams {
 
     @Schema(description = "Identifier for the left document", implementation = DocumentIdentifier.class)
     private DocumentIdentifier leftDocument;
@@ -25,7 +25,6 @@ public class DocumentsFieldsMergeParams {
     @Schema(description = "The direction of the merge operation", implementation = MergeDirection.class)
     private MergeDirection direction;
 
-    @Schema(description = "List of fields IDs to be considered in the merge operation")
-    private List<String> fieldIds;
-
+    @Schema(description = "List of merge pairs to be considered in the merge operation", implementation = DocumentsContentMergePair.class)
+    private List<DocumentsContentMergePair> pairs;
 }

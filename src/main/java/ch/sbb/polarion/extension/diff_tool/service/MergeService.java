@@ -3,6 +3,7 @@ package ch.sbb.polarion.extension.diff_tool.service;
 import ch.sbb.polarion.extension.diff_tool.report.MergeReportEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
@@ -149,6 +150,34 @@ public class MergeService {
             }
             if (!context.getMergeReport().getCopied().isEmpty()) {
                 target.save();
+            }
+            return null;
+        });
+
+        return MergeResult.builder()
+                .success(!context.getMergeReport().getCopied().isEmpty())
+                .mergeReport(context.getMergeReport())
+                .build();
+    }
+
+    public MergeResult mergeDocumentsContent(@NotNull DocumentsContentMergeParams mergeParams) {
+        DocumentsContentMergeContext context = new DocumentsContentMergeContext(mergeParams.getLeftDocument(), mergeParams.getRightDocument(), mergeParams.getDirection());
+
+        IModule sourceModule = polarionService.getModule(context.getSourceDocumentIdentifier());
+        IModule targetModule = polarionService.getModule(context.getTargetDocumentIdentifier());
+
+        if (!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), targetModule.getLastRevision())) {
+            return MergeResult.builder().success(false).targetModuleHasStructuralChanges(true).build();
+        }
+        if (!polarionService.userAuthorizedForMerge(targetModule.getProjectId())) {
+            return MergeResult.builder().success(false).mergeNotAuthorized(true).build();
+        }
+
+        DocumentsContentHandler documentsContentHandler = new DocumentsContentHandler();
+        TransactionalExecutor.executeInWriteTransaction(transaction -> {
+            documentsContentHandler.merge(sourceModule, targetModule, context, mergeParams.getPairs());
+            if (!context.getMergeReport().getModified().isEmpty()) {
+                targetModule.save();
             }
             return null;
         });

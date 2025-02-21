@@ -25,7 +25,7 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
   const diffService = useDiffService();
 
   const loadingContext = useLoadingContext();
-  const mergingContext = useMergingContext();
+  const mergingContext = useMergingContext({contentDiffing: true});
 
   const [docsData, setDocsData] = useState(null);
   const [mergeInProgress, setMergeInProgress] = useState(false);
@@ -34,7 +34,6 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
   const [mergeReport, setMergeReport] = useState({});
   const [mergeDeniedWarning, setMergeDeniedWarning] = useState(false);  // means that merge operation was denied because displayed state of documents is not last one
   const [mergeNotAuthorizedWarning, setMergeNotAuthorizedWarning] = useState(false);  // means that merge to target document is not authorized for current user
-  const [structuralChangesWarning, setStructuralChangesWarning] = useState(false);  // means that documents have undergone structural changes as a result of merge operation
   const [mergeReportModalVisible, setMergeReportModalVisible] = useState(false);
 
   useEffect(() => {
@@ -57,11 +56,9 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
     if (mergingContext.selectAllTrigger > 0) {
       docsData.pairedContentAnchors.map((pair, index) => {
         if (containsDiffAbove(pair)) {
-          console.log("diff above: ", pair);
           mergingContext.setPairSelected(index + CONTENT_ABOVE, pair, mergingContext.selectAll);
         }
         if (containsDiffBelow(pair)) {
-          console.log("diff below: ", pair);
           mergingContext.setPairSelected(index + CONTENT_BELOW, pair, mergingContext.selectAll)
         }
       });
@@ -70,14 +67,38 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
 
   const containsDiff = (anchorsPair) => {
     return containsDiffAbove(anchorsPair) || containsDiffBelow(anchorsPair);
-  }
+  };
 
   const containsDiffAbove = (anchorsPair) => {
     return (anchorsPair.leftAnchor && anchorsPair.leftAnchor.diffAbove) || (anchorsPair.rightAnchor && anchorsPair.rightAnchor.diffAbove);
-  }
+  };
 
   const containsDiffBelow = (anchorsPair) => {
     return (anchorsPair.leftAnchor && anchorsPair.leftAnchor.diffBelow) || (anchorsPair.rightAnchor && anchorsPair.rightAnchor.diffBelow);
+  };
+
+  const mergeCallback = (direction) => {
+    setMergeInProgress(true);
+    diffService.sendDocumentsContentMergeRequest(searchParams, direction, loadingContext, mergingContext, docsData)
+        .then((data) => {
+          setMergeReport(data.mergeReport);
+          setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);
+          setMergeNotAuthorizedWarning(!data.success && data.mergeNotAuthorized);
+          setMergeReportModalVisible(true);
+        })
+        .catch((error) => {
+          console.log(error);
+          setMergeError(error && (typeof error === 'string' || error instanceof String) && !error.includes("<html")
+              ? error : "Error occurred merging selected fields, please contact system administrator to diagnose the problem");
+          setMergeErrorModalVisible(true);
+        }).finally(() => setMergeInProgress(false));
+  };
+
+  const setMergeReportModalVisibleAndReloadIfNeeded = (visible) => {
+    setMergeReportModalVisible(visible);
+    if (!visible) {
+      location.reload();
+    }
   }
 
   if (loadingContext.contentDiffLoading) return <Loading message="Loading content diff" />;
@@ -94,20 +115,20 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
 
       <div className="row g-0">
         {enclosingCollections && <>
-          <CollectionHeader collection={enclosingCollections.leftCollection}/>
-          <CollectionHeader collection={enclosingCollections.rightCollection}/>
+          <CollectionHeader collection={enclosingCollections.leftCollection} />
+          <CollectionHeader collection={enclosingCollections.rightCollection} />
         </>}
         {!enclosingCollections && <>
-          <DocumentProjectHeader document={docsData.leftDocument}/>
-          <DocumentProjectHeader document={docsData.rightDocument}/>
+          <DocumentProjectHeader document={docsData.leftDocument} />
+          <DocumentProjectHeader document={docsData.rightDocument} />
         </>}
       </div>
       <div className="row g-0">
-        <DocumentHeader document={docsData.leftDocument}/>
-        <DocumentHeader document={docsData.rightDocument}/>
+        <DocumentHeader document={docsData.leftDocument} />
+        <DocumentHeader document={docsData.rightDocument} />
       </div>
 
-      <MergePane leftContext={docsData.leftDocument} rightContext={docsData.rightDocument} mergingContext={mergingContext} mergeCallback={() => {}} loadingContext={loadingContext}/>
+      <MergePane leftContext={docsData.leftDocument} rightContext={docsData.rightDocument} mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
     </div>
 
     <ErrorsOverlay loadingContext={loadingContext}/>
@@ -117,8 +138,8 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
       <p>{mergeError}</p>
     </Modal>
 
-    <MergeResultModal visible={mergeReportModalVisible} visibilityCallback={setMergeReportModalVisible}
-                      mergeDeniedWarning={mergeDeniedWarning} structuralChangesWarning={structuralChangesWarning} mergeNotAuthorizedWarning={mergeNotAuthorizedWarning} mergeReport={mergeReport}/>
+    <MergeResultModal visible={mergeReportModalVisible} visibilityCallback={setMergeReportModalVisibleAndReloadIfNeeded}
+                      mergeDeniedWarning={mergeDeniedWarning} mergeNotAuthorizedWarning={mergeNotAuthorizedWarning} mergeReport={mergeReport} />
 
     {docsData.pairedContentAnchors.map((pair, index) => {
       return <ContentAnchorsDiff key={index} anchorsPair={pair} currentIndex={index} mergingContext={mergingContext} />
