@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.widgets;
 
+import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.PrototypeEnum;
@@ -17,6 +18,7 @@ import com.polarion.alm.tracker.model.IRichPage;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.alm.tracker.model.IWorkflowObject;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.List;
 
@@ -31,6 +33,17 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
 
     public WorkItemsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params) {
         super(context, COLUMNS_PARAMETER, params);
+
+        this.params = params;
+        if (!context.getDisplayedScope().isGlobal()) {
+            SortingParameter sortingParameter = new SortingParameterImpl.Builder(WIDGET_ID).byLuceneSortString(IUniqueObject.KEY_ID).build();
+            params.sourceParams().dataSet(initDataSet(WIDGET_ID, PrototypeEnum.WorkItem, context.getDisplayedScope(), sortingParameter, params.sourceParams().query()));
+        }
+    }
+
+    @VisibleForTesting
+    WorkItemsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params, @NotNull PolarionService polarionService) {
+        super(context, COLUMNS_PARAMETER, params, polarionService);
 
         this.params = params;
         if (!context.getDisplayedScope().isGlobal()) {
@@ -74,7 +87,8 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
         this.renderFooter(outerTable.append().tag().tr().append().tag().td(), params.sourceParams());
     }
 
-    private String getSpace(@NotNull ModelObject item) {
+    @VisibleForTesting
+    String getSpace(@NotNull ModelObject item) {
         String spaceFieldId = null;
         if (item.getOldApi() instanceof IModule) {
             spaceFieldId = "moduleFolder";

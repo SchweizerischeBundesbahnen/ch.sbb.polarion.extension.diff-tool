@@ -18,6 +18,7 @@ import com.polarion.alm.projects.IProjectService;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.tracker.ITrackerService;
+import com.polarion.alm.tracker.internal.model.LinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IApprovalStruct;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
@@ -142,7 +143,7 @@ class PolarionServiceTest {
         IWorkItem a2 = mock(IWorkItem.class);
         when(service.getWorkItem(eq("projectIdA"), eq("A-2"), isNull())).thenReturn(a2);
         IWorkItem a2r = mock(IWorkItem.class);
-        when(service.getWorkItem(eq("projectIdA"), eq("A-2"), eq("42"))).thenReturn(a2r);
+        when(service.getWorkItem("projectIdA", "A-2", "42")).thenReturn(a2r);
         IWorkItem a3 = mock(IWorkItem.class);
         when(service.getWorkItem(eq("projectIdA"), eq("A-3"), isNull())).thenReturn(a3);
         IWorkItem c3 = mock(IWorkItem.class);
@@ -151,16 +152,16 @@ class PolarionServiceTest {
         when(service.getPairedWorkItems(any(), anyString(), anyString())).thenReturn(List.of());
         IWorkItem b1 = mock(IWorkItem.class);
         when(b1.getId()).thenReturn("B-1");
-        when(service.getPairedWorkItems(eq(a1), eq("projectIdB"), eq("expectedLinkRole"))).thenReturn(List.of(b1));
+        when(service.getPairedWorkItems(a1, "projectIdB", "expectedLinkRole")).thenReturn(List.of(b1));
         IWorkItem b2 = mock(IWorkItem.class);
         when(b2.getId()).thenReturn("B-2");
-        when(service.getPairedWorkItems(eq(a2), eq("projectIdB"), eq("expectedLinkRole"))).thenReturn(List.of(b2));
+        when(service.getPairedWorkItems(a2, "projectIdB", "expectedLinkRole")).thenReturn(List.of(b2));
         IWorkItem b2r = mock(IWorkItem.class);
         when(b2r.getId()).thenReturn("B-2r");
-        when(service.getPairedWorkItems(eq(a2r), eq("projectIdB"), eq("expectedLinkRole"))).thenReturn(List.of(b2r));
+        when(service.getPairedWorkItems(a2r, "projectIdB", "expectedLinkRole")).thenReturn(List.of(b2r));
         IWorkItem b3 = mock(IWorkItem.class);
         when(b3.getId()).thenReturn("B-3");
-        when(service.getPairedWorkItems(eq(c3), eq("projectIdB"), eq("expectedLinkRole"))).thenReturn(List.of(b3));
+        when(service.getPairedWorkItems(c3, "projectIdB", "expectedLinkRole")).thenReturn(List.of(b3));
 
         IWorkItem from = mock(IWorkItem.class);
         when(from.getProjectId()).thenReturn("projectIdA");

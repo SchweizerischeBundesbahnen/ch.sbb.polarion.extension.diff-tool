@@ -23,13 +23,13 @@ public class LinksHandler implements DiffLifecycleHandler {
      * Also link may have data-scope & data-revision attributes in some cases so in this regex they are optional.
      * Note that all those attributes may come in random order.
      */
-    public static final String LINK_REGEX = "<span\\s+" +
-                                            "(?=[^>]*class=\"polarion-rte-link\")" +
-                                            "(?=[^>]*data-type=\"workItem\")" +
-                                            "(?=[^>]*data-item-id=\"(?<workItemId>[^\"]+?)\")" +
-                                            "(?=[^>]*data-scope=\"(?<workItemProjectId>[^\"]+)\")?" +
-                                            "(?=[^>]*data-revision=\"(?<workItemRevision>[^\"]+)\")?" +
-                                            "[^>]*?>";
+//    public static final String LINK_REGEX = "<span\\s+" +
+//                                            "(?=[^>]*class=\"polarion-rte-link\")" +
+//                                            "(?=[^>]*data-type=\"workItem\")" +
+//                                            "(?=[^>]*data-item-id=\"(?<workItemId>[^\"]+?)\")" +
+//                                            "(?=[^>]*data-scope=\"(?<workItemProjectId>[^\"]+)\")?" +
+//                                            "(?=[^>]*data-revision=\"(?<workItemRevision>[^\"]+)\")?" +
+//                                            "[^>]*?>";
 
     private static final String DATA_PAIRED_ITEM_ID = "data-paired-item-id";
     private static final String SPAN_START = "<span";

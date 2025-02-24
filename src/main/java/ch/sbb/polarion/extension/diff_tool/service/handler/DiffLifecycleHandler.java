@@ -15,6 +15,19 @@ import java.util.List;
 
 public interface DiffLifecycleHandler {
 
+    /*
+     * Link must have specific class attribute, data-type="workItem" and data-item-id which contains work item ID.
+     * Also link may have data-scope & data-revision attributes in some cases so in this regex they are optional.
+     * Note that all those attributes may come in random order.
+     */
+    String LINK_REGEX = "<span\\s+" +
+            "(?=[^>]*class=\"polarion-rte-link\")" +
+            "(?=[^>]*data-type=\"workItem\")" +
+            "(?=[^>]*data-item-id=\"(?<workItemId>[^\"]+?)\")" +
+            "(?=[^>]*data-scope=\"(?<workItemProjectId>[^\"]+)\")?" +
+            "(?=[^>]*data-revision=\"(?<workItemRevision>[^\"]+)\")?" +
+            "[^>]*?>";
+
     default @NotNull Pair<String, String> preProcess(@NotNull Pair<String, String> initialPair, @NotNull DiffContext context) {
         return initialPair;
     }

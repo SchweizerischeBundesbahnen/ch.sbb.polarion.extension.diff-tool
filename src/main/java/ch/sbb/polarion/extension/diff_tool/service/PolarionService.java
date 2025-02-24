@@ -12,6 +12,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.settings.HyperlinkRole;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.FieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
+import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.LinksHandler;
 import ch.sbb.polarion.extension.diff_tool.settings.AuthorizationSettings;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
@@ -565,7 +566,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             return html; // do not modify links when copying data between same project work items
         }
 
-        Pattern pattern = Pattern.compile(LinksHandler.LINK_REGEX);
+        Pattern pattern = Pattern.compile(DiffLifecycleHandler.LINK_REGEX);
         Matcher matcher = pattern.matcher(html);
 
         StringBuilder buf = new StringBuilder();
