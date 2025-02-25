@@ -116,14 +116,13 @@ class DocumentsContentHandler {
         Element toAnchor = null;
         for (Element element : targetDocument.body().children()) {
             String extractedWorkItemId = extractWorkItemId(element);
-            if (extractedWorkItemId == null) {
-                continue; // We are looking for anchors, skip content
-            }
-            if (contentAnchorId.equals(extractedWorkItemId)) {
-                toAnchor = element;
-                break;
-            } else {
-                fromAnchor = element;
+            if (extractedWorkItemId != null) { // We are looking for anchors, skip content
+                if (contentAnchorId.equals(extractedWorkItemId)) {
+                    toAnchor = element;
+                    break;
+                } else {
+                    fromAnchor = element;
+                }
             }
         }
         return Pair.of(fromAnchor, toAnchor);
@@ -134,15 +133,14 @@ class DocumentsContentHandler {
         Element toAnchor = null;
         for (Element element : targetDocument.body().children()) {
             String extractedWorkItemId = extractWorkItemId(element);
-            if (extractedWorkItemId == null) {
-                continue; // We are looking for anchors, skip content
-            }
-            if (contentAnchorId.equals(extractedWorkItemId)) {
-                fromAnchor = element;
-            } else {
-                if (fromAnchor != null) {
-                    toAnchor = element;
-                    break;
+            if (extractedWorkItemId != null) { // We are looking for anchors, skip content
+                if (contentAnchorId.equals(extractedWorkItemId)) {
+                    fromAnchor = element;
+                } else {
+                    if (fromAnchor != null) {
+                        toAnchor = element;
+                        break;
+                    }
                 }
             }
         }
