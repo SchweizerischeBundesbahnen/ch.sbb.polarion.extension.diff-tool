@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.report;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -94,7 +95,8 @@ public class MergeReport {
                 entry.getDescription());
     }
 
-    private String getEntityInfo(MergeReportEntry entry) {
+    @VisibleForTesting
+    String getEntityInfo(MergeReportEntry entry) {
         if (entry.getWorkItemsPair() != null) {
             return "left WI '%s', right WI '%s'".formatted(
                     Optional.ofNullable(entry.getWorkItemsPair().getLeftWorkItem()).map(WorkItem::getId).orElse("null"),

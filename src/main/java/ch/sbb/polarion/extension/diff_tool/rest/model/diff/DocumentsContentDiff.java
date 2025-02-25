@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.Collection;
+import java.util.List;
 
 @Data
 @Builder
@@ -18,6 +18,6 @@ public class DocumentsContentDiff {
     private Document rightDocument;
 
     @Schema(description = "A collection of paired anchors of inline content of two documents", implementation = DocumentContentAnchorsPair.class)
-    private Collection<DocumentContentAnchorsPair> pairedContentAnchors;
+    private List<DocumentContentAnchorsPair> pairedContentAnchors;
 
 }

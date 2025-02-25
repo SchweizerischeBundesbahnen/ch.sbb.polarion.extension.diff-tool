@@ -46,7 +46,7 @@ public class DocumentContentAnchorsPair {
         }
     }
 
-    public void setDiff(String diff, @NotNull DocumentContentAnchor.ContentSide contentSide, @NotNull DocumentContentAnchor anchor) {
+    private void setDiff(String diff, @NotNull DocumentContentAnchor.ContentSide contentSide, @NotNull DocumentContentAnchor anchor) {
         switch (contentSide) {
             case ABOVE: {
                 anchor.setDiffAbove(diff);

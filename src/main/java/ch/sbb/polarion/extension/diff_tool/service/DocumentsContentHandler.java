@@ -7,6 +7,7 @@ import com.polarion.alm.tracker.model.IModule;
 import com.polarion.core.util.types.Text;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -71,7 +72,8 @@ public class DocumentsContentHandler {
         }
     }
 
-    private List<Element> getContent(@NotNull Document sourceDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentSide contentSide) {
+    @VisibleForTesting
+    List<Element> getContent(@NotNull Document sourceDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentSide contentSide) {
         List<Element> content = new ArrayList<>();
         boolean elementPassed = false;
         for (Element element : sourceDocument.body().children()) {
@@ -95,7 +97,8 @@ public class DocumentsContentHandler {
         return Collections.emptyList();
     }
 
-    private boolean insertContent(@NotNull Document targetDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentSide contentSide, @NotNull List<Element> contentToMerge) {
+    @VisibleForTesting
+    boolean insertContent(@NotNull Document targetDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentSide contentSide, @NotNull List<Element> contentToMerge) {
         Element fromAnchor = null;
         Element toAnchor = null;
         for (Element element : targetDocument.body().children()) {
@@ -125,7 +128,8 @@ public class DocumentsContentHandler {
         return removedOldContent || insertedNewContent;
     }
 
-    private boolean removeContent(@NotNull Document document, @Nullable Element fromElement, @Nullable Element toElement) {
+    @VisibleForTesting
+    boolean removeContent(@NotNull Document document, @Nullable Element fromElement, @Nullable Element toElement) {
         boolean removed = false;
         Element current = fromElement != null ? fromElement.nextElementSibling() : document.body().child(0);
         while (current != null && !current.equals(toElement)) {
@@ -137,19 +141,21 @@ public class DocumentsContentHandler {
         return removed;
     }
 
-    public boolean insertContent(@NotNull Document document, @Nullable Element fromElement, @NotNull List<Element> elementsToInsert) {
+    @VisibleForTesting
+    boolean insertContent(@NotNull Document document, @Nullable Element fromElement, @NotNull List<Element> elementsToInsert) {
         for (Element element : elementsToInsert) {
             if (fromElement != null) {
                 fromElement.after(element);
             } else {
-                document.prependChild(element);
+                document.body().prependChild(element);
             }
             fromElement = element;  // Update reference to continue inserting after the newly added element
         }
         return !elementsToInsert.isEmpty();
     }
 
-    private DocumentContentAnchor anchor(@NotNull Element element) {
+    @VisibleForTesting
+    DocumentContentAnchor anchor(@NotNull Element element) {
         String workItemId = extractWorkItemId(element);
         if (workItemId != null) {
             return DocumentContentAnchor.builder().id(workItemId).build();
@@ -158,11 +164,13 @@ public class DocumentsContentHandler {
         }
     }
 
-    private boolean isChapter(@NotNull Element element) {
+    @VisibleForTesting
+    boolean isChapter(@NotNull Element element) {
         return HTML_HEADER_TAGS.contains(element.tagName().toLowerCase());
     }
 
-    private String extractWorkItemId(@NotNull Element element) {
+    @VisibleForTesting
+    String extractWorkItemId(@NotNull Element element) {
         if (element.id().contains("name=module-workitem;")) {
             RegexMatcher idMatcher = RegexMatcher.get(".*;params=id=(?<id>[A-Za-z]+-\\d+)");
             return idMatcher.findFirst(element.id(), regexEngine -> regexEngine.group("id")).orElse(null);
