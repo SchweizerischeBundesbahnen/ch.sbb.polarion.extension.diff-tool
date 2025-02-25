@@ -11,16 +11,16 @@ class DocumentContentAnchorsPairTest {
     void testGetLeftContentForNullAnchor() {
         DocumentContentAnchorsPair documentContentAnchorsPair = new DocumentContentAnchorsPair(null, DocumentContentAnchor.builder().contentAbove("above").contentBelow("below").build());
 
-        assertEquals("", documentContentAnchorsPair.getLeftContent(DocumentContentAnchor.ContentSide.ABOVE));
-        assertEquals("", documentContentAnchorsPair.getLeftContent(DocumentContentAnchor.ContentSide.BELOW));
+        assertEquals("", documentContentAnchorsPair.getLeftContent(DocumentContentAnchor.ContentPosition.ABOVE));
+        assertEquals("", documentContentAnchorsPair.getLeftContent(DocumentContentAnchor.ContentPosition.BELOW));
     }
 
     @Test
     void testGetRightContentForNullAnchor() {
         DocumentContentAnchorsPair documentContentAnchorsPair = new DocumentContentAnchorsPair(DocumentContentAnchor.builder().contentAbove("above").contentBelow("below").build(), null);
 
-        assertEquals("", documentContentAnchorsPair.getRightContent(DocumentContentAnchor.ContentSide.ABOVE));
-        assertEquals("", documentContentAnchorsPair.getRightContent(DocumentContentAnchor.ContentSide.BELOW));
+        assertEquals("", documentContentAnchorsPair.getRightContent(DocumentContentAnchor.ContentPosition.ABOVE));
+        assertEquals("", documentContentAnchorsPair.getRightContent(DocumentContentAnchor.ContentPosition.BELOW));
     }
 
     @Test
@@ -29,7 +29,7 @@ class DocumentContentAnchorsPairTest {
                 DocumentContentAnchor.builder().contentAbove("left_above").build(),
                 DocumentContentAnchor.builder().contentAbove("right_above").build());
 
-        assertEquals("left_above", documentContentAnchorsPair.getLeftContent(DocumentContentAnchor.ContentSide.ABOVE));
+        assertEquals("left_above", documentContentAnchorsPair.getLeftContent(DocumentContentAnchor.ContentPosition.ABOVE));
     }
 
     @Test
@@ -38,7 +38,7 @@ class DocumentContentAnchorsPairTest {
                 DocumentContentAnchor.builder().contentAbove("left_above").contentBelow("left_below").build(),
                 DocumentContentAnchor.builder().contentAbove("right_above").contentBelow("right_below").build());
 
-        assertEquals("right_above", documentContentAnchorsPair.getRightContent(DocumentContentAnchor.ContentSide.ABOVE));
+        assertEquals("right_above", documentContentAnchorsPair.getRightContent(DocumentContentAnchor.ContentPosition.ABOVE));
     }
 
     @Test
@@ -47,7 +47,7 @@ class DocumentContentAnchorsPairTest {
                 DocumentContentAnchor.builder().contentAbove("left_above").contentBelow("left_below").build(),
                 DocumentContentAnchor.builder().contentAbove("right_above").contentBelow("right_below").build());
 
-        assertEquals("left_below", documentContentAnchorsPair.getLeftContent(DocumentContentAnchor.ContentSide.BELOW));
+        assertEquals("left_below", documentContentAnchorsPair.getLeftContent(DocumentContentAnchor.ContentPosition.BELOW));
     }
 
     @Test
@@ -56,36 +56,36 @@ class DocumentContentAnchorsPairTest {
                 DocumentContentAnchor.builder().contentAbove("left_above").contentBelow("left_below").build(),
                 DocumentContentAnchor.builder().contentAbove("right_above").contentBelow("right_below").build());
 
-        assertEquals("right_below", documentContentAnchorsPair.getRightContent(DocumentContentAnchor.ContentSide.BELOW));
+        assertEquals("right_below", documentContentAnchorsPair.getRightContent(DocumentContentAnchor.ContentPosition.BELOW));
     }
 
     @Test
     void testSetLeftDiffForNullAnchor() {
         DocumentContentAnchorsPair documentContentAnchorsPair = new DocumentContentAnchorsPair(null, new DocumentContentAnchor());
 
-        assertDoesNotThrow(() -> documentContentAnchorsPair.setLeftDiff("diff", DocumentContentAnchor.ContentSide.ABOVE));
-        assertDoesNotThrow(() -> documentContentAnchorsPair.setLeftDiff("diff", DocumentContentAnchor.ContentSide.BELOW));
+        assertDoesNotThrow(() -> documentContentAnchorsPair.setLeftDiff("diff", DocumentContentAnchor.ContentPosition.ABOVE));
+        assertDoesNotThrow(() -> documentContentAnchorsPair.setLeftDiff("diff", DocumentContentAnchor.ContentPosition.BELOW));
     }
 
     @Test
     void testSetRightDiffForNullAnchor() {
         DocumentContentAnchorsPair documentContentAnchorsPair = new DocumentContentAnchorsPair(new DocumentContentAnchor(), null);
 
-        assertDoesNotThrow(() -> documentContentAnchorsPair.setRightDiff("diff", DocumentContentAnchor.ContentSide.ABOVE));
-        assertDoesNotThrow(() -> documentContentAnchorsPair.setRightDiff("diff", DocumentContentAnchor.ContentSide.BELOW));
+        assertDoesNotThrow(() -> documentContentAnchorsPair.setRightDiff("diff", DocumentContentAnchor.ContentPosition.ABOVE));
+        assertDoesNotThrow(() -> documentContentAnchorsPair.setRightDiff("diff", DocumentContentAnchor.ContentPosition.BELOW));
     }
 
     @Test
     void testSetLeftDiffAbove() {
         DocumentContentAnchorsPair documentContentAnchorsPair = new DocumentContentAnchorsPair(new DocumentContentAnchor(), new DocumentContentAnchor());
-        documentContentAnchorsPair.setLeftDiff("left_diff_above", DocumentContentAnchor.ContentSide.ABOVE);
+        documentContentAnchorsPair.setLeftDiff("left_diff_above", DocumentContentAnchor.ContentPosition.ABOVE);
         assertEquals("left_diff_above", documentContentAnchorsPair.getLeftAnchor().getDiffAbove());
     }
 
     @Test
     void testSetRightDiffAbove() {
         DocumentContentAnchorsPair documentContentAnchorsPair = new DocumentContentAnchorsPair(new DocumentContentAnchor(), new DocumentContentAnchor());
-        documentContentAnchorsPair.setRightDiff("right_diff_above", DocumentContentAnchor.ContentSide.ABOVE);
+        documentContentAnchorsPair.setRightDiff("right_diff_above", DocumentContentAnchor.ContentPosition.ABOVE);
 
         assertEquals("right_diff_above", documentContentAnchorsPair.getRightAnchor().getDiffAbove());
     }
@@ -93,7 +93,7 @@ class DocumentContentAnchorsPairTest {
     @Test
     void testSetLeftDiffBelow() {
         DocumentContentAnchorsPair documentContentAnchorsPair = new DocumentContentAnchorsPair(new DocumentContentAnchor(), new DocumentContentAnchor());
-        documentContentAnchorsPair.setLeftDiff("left_diff_below", DocumentContentAnchor.ContentSide.BELOW);
+        documentContentAnchorsPair.setLeftDiff("left_diff_below", DocumentContentAnchor.ContentPosition.BELOW);
 
         assertEquals("left_diff_below", documentContentAnchorsPair.getLeftAnchor().getDiffBelow());
     }
@@ -101,7 +101,7 @@ class DocumentContentAnchorsPairTest {
     @Test
     void testSetRightDiffBelow() {
         DocumentContentAnchorsPair documentContentAnchorsPair = new DocumentContentAnchorsPair(new DocumentContentAnchor(), new DocumentContentAnchor());
-        documentContentAnchorsPair.setRightDiff("right_diff_below", DocumentContentAnchor.ContentSide.BELOW);
+        documentContentAnchorsPair.setRightDiff("right_diff_below", DocumentContentAnchor.ContentPosition.BELOW);
 
         assertEquals("right_diff_below", documentContentAnchorsPair.getRightAnchor().getDiffBelow());
     }

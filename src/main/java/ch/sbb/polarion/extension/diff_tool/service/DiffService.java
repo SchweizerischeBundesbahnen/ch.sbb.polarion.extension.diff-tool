@@ -114,8 +114,8 @@ public class DiffService {
             DocumentContentAnchor leftAnchor = convertWorkItemIntoAnchor(pairedWorkItem.getLeftWorkItem(), leftDocumentAnchors);
             DocumentContentAnchor rightAnchor = convertWorkItemIntoAnchor(pairedWorkItem.getRightWorkItem(), rightDocumentAnchors);
             DocumentContentAnchorsPair anchorsPair = new DocumentContentAnchorsPair(leftAnchor, rightAnchor);
-            fillHtmlDiffs(leftDocument, rightDocument, anchorsPair, DocumentContentAnchor.ContentSide.ABOVE);
-            fillHtmlDiffs(leftDocument, rightDocument, anchorsPair, DocumentContentAnchor.ContentSide.BELOW);
+            fillHtmlDiffs(leftDocument, rightDocument, anchorsPair, DocumentContentAnchor.ContentPosition.ABOVE);
+            fillHtmlDiffs(leftDocument, rightDocument, anchorsPair, DocumentContentAnchor.ContentPosition.BELOW);
             pairedAnchors.add(anchorsPair);
         }
         return pairedAnchors;
@@ -624,14 +624,14 @@ public class DiffService {
     }
 
     @VisibleForTesting
-    void fillHtmlDiffs(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @NotNull DocumentContentAnchorsPair contentAnchorsPair, @NotNull DocumentContentAnchor.ContentSide contentSide) {
-        DiffContext contextA = new DiffContext(leftDocument, rightDocument, contentAnchorsPair.getLeftContent(contentSide), contentAnchorsPair.getRightContent(contentSide), polarionService);
-        DiffContext contextB = new DiffContext(rightDocument, leftDocument, contentAnchorsPair.getRightContent(contentSide), contentAnchorsPair.getLeftContent(contentSide), polarionService).reverseStyles(true);
+    void fillHtmlDiffs(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @NotNull DocumentContentAnchorsPair contentAnchorsPair, @NotNull DocumentContentAnchor.ContentPosition contentPosition) {
+        DiffContext contextA = new DiffContext(leftDocument, rightDocument, contentAnchorsPair.getLeftContent(contentPosition), contentAnchorsPair.getRightContent(contentPosition), polarionService);
+        DiffContext contextB = new DiffContext(rightDocument, leftDocument, contentAnchorsPair.getRightContent(contentPosition), contentAnchorsPair.getLeftContent(contentPosition), polarionService).reverseStyles(true);
         defaultDiffer.accept(contextA);
         defaultDiffer.accept(contextB);
         cleanDiff(contextA, contextB);
-        contentAnchorsPair.setLeftDiff(contextB.fieldB.getHtmlDiff(), contentSide);
-        contentAnchorsPair.setRightDiff(contextA.fieldB.getHtmlDiff(), contentSide);
+        contentAnchorsPair.setLeftDiff(contextB.fieldB.getHtmlDiff(), contentPosition);
+        contentAnchorsPair.setRightDiff(contextA.fieldB.getHtmlDiff(), contentPosition);
     }
 
     @VisibleForTesting

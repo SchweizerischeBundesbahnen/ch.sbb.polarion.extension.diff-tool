@@ -1496,11 +1496,11 @@
       "DocumentsContentMergePair": {
         "description": "Documents content merge pair definition",
         "properties": {
-          "contentSide": {
+          "contentPosition": {
             "description": "Specifies if content above or below WorkItems to merge",
             "enum": [
-              "ABOVE",
-              "BELOW"
+              "above",
+              "below"
             ],
             "type": "string"
           },

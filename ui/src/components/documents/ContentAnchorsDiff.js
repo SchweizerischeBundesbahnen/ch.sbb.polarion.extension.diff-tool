@@ -34,9 +34,9 @@ export default function ContentAnchorsDiff({ anchorsPair, currentIndex, mergingC
     setBelowDiffSelected(mergingContext.isIndexSelected(belowDiffIndex));
   }, [mergingContext.selectionRegistry]);
 
-  const changeDiffSelected = (contentSide) => {
-    const index = contentSide === CONTENT_ABOVE ? aboveDiffIndex : belowDiffIndex;
-    const newValue = !(contentSide === CONTENT_ABOVE ? aboveDiffSelected : belowDiffSelected);
+  const changeDiffSelected = (contentPosition) => {
+    const index = contentPosition === CONTENT_ABOVE ? aboveDiffIndex : belowDiffIndex;
+    const newValue = !(contentPosition === CONTENT_ABOVE ? aboveDiffSelected : belowDiffSelected);
     mergingContext.setPairSelected(index, anchorsPair, newValue);
   }
 

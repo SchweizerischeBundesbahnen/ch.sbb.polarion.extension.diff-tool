@@ -65,7 +65,7 @@ class DocumentsContentHandlerTest {
 
         DocumentsContentMergeContext context = new DocumentsContentMergeContext(mock(DocumentIdentifier.class), mock(DocumentIdentifier.class), MergeDirection.LEFT_TO_RIGHT);
         List<DocumentsContentMergePair> pairsToMerge = new ArrayList<>();
-        pairsToMerge.add(DocumentsContentMergePair.builder().leftWorkItemId("AA-3").rightWorkItemId("AA-7").contentSide(DocumentContentAnchor.ContentSide.ABOVE).build());
+        pairsToMerge.add(DocumentsContentMergePair.builder().leftWorkItemId("AA-3").rightWorkItemId("AA-7").contentPosition(DocumentContentAnchor.ContentPosition.ABOVE).build());
         handler.merge(leftDocument, rightDocument, context, pairsToMerge);
 
         String expectedResult = """
@@ -82,7 +82,7 @@ class DocumentsContentHandlerTest {
     @Test
     void testGetContentAboveAnchor() {
         Document document = generateTestDocument();
-        List<Element> elements = handler.getContent(document, "AA-3", DocumentContentAnchor.ContentSide.ABOVE);
+        List<Element> elements = handler.getContent(document, "AA-3", DocumentContentAnchor.ContentPosition.ABOVE);
         assertNotNull(elements);
         assertEquals(1, elements.size());
         Element element = elements.get(0);
@@ -93,7 +93,7 @@ class DocumentsContentHandlerTest {
     @Test
     void testGetContentBelowAnchor() {
         Document document = generateTestDocument();
-        List<Element> elements = handler.getContent(document, "AA-3", DocumentContentAnchor.ContentSide.BELOW);
+        List<Element> elements = handler.getContent(document, "AA-3", DocumentContentAnchor.ContentPosition.BELOW);
         assertNotNull(elements);
         assertTrue(elements.isEmpty());
     }
@@ -104,7 +104,7 @@ class DocumentsContentHandlerTest {
 
         Element element = new Element("p");
         element.text("merged");
-        boolean contentModified = handler.insertContent(document, "AA-3", DocumentContentAnchor.ContentSide.ABOVE, Collections.singletonList(element));
+        boolean contentModified = handler.insertContent(document, "AA-3", DocumentContentAnchor.ContentPosition.ABOVE, Collections.singletonList(element));
         assertTrue(contentModified);
 
         assertEquals(5, document.body().children().size());
@@ -132,7 +132,7 @@ class DocumentsContentHandlerTest {
 
         Element element = new Element("p");
         element.text("merged");
-        boolean contentModified = handler.insertContent(document, "AA-3", DocumentContentAnchor.ContentSide.BELOW, Collections.singletonList(element));
+        boolean contentModified = handler.insertContent(document, "AA-3", DocumentContentAnchor.ContentPosition.BELOW, Collections.singletonList(element));
         assertTrue(contentModified);
 
         assertEquals(6, document.body().children().size());
@@ -279,6 +279,9 @@ class DocumentsContentHandlerTest {
         assertTrue(handler.isChapter(element));
 
         element = new Element("h6");
+        assertTrue(handler.isChapter(element));
+
+        element = new Element("h7");
         assertFalse(handler.isChapter(element));
 
         element = new Element("p");

@@ -13,8 +13,19 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Represents an anchor to which document content blocks are tied")
 public class DocumentContentAnchor {
 
-    public enum ContentSide {
-        ABOVE, BELOW
+    public enum ContentPosition {
+        ABOVE("above"), BELOW("below");
+
+        private final String name;
+
+        ContentPosition(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 
     @Schema(description = "ID of the WorkItem which represents the anchor")

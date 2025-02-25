@@ -26,7 +26,7 @@ import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationRe
 
 class DocumentsContentHandler {
 
-    private static final Set<String> HTML_HEADER_TAGS = new HashSet<>(Arrays.asList("h1", "h2", "h3", "h4", "h5"));
+    private static final Set<String> HTML_HEADER_TAGS = new HashSet<>(Arrays.asList("h1", "h2", "h3", "h4", "h5", "h6"));
 
     public Map<String, DocumentContentAnchor> parse(@NotNull String documentContent) {
         DocumentContentAnchor lastAnchor = null;
@@ -60,12 +60,12 @@ class DocumentsContentHandler {
         Document sourceDocument = Jsoup.parse(sourceModule.getHomePageContent().getContent());
         Document targetDocument = Jsoup.parse(targetModule.getHomePageContent().getContent());
         for (DocumentsContentMergePair mergePair : mergePairs) {
-            List<Element> sourceContent = getContent(sourceDocument, mergeContext.getSourceWorkItemId(mergePair), mergePair.getContentSide());
-            boolean contentModified = insertContent(targetDocument, mergeContext.getTargetWorkItemId(mergePair), mergePair.getContentSide(), sourceContent);
+            List<Element> sourceContent = getContent(sourceDocument, mergeContext.getSourceWorkItemId(mergePair), mergePair.getContentPosition());
+            boolean contentModified = insertContent(targetDocument, mergeContext.getTargetWorkItemId(mergePair), mergePair.getContentPosition(), sourceContent);
             if (contentModified) {
-                String contentSide = mergePair.getContentSide() == DocumentContentAnchor.ContentSide.ABOVE ? "above" : "below";
+                String contentPosition = mergePair.getContentPosition().toString();
                 mergeContext.reportEntry(MODIFIED, mergePair, "content %s workitem '%s' modified with content %s workitem '%s'".formatted(
-                        contentSide, mergeContext.getTargetWorkItemId(mergePair), contentSide, mergeContext.getSourceWorkItemId(mergePair)));
+                        contentPosition, mergeContext.getTargetWorkItemId(mergePair), contentPosition, mergeContext.getSourceWorkItemId(mergePair)));
             }
         }
         if (!mergeContext.getMergeReport().getModified().isEmpty()) {
@@ -74,7 +74,7 @@ class DocumentsContentHandler {
     }
 
     @VisibleForTesting
-    List<Element> getContent(@NotNull Document sourceDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentSide contentSide) {
+    List<Element> getContent(@NotNull Document sourceDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentPosition contentPosition) {
         List<Element> content = new ArrayList<>();
         boolean elementPassed = false;
         for (Element element : sourceDocument.body().children()) {
@@ -86,7 +86,7 @@ class DocumentsContentHandler {
                     return content;
                 }
                 if (contentAnchorId.equals(extractedWorkItemId)) {
-                    if (contentSide == DocumentContentAnchor.ContentSide.ABOVE) {
+                    if (contentPosition == DocumentContentAnchor.ContentPosition.ABOVE) {
                         return content;
                     } else {
                         elementPassed = true;
@@ -99,9 +99,9 @@ class DocumentsContentHandler {
     }
 
     @VisibleForTesting
-    boolean insertContent(@NotNull Document targetDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentSide contentSide, @NotNull List<Element> contentToMerge) {
+    boolean insertContent(@NotNull Document targetDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentPosition contentPosition, @NotNull List<Element> contentToMerge) {
         final Pair<Element, Element> contentBoundaries;
-        if (contentSide == DocumentContentAnchor.ContentSide.ABOVE) {
+        if (contentPosition == DocumentContentAnchor.ContentPosition.ABOVE) {
             contentBoundaries = getContentBoundariesAbove(targetDocument, contentAnchorId);
         } else {
             contentBoundaries = getContentBoundariesBelow(targetDocument, contentAnchorId);

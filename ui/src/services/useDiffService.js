@@ -303,7 +303,7 @@ export default function useDiffService() {
         pairs.push({
           leftWorkItemId: selectedPair.leftAnchor.id,
           rightWorkItemId: selectedPair.rightAnchor.id,
-          contentSide: (index.includes(CONTENT_ABOVE) ? CONTENT_ABOVE : CONTENT_BELOW)
+          contentPosition: (index.includes(CONTENT_ABOVE) ? CONTENT_ABOVE : CONTENT_BELOW)
         });
       }
     }

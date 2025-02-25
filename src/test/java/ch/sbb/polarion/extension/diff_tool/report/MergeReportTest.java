@@ -55,7 +55,7 @@ class MergeReportTest {
     @Test
     void testGetContentEntityInfo() {
         String expected = "left WI 'AA-123', right WI 'BB-456'";
-        DocumentsContentMergePair documentsContentPair = new DocumentsContentMergePair("AA-123", "BB-456", DocumentContentAnchor.ContentSide.ABOVE);
+        DocumentsContentMergePair documentsContentPair = new DocumentsContentMergePair("AA-123", "BB-456", DocumentContentAnchor.ContentPosition.ABOVE);
         String entityInfo = mergeReport.getEntityInfo(new MergeReportEntry(MergeReport.OperationResultType.MODIFIED, documentsContentPair, "Modified content"));
 
         assertEquals(expected, entityInfo);

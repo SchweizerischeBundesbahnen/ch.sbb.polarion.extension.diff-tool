@@ -7,8 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
-import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor.ContentSide.ABOVE;
-import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor.ContentSide.BELOW;
+import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor.ContentPosition.ABOVE;
+import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor.ContentPosition.BELOW;
 
 @Data
 @Builder
@@ -23,36 +23,36 @@ public class DocumentContentAnchorsPair {
     @Schema(description = "The right content anchor in the pair", implementation = DocumentContentAnchor.class)
     private DocumentContentAnchor rightAnchor;
 
-    public String getLeftContent(@NotNull DocumentContentAnchor.ContentSide contentSide) {
-        return switch (contentSide) {
+    public String getLeftContent(@NotNull DocumentContentAnchor.ContentPosition contentPosition) {
+        return switch (contentPosition) {
             case ABOVE -> leftAnchor == null ? "" : leftAnchor.getContentAbove();
             case BELOW -> leftAnchor == null ? "" : leftAnchor.getContentBelow();
         };
     }
 
-    public String getRightContent(@NotNull DocumentContentAnchor.ContentSide contentSide) {
-        return switch (contentSide) {
+    public String getRightContent(@NotNull DocumentContentAnchor.ContentPosition contentPosition) {
+        return switch (contentPosition) {
             case ABOVE -> rightAnchor == null ? "" : rightAnchor.getContentAbove();
             case BELOW -> rightAnchor == null ? "" : rightAnchor.getContentBelow();
         };
     }
 
-    public void setLeftDiff(String diff, @NotNull DocumentContentAnchor.ContentSide contentSide) {
+    public void setLeftDiff(String diff, @NotNull DocumentContentAnchor.ContentPosition contentPosition) {
         if (leftAnchor != null) {
-            setDiff(diff, contentSide, leftAnchor);
+            setDiff(diff, contentPosition, leftAnchor);
         }
     }
 
-    public void setRightDiff(String diff, @NotNull DocumentContentAnchor.ContentSide contentSide) {
+    public void setRightDiff(String diff, @NotNull DocumentContentAnchor.ContentPosition contentPosition) {
         if (rightAnchor != null) {
-            setDiff(diff, contentSide, rightAnchor);
+            setDiff(diff, contentPosition, rightAnchor);
         }
     }
 
-    private void setDiff(String diff, @NotNull DocumentContentAnchor.ContentSide contentSide, @NotNull DocumentContentAnchor anchor) {
-        if (contentSide == ABOVE) {
+    private void setDiff(String diff, @NotNull DocumentContentAnchor.ContentPosition contentPosition, @NotNull DocumentContentAnchor anchor) {
+        if (contentPosition == ABOVE) {
             anchor.setDiffAbove(diff);
-        } else if (contentSide == BELOW) {
+        } else if (contentPosition == BELOW) {
             anchor.setDiffBelow(diff);
         }
     }

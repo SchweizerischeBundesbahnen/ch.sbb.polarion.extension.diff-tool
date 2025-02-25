@@ -18,6 +18,6 @@ public class DocumentsContentMergePair {
     @Schema(description = "Identifier of the right WorkItem", implementation = String.class)
     private String rightWorkItemId;
 
-    @Schema(description = "Specifies if content above or below WorkItems to merge", implementation = DocumentContentAnchor.ContentSide.class)
-    private DocumentContentAnchor.ContentSide contentSide;
+    @Schema(description = "Specifies if content above or below WorkItems to merge", implementation = DocumentContentAnchor.ContentPosition.class)
+    private DocumentContentAnchor.ContentPosition contentPosition;
 }
