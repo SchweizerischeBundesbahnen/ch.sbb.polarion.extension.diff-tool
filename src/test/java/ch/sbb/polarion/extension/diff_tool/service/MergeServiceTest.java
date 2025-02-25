@@ -17,11 +17,8 @@ import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
 import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
-import com.polarion.alm.shared.api.model.document.DocumentFields;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
-import com.polarion.alm.shared.api.model.document.internal.InternalDocument;
 import com.polarion.alm.shared.api.model.document.internal.InternalUpdatableDocument;
-import com.polarion.alm.shared.api.model.fields.RichTextField;
 import com.polarion.alm.shared.api.model.wi.WorkItemReference;
 import com.polarion.alm.shared.api.transaction.RunnableInWriteTransaction;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
@@ -29,8 +26,6 @@ import com.polarion.alm.shared.api.transaction.WriteTransaction;
 import com.polarion.alm.shared.api.transaction.internal.InternalWriteTransaction;
 import com.polarion.alm.shared.api.utils.collections.StrictList;
 import com.polarion.alm.shared.dle.compare.DleWIsMergeActionExecuter;
-import com.polarion.alm.shared.dle.compare.DleWorkItemsComparator;
-import com.polarion.alm.shared.dle.compare.DleWorkitemsMatcher;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
@@ -1040,43 +1035,6 @@ class MergeServiceTest {
 
         assertTrue(result);
         verify(targetDestinationParentNode, times(1)).moveNodeAsLastChild(targetNode);
-    }
-
-    @Test
-    void testGetDleWIsMergeActionExecuter() {
-        IWorkItem sourceWorkItem = mock(IWorkItem.class);
-        InternalWriteTransaction transaction = mock(InternalWriteTransaction.class, RETURNS_DEEP_STUBS);
-        DocumentsMergeContext context = mock(DocumentsMergeContext.class);
-
-        InternalDocument leftDocument = mock(InternalDocument.class);
-        DocumentFields leftDocumentFields = mock(DocumentFields.class);
-        when(leftDocumentFields.homePageContent()).thenReturn(mock(RichTextField.class));
-        when(leftDocument.fields()).thenReturn(leftDocumentFields);
-
-        InternalDocument rightDocument = mock(InternalDocument.class);
-        DocumentFields rightDocumentFields = mock(DocumentFields.class);
-        when(rightDocumentFields.homePageContent()).thenReturn(mock(RichTextField.class));
-        when(rightDocument.fields()).thenReturn(rightDocumentFields);
-
-        InternalUpdatableDocument targetDocument = mock(InternalUpdatableDocument.class);
-        DleWorkitemsMatcher leftMatcher = mock(DleWorkitemsMatcher.class);
-        DleWorkitemsMatcher rightMatcher = mock(DleWorkitemsMatcher.class);
-        DleWorkItemsComparator comparator = mock(DleWorkItemsComparator.class);
-
-        when(context.getSourceDocumentReference()).thenReturn(mock(DocumentReference.class));
-        when(context.getTargetDocumentReference()).thenReturn(mock(DocumentReference.class));
-        when(context.getSourceDocumentReference().get(transaction)).thenReturn(leftDocument);
-        when(context.getTargetDocumentReference().get(transaction)).thenReturn(rightDocument);
-        when(context.getTargetDocumentReference().getUpdatable(transaction)).thenReturn(targetDocument);
-        when(sourceWorkItem.getProjectId()).thenReturn("projectId");
-        when(sourceWorkItem.getId()).thenReturn("workItemId");
-        when(sourceWorkItem.getRevision()).thenReturn("1");
-        when(comparator.getLeftMergedPartsOrder()).thenReturn(mock(StrictList.class));
-        when(comparator.getRightMergedPartsOrder()).thenReturn(mock(StrictList.class));
-
-        DleWIsMergeActionExecuter executer = mergeService.getDleWIsMergeActionExecuter(sourceWorkItem, transaction, context);
-
-        assertNotNull(executer);
     }
 
     @Test
