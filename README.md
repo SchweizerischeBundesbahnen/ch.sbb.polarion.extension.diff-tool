@@ -9,11 +9,12 @@
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.diff-tool&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.diff-tool)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.diff-tool&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_ch.sbb.polarion.extension.diff-tool)
 
-# Polarion ALM extension to compare objects of different types
+# Polarion ALM extension for diffing and merging
 
 This Polarion extension provides functionality of diffing:
 * fields of 2 documents (either different or the same in different revisions)
 * work items of 2 documents (also either of different documents or of the same in different revisions)
+* inlined content of 2 documents, inserted there not via work items, but directly
 * arbitrary set of work items in one project with their counterpart work items from another project
 
 ...and then to merge selected diffs in any direction. First 2 options are available either via selecting 2 certain documents

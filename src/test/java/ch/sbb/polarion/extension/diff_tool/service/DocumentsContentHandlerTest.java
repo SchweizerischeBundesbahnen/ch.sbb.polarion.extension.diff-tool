@@ -6,7 +6,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMerge
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.core.util.types.Text;
-import com.polarion.subterra.base.location.ILocation;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,10 +18,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class DocumentsContentHandlerTest {
+class DocumentsContentHandlerTest {
 
     DocumentsContentHandler handler = new DocumentsContentHandler();
 
