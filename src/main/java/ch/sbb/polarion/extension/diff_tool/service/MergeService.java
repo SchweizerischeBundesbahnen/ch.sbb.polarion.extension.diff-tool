@@ -382,8 +382,9 @@ public class MergeService {
         return false;
     }
 
-    private boolean move(@NotNull IModule.IStructureNode sourceNode, @NotNull IModule.IStructureNode targetNode,
-                         @Nullable IModule.IStructureNode targetDestinationParentNode, @NotNull DocumentsMergeContext mergeContext) {
+    @VisibleForTesting
+    boolean move(@NotNull IModule.IStructureNode sourceNode, @NotNull IModule.IStructureNode targetNode,
+                 @Nullable IModule.IStructureNode targetDestinationParentNode, @NotNull DocumentsMergeContext mergeContext) {
         String targetDestinationNumber = getTargetDestinationNumber(sourceNode, targetDestinationParentNode);
         IModule.IStructureNode targetDestinationNode = getNodeByOutlineNumber(mergeContext.getTargetModule(), targetDestinationNumber);
         if (targetDestinationNode != null) {
@@ -431,7 +432,8 @@ public class MergeService {
         });
     }
 
-    private String getTargetDestinationNumber(IModule.IStructureNode sourceNode, IModule.IStructureNode targetDestinationParentNode) {
+    @VisibleForTesting
+    String getTargetDestinationNumber(IModule.IStructureNode sourceNode, IModule.IStructureNode targetDestinationParentNode) {
         String sourceNumberWithinParent = (sourceNode.getParent() == null || sourceNode.getParent().getOutlineNumber() == null)
                 ? sourceNode.getOutlineNumber() : sourceNode.getOutlineNumber().substring(sourceNode.getParent().getOutlineNumber().length());
         return (targetDestinationParentNode == null || targetDestinationParentNode.getOutlineNumber() == null)

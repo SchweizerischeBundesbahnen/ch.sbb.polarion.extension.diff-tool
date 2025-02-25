@@ -17,8 +17,11 @@ import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
 import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
+import com.polarion.alm.shared.api.model.document.DocumentFields;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
+import com.polarion.alm.shared.api.model.document.internal.InternalDocument;
 import com.polarion.alm.shared.api.model.document.internal.InternalUpdatableDocument;
+import com.polarion.alm.shared.api.model.fields.RichTextField;
 import com.polarion.alm.shared.api.model.wi.WorkItemReference;
 import com.polarion.alm.shared.api.transaction.RunnableInWriteTransaction;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
@@ -26,6 +29,8 @@ import com.polarion.alm.shared.api.transaction.WriteTransaction;
 import com.polarion.alm.shared.api.transaction.internal.InternalWriteTransaction;
 import com.polarion.alm.shared.api.utils.collections.StrictList;
 import com.polarion.alm.shared.dle.compare.DleWIsMergeActionExecuter;
+import com.polarion.alm.shared.dle.compare.DleWorkItemsComparator;
+import com.polarion.alm.shared.dle.compare.DleWorkitemsMatcher;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
@@ -971,6 +976,107 @@ class MergeServiceTest {
                         eq(invocation.linkRevision), anyBoolean());
             }
         }
+    }
+
+    @Test
+    void testMoveWhenTargetDestinationNodeExists() {
+        IModule.IStructureNode sourceNode = mock(IModule.IStructureNode.class);
+        IModule.IStructureNode targetNode = mock(IModule.IStructureNode.class);
+        IModule.IStructureNode targetDestinationParentNode = mock(IModule.IStructureNode.class);
+        IModule.IStructureNode targetDestinationNode = mock(IModule.IStructureNode.class);
+        IModule.IStructureNode parent = mock(IModule.IStructureNode.class, RETURNS_DEEP_STUBS);
+        DocumentsMergeContext mergeContext = mock(DocumentsMergeContext.class);
+        IModule targetModule = mock(IModule.class);
+        IWorkItem targetWorkItem = mock(IWorkItem.class);
+        when(targetModule.getAllWorkItems()).thenReturn(List.of(targetWorkItem));
+        when(targetModule.getOutlineNumberOfWorkitem(targetWorkItem)).thenReturn("1");
+
+        when(mergeContext.getTargetModule()).thenReturn(targetModule);
+
+        List<IModule.IStructureNode> children = new ArrayList<>();
+        children.add(targetNode);
+        children.add(mock(IModule.IStructureNode.class));
+        when(parent.getChildren()).thenReturn(children);
+        when(targetDestinationNode.getParent()).thenReturn(parent);
+
+        MergeService service = spy(mergeService);
+        when(service.getTargetDestinationNumber(sourceNode, targetDestinationParentNode)).thenReturn("1");
+        when(service.getNodeByOutlineNumber(targetModule, "1")).thenReturn(targetDestinationNode);
+
+
+        boolean result = service.move(sourceNode, targetNode, targetDestinationParentNode, mergeContext);
+
+        assertTrue(result);
+        verify(parent, times(1)).addChild(any(), anyInt());
+    }
+
+    @Test
+    void testMoveWhenTargetDestinationNodeDoesNotExist() {
+        IModule.IStructureNode sourceNode = mock(IModule.IStructureNode.class);
+        IModule.IStructureNode targetNode = mock(IModule.IStructureNode.class);
+
+        IModule.IStructureNode targetDestinationParentNode = mock(IModule.IStructureNode.class);
+
+        IModule.IStructureNode parent = mock(IModule.IStructureNode.class, RETURNS_DEEP_STUBS);
+        DocumentsMergeContext mergeContext = mock(DocumentsMergeContext.class);
+        IModule targetModule = mock(IModule.class);
+        IWorkItem targetWorkItem = mock(IWorkItem.class);
+        when(targetModule.getAllWorkItems()).thenReturn(List.of(targetWorkItem));
+        when(targetModule.getOutlineNumberOfWorkitem(targetWorkItem)).thenReturn("1");
+
+        when(mergeContext.getTargetModule()).thenReturn(targetModule);
+
+        List<IModule.IStructureNode> children = new ArrayList<>();
+        children.add(targetNode);
+        children.add(mock(IModule.IStructureNode.class));
+        when(parent.getChildren()).thenReturn(children);
+
+        MergeService service = spy(mergeService);
+        when(service.getTargetDestinationNumber(sourceNode, targetDestinationParentNode)).thenReturn("1");
+        when(service.getNodeByOutlineNumber(targetModule, "1")).thenReturn(null);
+
+
+        boolean result = service.move(sourceNode, targetNode, targetDestinationParentNode, mergeContext);
+
+        assertTrue(result);
+        verify(targetDestinationParentNode, times(1)).moveNodeAsLastChild(targetNode);
+    }
+
+    @Test
+    void testGetDleWIsMergeActionExecuter() {
+        IWorkItem sourceWorkItem = mock(IWorkItem.class);
+        InternalWriteTransaction transaction = mock(InternalWriteTransaction.class, RETURNS_DEEP_STUBS);
+        DocumentsMergeContext context = mock(DocumentsMergeContext.class);
+
+        InternalDocument leftDocument = mock(InternalDocument.class);
+        DocumentFields leftDocumentFields = mock(DocumentFields.class);
+        when(leftDocumentFields.homePageContent()).thenReturn(mock(RichTextField.class));
+        when(leftDocument.fields()).thenReturn(leftDocumentFields);
+
+        InternalDocument rightDocument = mock(InternalDocument.class);
+        DocumentFields rightDocumentFields = mock(DocumentFields.class);
+        when(rightDocumentFields.homePageContent()).thenReturn(mock(RichTextField.class));
+        when(rightDocument.fields()).thenReturn(rightDocumentFields);
+
+        InternalUpdatableDocument targetDocument = mock(InternalUpdatableDocument.class);
+        DleWorkitemsMatcher leftMatcher = mock(DleWorkitemsMatcher.class);
+        DleWorkitemsMatcher rightMatcher = mock(DleWorkitemsMatcher.class);
+        DleWorkItemsComparator comparator = mock(DleWorkItemsComparator.class);
+
+        when(context.getSourceDocumentReference()).thenReturn(mock(DocumentReference.class));
+        when(context.getTargetDocumentReference()).thenReturn(mock(DocumentReference.class));
+        when(context.getSourceDocumentReference().get(transaction)).thenReturn(leftDocument);
+        when(context.getTargetDocumentReference().get(transaction)).thenReturn(rightDocument);
+        when(context.getTargetDocumentReference().getUpdatable(transaction)).thenReturn(targetDocument);
+        when(sourceWorkItem.getProjectId()).thenReturn("projectId");
+        when(sourceWorkItem.getId()).thenReturn("workItemId");
+        when(sourceWorkItem.getRevision()).thenReturn("1");
+        when(comparator.getLeftMergedPartsOrder()).thenReturn(mock(StrictList.class));
+        when(comparator.getRightMergedPartsOrder()).thenReturn(mock(StrictList.class));
+
+        DleWIsMergeActionExecuter executer = mergeService.getDleWIsMergeActionExecuter(sourceWorkItem, transaction, context);
+
+        assertNotNull(executer);
     }
 
     @Test
