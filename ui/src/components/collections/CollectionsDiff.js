@@ -12,6 +12,7 @@ import CollectionHeader from "@/components/collections/CollectionHeader";
 import useRemote from "@/services/useRemote";
 import Modal from "@/components/Modal";
 import DocumentsFieldsDiff from "@/components/documents/DocumentsFieldsDiff";
+import DocumentsContentDiff from "@/components/documents/DocumentsContentDiff";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceCollectionId', 'targetProjectId', 'targetCollectionId'];
 
@@ -22,6 +23,8 @@ export default function CollectionsDiff() {
   const remote = useRemote();
 
   const [compareAsWorkItems] = useState(searchParams.get('compareAs') === 'Workitems');
+  const [compareAsFields] = useState(searchParams.get('compareAs') === 'Fields');
+  const [compareAsContent] = useState(searchParams.get('compareAs') === 'Content');
   const [loading, setLoading] = useState(true);
   const [loadingError, setLoadingError] = useState(null);
   const [collectionsData, setCollectionsData] = useState({});
@@ -50,7 +53,7 @@ export default function CollectionsDiff() {
           context.state.setDataLoaded(true);
         }).catch((error) => {
           setLoading(false);
-          setLoadingError(error && error.message);
+          setLoadingError(error);
         });
 
     remote.sendRequest({
@@ -163,7 +166,9 @@ export default function CollectionsDiff() {
 
   if (compareAsWorkItems) {
     return <DocumentsDiff enclosingCollections={collectionsData} />;
-  } else {
+  } else if (compareAsFields) {
     return <DocumentsFieldsDiff enclosingCollections={collectionsData} />;
+  } else {
+    return <DocumentsContentDiff enclosingCollections={collectionsData} />;
   }
 }

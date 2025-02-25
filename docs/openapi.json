@@ -226,6 +226,37 @@
         ]
       }
     },
+    "/api/diff/documents-content": {
+      "post": {
+        "operationId": "getDocumentsContentDiff",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentsDiffParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentsDiff"
+                }
+              }
+            },
+            "description": "Successfully retrieved the differences between page content of the provided documents"
+          }
+        },
+        "summary": "Gets difference two live documents page content",
+        "tags": [
+          "Difference"
+        ]
+      }
+    },
     "/api/diff/documents-fields": {
       "post": {
         "operationId": "getDocumentsFieldsDiff",
@@ -411,6 +442,37 @@
           }
         },
         "summary": "Merge Documents and their WorkItems",
+        "tags": [
+          "Merge"
+        ]
+      }
+    },
+    "/api/merge/documents-content": {
+      "post": {
+        "operationId": "mergeDocumentsContent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentsContentMergeParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergeResult"
+                }
+              }
+            },
+            "description": "Merge result"
+          }
+        },
+        "summary": "Merge inline content of documents",
         "tags": [
           "Merge"
         ]
@@ -1220,6 +1282,52 @@
         },
         "type": "object"
       },
+      "DocumentContentAnchor": {
+        "description": "Represents an anchor to which document content blocks are tied",
+        "properties": {
+          "contentAbove": {
+            "description": "Content block above the anchor",
+            "type": "string"
+          },
+          "contentBelow": {
+            "description": "Content block below the anchor",
+            "type": "string"
+          },
+          "diffAbove": {
+            "description": "Diff of content block above the anchor",
+            "type": "string"
+          },
+          "diffBelow": {
+            "description": "Diff of content block below the anchor",
+            "type": "string"
+          },
+          "id": {
+            "description": "ID of the WorkItem which represents the anchor",
+            "type": "string"
+          },
+          "outlineNumber": {
+            "description": "Outline number of the WorkItem",
+            "type": "string"
+          },
+          "title": {
+            "description": "Title of the WorkItem",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentContentAnchorsPair": {
+        "description": "Represents a pair of documents content anchors for diffing/merging content blocks which potentially linked to them",
+        "properties": {
+          "leftAnchor": {
+            "$ref": "#/components/schemas/DocumentContentAnchor"
+          },
+          "rightAnchor": {
+            "$ref": "#/components/schemas/DocumentContentAnchor"
+          }
+        },
+        "type": "object"
+      },
       "DocumentDuplicateParams": {
         "description": "Parameters to create a document duplicated from another one",
         "properties": {
@@ -1366,6 +1474,66 @@
           "projectName": {
             "description": "Name of a project in which collection resides",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentsContentDiff": {
+        "description": "Represents the difference between inline content of two documents",
+        "properties": {
+          "leftDocument": {
+            "$ref": "#/components/schemas/Document"
+          },
+          "pairedContentAnchors": {
+            "$ref": "#/components/schemas/DocumentContentAnchorsPair"
+          },
+          "rightDocument": {
+            "$ref": "#/components/schemas/Document"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentsContentMergePair": {
+        "description": "Documents content merge pair definition",
+        "properties": {
+          "contentPosition": {
+            "description": "Specifies if content above or below WorkItems to merge",
+            "enum": [
+              "above",
+              "below"
+            ],
+            "type": "string"
+          },
+          "leftWorkItemId": {
+            "description": "Identifier of the left WorkItem",
+            "type": "string"
+          },
+          "rightWorkItemId": {
+            "description": "Identifier of the right WorkItem",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentsContentMergeParams": {
+        "description": "Documents content merge input data",
+        "properties": {
+          "direction": {
+            "description": "Enum representing the direction of a merge operation",
+            "enum": [
+              "LEFT_TO_RIGHT",
+              "RIGHT_TO_LEFT"
+            ],
+            "type": "string"
+          },
+          "leftDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
+          },
+          "pairs": {
+            "$ref": "#/components/schemas/DocumentsContentMergePair"
+          },
+          "rightDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
           }
         },
         "type": "object"
@@ -1677,36 +1845,6 @@
         "description": "Type of the field",
         "type": "object"
       },
-      "MergeParams": {
-        "description": "Merge input data",
-        "properties": {
-          "configCacheBucketId": {
-            "description": "The ID of the configuration cache bucket",
-            "type": "string"
-          },
-          "configName": {
-            "default": "Default",
-            "description": "The configuration name to use for the merge operation",
-            "type": "string"
-          },
-          "direction": {
-            "description": "Enum representing the direction of a merge operation",
-            "enum": [
-              "LEFT_TO_RIGHT",
-              "RIGHT_TO_LEFT"
-            ],
-            "type": "string"
-          },
-          "linkRole": {
-            "description": "The role of the link connecting work item pairs",
-            "type": "string"
-          },
-          "pairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
-          }
-        },
-        "type": "object"
-      },
       "MergeReport": {
         "description": "Merge report with detailed information about the merge operation",
         "properties": {
@@ -1796,6 +1934,9 @@
       },
       "MergeReportEntry": {
         "properties": {
+          "documentsContentPair": {
+            "$ref": "#/components/schemas/DocumentsContentMergePair"
+          },
           "fieldId": {
             "description": "Field id",
             "type": "string"
@@ -2157,7 +2298,8 @@
             "$ref": "#/components/schemas/Project"
           },
           "leftWorkItemIdsWithRedundancy": {
-            "$ref": "#/components/schemas/WorkItemsPair"
+            "description": "A collection of WorkItem IDs from left project which contain more than 1 counterpart WorkItem from right project and certain link role",
+            "type": "string"
           },
           "pairedWorkItems": {
             "$ref": "#/components/schemas/WorkItemsPair"

@@ -33,6 +33,9 @@ public final class WorkItem {
     private IWorkItem underlyingObject;
 
     @JsonIgnore
+    private IModule module;
+
+    @JsonIgnore
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     private final Map<String, Field> fieldsMap = new HashMap<>();
@@ -100,7 +103,7 @@ public final class WorkItem {
 
     @JsonIgnore
     public IModule getModule() {
-        return underlyingObject.getModule();
+        return module != null ? module : underlyingObject.getModule();
     }
 
     @JsonIgnore

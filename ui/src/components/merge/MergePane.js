@@ -32,8 +32,10 @@ export default function MergePane({leftContext, rightContext, mergingContext, me
 
   const confirmMerge = (direction) => {
     setDirection(direction);
-    const pairsToMerge = mergingContext.getSelectedValues();
-    setStructuralChanges(containsStructuralChanges(pairsToMerge));
+    if (!mergingContext.documentContentDiffing) {
+      const pairsToMerge = mergingContext.getSelectedValues();
+      setStructuralChanges(containsStructuralChanges(pairsToMerge));
+    }
     setModalVisible(true);
   };
 

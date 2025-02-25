@@ -49,7 +49,7 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
 
   const loadDiff = () => {
     mergingContext.resetRegistry();
-    diffService.getDocumentsFieldsDiff(searchParams, context.state.compareEnumsById, context.state.compareOnlyMutualFields, loadingContext)
+    diffService.sendDocumentsFieldsDiffRequest(searchParams, context.state.compareEnumsById, context.state.compareOnlyMutualFields, loadingContext)
         .then((data)=> {
               setFieldsData(data);
               let diffs = data.pairedFields.filter(fieldDiff => fieldDiff.leftField.htmlDiff && fieldDiff.rightField.htmlDiff).map((fieldDiff, index) => {
@@ -107,6 +107,14 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
     }
   }
 
+  const changeSelected = (fieldId) => {
+    return (event) => {
+      event.stopPropagation();
+      let index = fieldsDiffs.map(d => d.id).indexOf(fieldId);
+      mergingContext.setPairSelected(index, fieldId, !mergingContext.isIndexSelected(index));
+    }
+  };
+
   if (loadingContext.fieldsDiffLoading) return <Loading message="Loading fields diff" />;
 
   if (loadingContext.fieldsDiffLoadingError || !fieldsData || !fieldsData.leftDocument || !fieldsData.rightDocument) {
@@ -115,14 +123,6 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
                       ? loadingContext.fieldsDiffLoadingError
                       : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
   }
-
-  const changeSelected = (fieldId) => {
-    return (event) => {
-      event.stopPropagation();
-      let index = fieldsDiffs.map(d => d.id).indexOf(fieldId);
-      mergingContext.setPairSelected(index, fieldId, !mergingContext.isIndexSelected(index));
-    }
-  };
 
   return <div id="diff-body" className={`doc-diff ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
     <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>

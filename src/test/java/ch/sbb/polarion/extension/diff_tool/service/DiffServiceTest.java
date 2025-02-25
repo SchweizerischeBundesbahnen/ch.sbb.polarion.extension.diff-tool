@@ -1,5 +1,9 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchorsPair;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeMoveDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Project;
@@ -18,7 +22,12 @@ import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.IWorkItem;
+import com.polarion.core.util.types.Text;
+import com.polarion.platform.persistence.IDataService;
+import com.polarion.platform.persistence.internal.DataService;
+import com.polarion.platform.persistence.model.IRevision;
 import com.polarion.subterra.base.data.model.ICustomField;
+import com.polarion.subterra.base.location.ILocation;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
@@ -59,7 +68,7 @@ class DiffServiceTest {
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         TestUtils.clearSettings();
     }
 
@@ -208,6 +217,99 @@ class DiffServiceTest {
     }
 
     @Test
+    void testGetDocumentsContentDiff() {
+        IDataService dataService = mock(IDataService.class);
+        IRevision revision = mock(IRevision.class);
+        when(dataService.getLastStorageRevision()).thenReturn(revision);
+
+        IModule leftDocument = mock(IModule.class);
+        when(leftDocument.getHomePageContent()).thenReturn(Text.html("""
+            <h2 id="polarion_wiki macro name=module-workitem;params=id=AA-1"></h2>
+            <h3 id="polarion_wiki macro name=module-workitem;params=id=AA-2"></h3>
+            <p>Paragraph above</p>
+            <div id="polarion_wiki macro name=module-workitem;params=id=AA-3"></div>
+            <div id="polarion_wiki macro name=module-workitem;params=id=AA-4"></div>
+        """));
+        ILocation leftDocumentLocation = mock(ILocation.class);
+        when(leftDocument.getModuleLocation()).thenReturn(leftDocumentLocation);
+        when(leftDocument.getDataSvc()).thenReturn(dataService);
+
+        IModule rightDocument = mock(IModule.class);
+        when(rightDocument.getHomePageContent()).thenReturn(Text.html("""
+            <h2 id="polarion_wiki macro name=module-workitem;params=id=AA-5"></h2>
+            <h3 id="polarion_wiki macro name=module-workitem;params=id=AA-6"></h3>
+            <div id="polarion_wiki macro name=module-workitem;params=id=AA-7"></div>
+            <p>Paragraph below</p>
+            <div id="polarion_wiki macro name=module-workitem;params=id=AA-8"></div>
+        """));
+        ILocation rightDocumentLocation = mock(ILocation.class);
+        when(rightDocument.getModuleLocation()).thenReturn(rightDocumentLocation);
+        when(rightDocument.getDataSvc()).thenReturn(dataService);
+
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "left", "rev1")).thenReturn(leftDocument);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "right", "rev1")).thenReturn(rightDocument);
+
+        String linkRole = "link-role";
+
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        when(leftDocument.getProject()).thenReturn(trackerProject);
+        when(rightDocument.getProject()).thenReturn(trackerProject);
+
+        ILinkRoleOpt linkRoleObjectMock = mock(ILinkRoleOpt.class);
+        when(polarionService.getLinkRoleById(linkRole, trackerProject)).thenReturn(linkRoleObjectMock);
+
+        List<WorkItemsPair> pairedWorkItems = new ArrayList<>();
+        pairedWorkItems.add(createWorkItemsPair("AA-1", "AA-5"));
+        pairedWorkItems.add(createWorkItemsPair("AA-2", "AA-6"));
+        pairedWorkItems.add(createWorkItemsPair("AA-3", "AA-7"));
+        pairedWorkItems.add(createWorkItemsPair("AA-4", "AA-8"));
+        when(polarionService.getPairedWorkItems(leftDocument, rightDocument, linkRoleObjectMock, Collections.emptyList())).thenReturn(pairedWorkItems);
+
+        when(polarionService.renderDocumentContentBlock(leftDocument, "<p>Paragraph above</p>")).thenReturn("<p>Paragraph above</p>");
+        when(polarionService.renderDocumentContentBlock(rightDocument, "<p>Paragraph below</p>")).thenReturn("<p>Paragraph below</p>");
+
+        DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").revision("rev1").build();
+        DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").revision("rev1").build();
+
+        DocumentsContentDiff result = diffService.getDocumentsContentDiff(leftDocumentIdentifier, rightDocumentIdentifier, linkRole);
+        assertNotNull(result);
+        assertEquals(4, result.getPairedContentAnchors().size());
+
+        List<DocumentContentAnchorsPair> expectedPairedAnchors = new ArrayList<>();
+        expectedPairedAnchors.add(DocumentContentAnchorsPair.builder()
+                .leftAnchor(DocumentContentAnchor.builder().id("AA-1").contentAbove("").contentBelow("").build())
+                .rightAnchor(DocumentContentAnchor.builder().id("AA-5").contentAbove("").contentBelow("").build())
+                .build());
+
+        expectedPairedAnchors.add(DocumentContentAnchorsPair.builder()
+                .leftAnchor(DocumentContentAnchor.builder().id("AA-2").contentAbove("").contentBelow("").build())
+                .rightAnchor(DocumentContentAnchor.builder().id("AA-6").contentAbove("").contentBelow("").build())
+                .build());
+
+        expectedPairedAnchors.add(DocumentContentAnchorsPair.builder()
+                .leftAnchor(DocumentContentAnchor.builder().id("AA-3").contentAbove("<p>Paragraph above</p>").contentBelow("")
+                        .diffAbove("<p><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">Paragraph above</span></p>").build())
+                .rightAnchor(DocumentContentAnchor.builder().id("AA-7").contentAbove("").contentBelow("")
+                        .diffAbove("<p><span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"last-diff\">Paragraph above</span></p>").build())
+                .build());
+
+        expectedPairedAnchors.add(DocumentContentAnchorsPair.builder()
+                .leftAnchor(DocumentContentAnchor.builder().id("AA-4").contentAbove("").contentBelow("")
+                        .diffAbove("<p><span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"last-diff\">Paragraph below</span></p>").build())
+                .rightAnchor(DocumentContentAnchor.builder().id("AA-8").contentAbove("<p>Paragraph below</p>").contentBelow("")
+                        .diffAbove("<p><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">Paragraph below</span></p>").build())
+                .build());
+
+        for (int i = 0; i < expectedPairedAnchors.size(); i++) {
+            DocumentContentAnchorsPair expectedPairedAnchor = expectedPairedAnchors.get(i);
+            DocumentContentAnchorsPair actualPairedAnchor = result.getPairedContentAnchors().get(i);
+
+            assertAnchorsEqual(i, "LEFT", expectedPairedAnchor.getLeftAnchor(), actualPairedAnchor.getLeftAnchor());
+            assertAnchorsEqual(i, "RIGHT", expectedPairedAnchor.getRightAnchor(), actualPairedAnchor.getRightAnchor());
+        }
+    }
+
+    @Test
     void testGetFieldsDiff() {
         IModule left = mock(IModule.class);
         IModule right = mock(IModule.class);
@@ -319,14 +421,14 @@ class DiffServiceTest {
         }
 
         if (expected == null || actual == null) {
-            fail(String.format("Items don't conform [%s/%s]: EXPECTED {%s} - ACTUAL {%s}",
+            fail(String.format("Items don't match [%s/%s]: EXPECTED {%s} - ACTUAL {%s}",
                     index, side,
                     expected == null ? "null" : "not null",
                     actual == null ? "null" : "not null"));
         } else if (!(Objects.equals(expected.getOutlineNumber(), actual.getOutlineNumber())
                 && Objects.equals(expected.getMovedOutlineNumber(), actual.getMovedOutlineNumber())
                 && Objects.equals(expected.getMoveDirection(), actual.getMoveDirection()))) {
-            fail(String.format("Items don't conform [%s/%s]: EXPECTED {%s, %s, %s} - ACTUAL {%s, %s, %s}",
+            fail(String.format("Items don't match [%s/%s]: EXPECTED {%s, %s, %s} - ACTUAL {%s, %s, %s}",
                     index, side,
                     expected.getOutlineNumber(), expected.getMovedOutlineNumber(), expected.getMoveDirection(),
                     actual.getOutlineNumber(), actual.getMovedOutlineNumber(), actual.getMoveDirection()));
@@ -359,4 +461,40 @@ class DiffServiceTest {
         workItem.setMoveDirection(moveDirection);
         return workItem;
     }
+
+    private WorkItemsPair createWorkItemsPair(String leftWorkItemId, String rightWorkItemId) {
+        WorkItem leftWorkItem = WorkItem.builder().id(leftWorkItemId).build();
+        WorkItem rightWorkItem = WorkItem.builder().id(rightWorkItemId).build();
+        return WorkItemsPair.builder().leftWorkItem(leftWorkItem).rightWorkItem(rightWorkItem).build();
+    }
+
+    private void assertAnchorsEqual(int index, String side, DocumentContentAnchor expected, DocumentContentAnchor actual) {
+        if (expected == null && actual == null) {
+            return;
+        }
+
+        if (expected == null || actual == null) {
+            fail(String.format("Anchors don't match [%s/%s]: EXPECTED {%s} - ACTUAL {%s}",
+                    index, side,
+                    expected == null ? "null" : "not null",
+                    actual == null ? "null" : "not null"));
+        } else if (!(Objects.equals(expected.getId(), actual.getId()))) {
+            fail(String.format("Anchors IDs don't match [%s/%s]: EXPECTED {%s} - ACTUAL {%s}",
+                    index, side, expected.getId(), actual.getId()));
+        } else if (!(Objects.equals(expected.getContentAbove(), actual.getContentAbove())
+                && Objects.equals(expected.getContentBelow(), actual.getContentBelow()))) {
+            fail(String.format("Anchors content doesn't match [%s/%s]: EXPECTED {%s, %s} - ACTUAL {%s, %s}",
+                    index, side,
+                    expected.getContentAbove(), expected.getContentBelow(),
+                    actual.getContentAbove(), actual.getContentBelow()));
+        } else if (!(Objects.equals(expected.getDiffAbove(), actual.getDiffAbove())
+                && Objects.equals(expected.getDiffBelow(), actual.getDiffBelow()))) {
+            fail(String.format("Anchors diff doesn't match [%s/%s]: EXPECTED {%s, %s} - ACTUAL {%s, %s}",
+                    index, side,
+                    expected.getDiffAbove(), expected.getDiffBelow(),
+                    actual.getDiffAbove(), actual.getDiffBelow()));
+        }
+    }
+
+
 }

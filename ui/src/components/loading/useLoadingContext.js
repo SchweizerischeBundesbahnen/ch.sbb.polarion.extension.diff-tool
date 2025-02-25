@@ -23,6 +23,9 @@ export default function useLoadingContext() {
   const [fieldsDiffLoading, setFieldsDiffLoading] = useState(true);
   const [fieldsDiffLoadingError, setFieldsDiffLoadingError] = useState(null);
 
+  const [contentDiffLoading, setContentDiffLoading] = useState(true);
+  const [contentDiffLoadingError, setContentDiffLoadingError] = useState(null);
+
   const [reloadMarker, setReloadMarker] = useState(0);
 
   useEffect(() => {
@@ -119,6 +122,24 @@ export default function useLoadingContext() {
     setFieldsDiffLoadingError(error);
   };
 
+  const contentDiffLoadingStarted = () => {
+    setContentDiffLoading(true);
+    setDiffsLoadingProgress(0);
+    appContext.state.setDiffsExist(false);
+    appContext.state.setDataLoaded(false);
+  };
+
+  const contentDiffLoadingFinished = () => {
+    setContentDiffLoading(false);
+    setDiffsLoadingProgress(100);
+    appContext.state.setDataLoaded(true);
+  };
+
+  const contentDiffLoadingFinishedWithError = (error) => {
+    setContentDiffLoading(false);
+    setContentDiffLoadingError(error);
+  };
+
   const resetDiffsLoadingState = (pairs) => {
     setPairs([]);
     appContext.state.setDataLoaded(false);
@@ -157,6 +178,12 @@ export default function useLoadingContext() {
     fieldsDiffLoadingStarted,
     fieldsDiffLoadingFinished,
     fieldsDiffLoadingFinishedWithError,
+
+    contentDiffLoading,
+    contentDiffLoadingError,
+    contentDiffLoadingStarted,
+    contentDiffLoadingFinished,
+    contentDiffLoadingFinishedWithError,
 
   };
 }

@@ -26,6 +26,7 @@ import com.google.common.collect.Streams;
 import com.polarion.alm.projects.IProjectService;
 import com.polarion.alm.projects.model.IFolder;
 import com.polarion.alm.projects.model.IProject;
+import com.polarion.alm.server.api.model.document.ProxyDocument;
 import com.polarion.alm.server.rt.parts.Renderer;
 import com.polarion.alm.shared.api.model.ModelObjectReference;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
@@ -34,6 +35,8 @@ import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.internal.InternalReadOnlyTransaction;
 import com.polarion.alm.shared.api.utils.html.HtmlFragmentBuilder;
 import com.polarion.alm.shared.api.utils.html.RichTextRenderTarget;
+import com.polarion.alm.shared.dle.document.DocumentRenderer;
+import com.polarion.alm.shared.dle.document.DocumentRendererParameters;
 import com.polarion.alm.shared.dle.document.WorkItemFieldReference;
 import com.polarion.alm.shared.rt.RichTextRenderingContext;
 import com.polarion.alm.shared.rt.parts.FieldRichTextRenderer;
@@ -501,6 +504,15 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             Renderer renderer = new Renderer(fragmentBuilder.html(""), renderingContext, dummyInstance, FieldRenderType.IMGTXT, "label", "fieldId", false);
             renderer.renderValue(module.getValue(fieldId));
             return fragmentBuilder.toString();
+        });
+    }
+
+    public String renderDocumentContentBlock(@NotNull IModule module, @NotNull String contentBlock) {
+        return TransactionalExecutor.executeSafelyInReadOnlyTransaction(transaction -> {
+            DocumentRendererParameters parameters = new DocumentRendererParameters(null, null);
+            ProxyDocument document = new ProxyDocument(module, (InternalReadOnlyTransaction) transaction);
+            DocumentRenderer documentRenderer = new DocumentRenderer((InternalReadOnlyTransaction) transaction, document, RichTextRenderTarget.PDF_EXPORT, parameters);
+            return documentRenderer.render(contentBlock);
         });
     }
 

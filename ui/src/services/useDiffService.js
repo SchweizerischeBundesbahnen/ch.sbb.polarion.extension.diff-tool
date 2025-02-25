@@ -1,5 +1,5 @@
 import useRemote from "@/services/useRemote";
-import {config} from "@fortawesome/fontawesome-svg-core";
+import {CONTENT_ABOVE, CONTENT_BELOW} from "@/components/documents/ContentAnchorsDiff";
 
 export default function useDiffService() {
   const remote = useRemote();
@@ -24,11 +24,7 @@ export default function useDiffService() {
         contentType: "application/json"
       })
           .then(response => {
-            if (response.ok) {
-              return response.json();
-            } else {
-              throw response.json();
-            }
+            return handleResponse(response);
           })
           .then(data =>  {
             loadingContext.pairsLoadingFinished(getFilteredPairs(data.pairedWorkItems.slice(), searchParams));
@@ -43,7 +39,7 @@ export default function useDiffService() {
     });
   };
 
-  const getDocumentsFieldsDiff = (searchParams, compareEnumsById, compareOnlyMutualFields, loadingContext) => {
+  const sendDocumentsFieldsDiffRequest = (searchParams, compareEnumsById, compareOnlyMutualFields, loadingContext) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
 
@@ -62,11 +58,7 @@ export default function useDiffService() {
         contentType: "application/json"
       })
           .then(response => {
-            if (response.ok) {
-              return response.json();
-            } else {
-              throw response.json();
-            }
+            return handleResponse(response);
           })
           .then(data =>  {
             loadingContext.fieldsDiffLoadingFinished();
@@ -75,6 +67,41 @@ export default function useDiffService() {
           .catch(errorResponse => {
             Promise.resolve(errorResponse).then((error) => {
               loadingContext.fieldsDiffLoadingFinishedWithError(error && error.message);
+              reject(error);
+            });
+          });
+    });
+  };
+
+  const sendDocumentsContentDiffRequest = (searchParams, configCacheId, loadingContext) => {
+    const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
+    const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
+
+    loadingContext.pairsLoadingStarted(true); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
+
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/diff/documents-content`,
+        body: JSON.stringify({
+          leftDocument: leftDocument,
+          rightDocument: rightDocument,
+          linkRole: searchParams.get('linkRole'),
+          configName: searchParams.get('config'),
+          configCacheBucketId: configCacheId
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            return handleResponse(response);
+          })
+          .then(data =>  {
+            loadingContext.contentDiffLoadingFinished();
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            Promise.resolve(errorResponse).then((error) => {
+              loadingContext.contentDiffLoadingFinishedWithError(error && error.message);
               reject(error);
             });
           });
@@ -119,11 +146,7 @@ export default function useDiffService() {
         contentType: "application/json"
       })
           .then(response => {
-            if (response.ok) {
-              return response.json();
-            } else {
-              throw response.json();
-            }
+            return handleResponse(response);
           })
           .then(data =>  {
             loadingContext.pairsLoadingFinished(data.pairedWorkItems.slice());
@@ -153,19 +176,13 @@ export default function useDiffService() {
         contentType: "application/json"
       })
           .then(response => {
-            if (response.ok) {
-              return response.json();
-            } else {
-              throw response.json();
-            }
+            return handleResponse(response);
           })
           .then(data =>  {
             resolve(data);
           })
           .catch(errorResponse => {
-            Promise.resolve(errorResponse).then((error) => {
-              reject(error);
-            });
+            handleErrorResponse(errorResponse, reject);
           });
     });
   };
@@ -188,24 +205,13 @@ export default function useDiffService() {
         contentType: "application/json"
       })
           .then(response => {
-            if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
-              Promise.resolve().then(() => {
-                return reject("Your session has expired. Please refresh the page to log in.");
-              });
-            }
-            if (response.ok) {
-              return response.json();
-            } else {
-              throw response.json();
-            }
+            return handleResponseAndSessionExpire(response, reject);
           })
           .then((data) =>  {
             resolve(data);
           })
           .catch(errorResponse => {
-            Promise.resolve(errorResponse).then((error) => {
-              return reject(error && error.message);
-            });
+            handleErrorResponse(errorResponse, reject);
           });
     });
   };
@@ -242,25 +248,14 @@ export default function useDiffService() {
         contentType: "application/json"
       })
           .then(response => {
-            if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
-              Promise.resolve().then(() => {
-                return reject("Your session has expired. Please refresh the page to log in. Note that any unsaved changes will be lost.");
-              });
-            }
-            if (response.ok) {
-              return response.json();
-            } else {
-              throw response.json();
-            }
+            return handleResponseAndSessionExpire(response, reject);
           })
           .then((data) =>  {
             loadingContext.reload(mergingContext.getSelectedIndexes());
             resolve(data);
           })
           .catch(errorResponse => {
-            Promise.resolve(errorResponse).then((error) => {
-              return reject(error && error.message);
-            });
+            handleErrorResponse(errorResponse, reject);
           });
     });
   };
@@ -284,24 +279,55 @@ export default function useDiffService() {
         contentType: "application/json"
       })
           .then(response => {
-            if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
-              Promise.resolve().then(() => {
-                return reject("Your session has expired. Please refresh the page to log in. Note that any unsaved changes will be lost.");
-              });
-            }
-            if (response.ok) {
-              return response.json();
-            } else {
-              throw response.json();
-            }
+            return handleResponseAndSessionExpire(response, reject);
           })
           .then((data) =>  {
             resolve(data);
           })
           .catch(errorResponse => {
-            Promise.resolve(errorResponse).then((error) => {
-              return reject(error && error.message);
-            });
+            handleErrorResponse(errorResponse, reject);
+          });
+    });
+  };
+
+  const sendDocumentsContentMergeRequest = (searchParams, direction, loadingContext, mergingContext, docsData) => {
+    const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
+    const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
+    leftDocument.moduleXmlRevision = docsData.leftDocument.moduleXmlRevision;
+    rightDocument.moduleXmlRevision = docsData.rightDocument.moduleXmlRevision;
+
+    const pairs = [];
+    for (let index of mergingContext.getSelectedIndexes()) {
+      const selectedPair = mergingContext.getValue(index);
+      if (selectedPair && selectedPair.leftAnchor && selectedPair.rightAnchor) {
+        pairs.push({
+          leftWorkItemId: selectedPair.leftAnchor.id,
+          rightWorkItemId: selectedPair.rightAnchor.id,
+          contentPosition: (index.includes(CONTENT_ABOVE) ? CONTENT_ABOVE : CONTENT_BELOW)
+        });
+      }
+    }
+
+    return new Promise((resolve, reject) => {
+      remote.sendRequest({
+        method: "POST",
+        url: `/merge/documents-content`,
+        body: JSON.stringify({
+          leftDocument: leftDocument,
+          rightDocument: rightDocument,
+          direction: direction,
+          pairs: pairs
+        }),
+        contentType: "application/json"
+      })
+          .then(response => {
+            return handleResponseAndSessionExpire(response, reject);
+          })
+          .then((data) =>  {
+            resolve(data);
+          })
+          .catch(errorResponse => {
+            handleErrorResponse(errorResponse, reject);
           });
     });
   };
@@ -328,25 +354,14 @@ export default function useDiffService() {
         contentType: "application/json"
       })
           .then(response => {
-            if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
-              Promise.resolve().then(() => {
-                return reject("Your session has expired. Please refresh the page to log in. Note that any unsaved changes will be lost.");
-              });
-            }
-            if (response.ok) {
-              return response.json();
-            } else {
-              throw response.json();
-            }
+            return handleResponseAndSessionExpire(response, reject);
           })
           .then((data) =>  {
             loadingContext.reload(mergingContext.getSelectedIndexes());
             resolve(data);
           })
           .catch(errorResponse => {
-            Promise.resolve(errorResponse).then((error) => {
-              return reject(error && error.message);
-            });
+            handleErrorResponse(errorResponse, reject);
           });
     });
   };
@@ -402,15 +417,38 @@ export default function useDiffService() {
     }
   };
 
+  const handleResponseAndSessionExpire = (response, reject) => {
+    if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
+      return reject("Your session has expired. Please refresh the page to log in. Note that any unsaved changes will be lost.");
+    }
+    return handleResponse(response);
+  };
+
+  const handleResponse = (response) => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw response.json();
+    }
+  };
+
+  const handleErrorResponse = (errorResponse, reject) => {
+    Promise.resolve(errorResponse).then((error) => {
+      return reject(error && error.message);
+    });
+  };
+
   return {
     sendDocumentsDiffRequest,
+    sendDocumentsFieldsDiffRequest,
+    sendDocumentsContentDiffRequest,
     sendFindWorkItemsPairsRequest,
     sendCollectionsDiffRequest,
     sendCreateTargetDocumentRequest,
     sendDocumentsMergeRequest,
     sendWorkItemsMergeRequest,
-    getDocumentsFieldsDiff,
     sendDocumentsFieldsMergeRequest,
+    sendDocumentsContentMergeRequest,
     diffsExist
   };
 }
