@@ -6,7 +6,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import com.polarion.alm.tracker.model.IModule;
-import com.polarion.subterra.base.data.model.ICustomField;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;

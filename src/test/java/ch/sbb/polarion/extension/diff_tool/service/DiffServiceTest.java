@@ -68,7 +68,7 @@ class DiffServiceTest {
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         TestUtils.clearSettings();
     }
 

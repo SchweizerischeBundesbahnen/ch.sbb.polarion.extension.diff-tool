@@ -51,6 +51,7 @@ public class DiffService {
     }
 
     private static final CharSequence DAISY_DIFF_CHANGED_FRAGMENT = "class=\"diff-html-";
+    private static final String INVALID_ROLE_ID_MESSAGE = "No link role could be found by ID '%s'";
     private final PolarionService polarionService;
 
     // We will execute diff operation twice: using direct & reverse order.
@@ -80,7 +81,7 @@ public class DiffService {
                 leftDocumentIdentifier.getName(), leftDocumentIdentifier.getRevision());
         ILinkRoleOpt linkRole = polarionService.getLinkRoleById(linkRoleId, leftDocument.getProject());
         if (linkRole == null) {
-            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", linkRoleId));
+            throw new IllegalArgumentException(String.format(INVALID_ROLE_ID_MESSAGE, linkRoleId));
         }
 
         IModule rightDocument = polarionService.getDocumentWithFilledRevision(rightDocumentIdentifier.getProjectId(), rightDocumentIdentifier.getSpaceId(),
@@ -139,7 +140,7 @@ public class DiffService {
                 leftDocumentIdentifier.getName(), leftDocumentIdentifier.getRevision());
         ILinkRoleOpt linkRole = polarionService.getLinkRoleById(linkRoleId, leftDocument.getProject());
         if (linkRole == null) {
-            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", linkRoleId));
+            throw new IllegalArgumentException(String.format(INVALID_ROLE_ID_MESSAGE, linkRoleId));
         }
 
         IModule rightDocument = polarionService.getDocumentWithFilledRevision(rightDocumentIdentifier.getProjectId(), rightDocumentIdentifier.getSpaceId(),
@@ -353,7 +354,7 @@ public class DiffService {
     public WorkItemsPairs findWorkItemsPairs(@NotNull WorkItemsPairsParams workItemsPairsParams) {
         ILinkRoleOpt linkRole = polarionService.getLinkRoleById(workItemsPairsParams.getLinkRole(), polarionService.getTrackerProject(workItemsPairsParams.getLeftProjectId()));
         if (linkRole == null) {
-            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", workItemsPairsParams.getLinkRole()));
+            throw new IllegalArgumentException(String.format(INVALID_ROLE_ID_MESSAGE, workItemsPairsParams.getLinkRole()));
         }
         IProject leftProject = polarionService.getProject(workItemsPairsParams.getLeftProjectId());
         IProject rightProject = polarionService.getProject(workItemsPairsParams.getRightProjectId());

@@ -16,7 +16,7 @@ class MergeReportTest {
     private MergeReport mergeReport;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         mergeReport = new MergeReport();
 
         mergeReport.addEntry(createEntry(MergeReport.OperationResultType.CONFLICTED, "AA-123", "BB-456", "Conflict occurred", LocalDateTime.of(2023, 10, 5, 10, 0)));

@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.diff_tool.report;
 
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergePair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import com.fasterxml.jackson.annotation.JsonIgnore;

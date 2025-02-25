@@ -7,6 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
+import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor.ContentSide.ABOVE;
+import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor.ContentSide.BELOW;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -47,15 +50,10 @@ public class DocumentContentAnchorsPair {
     }
 
     private void setDiff(String diff, @NotNull DocumentContentAnchor.ContentSide contentSide, @NotNull DocumentContentAnchor anchor) {
-        switch (contentSide) {
-            case ABOVE: {
-                anchor.setDiffAbove(diff);
-                break;
-            }
-            case BELOW: {
-                anchor.setDiffBelow(diff);
-                break;
-            }
+        if (contentSide == ABOVE) {
+            anchor.setDiffAbove(diff);
+        } else if (contentSide == BELOW) {
+            anchor.setDiffBelow(diff);
         }
     }
 }

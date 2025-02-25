@@ -23,7 +23,7 @@ import java.util.Set;
 
 import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationResultType.MODIFIED;
 
-public class DocumentsContentHandler {
+class DocumentsContentHandler {
 
     private static final Set<String> HTML_HEADER_TAGS = new HashSet<>(Arrays.asList("h1", "h2", "h3", "h4", "h5"));
 
@@ -103,22 +103,23 @@ public class DocumentsContentHandler {
         Element toAnchor = null;
         for (Element element : targetDocument.body().children()) {
             String extractedWorkItemId = extractWorkItemId(element);
-            if (extractedWorkItemId != null) {
-                if (contentSide == DocumentContentAnchor.ContentSide.ABOVE) {
-                    if (contentAnchorId.equals(extractedWorkItemId)) {
+            if (extractedWorkItemId == null) {
+                continue; // We are looking for anchors, skip content
+            }
+            if (contentSide == DocumentContentAnchor.ContentSide.ABOVE) {
+                if (contentAnchorId.equals(extractedWorkItemId)) {
+                    toAnchor = element;
+                    break;
+                } else {
+                    fromAnchor = element;
+                }
+            } else {
+                if (contentAnchorId.equals(extractedWorkItemId)) {
+                    fromAnchor = element;
+                } else {
+                    if (fromAnchor != null) {
                         toAnchor = element;
                         break;
-                    } else {
-                        fromAnchor = element;
-                    }
-                } else {
-                    if (contentAnchorId.equals(extractedWorkItemId)) {
-                        fromAnchor = element;
-                    } else {
-                        if (fromAnchor != null) {
-                            toAnchor = element;
-                            break;
-                        }
                     }
                 }
             }
