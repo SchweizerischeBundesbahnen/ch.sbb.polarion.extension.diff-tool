@@ -452,7 +452,6 @@ class MergeServiceTest {
         when(iPObjectList.contains(rightWorkItem)).thenReturn(true);
         when(leftWorkItem.getLinkedWorkItems()).thenReturn(iPObjectList);
 
-        MergeService service = spy(mergeService);
         when(polarionService.getModule(doc2.getProjectId(), doc2.getSpaceId(), doc2.getName())).thenReturn(rightModule);
 
         boolean result = mergeService.moveWorkItemOutOfDocument(pair, context);
@@ -658,7 +657,7 @@ class MergeServiceTest {
     }
 
     @Test
-    void testCreateWorkItemWhenTargetIsNull() {
+    void testCreateReferencedWorkItemWhenTargetIsNull() {
         WorkItemsPair pair = mock(WorkItemsPair.class);
         IWorkItem iWorkItem = mock(IWorkItem.class);
         when(iWorkItem.getProjectId()).thenReturn("projectA");
@@ -695,6 +694,89 @@ class MergeServiceTest {
         when(service.getWorkItem(source)).thenReturn(iWorkItem);
         doNothing().when(service).reloadModule(targetModule);
         boolean result = service.createOrDeleteItem(pair, context, mock(WriteTransaction.class));
+        assertTrue(result);
+    }
+
+    @Test
+    void testCreateWorkItemWhenTargetIsNull() {
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+        IWorkItem iWorkItem = mock(IWorkItem.class);
+        when(iWorkItem.getProjectId()).thenReturn("projectA");
+
+        WorkItem source = mock(WorkItem.class);
+        WorkItem target = mock(WorkItem.class);
+
+        DocumentsMergeContext context = mock(DocumentsMergeContext.class);
+        when(context.getSourceWorkItem(pair)).thenReturn(source);
+        when(context.getTargetWorkItem(pair)).thenReturn(target);
+
+        when(source.getId()).thenReturn("sourceId");
+
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        when(targetModule.getProjectId()).thenReturn("projectA");
+        when(context.getTargetModule()).thenReturn(targetModule);
+
+        IModule.IStructureNode destinationParentNode = mock(IModule.IStructureNode.class);
+        IModule.IStructureNode sourceParentNode = mock(IModule.IStructureNode.class);
+        when(sourceModule.getStructureNodeOfWI(iWorkItem)).thenReturn(destinationParentNode);
+        when(destinationParentNode.getParent()).thenReturn(sourceParentNode);
+        when(sourceParentNode.getWorkItem()).thenReturn(iWorkItem);
+
+        when(polarionService.getPairedWorkItems(iWorkItem, "projectA", null)).thenReturn(List.of(iWorkItem));
+
+        when(context.getSourceModule()).thenReturn(sourceModule);
+        when(context.getTargetModule()).thenReturn(targetModule);
+
+        MergeService service = spy(mergeService);
+        when(service.getWorkItem(source)).thenReturn(iWorkItem);
+        doNothing().when(service).reloadModule(targetModule);
+        boolean result = service.createOrDeleteItem(pair, context, mock(WriteTransaction.class));
+
+        assertTrue(result);
+        verify(context).reportEntry(eq(CREATED), eq(pair), anyString());
+    }
+
+    @Test
+    void testCreateWorkItemWhenTargetIsNullAndInsertFailed() {
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+        IWorkItem iWorkItem = mock(IWorkItem.class);
+        when(iWorkItem.getProjectId()).thenReturn("projectA");
+        when(iWorkItem.getId()).thenReturn("workItemId");
+
+        WorkItem source = mock(WorkItem.class);
+        WorkItem target = mock(WorkItem.class);
+
+        DocumentsMergeContext context = mock(DocumentsMergeContext.class);
+        when(context.getSourceWorkItem(pair)).thenReturn(source);
+        when(context.getTargetWorkItem(pair)).thenReturn(target);
+
+        when(source.getId()).thenReturn("sourceId");
+
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+        when(targetModule.getProjectId()).thenReturn("projectA");
+        when(context.getTargetModule()).thenReturn(targetModule);
+
+        IModule.IStructureNode destinationParentNode = mock(IModule.IStructureNode.class);
+        IModule.IStructureNode sourceParentNode = mock(IModule.IStructureNode.class);
+        when(sourceModule.getStructureNodeOfWI(iWorkItem)).thenReturn(destinationParentNode);
+        when(destinationParentNode.getParent()).thenReturn(sourceParentNode);
+        when(sourceParentNode.getWorkItem()).thenReturn(iWorkItem);
+
+        when(polarionService.getPairedWorkItems(iWorkItem, "projectA", null)).thenReturn(List.of(iWorkItem));
+
+        when(context.getSourceModule()).thenReturn(sourceModule);
+        when(context.getTargetModule()).thenReturn(targetModule);
+
+        MergeService service = spy(mergeService);
+        when(service.getWorkItem(source)).thenReturn(iWorkItem);
+        when(service.insertWorkItem(iWorkItem, context, false)).thenReturn(null);
+        doNothing().when(service).reloadModule(targetModule);
+        boolean result = service.createOrDeleteItem(pair, context, mock(WriteTransaction.class));
+
+        verify(context).reportEntry(eq(CREATION_FAILED), eq(pair), anyString());
         assertTrue(result);
     }
 

@@ -1,6 +1,9 @@
 package ch.sbb.polarion.extension.diff_tool.util;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.StringsDiff;
+import com.polarion.subterra.base.data.model.IEnumType;
+import com.polarion.subterra.base.data.model.IListType;
+import com.polarion.subterra.base.data.model.IType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -10,7 +13,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DiffToolUtilsTest {
@@ -55,6 +60,46 @@ class DiffToolUtilsTest {
         assertEquals("background-color: lightyellow;", modifiedStyle);
         assertEquals("border: 1px dashed magenta; padding: 2px; margin: 2px;", changedStyle);
         assertEquals("", invalidStyle);
+    }
+
+    @Test
+    void testIsEnumContainingTypeWithEnumType() {
+        IEnumType enumTypeMock = mock(IEnumType.class);
+        boolean result = DiffToolUtils.isEnumContainingType(enumTypeMock);
+        assertTrue(result);
+    }
+
+    @Test
+    void testIsEnumContainingTypeWithListContainingEnumType() {
+        IListType listTypeMock = mock(IListType.class);
+        IEnumType enumTypeMock = mock(IEnumType.class);
+        when(listTypeMock.getItemType()).thenReturn(enumTypeMock);
+
+        boolean result = DiffToolUtils.isEnumContainingType(listTypeMock);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void testIsEnumContainingTypeWithListNotContainingEnumType() {
+        IListType listTypeMock = mock(IListType.class);
+        IType nonEnumTypeMock = mock(IType.class);
+        when(listTypeMock.getItemType()).thenReturn(nonEnumTypeMock);
+        boolean result = DiffToolUtils.isEnumContainingType(listTypeMock);
+        assertFalse(result);
+    }
+
+    @Test
+    void testIsEnumContainingTypeWithNullType() {
+        boolean result = DiffToolUtils.isEnumContainingType(null);
+        assertFalse(result);
+    }
+
+    @Test
+    void testIsEnumContainingTypeWithOtherType() {
+        IType someOtherTypeMock = mock(IType.class);
+        boolean result = DiffToolUtils.isEnumContainingType(someOtherTypeMock);
+        assertFalse(result);
     }
 
     public static Stream<Arguments> testDiffTextValues() {
