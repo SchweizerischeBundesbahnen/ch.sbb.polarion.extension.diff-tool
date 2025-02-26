@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.widgets;
 
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
+import ch.sbb.polarion.extension.generic.test_extensions.PlatformContextMockExtension;
 import com.polarion.alm.shared.api.Scope;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.PrototypeEnum;
@@ -14,7 +15,6 @@ import com.polarion.alm.shared.api.model.wi.WorkItemReference;
 import com.polarion.alm.shared.api.utils.SharedLocalization;
 import com.polarion.alm.shared.api.utils.html.HtmlAttributesBuilder;
 import com.polarion.alm.shared.api.utils.html.HtmlContentBuilder;
-import com.polarion.alm.shared.api.utils.html.HtmlFragmentBuilder;
 import com.polarion.alm.shared.api.utils.html.HtmlTagBuilder;
 import com.polarion.alm.shared.api.utils.html.HtmlTagSelector;
 import com.polarion.alm.tracker.model.IWorkItem;
@@ -22,14 +22,13 @@ import com.polarion.platform.persistence.model.IPrototype;
 import com.polarion.subterra.base.data.identification.ILocalId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, PlatformContextMockExtension.class})
 public class WorkItemsDiffWidgetRendererTest {
 
     @Mock
@@ -185,6 +184,6 @@ public class WorkItemsDiffWidgetRendererTest {
         Scope scope = mock(Scope.class);
         when(context.getDisplayedScope()).thenReturn(scope);
         when(scope.isGlobal()).thenReturn(true);
-        return new WorkItemsDiffWidgetRenderer(context, params, polarionService);
+        return new WorkItemsDiffWidgetRenderer(context, params);
     }
 }

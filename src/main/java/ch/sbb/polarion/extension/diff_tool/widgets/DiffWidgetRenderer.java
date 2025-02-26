@@ -47,14 +47,6 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         this.diffWidgetParams = diffWidgetParams;
     }
 
-    @VisibleForTesting
-    DiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull FieldsParameter columnsParameter, @NotNull DiffWidgetParams diffWidgetParams, @NotNull PolarionService polarionService) {
-        super(context);
-        this.polarionService = polarionService;
-        this.columnsParameter = columnsParameter;
-        this.diffWidgetParams = diffWidgetParams;
-    }
-
     protected String getProjectId() {
         return diffWidgetParams.sourceParams().projectId();
     }
@@ -69,7 +61,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
 
     @VisibleForTesting
     DataSet initDataSet(@NotNull String widgetId, @NotNull PrototypeEnum allowedPrototype, @NotNull Scope scope,
-                                  @NotNull SortingParameter sortingParameter, @Nullable String query) {
+                        @NotNull SortingParameter sortingParameter, @Nullable String query) {
         DataSetParameterImpl dataSetParameter = (DataSetParameterImpl) new DataSetParameterBuilder(widgetId)
                 .allowedPrototypes(allowedPrototype)
                 .add("sortBy", sortingParameter)

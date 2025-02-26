@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.diff_tool.widgets;
 
-import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.PrototypeEnum;
@@ -33,17 +32,6 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
 
     public WorkItemsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params) {
         super(context, COLUMNS_PARAMETER, params);
-
-        this.params = params;
-        if (!context.getDisplayedScope().isGlobal()) {
-            SortingParameter sortingParameter = new SortingParameterImpl.Builder(WIDGET_ID).byLuceneSortString(IUniqueObject.KEY_ID).build();
-            params.sourceParams().dataSet(initDataSet(WIDGET_ID, PrototypeEnum.WorkItem, context.getDisplayedScope(), sortingParameter, params.sourceParams().query()));
-        }
-    }
-
-    @VisibleForTesting
-    WorkItemsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params, @NotNull PolarionService polarionService) {
-        super(context, COLUMNS_PARAMETER, params, polarionService);
 
         this.params = params;
         if (!context.getDisplayedScope().isGlobal()) {
