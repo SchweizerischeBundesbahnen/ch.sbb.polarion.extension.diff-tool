@@ -1,9 +1,10 @@
 package ch.sbb.polarion.extension.diff_tool.widgets;
 
-import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.generic.test_extensions.PlatformContextMockExtension;
 import com.polarion.alm.shared.api.Scope;
 import com.polarion.alm.shared.api.model.ModelObject;
+import com.polarion.alm.shared.api.model.ModelObjectsBase;
+import com.polarion.alm.shared.api.model.ModelObjectsSearch;
 import com.polarion.alm.shared.api.model.PrototypeEnum;
 import com.polarion.alm.shared.api.model.Renderer;
 import com.polarion.alm.shared.api.model.fields.Field;
@@ -12,11 +13,13 @@ import com.polarion.alm.shared.api.model.wi.WorkItem;
 import com.polarion.alm.shared.api.model.wi.WorkItemFields;
 import com.polarion.alm.shared.api.model.wi.WorkItemPermissions;
 import com.polarion.alm.shared.api.model.wi.WorkItemReference;
+import com.polarion.alm.shared.api.transaction.internal.InternalReadOnlyTransaction;
 import com.polarion.alm.shared.api.utils.SharedLocalization;
 import com.polarion.alm.shared.api.utils.html.HtmlAttributesBuilder;
 import com.polarion.alm.shared.api.utils.html.HtmlContentBuilder;
 import com.polarion.alm.shared.api.utils.html.HtmlTagBuilder;
 import com.polarion.alm.shared.api.utils.html.HtmlTagSelector;
+import com.polarion.alm.shared.api.utils.internal.InternalPolarionUtils;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.platform.persistence.model.IPrototype;
 import com.polarion.subterra.base.data.identification.ILocalId;
@@ -36,9 +39,6 @@ public class WorkItemsDiffWidgetRendererTest {
 
     @Mock
     private DiffWidgetParams params;
-
-    @Mock
-    private PolarionService polarionService;
 
     @Test
     void testConstructor() {
@@ -183,7 +183,20 @@ public class WorkItemsDiffWidgetRendererTest {
     private WorkItemsDiffWidgetRenderer mockRenderer(RichPageWidgetCommonContext context, DiffWidgetParams params) {
         Scope scope = mock(Scope.class);
         when(context.getDisplayedScope()).thenReturn(scope);
-        when(scope.isGlobal()).thenReturn(true);
+
+        InternalReadOnlyTransaction internalReadOnlyTransaction = mock(InternalReadOnlyTransaction.class);
+        when(internalReadOnlyTransaction.utils()).thenReturn(mock(InternalPolarionUtils.class));
+        ModelObjectsBase modelObjectsBase = mock(ModelObjectsBase.class);
+        ModelObjectsSearch modelObjectsSearch = mock(ModelObjectsSearch.class);
+        when(modelObjectsSearch.query(null)).thenReturn(modelObjectsSearch);
+        when(modelObjectsSearch.sort("id")).thenReturn(modelObjectsSearch);
+        when(modelObjectsBase.search()).thenReturn(modelObjectsSearch);
+        when(internalReadOnlyTransaction.byEnum(any())).thenReturn(modelObjectsBase);
+        when(context.transaction()).thenReturn(internalReadOnlyTransaction);
+
+        when(params.sourceParams()).thenReturn(mock(DataSetWidgetParams.class));
+
+        when(scope.isGlobal()).thenReturn(false);
         return new WorkItemsDiffWidgetRenderer(context, params);
     }
 }
