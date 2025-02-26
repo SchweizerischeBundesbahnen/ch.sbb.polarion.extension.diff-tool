@@ -11,14 +11,16 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairsParams;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.ImageHandler;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
-
 import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.IWorkItem;
+import com.polarion.platform.persistence.IEnumOption;
+import com.polarion.platform.persistence.model.ITypedList;
 import com.polarion.subterra.base.data.model.ICustomField;
+import com.polarion.subterra.base.data.model.IEnumType;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
@@ -311,6 +313,37 @@ class DiffServiceTest {
                 .build();
 
         assertEquals(expectedResult, realResult);
+    }
+
+    @Test
+    void testGetFieldValueWithEnumIdComparisonMode() {
+        WorkItem workItemMock = mock(WorkItem.class);
+        IEnumType fieldTypeMock = mock(IEnumType.class);
+        IEnumOption enumOptionMock = mock(IEnumOption.class);
+        when(polarionService.getFieldValue(any(), any(), any())).thenReturn(enumOptionMock);
+        when(enumOptionMock.getId()).thenReturn("enumId");
+
+        Object result = diffService.getFieldValue(null, "someEnumField", workItemMock, fieldTypeMock, true);
+
+        assertEquals("enumId", result);
+    }
+
+    @Test
+    void testGetFieldValueWithEnumListComparisonMode() {
+        WorkItem workItemMock = mock(WorkItem.class);
+        IEnumType fieldTypeMock = mock(IEnumType.class);
+        ITypedList typedListMock = mock(ITypedList.class);
+
+        String fieldId = "someEnumListField";
+        List<IEnumOption> enumList = List.of(mock(IEnumOption.class), mock(IEnumOption.class));
+        when(polarionService.getFieldValue(any(), anyString(), any())).thenReturn(typedListMock);
+        when(typedListMock.stream()).thenReturn(enumList.stream());
+        when(enumList.get(0).getId()).thenReturn("enumId");
+        when(enumList.get(1).getId()).thenReturn("enumId");
+
+        Object result = diffService.getFieldValue(null, fieldId, workItemMock, fieldTypeMock, true);
+
+        assertEquals(List.of("enumId", "enumId"), result);
     }
 
     private void assertItemsEqual(int index, String side, WorkItem expected, WorkItem actual) {
