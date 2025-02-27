@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith({MockitoExtension.class, PlatformContextMockExtension.class})
-public class CopyToolModuleTest {
+class CopyToolModuleTest {
     @Test
     void testGetFormExtensionContribution() {
         CopyToolModule copyToolModule = new CopyToolModule();

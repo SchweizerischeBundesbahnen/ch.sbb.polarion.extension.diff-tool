@@ -8,7 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith({MockitoExtension.class, PlatformContextMockExtension.class})
-public class CopyToolFormExtensionTest {
+class CopyToolFormExtensionTest {
     @Test
     void testConstructor() {
         CopyToolFormExtension copyToolFormExtension = new CopyToolFormExtension();

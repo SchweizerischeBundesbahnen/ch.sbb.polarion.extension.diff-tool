@@ -21,12 +21,11 @@ import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.IWorkItem;
-import com.polarion.platform.persistence.IEnumOption;
-import com.polarion.platform.persistence.model.ITypedList;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.IDataService;
-import com.polarion.platform.persistence.internal.DataService;
+import com.polarion.platform.persistence.IEnumOption;
 import com.polarion.platform.persistence.model.IRevision;
+import com.polarion.platform.persistence.model.ITypedList;
 import com.polarion.subterra.base.data.model.ICustomField;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.location.ILocation;
@@ -226,24 +225,24 @@ class DiffServiceTest {
 
         IModule leftDocument = mock(IModule.class);
         when(leftDocument.getHomePageContent()).thenReturn(Text.html("""
-            <h2 id="polarion_wiki macro name=module-workitem;params=id=AA-1"></h2>
-            <h3 id="polarion_wiki macro name=module-workitem;params=id=AA-2"></h3>
-            <p>Paragraph above</p>
-            <div id="polarion_wiki macro name=module-workitem;params=id=AA-3"></div>
-            <div id="polarion_wiki macro name=module-workitem;params=id=AA-4"></div>
-        """));
+                    <h2 id="polarion_wiki macro name=module-workitem;params=id=AA-1"></h2>
+                    <h3 id="polarion_wiki macro name=module-workitem;params=id=AA-2"></h3>
+                    <p>Paragraph above</p>
+                    <div id="polarion_wiki macro name=module-workitem;params=id=AA-3"></div>
+                    <div id="polarion_wiki macro name=module-workitem;params=id=AA-4"></div>
+                """));
         ILocation leftDocumentLocation = mock(ILocation.class);
         when(leftDocument.getModuleLocation()).thenReturn(leftDocumentLocation);
         when(leftDocument.getDataSvc()).thenReturn(dataService);
 
         IModule rightDocument = mock(IModule.class);
         when(rightDocument.getHomePageContent()).thenReturn(Text.html("""
-            <h2 id="polarion_wiki macro name=module-workitem;params=id=AA-5"></h2>
-            <h3 id="polarion_wiki macro name=module-workitem;params=id=AA-6"></h3>
-            <div id="polarion_wiki macro name=module-workitem;params=id=AA-7"></div>
-            <p>Paragraph below</p>
-            <div id="polarion_wiki macro name=module-workitem;params=id=AA-8"></div>
-        """));
+                    <h2 id="polarion_wiki macro name=module-workitem;params=id=AA-5"></h2>
+                    <h3 id="polarion_wiki macro name=module-workitem;params=id=AA-6"></h3>
+                    <div id="polarion_wiki macro name=module-workitem;params=id=AA-7"></div>
+                    <p>Paragraph below</p>
+                    <div id="polarion_wiki macro name=module-workitem;params=id=AA-8"></div>
+                """));
         ILocation rightDocumentLocation = mock(ILocation.class);
         when(rightDocument.getModuleLocation()).thenReturn(rightDocumentLocation);
         when(rightDocument.getDataSvc()).thenReturn(dataService);

@@ -59,8 +59,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         return diffWidgetParams.configuration();
     }
 
-    @VisibleForTesting
-    DataSet initDataSet(@NotNull String widgetId, @NotNull PrototypeEnum allowedPrototype, @NotNull Scope scope,
+    protected DataSet initDataSet(@NotNull String widgetId, @NotNull PrototypeEnum allowedPrototype, @NotNull Scope scope,
                         @NotNull SortingParameter sortingParameter, @Nullable String query) {
         DataSetParameterImpl dataSetParameter = (DataSetParameterImpl) new DataSetParameterBuilder(widgetId)
                 .allowedPrototypes(allowedPrototype)

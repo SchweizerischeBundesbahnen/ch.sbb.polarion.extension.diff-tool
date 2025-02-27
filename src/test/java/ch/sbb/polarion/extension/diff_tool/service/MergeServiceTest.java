@@ -656,7 +656,7 @@ class MergeServiceTest {
         IWorkItem result = mergeService.insertWorkItem(sourceWorkItem, context, false);
 
         assertEquals(pairedWorkItem, result);
-        verify(polarionService, times(2)).getPairedWorkItems(eq(sourceWorkItem), eq("projectB"), eq(null));
+        verify(polarionService, times(2)).getPairedWorkItems(sourceWorkItem, "projectB", null);
     }
 
     @Test
@@ -808,10 +808,14 @@ class MergeServiceTest {
         when(context.getTargetModule()).thenReturn(targetModule);
 
         Text text = mock(Text.class);
-        when(text.getContent()).thenReturn("<html><h3 id=\"123\">Test</h3>\n" +
-                "<p>Test text</p>\n" +
-                "<div id=\"456\">test</div>\n" +
-                "<p>Test Text</p></html>/>");
+        when(text.getContent()).thenReturn("""
+                <html>
+                    <h3 id="123">Test</h3>
+                    <p>Test text</p>
+                    <div id="456">test</div>
+                    <p>Test Text</p>
+                </html>/>
+                """);
         when(context.getSourceModule().getHomePageContent()).thenReturn(text);
         when(context.getTargetModule().getHomePageContent()).thenReturn(text);
 
@@ -892,7 +896,7 @@ class MergeServiceTest {
         boolean result = service.createOrDeleteItem(pair, context, mock(WriteTransaction.class));
 
         assertTrue(result);
-        verify(service).deleteWorkItemFromDocument(eq(context.getTargetDocumentIdentifier()), eq(targetWorkItem));
+        verify(service).deleteWorkItemFromDocument(context.getTargetDocumentIdentifier(), targetWorkItem);
         assertFalse(context.getMergeReport().getEntriesByType(DELETED).isEmpty());
         verify(service).reloadModule(context.getTargetModule());
     }

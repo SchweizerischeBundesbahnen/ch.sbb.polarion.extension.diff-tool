@@ -18,7 +18,6 @@ import com.polarion.alm.projects.IProjectService;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.tracker.ITrackerService;
-import com.polarion.alm.tracker.internal.model.LinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IApprovalStruct;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;

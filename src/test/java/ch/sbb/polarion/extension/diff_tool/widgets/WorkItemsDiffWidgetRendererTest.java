@@ -48,7 +48,6 @@ class WorkItemsDiffWidgetRendererTest {
 
     @Test
     void testRenderUnresolvableItem() {
-        RichPageWidgetCommonContext context = mock(RichPageWidgetCommonContext.class);
         SharedLocalization localization = mock(SharedLocalization.class);
         when(context.localization()).thenReturn(localization);
         when(localization.getString("richpages.widget.table.unresolvableItem", "path")).thenReturn("Unresolvable item");
