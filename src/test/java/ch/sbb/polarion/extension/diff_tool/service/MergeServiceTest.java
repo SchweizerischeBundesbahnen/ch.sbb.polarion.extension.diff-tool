@@ -18,6 +18,7 @@ import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
+import com.polarion.alm.shared.api.model.document.internal.InternalDocument;
 import com.polarion.alm.shared.api.model.document.internal.InternalUpdatableDocument;
 import com.polarion.alm.shared.api.model.wi.WorkItemReference;
 import com.polarion.alm.shared.api.transaction.RunnableInWriteTransaction;
@@ -25,7 +26,9 @@ import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.WriteTransaction;
 import com.polarion.alm.shared.api.transaction.internal.InternalWriteTransaction;
 import com.polarion.alm.shared.api.utils.collections.StrictList;
+import com.polarion.alm.shared.dle.compare.DleWIsMergeAction;
 import com.polarion.alm.shared.dle.compare.DleWIsMergeActionExecuter;
+import com.polarion.alm.shared.dle.compare.DleWorkItemsComparator;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
@@ -1135,6 +1138,47 @@ class MergeServiceTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model, true));
         assertEquals("No link role could be found by ID 'someLinkRole'", exception.getMessage());
+    }
+
+    @Test
+    void testGetDleWIsMergeActionExecuter() {
+        IWorkItem sourceWorkItem = mock(IWorkItem.class);
+        InternalWriteTransaction transaction = mock(InternalWriteTransaction.class);
+        DocumentsMergeContext context = mock(DocumentsMergeContext.class);
+        InternalDocument leftDocument = mock(InternalDocument.class);
+        InternalDocument rightDocument = mock(InternalDocument.class);
+        DleWorkItemsComparator comparator = mock(DleWorkItemsComparator.class);
+        InternalUpdatableDocument targetDocument = mock(InternalUpdatableDocument.class);
+        DleWIsMergeAction action = mock(DleWIsMergeAction.class);
+
+        DocumentReference mockSourceDocumentReference = mock(DocumentReference.class);
+        DocumentReference mockTargetDocumentReference = mock(DocumentReference.class);
+
+        when(targetDocument.getReferenceToCurrent()).thenReturn(mockTargetDocumentReference);
+
+        when(context.getSourceDocumentReference()).thenReturn(mockSourceDocumentReference);
+        when(context.getTargetDocumentReference()).thenReturn(mockTargetDocumentReference);
+
+        when(mockSourceDocumentReference.get(transaction)).thenReturn(leftDocument);
+        when(mockTargetDocumentReference.get(transaction)).thenReturn(rightDocument);
+
+        MergeService service = spy(mergeService);
+
+        doReturn(comparator).when(service).createComparator(transaction, leftDocument, rightDocument);
+
+        when(context.getTargetDocumentReference().getUpdatable(transaction)).thenReturn(targetDocument);
+        when(comparator.getLeftMergedPartsOrder()).thenReturn(mock(StrictList.class));
+        when(comparator.getRightMergedPartsOrder()).thenReturn(mock(StrictList.class));
+        when(sourceWorkItem.getProjectId()).thenReturn("projectId");
+        when(sourceWorkItem.getId()).thenReturn("workItemId");
+        when(sourceWorkItem.getRevision()).thenReturn("revision");
+        when(service.getAction(sourceWorkItem)).thenReturn(action);
+        doReturn(mock(Consumer.class)).when(action).execute(any());
+
+        DleWIsMergeActionExecuter result = service.getDleWIsMergeActionExecuter(sourceWorkItem, transaction, context);
+
+        assertNotNull(result);
+        assertInstanceOf(DleWIsMergeActionExecuter.class, result);
     }
 
     private static MergeTestContext sameProject() {

@@ -491,24 +491,36 @@ public class MergeService {
 
     @VisibleForTesting
     @NotNull
-    DleWIsMergeActionExecuter getDleWIsMergeActionExecuter(IWorkItem sourceWorkItem, @NotNull InternalWriteTransaction transaction, DocumentsMergeContext context) {
+    public DleWIsMergeActionExecuter getDleWIsMergeActionExecuter(IWorkItem sourceWorkItem, @NotNull InternalWriteTransaction transaction, DocumentsMergeContext context) {
         // taken from DleWorkItemsCompareOther#initializeOutside
         InternalDocument leftDocument = (InternalDocument) context.getSourceDocumentReference().get(transaction);
         InternalDocument rightDocument = (InternalDocument) context.getTargetDocumentReference().get(transaction);
 
-        DleWorkitemsMatcher leftMatcher = new DleWorkitemsMatcher(leftDocument, null, transaction);
-        DleWorkitemsMatcher rightMatcher = new DleWorkitemsMatcher(rightDocument, null, transaction);
-        DleWorkItemsComparator comparator = new DleWorkItemsComparator(transaction, leftMatcher, rightMatcher, MERGE_OPTION);
+        DleWorkItemsComparator comparator = createComparator(transaction, leftDocument, rightDocument);
 
         // taken from DleWIsMergeSaveRequest#executeActions
-        InternalUpdatableDocument targetDocument = (InternalUpdatableDocument) (context.getTargetDocumentReference()).getUpdatable(transaction);
+        InternalUpdatableDocument targetDocument = (InternalUpdatableDocument) context.getTargetDocumentReference().getUpdatable(transaction);
+
         DleWIsMergeActionExecuter executer = new DleWIsMergeActionExecuter(targetDocument, comparator.getLeftMergedPartsOrder(), comparator.getRightMergedPartsOrder());
 
-        WorkItemReference workItemReference = new WorkItemReference(sourceWorkItem.getProjectId(), sourceWorkItem.getId(), sourceWorkItem.getRevision(), null);
-        DleWIsMergeAction action = new DuplicateWorkItemAction(workItemReference);
+        DleWIsMergeAction action = getAction(sourceWorkItem);
+
         action.execute(executer);
         executer.finish();
         return executer;
+    }
+
+    @VisibleForTesting
+    DleWIsMergeAction getAction(IWorkItem sourceWorkItem) {
+        WorkItemReference workItemReference = new WorkItemReference(sourceWorkItem.getProjectId(), sourceWorkItem.getId(), sourceWorkItem.getRevision(), null);
+        return new DuplicateWorkItemAction(workItemReference);
+    }
+
+    @VisibleForTesting
+    DleWorkItemsComparator createComparator(InternalWriteTransaction transaction, InternalDocument leftDocument, InternalDocument rightDocument) {
+        DleWorkitemsMatcher leftMatcher = new DleWorkitemsMatcher(leftDocument, null, transaction);
+        DleWorkitemsMatcher rightMatcher = new DleWorkitemsMatcher(rightDocument, null, transaction);
+        return new DleWorkItemsComparator(transaction, leftMatcher, rightMatcher, MERGE_OPTION);
     }
 
     /**
