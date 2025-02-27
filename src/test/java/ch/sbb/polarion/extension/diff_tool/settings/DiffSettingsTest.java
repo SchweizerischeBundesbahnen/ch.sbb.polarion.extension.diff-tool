@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, CurrentContextExtension.class})
 @CurrentContextConfig("diff-tool")
-public class DiffSettingsTest {
+class DiffSettingsTest {
 
     @Test
     void testDefaultSettings() {

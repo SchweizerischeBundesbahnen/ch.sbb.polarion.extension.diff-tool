@@ -631,7 +631,7 @@ public class DiffService {
             } else if (value instanceof ITypedList<?> typedList) {
                 // enum list - get all IDs in order to later compare them properly using Objects.equals()
                 // (note that we are sorting list in order to ignore the values order)
-                value = typedList.stream().filter(i -> i instanceof IEnumOption).map(e -> ((IEnumOption) e).getId()).sorted().toList();
+                value = typedList.stream().filter(IEnumOption.class::isInstance).map(e -> ((IEnumOption) e).getId()).sorted().toList();
             } else if (value != null) {
                 // theoretically we shouldn't reach this statement, but just in case we convert it to string otherwise we get jackson serialization exception
                 value = String.valueOf(value);

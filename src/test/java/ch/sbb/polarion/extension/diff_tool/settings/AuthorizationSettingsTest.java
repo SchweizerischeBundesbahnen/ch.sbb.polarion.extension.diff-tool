@@ -1,7 +1,5 @@
 package ch.sbb.polarion.extension.diff_tool.settings;
 
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
-
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
 import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
 import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
@@ -18,17 +16,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
 
 @ExtendWith({MockitoExtension.class, CurrentContextExtension.class})
 @CurrentContextConfig("diff-tool")
-public class AuthorizationSettingsTest {
+class AuthorizationSettingsTest {
 
     @Test
     void testDefaultSettings() {

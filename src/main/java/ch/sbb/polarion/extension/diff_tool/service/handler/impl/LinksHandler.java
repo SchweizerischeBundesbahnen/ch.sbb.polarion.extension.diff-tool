@@ -1,8 +1,8 @@
 package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
-import ch.sbb.polarion.extension.generic.util.HtmlUtils;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
+import ch.sbb.polarion.extension.generic.util.HtmlUtils;
 import com.polarion.alm.tracker.model.IWorkItem;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -17,20 +17,6 @@ import java.util.regex.Pattern;
 
 @NoArgsConstructor
 public class LinksHandler implements DiffLifecycleHandler {
-
-    /*
-     * Link must have specific class attribute, data-type="workItem" and data-item-id which contains work item ID.
-     * Also link may have data-scope & data-revision attributes in some cases so in this regex they are optional.
-     * Note that all those attributes may come in random order.
-     */
-//    public static final String LINK_REGEX = "<span\\s+" +
-//                                            "(?=[^>]*class=\"polarion-rte-link\")" +
-//                                            "(?=[^>]*data-type=\"workItem\")" +
-//                                            "(?=[^>]*data-item-id=\"(?<workItemId>[^\"]+?)\")" +
-//                                            "(?=[^>]*data-scope=\"(?<workItemProjectId>[^\"]+)\")?" +
-//                                            "(?=[^>]*data-revision=\"(?<workItemRevision>[^\"]+)\")?" +
-//                                            "[^>]*?>";
-
     private static final String DATA_PAIRED_ITEM_ID = "data-paired-item-id";
     private static final String SPAN_START = "<span";
     private static final String SPAN_END = "</span>";

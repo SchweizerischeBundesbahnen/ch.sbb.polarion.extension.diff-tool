@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, PlatformContextMockExtension.class})
-public class WorkItemsDiffWidgetRendererTest {
+class WorkItemsDiffWidgetRendererTest {
 
     @Mock
     private RichPageWidgetCommonContext context;

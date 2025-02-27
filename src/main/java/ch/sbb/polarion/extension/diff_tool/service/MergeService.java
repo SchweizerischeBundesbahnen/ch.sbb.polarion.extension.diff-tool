@@ -71,7 +71,8 @@ public class MergeService {
     public MergeResult mergeDocuments(@NotNull DocumentsMergeParams mergeParams) {
         DocumentIdentifier documentIdentifier1 = mergeParams.getLeftDocument();
         DocumentIdentifier documentIdentifier2 = mergeParams.getRightDocument();
-        // Evict cache of work items of specified documents before merging their work items, as after merge cache can become invalid        polarionService.evictDocumentsCache(documentIdentifier1, documentIdentifier2);
+        // Evict cache of work items of specified documents before merging their work items, as after merge cache can become invalid
+        polarionService.evictDocumentsCache(documentIdentifier1, documentIdentifier2);
 
         DiffModel diffModel = DiffModelCachedResource.get(documentIdentifier1.getProjectId(), mergeParams.getConfigName(), mergeParams.getConfigCacheBucketId());
         DocumentsMergeContext context = new DocumentsMergeContext(polarionService, documentIdentifier1, documentIdentifier2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, mergeParams.isAllowedReferencedWorkItemMerge());
@@ -234,6 +235,8 @@ public class MergeService {
     }
 
     @VisibleForTesting
+    @SuppressWarnings("java:S3776")
+        // ignore cognitive complexity complaint
     boolean createOrDeleteItem(WorkItemsPair pair, DocumentsMergeContext context, WriteTransaction transaction) {
         IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
         IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
@@ -305,6 +308,8 @@ public class MergeService {
     }
 
     @VisibleForTesting
+    @SuppressWarnings("java:S3776")
+        // ignore cognitive complexity complaint
     void updateAndMoveItem(WorkItemsPair pair, DocumentsMergeContext context) {
         IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
         IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));

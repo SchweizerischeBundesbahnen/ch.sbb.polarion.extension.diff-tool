@@ -24,12 +24,12 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, PlatformContextMockExtension.class})
 @CurrentContextConfig("diff-tool")
-public class RolesUtilsTest {
+class RolesUtilsTest {
     private static ISecurityService securityServiceMock;
     private static IProjectService projectServiceMock;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         securityServiceMock = mock(ISecurityService.class);
         projectServiceMock = mock(IProjectService.class);
 
