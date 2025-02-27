@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.0.0...v5.1.0) (2025-02-25)
+
+
+### Features
+
+* Comparison of plain text inside LiveDocs ([#211](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/211)) ([d1f5ffe](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d1f5ffebcb5a8e2d3b924ce2c1f8a111f30eaae2)), closes [#210](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/210)
+
+
+### Bug Fixes
+
+* **deps:** update nextjs monorepo to v15.1.5 ([f8b1436](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/f8b143696fda764725e05cf543cf5989bec2080c))
+
 ## [5.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v4.7.0...v5.0.0) (2025-01-10)
 
 

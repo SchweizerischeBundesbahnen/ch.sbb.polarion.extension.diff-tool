@@ -3,6 +3,7 @@ package ch.sbb.polarion.extension.diff_tool.rest.controller;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DetachedWorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsDiff;
@@ -220,6 +221,36 @@ public class DiffInternalController {
         }
         return diffService.getDocumentsFieldsDiff(params.getLeftDocument(), params.getRightDocument(),
                 Boolean.TRUE.equals(params.getCompareEnumsById()), Boolean.TRUE.equals(params.getCompareOnlyMutualFields()));
+    }
+
+    @POST
+    @Path("/diff/documents-content")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Gets difference two live documents page content",
+            parameters = {
+                    @Parameter(
+                            description = "Parameters for getting the documents content differences",
+                            required = true,
+                            schema = @Schema(implementation = DocumentsDiffParams.class)
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Successfully retrieved the differences between page content of the provided documents",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = DocumentsDiff.class)
+                            )
+                    )
+            }
+    )
+    public DocumentsContentDiff getDocumentsContentDiff(@Parameter(required = true) DocumentsDiffParams params) {
+        if (params == null || params.getLeftDocument() == null || params.getRightDocument() == null) {
+            throw new BadRequestException("Parameters 'leftDocument' and 'rightDocument' should be provided");
+        }
+        return diffService.getDocumentsContentDiff(params.getLeftDocument(), params.getRightDocument(), params.getLinkRole());
     }
 
     @POST

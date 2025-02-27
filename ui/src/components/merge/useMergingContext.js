@@ -3,14 +3,15 @@ import {useEffect, useState} from "react";
 export const LEFT_TO_RIGHT = 0;
 export const RIGHT_TO_LEFT = 1;
 
-export function useMergingContext() {
+export function useMergingContext({contentDiffing = false}){
   const [selectionRegistry, setSelectionRegistry] = useState(new Map());
   const [selectionCount, setSelectionCount] = useState(0);
   const [selectAll, setSelectAll] = useState(false);
   const [selectAllTrigger, setSelectAllTrigger] = useState(0);
+  const [documentContentDiffing] = useState(contentDiffing);
 
   useEffect(() => {
-    let allSelected = true;
+    let allSelected = selectionRegistry.size > 0;
     let count = 0;
     selectionRegistry.forEach((value) => {
       count += (value ? 1 : 0);
@@ -83,6 +84,10 @@ export function useMergingContext() {
     return selectedIndexes;
   };
 
+  const getValue = (index) => {
+    return selectionRegistry.get(index);
+  };
+
   const resetSelection = () => {
     setSelectionRegistry(r => {
       const registry = new Map(r);
@@ -98,6 +103,6 @@ export function useMergingContext() {
     setSelectAllTrigger(selectAllTrigger === Number.MAX_SAFE_INTEGER ? 1 : selectAllTrigger + 1);
   };
 
-  return { selectionRegistry, resetRegistry, resetRegistryEntry, selectionCount, setPairSelected, isPairSelected, isIndexSelected, resetSelection,
-    getSelectedValues, getSelectedIndexes, selectAll, setSelectAll, selectAllTrigger, setAndApplySelectAll };
+  return { documentContentDiffing, selectionRegistry, resetRegistry, resetRegistryEntry, selectionCount, setPairSelected, isPairSelected, isIndexSelected, resetSelection,
+    getSelectedValues, getSelectedIndexes, getValue, selectAll, setSelectAll, selectAllTrigger, setAndApplySelectAll };
 }

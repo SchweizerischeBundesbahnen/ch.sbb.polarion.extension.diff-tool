@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.report;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -87,16 +88,28 @@ public class MergeReport {
     }
 
     private String formatLogEntry(MergeReportEntry entry) {
-        String entityInfo = entry.getWorkItemsPair() == null ?
-                "field ID '%s'".formatted(entry.getFieldId()) : "left WI '%s', right WI '%s'".formatted(
-                Optional.ofNullable(entry.getWorkItemsPair().getLeftWorkItem()).map(WorkItem::getId).orElse("null"),
-                Optional.ofNullable(entry.getWorkItemsPair().getRightWorkItem()).map(WorkItem::getId).orElse("null"));
-
         return String.format("%s: '%s' -- %s -- %s",
                 entry.getOperationTime().format(DATE_TIME_FORMATTER),
                 entry.getOperationResultType(),
-                entityInfo,
+                getEntityInfo(entry),
                 entry.getDescription());
+    }
+
+    @VisibleForTesting
+    String getEntityInfo(MergeReportEntry entry) {
+        if (entry.getWorkItemsPair() != null) {
+            return "left WI '%s', right WI '%s'".formatted(
+                    Optional.ofNullable(entry.getWorkItemsPair().getLeftWorkItem()).map(WorkItem::getId).orElse("null"),
+                    Optional.ofNullable(entry.getWorkItemsPair().getRightWorkItem()).map(WorkItem::getId).orElse("null"));
+        } else if (entry.getFieldId() != null) {
+            return "field ID '%s'".formatted(entry.getFieldId());
+        } else if (entry.getDocumentsContentPair() != null) {
+            return "left WI '%s', right WI '%s'".formatted(
+                    entry.getDocumentsContentPair().getLeftWorkItemId(),
+                    entry.getDocumentsContentPair().getRightWorkItemId());
+        } else {
+            return "UNKNOWN";
+        }
     }
 
     public void addEntry(MergeReportEntry entry) {

@@ -187,13 +187,13 @@ export default function ControlPane({diff_type}) {
                   Compare as:
                 </label>
                 <select id="target-type" className="form-select" value={selectedCompareAs} onChange={(event) => setSelectedCompareAs(event.target.value)}>
-                  {["Workitems", "Fields"].map((compareAs, index) => {
+                  {["Workitems", "Fields", "Content"].map((compareAs, index) => {
                     return <option key={index} value={compareAs}>{compareAs}</option>
                   })}
                 </select>
               </div>
           }
-          {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF &&
+          {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF && diff_type !== DiffTypes.DOCUMENTS_CONTENT_DIFF &&
               <div style={{
                 marginBottom: "6px"
               }} className="select-set">
@@ -216,7 +216,7 @@ export default function ControlPane({diff_type}) {
                 </label>
               </div>
           }
-          {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF &&
+          {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF && diff_type !== DiffTypes.DOCUMENTS_CONTENT_DIFF &&
               <div className="form-check">
                 <input className="form-check-input" type="checkbox" value="" id="counterparts-differ"
                        onChange={() => context.state.setCounterpartWorkItemsDiffer(!context.state.counterpartWorkItemsDiffer)}/>
@@ -234,13 +234,15 @@ export default function ControlPane({diff_type}) {
                 </label>
               </div>
           }
-          <div className="form-check">
-            <input className="form-check-input" type="checkbox" value="" id="compare-enums-by-id"
-                   onChange={() => context.state.setCompareEnumsById(!context.state.compareEnumsById)}/>
-            <label className="form-check-label" htmlFor="compare-enums-by-id">
-              Compare enums by ID
-            </label>
-          </div>
+          {diff_type !== DiffTypes.DOCUMENTS_CONTENT_DIFF &&
+            <div className="form-check">
+              <input className="form-check-input" type="checkbox" value="" id="compare-enums-by-id"
+                     onChange={() => context.state.setCompareEnumsById(!context.state.compareEnumsById)}/>
+              <label className="form-check-label" htmlFor="compare-enums-by-id">
+                Compare enums by ID
+              </label>
+            </div>
+          }
           {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.COLLECTIONS_DIFF) &&
               <div className="form-check">
                 <input className="form-check-input" type="checkbox" value="" id="allow-reference-wi-merge"
@@ -250,7 +252,7 @@ export default function ControlPane({diff_type}) {
                 </label>
               </div>
           }
-          {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.COLLECTIONS_DIFF) &&
+          {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.COLLECTIONS_DIFF || diff_type === DiffTypes.DOCUMENTS_CONTENT_DIFF) &&
               <div className="form-check">
                 <input className="form-check-input" type="checkbox" value="" checked={context.state.hideChaptersIfNoDifference} id="hide-chapters"
                        onChange={() => context.state.setHideChaptersIfNoDifference(!context.state.hideChaptersIfNoDifference)}/>
