@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.widgets;
 
+import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.PrototypeEnum;
 import com.polarion.alm.shared.api.model.rp.parameter.Field;
@@ -14,7 +15,9 @@ import com.polarion.alm.shared.api.utils.html.HtmlTagBuilder;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IRichPage;
 import com.polarion.alm.tracker.model.IWorkItem;
+import com.polarion.alm.tracker.model.IWorkflowObject;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.List;
 
@@ -22,7 +25,7 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
     private static final String WIDGET_ID = "work-items-diff-widget";
 
     private static final FieldsParameter COLUMNS_PARAMETER = new FieldsParameterImpl.Builder(WIDGET_ID)
-            .fields(List.of(IWorkItem.KEY_ID, IWorkItem.KEY_TITLE, IWorkItem.KEY_TYPE, IWorkItem.KEY_STATUS, IWorkItem.KEY_SEVERITY))
+            .fields(List.of(IUniqueObject.KEY_ID, IWorkItem.KEY_TITLE, IWorkflowObject.KEY_TYPE, IWorkflowObject.KEY_STATUS, IWorkItem.KEY_SEVERITY))
             .build();
 
     private final DiffWidgetParams params;
@@ -32,7 +35,7 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
 
         this.params = params;
         if (!context.getDisplayedScope().isGlobal()) {
-            SortingParameter sortingParameter = new SortingParameterImpl.Builder(WIDGET_ID).byLuceneSortString(IWorkItem.KEY_ID).build();
+            SortingParameter sortingParameter = new SortingParameterImpl.Builder(WIDGET_ID).byLuceneSortString(IUniqueObject.KEY_ID).build();
             params.sourceParams().dataSet(initDataSet(WIDGET_ID, PrototypeEnum.WorkItem, context.getDisplayedScope(), sortingParameter, params.sourceParams().query()));
         }
     }
@@ -72,7 +75,8 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
         this.renderFooter(outerTable.append().tag().tr().append().tag().td(), params.sourceParams());
     }
 
-    private String getSpace(@NotNull ModelObject item) {
+    @VisibleForTesting
+    String getSpace(@NotNull ModelObject item) {
         String spaceFieldId = null;
         if (item.getOldApi() instanceof IModule) {
             spaceFieldId = "moduleFolder";

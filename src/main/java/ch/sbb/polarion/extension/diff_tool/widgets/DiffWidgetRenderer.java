@@ -29,18 +29,20 @@ import com.polarion.alm.ui.shared.LinearGradientColor;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.Collection;
 import java.util.List;
 
 abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
 
-    private final PolarionService polarionService = new PolarionService();
+    private final PolarionService polarionService;
     private final FieldsParameter columnsParameter;
     private final DiffWidgetParams diffWidgetParams;
 
     protected DiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull FieldsParameter columnsParameter, @NotNull DiffWidgetParams diffWidgetParams) {
         super(context);
+        this.polarionService = new PolarionService();
         this.columnsParameter = columnsParameter;
         this.diffWidgetParams = diffWidgetParams;
     }
@@ -58,7 +60,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
     }
 
     protected DataSet initDataSet(@NotNull String widgetId, @NotNull PrototypeEnum allowedPrototype, @NotNull Scope scope,
-                                  @NotNull SortingParameter sortingParameter, @Nullable String query) {
+                        @NotNull SortingParameter sortingParameter, @Nullable String query) {
         DataSetParameterImpl dataSetParameter = (DataSetParameterImpl) new DataSetParameterBuilder(widgetId)
                 .allowedPrototypes(allowedPrototype)
                 .add("sortBy", sortingParameter)
