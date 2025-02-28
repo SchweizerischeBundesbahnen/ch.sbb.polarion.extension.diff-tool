@@ -29,7 +29,6 @@ import com.polarion.alm.ui.shared.LinearGradientColor;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.Collection;
 import java.util.List;
@@ -60,7 +59,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
     }
 
     protected DataSet initDataSet(@NotNull String widgetId, @NotNull PrototypeEnum allowedPrototype, @NotNull Scope scope,
-                        @NotNull SortingParameter sortingParameter, @Nullable String query) {
+                                  @NotNull SortingParameter sortingParameter, @Nullable String query) {
         DataSetParameterImpl dataSetParameter = (DataSetParameterImpl) new DataSetParameterBuilder(widgetId)
                 .allowedPrototypes(allowedPrototype)
                 .add("sortBy", sortingParameter)
