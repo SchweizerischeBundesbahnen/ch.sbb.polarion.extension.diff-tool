@@ -262,6 +262,7 @@ public class MergeService {
                     }
                 } else {
                     newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context, pair);
+                    context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId()));
                 }
                 context.bindCounterpartItem(pair,
                         WorkItem.of(newWorkItem,
