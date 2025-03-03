@@ -21,7 +21,7 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ListCleanerTest {
+class ListCleanerTest {
 
     @Test
     void testApprovalsCleanUp() {

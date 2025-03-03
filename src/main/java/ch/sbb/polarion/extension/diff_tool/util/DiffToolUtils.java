@@ -122,7 +122,7 @@ public class DiffToolUtils {
     }
 
     public boolean isEnumContainingType(IType fieldType) {
-        return fieldType instanceof IEnumType || fieldType instanceof IListType && ((IListType) fieldType).getItemType() instanceof IEnumType;
+        return fieldType instanceof IEnumType || fieldType instanceof IListType type && type.getItemType() instanceof IEnumType;
     }
 
     @NotNull

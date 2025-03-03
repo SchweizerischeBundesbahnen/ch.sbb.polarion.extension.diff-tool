@@ -2,8 +2,6 @@ package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.*;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
-import io.swagger.v3.oas.annotations.Parameter;
-
 import javax.ws.rs.Path;
 
 @Secured

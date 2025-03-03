@@ -4,10 +4,10 @@ import ch.sbb.polarion.extension.diff_tool.service.handler.impl.EnumReplaceHandl
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.HyperlinksHandler;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.IdsHandler;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.ImageHandler;
+import ch.sbb.polarion.extension.diff_tool.service.handler.impl.LinkedWorkItemsHandler;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.LinksHandler;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.OuterWrapperHandler;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.ReverseStylesHandler;
-import ch.sbb.polarion.extension.diff_tool.service.handler.impl.LinkedWorkItemsHandler;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 

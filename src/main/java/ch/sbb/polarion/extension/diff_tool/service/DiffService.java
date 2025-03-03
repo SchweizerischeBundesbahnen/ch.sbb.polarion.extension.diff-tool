@@ -1,16 +1,39 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.*;
-import ch.sbb.polarion.extension.diff_tool.util.OutlineNumberComparator;
-import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
-import ch.sbb.polarion.extension.generic.fields.model.FieldMetadata;
-import ch.sbb.polarion.extension.generic.util.ObjectUtils;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DetachedWorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Document;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchorsPair;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItem;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsCollection;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsPair;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsPair;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeMoveDirection;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Project;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ProjectWorkItem;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairs;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
+import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
+import ch.sbb.polarion.extension.diff_tool.util.OutlineNumberComparator;
 import ch.sbb.polarion.extension.diff_tool.util.RequestContextUtil;
+import ch.sbb.polarion.extension.generic.fields.model.FieldMetadata;
+import ch.sbb.polarion.extension.generic.util.ObjectUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.polarion.alm.projects.model.IProject;
@@ -34,9 +57,13 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.security.auth.Subject;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -348,7 +375,7 @@ public class DiffService {
     private boolean isInlined(WorkItem potentialParent, WorkItem potentialInlined) {
         return (potentialParent == null && potentialInlined == null)
                 || (potentialParent != null && potentialInlined != null && potentialInlined.getOutlineNumber().contains("-")
-                    && potentialParent.getOutlineNumber().equals(potentialInlined.getOutlineNumber().substring(0, potentialInlined.getOutlineNumber().indexOf("-"))));
+                && potentialParent.getOutlineNumber().equals(potentialInlined.getOutlineNumber().substring(0, potentialInlined.getOutlineNumber().indexOf("-"))));
     }
 
     public WorkItemsPairs findWorkItemsPairs(@NotNull WorkItemsPairsParams workItemsPairsParams) {
@@ -581,7 +608,8 @@ public class DiffService {
         return polarionService.renderField(iWorkItem.getProjectId(), iWorkItem.getId(), workItem.getRevision(), fieldId, documentReference);
     }
 
-    private Object getFieldValue(IPObject ipObject, String fieldId, WorkItem workItem, IType fieldType, boolean compareEnumsById) {
+    @VisibleForTesting
+    Object getFieldValue(IPObject ipObject, String fieldId, WorkItem workItem, IType fieldType, boolean compareEnumsById) {
         boolean enumIdComparisonMode = compareEnumsById && DiffToolUtils.isEnumContainingType(fieldType);
         Object value = polarionService.getFieldValue(ipObject, fieldId, enumIdComparisonMode ? Object.class : String.class);
         if (IWorkItem.KEY_DESCRIPTION.equals(fieldId)) {
@@ -597,13 +625,13 @@ public class DiffService {
         } else if (fieldId.equals(DiffField.EXTERNAL_PROJECT_WORK_ITEM.getKey()) && workItem != null) {
             value = workItem.isExternalProjectWorkItem();
         } else if (enumIdComparisonMode) {
-            if (value instanceof IEnumOption) {
+            if (value instanceof IEnumOption enumOption) {
                 // single enum - just take enum ID
-                value = ((IEnumOption) value).getId();
-            } else if (value instanceof ITypedList<?>) {
+                value = enumOption.getId();
+            } else if (value instanceof ITypedList<?> typedList) {
                 // enum list - get all IDs in order to later compare them properly using Objects.equals()
                 // (note that we are sorting list in order to ignore the values order)
-                value = ((ITypedList<?>) value).stream().filter(i -> i instanceof IEnumOption).map(e -> ((IEnumOption) e).getId()).sorted().toList();
+                value = typedList.stream().filter(IEnumOption.class::isInstance).map(e -> ((IEnumOption) e).getId()).sorted().toList();
             } else if (value != null) {
                 // theoretically we shouldn't reach this statement, but just in case we convert it to string otherwise we get jackson serialization exception
                 value = String.valueOf(value);
