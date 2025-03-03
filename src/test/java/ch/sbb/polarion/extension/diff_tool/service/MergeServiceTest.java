@@ -11,6 +11,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.HyperlinkRole;
 import ch.sbb.polarion.extension.diff_tool.settings.DiffSettings;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
@@ -29,7 +30,9 @@ import com.polarion.alm.shared.api.utils.collections.StrictList;
 import com.polarion.alm.shared.dle.compare.DleWIsMergeAction;
 import com.polarion.alm.shared.dle.compare.DleWIsMergeActionExecuter;
 import com.polarion.alm.shared.dle.compare.DleWorkItemsComparator;
+import com.polarion.alm.tracker.internal.model.HyperlinkStruct;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
+import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
@@ -1183,6 +1186,100 @@ class MergeServiceTest {
 
         assertNotNull(result);
         assertInstanceOf(DleWIsMergeActionExecuter.class, result);
+    }
+
+    @Test
+    void testRemoveWrongHyperlinks() {
+        DocumentsMergeContext context = mock(DocumentsMergeContext.class);
+        DiffModel diffModel = mock(DiffModel.class);
+        when(context.getDiffModel()).thenReturn(diffModel);
+        IWorkItem workItem = mock(IWorkItem.class);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        HyperlinkStruct allowedLink = mock(HyperlinkStruct.class);
+        IHyperlinkRoleOpt iHyperlinkRoleOpt = mock(IHyperlinkRoleOpt.class);
+        when(iHyperlinkRoleOpt.getId()).thenReturn("role");
+        when(allowedLink.getRole()).thenReturn(iHyperlinkRoleOpt);
+
+        HyperlinkStruct forbiddenLink = mock(HyperlinkStruct.class);
+        IHyperlinkRoleOpt forbiddenHyperlinkRoleOpt = mock(IHyperlinkRoleOpt.class);
+        when(forbiddenHyperlinkRoleOpt.getId()).thenReturn("forbiddenHyperlinkRole");
+        when(forbiddenLink.getRole()).thenReturn(forbiddenHyperlinkRoleOpt);
+
+        HyperlinkStruct wrongConfigLink = mock(HyperlinkStruct.class);
+        IHyperlinkRoleOpt wrongHyperlinkRoleOpt = mock(IHyperlinkRoleOpt.class);
+        when(wrongHyperlinkRoleOpt.getId()).thenReturn("wrongHyperlinkRole");
+        when(wrongConfigLink.getRole()).thenReturn(wrongHyperlinkRoleOpt);
+
+        List<Object> hyperlinks = new ArrayList<>();
+        hyperlinks.add(allowedLink);
+        hyperlinks.add(forbiddenLink);
+        hyperlinks.add(wrongConfigLink);
+
+        when(workItem.getHyperlinks()).thenReturn(hyperlinks);
+        ITypeOpt typeOpt = mock(ITypeOpt.class);
+        when(typeOpt.getId()).thenReturn("type");
+        when(workItem.getType()).thenReturn(typeOpt);
+
+        when(workItem.getProjectId()).thenReturn("projectId");
+        HyperlinkRole hyperlinkRole = mock(HyperlinkRole.class);
+        when(hyperlinkRole.getId()).thenReturn("role");
+        when(hyperlinkRole.getWorkItemTypeId()).thenReturn("type");
+        when(polarionService.getHyperlinkRoles("projectId")).thenReturn(List.of(hyperlinkRole));
+
+        when(diffModel.getHyperlinkRoles()).thenReturn(List.of("", "type#role", "type#wrongHyperlinkRole"));
+        when(context.getDiffModel()).thenReturn(diffModel);
+
+        mergeService.removeWrongHyperlinks(workItem, context, pair);
+
+        assertTrue(hyperlinks.contains(allowedLink));
+        assertFalse(hyperlinks.contains(forbiddenLink));
+        assertFalse(hyperlinks.contains(wrongConfigLink));
+        verify(context).reportEntry(eq(WARNING), eq(pair), anyString());
+    }
+
+    @Test
+    void testMergeHyperlinksNewLinksAdded() {
+        IWorkItem workItem = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class);
+        DiffModel diffModel = mock(DiffModel.class);
+
+        when(context.getDiffModel()).thenReturn(diffModel);
+        when(diffModel.getHyperlinkRoles()).thenReturn(List.of("", "type#role"));
+
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        ITypeOpt typeOpt = mock(ITypeOpt.class);
+        when(typeOpt.getId()).thenReturn("type");
+        when(workItem.getType()).thenReturn(typeOpt);
+
+        HyperlinkStruct existingLink = mock(HyperlinkStruct.class);
+        IHyperlinkRoleOpt iHyperlinkRoleOpt = mock(IHyperlinkRoleOpt.class);
+        when(iHyperlinkRoleOpt.getId()).thenReturn("role");
+        when(existingLink.getRole()).thenReturn(iHyperlinkRoleOpt);
+
+        HyperlinkStruct newLink = mock(HyperlinkStruct.class);
+        when(newLink.getRole()).thenReturn(iHyperlinkRoleOpt);
+
+        when(existingLink.getUri()).thenReturn("existing");
+        when(newLink.getUri()).thenReturn("new");
+
+        List<HyperlinkStruct> hyperlinks = new ArrayList<>();
+        hyperlinks.add(existingLink);
+        when(workItem.getHyperlinks()).thenReturn(hyperlinks);
+
+        List<HyperlinkStruct> newLinksList = List.of(newLink);
+
+        when(workItem.getProjectId()).thenReturn("projectId");
+        HyperlinkRole hyperlinkRole = mock(HyperlinkRole.class);
+        when(hyperlinkRole.getId()).thenReturn("role");
+        when(hyperlinkRole.getWorkItemTypeId()).thenReturn("type");
+        when(polarionService.getHyperlinkRoles("projectId")).thenReturn(List.of(hyperlinkRole));
+
+        mergeService.mergeHyperlinks(workItem, newLinksList, context, pair);
+
+        verify(workItem, times(1)).addHyperlink("new", newLink.getRole());
+        assertFalse(workItem.getHyperlinks().contains(existingLink));
     }
 
     private static MergeTestContext sameProject() {

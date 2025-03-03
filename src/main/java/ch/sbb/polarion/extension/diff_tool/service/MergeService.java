@@ -562,7 +562,8 @@ public class MergeService {
      * Newly created work item will have all the hyperlinks from the source but the allowed roles
      * may be limited by settings therefore we have to check and remove forbidden links
      */
-    private void removeWrongHyperlinks(IWorkItem workItem, DocumentsMergeContext context, WorkItemsPair pair) {
+    @VisibleForTesting
+    void removeWrongHyperlinks(IWorkItem workItem, DocumentsMergeContext context, WorkItemsPair pair) {
         if (!workItem.getHyperlinks().isEmpty()) {
             ((Collection<?>) workItem.getHyperlinks()).removeIf(link -> {
                 if (link instanceof HyperlinkStruct linkStruct) {
@@ -685,7 +686,8 @@ public class MergeService {
         target.save();
     }
 
-    private void mergeHyperlinks(IWorkItem workItem, @Nullable Collection<?> linksList, SettingsAwareMergeContext context, WorkItemsPair pair) {
+    @VisibleForTesting
+    void mergeHyperlinks(IWorkItem workItem, @Nullable Collection<?> linksList, SettingsAwareMergeContext context, WorkItemsPair pair) {
         List<HyperlinkStruct> existingList = ((Collection<?>) workItem.getHyperlinks()).stream()
                 .filter(HyperlinkStruct.class::isInstance).map(HyperlinkStruct.class::cast)
                 .filter(h -> isHyperlinkRoleAllowedInConfiguration(h, workItem.getType(), context))
