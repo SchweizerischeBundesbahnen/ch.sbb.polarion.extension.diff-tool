@@ -10,8 +10,7 @@
 <head>
     <title>Merge Authorization</title>
     <link rel="stylesheet" href="../ui/generic/css/common.css?bundle=<%= version.getBundleBuildTimestampDigitsOnly() %>">
-    <script type="text/javascript" src="../ui/generic/js/common.js?bundle=<%= version.getBundleBuildTimestampDigitsOnly() %>"></script>
-
+    <script type="module" src="../js/modules/authorization.js?bundle=<%= version.getBundleBuildTimestampDigitsOnly() %>"></script>
     <style type="text/css">
         .roles_table {
             margin: 20px;
@@ -75,11 +74,7 @@
     <input id="bundle-timestamp" type="hidden" value="<%= ch.sbb.polarion.extension.generic.util.VersionUtils.getVersion().getBundleBuildTimestamp() %>"/>
 </div>
 
-<jsp:include page='/common/jsp/buttons.jsp'>
-    <jsp:param name="saveFunction" value="saveSettings()"/>
-    <jsp:param name="cancelFunction" value="cancelEdit()"/>
-    <jsp:param name="defaultFunction" value="revertToDefault()"/>
-</jsp:include>
+<jsp:include page='/common/jsp/buttons.jsp'/>
 
 <div class="standard-admin-page">
     <h2>Quick Help</h2>
@@ -92,7 +87,5 @@
         <p>Additionally, project administrators can configure merging permissions based on the needs of their specific project, allowing for more granular control.</p>
     </div>
 </div>
-
-<script type="text/javascript" src="../js/authorization.js?bundle=<%= version.getBundleBuildTimestampDigitsOnly() %>"></script>
 </body>
 </html>
