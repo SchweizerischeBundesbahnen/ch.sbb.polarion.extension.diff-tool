@@ -3,7 +3,7 @@ import {useEffect, useState} from "react";
 export const LEFT_TO_RIGHT = 0;
 export const RIGHT_TO_LEFT = 1;
 
-export function useMergingContext({contentDiffing = false}){
+export function useMergingContext({contentDiffing = false} = {}){
   const [selectionRegistry, setSelectionRegistry] = useState(new Map());
   const [selectionCount, setSelectionCount] = useState(0);
   const [selectAll, setSelectAll] = useState(false);
