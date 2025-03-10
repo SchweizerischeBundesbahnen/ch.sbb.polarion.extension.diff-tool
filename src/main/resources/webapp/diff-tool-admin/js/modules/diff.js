@@ -1,23 +1,35 @@
-SbbCommon.init({
+import ExtensionContext from '../../ui/generic/js/modules/ExtensionContext.js';
+import ConfigurationsPane from '../../ui/generic/js/modules/ConfigurationsPane.js';
+
+const ctx = new ExtensionContext({
   extension: 'diff-tool',
   setting: 'diff',
-  scope: SbbCommon.getValueById('scope')
+  scopeFieldId: 'scope'
 });
-Configurations.init({
-  setConfigurationContentCallback: setDiffFields
+
+const conf = new ConfigurationsPane({
+  ctx: ctx,
+  setConfigurationContentCallback: setDiffFields,
 });
+
+ctx.onClick(
+    'save-toolbar-button', saveDiffFields,
+    'cancel-toolbar-button', ctx.cancelEdit,
+    'default-toolbar-button', revertToDefault,
+    'revisions-toolbar-button', ctx.toggleRevisions,
+);
 
 const Fields = {
   fields: [],
-  availableFields: document.getElementById("available-fields"),
-  selectedFields: document.getElementById("selected-fields"),
-  addButton: document.getElementById("add-button"),
-  removeButton: document.getElementById("remove-button"),
-  hyperlinkSettingsContainer: document.getElementById("hyperlink-settings-container"),
-  hyperlinkRolesSearchInput: document.getElementById("search-hyperlink-roles-input"),
+  availableFields: ctx.getElementById("available-fields"),
+  selectedFields: ctx.getElementById("selected-fields"),
+  addButton: ctx.getElementById("add-button"),
+  removeButton: ctx.getElementById("remove-button"),
+  hyperlinkSettingsContainer: ctx.getElementById("hyperlink-settings-container"),
+  hyperlinkRolesSearchInput: ctx.getElementById("search-hyperlink-roles-input"),
 
   init: function () {
-    document.getElementById("fields-load-error").style.display = "none";
+    ctx.getElementById("fields-load-error").style.display = "none";
 
     this.availableFields.addEventListener("change", (event) => this.addButton.disabled = event.target.selectedIndex === -1);
     this.selectedFields.addEventListener("change", (event) => this.removeButton.disabled = event.target.selectedIndex === -1);
@@ -56,16 +68,16 @@ const Fields = {
     });
 
     return new Promise((resolve, reject) => {
-      SbbCommon.callAsync({
+      ctx.callAsync({
         method: 'GET',
-        url: `/polarion/${SbbCommon.extension}/rest/internal/projects/${SbbCommon.getValueById('project-id')}/workitem-fields`,
+        url: `/polarion/${ctx.extension}/rest/internal/projects/${ctx.getValueById('project-id')}/workitem-fields`,
         contentType: 'application/json',
         onOk: (responseText) => {
           this.fields = JSON.parse(responseText);
           resolve();
         },
         onError: () => {
-          document.getElementById("fields-load-error").style.display = "block";
+          ctx.getElementById("fields-load-error").style.display = "block";
           reject();
         }
       });
@@ -158,15 +170,15 @@ const Fields = {
 }
 
 const Statuses = {
-  statusesToIgnore: document.getElementById("statuses-to-ignore"),
+  statusesToIgnore: ctx.getElementById("statuses-to-ignore"),
 
   load: function () {
-    document.getElementById("statuses-load-error").style.display = "none";
+    ctx.getElementById("statuses-load-error").style.display = "none";
 
     return new Promise((resolve, reject) => {
-      SbbCommon.callAsync({
+      ctx.callAsync({
         method: 'GET',
-        url: `/polarion/${SbbCommon.extension}/rest/internal/projects/${SbbCommon.getValueById('project-id')}/workitem-statuses`,
+        url: `/polarion/${ctx.extension}/rest/internal/projects/${ctx.getValueById('project-id')}/workitem-statuses`,
         contentType: 'application/json',
         onOk: (responseText) => {
           for (let status of JSON.parse(responseText)) {
@@ -178,7 +190,7 @@ const Statuses = {
           resolve();
         },
         onError: () => {
-          document.getElementById("statuses-load-error").style.display = "block";
+          ctx.getElementById("statuses-load-error").style.display = "block";
           reject();
         }
       });
@@ -188,15 +200,15 @@ const Statuses = {
 }
 
 const HyperlinkRoles = {
-  roles: document.getElementById("hyperlink-roles"),
+  roles: ctx.getElementById("hyperlink-roles"),
 
   load: function () {
-    document.getElementById("hyperlink-roles-load-error").style.display = "none";
+    ctx.getElementById("hyperlink-roles-load-error").style.display = "none";
 
     return new Promise((resolve, reject) => {
-      SbbCommon.callAsync({
+      ctx.callAsync({
         method: 'GET',
-        url: `/polarion/${SbbCommon.extension}/rest/internal/projects/${SbbCommon.getValueById('project-id')}/hyperlink-roles`,
+        url: `/polarion/${ctx.extension}/rest/internal/projects/${ctx.getValueById('project-id')}/hyperlink-roles`,
         contentType: 'application/json',
         onOk: (responseText) => {
           for (let role of JSON.parse(responseText)) {
@@ -208,7 +220,7 @@ const HyperlinkRoles = {
           resolve();
         },
         onError: () => {
-          document.getElementById("hyperlink-roles-load-error").style.display = "block";
+          ctx.getElementById("hyperlink-roles-load-error").style.display = "block";
           reject();
         }
       });
@@ -218,11 +230,11 @@ const HyperlinkRoles = {
 }
 
 function saveDiffFields() {
-  SbbCommon.hideActionAlerts();
+  ctx.hideActionAlerts();
 
-  SbbCommon.callAsync({
+  ctx.callAsync({
     method: 'PUT',
-    url: `/polarion/${SbbCommon.extension}/rest/internal/settings/${SbbCommon.setting}/names/${Configurations.getSelectedConfiguration()}/content?scope=${SbbCommon.scope}`,
+    url: `/polarion/${ctx.extension}/rest/internal/settings/${ctx.setting}/names/${conf.getSelectedConfiguration()}/content?scope=${ctx.scope}`,
     contentType: 'application/json',
     body: JSON.stringify({
       'diffFields': Array.from(Fields.selectedFields.options).map(option => {
@@ -232,11 +244,11 @@ function saveDiffFields() {
       'hyperlinkRoles': Array.from(HyperlinkRoles.roles.selectedOptions).map(option => option.value)
     }),
     onOk: () => {
-      SbbCommon.showSaveSuccessAlert();
-      SbbCommon.setNewerVersionNotificationVisible(false);
-      Configurations.loadConfigurationNames();
+      ctx.showSaveSuccessAlert();
+      ctx.setNewerVersionNotificationVisible(false);
+      conf.loadConfigurationNames();
     },
-    onError: () => SbbCommon.showSaveErrorAlert()
+    onError: () => ctx.showSaveErrorAlert()
   });
 }
 
@@ -245,7 +257,7 @@ function revertToDefault() {
     loadDefaultContent()
         .then((responseText) => {
           setDiffFields(responseText);
-          SbbCommon.showRevertedToDefaultAlert();
+          ctx.showRevertedToDefaultAlert();
         })
   }
 }
@@ -255,11 +267,11 @@ function setDiffFields(text) {
   Fields.resetState(diffFieldsModel.diffFields);
   Array.from(Statuses.statusesToIgnore.options).forEach(option => option.selected = diffFieldsModel.statusesToIgnore.includes(option.value));
   Array.from(HyperlinkRoles.roles.options).forEach(option => option.selected = diffFieldsModel.hyperlinkRoles.includes(option.value));
-  if (diffFieldsModel.bundleTimestamp !== SbbCommon.getValueById('bundle-timestamp')) {
+  if (diffFieldsModel.bundleTimestamp !== ctx.getValueById('bundle-timestamp')) {
     loadDefaultContent()
         .then((responseText) => {
           const defaultDiffFieldsModel = JSON.parse(responseText);
-          SbbCommon.setNewerVersionNotificationVisible(diffFieldsModel.diffFields && defaultDiffFieldsModel.diffFields
+          ctx.setNewerVersionNotificationVisible(diffFieldsModel.diffFields && defaultDiffFieldsModel.diffFields
               && (diffFieldsModel.diffFields.length !== defaultDiffFieldsModel.diffFields.length || diffFieldsModel.diffFields !== defaultDiffFieldsModel.diffFields));
         })
   }
@@ -267,16 +279,16 @@ function setDiffFields(text) {
 
 function loadDefaultContent() {
   return new Promise((resolve, reject) => {
-    SbbCommon.setLoadingErrorNotificationVisible(false);
-    SbbCommon.hideActionAlerts();
+    ctx.setLoadingErrorNotificationVisible(false);
+    ctx.hideActionAlerts();
 
-    SbbCommon.callAsync({
+    ctx.callAsync({
       method: 'GET',
-      url: `/polarion/${SbbCommon.extension}/rest/internal/settings/${SbbCommon.setting}/default-content`,
+      url: `/polarion/${ctx.extension}/rest/internal/settings/${ctx.setting}/default-content`,
       contentType: 'application/json',
       onOk: (responseText) => resolve(responseText),
       onError: () => {
-        SbbCommon.setLoadingErrorNotificationVisible(true);
+        ctx.setLoadingErrorNotificationVisible(true);
         reject();
       }
     });
@@ -288,5 +300,5 @@ Promise.all([
   Statuses.load(),
   HyperlinkRoles.load()
 ]).then(() => {
-  Configurations.loadConfigurationNames();
+  conf.loadConfigurationNames();
 });
