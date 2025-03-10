@@ -26,7 +26,7 @@ export default function DocumentsDiff({ enclosingCollections }) {
   const diffService = useDiffService();
 
   const loadingContext = useLoadingContext();
-  const mergingContext = useMergingContext();
+  const mergingContext = useMergingContext({});
 
   const [configCacheId, setConfigCacheId] = useState("");
   const [docsData, setDocsData] = useState(null);
