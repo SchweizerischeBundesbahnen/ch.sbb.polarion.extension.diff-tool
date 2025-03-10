@@ -25,7 +25,7 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
   const diffService = useDiffService();
 
   const loadingContext = useLoadingContext();
-  const mergingContext = useMergingContext({});
+  const mergingContext = useMergingContext();
 
   const [fieldsData, setFieldsData] = useState(null);
   const [fieldsDiffs, setFieldsDiffs] = useState(null);

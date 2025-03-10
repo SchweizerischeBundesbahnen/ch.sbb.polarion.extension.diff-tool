@@ -24,7 +24,7 @@ export default function WorkItemsDiff() {
   const diffService = useDiffService();
 
   const loadingContext = useLoadingContext();
-  const mergingContext = useMergingContext({});
+  const mergingContext = useMergingContext();
 
   const [configCacheId, setConfigCacheId] = useState("");
   const [workItemsData, setWorkItemsData] = useState(null);
