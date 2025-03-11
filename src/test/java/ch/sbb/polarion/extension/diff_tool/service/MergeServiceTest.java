@@ -798,6 +798,9 @@ class MergeServiceTest {
         when(context.getSourceWorkItem(pair)).thenReturn(source);
         when(context.getTargetWorkItem(pair)).thenReturn(target);
 
+        DiffModel diffModel = mock(DiffModel.class);
+        when(context.getDiffModel()).thenReturn(diffModel);
+
         when(source.getId()).thenReturn("sourceId");
 
         IModule sourceModule = mock(IModule.class);
