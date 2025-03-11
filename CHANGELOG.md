@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.1.1...v5.1.2) (2025-03-11)
+
+
+### Bug Fixes
+
+* wrong hyperlinks in richtext at creation ([#220](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/220)) ([1e09927](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/1e09927b7eb7b8915454c7639bb47302281c48c1)), closes [#213](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/213)
+
 ## [5.1.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.1.0...v5.1.1) (2025-03-10)
 
 
