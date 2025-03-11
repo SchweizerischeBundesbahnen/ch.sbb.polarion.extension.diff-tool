@@ -674,15 +674,14 @@ public class MergeService {
             Object fieldValue = polarionService.getFieldValue(source, field.getKey());
             if (IWorkItem.KEY_HYPERLINKS.equals(field.getKey()) && (fieldValue == null || fieldValue instanceof Collection<?>)) {
                 mergeHyperlinks(target, (Collection<?>) fieldValue, context, pair);
-                continue;
             } else if (IWorkItem.KEY_LINKED_WORK_ITEMS.equals(field.getKey())) {
                 mergeLinkedWorkItems(source, target, context, pair);
-                continue;
+            } else {
+                if (fieldValue instanceof Text text) {
+                    fieldValue = new Text(text.getType(), polarionService.replaceLinksToPairedWorkItems(source, target, context.linkRole, text.getContent()));
+                }
+                polarionService.setFieldValue(target, field.getKey(), fieldValue);
             }
-            if (fieldValue instanceof Text text) {
-                fieldValue = new Text(text.getType(), polarionService.replaceLinksToPairedWorkItems(source, target, context.linkRole, text.getContent()));
-            }
-            polarionService.setFieldValue(target, field.getKey(), fieldValue);
         }
         target.save();
     }
