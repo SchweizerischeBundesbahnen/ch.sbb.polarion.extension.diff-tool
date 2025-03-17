@@ -1,0 +1,118 @@
+[
+  {
+    "leftDocument": {
+      "projectId": "elibrary",
+      "projectName": "E-Library",
+      "spaceId": "Specification",
+      "locationPath": "Specification/Administration Specification",
+      "id": "Administration Specification",
+      "title": "Administration Specification",
+      "revision": null,
+      "moduleXmlRevision": "3135",
+      "headRevision": "6421",
+      "authorizedForMerge": false,
+      "spaceName": "Specification"
+    },
+    "rightDocument": {
+      "projectId": "drivepilot",
+      "projectName": "Drive Pilot",
+      "spaceId": "Specification",
+      "locationPath": "Specification/Administration Specification",
+      "id": "Administration Specification",
+      "title": "Administration Specification",
+      "revision": null,
+      "moduleXmlRevision": "5986",
+      "headRevision": "6421",
+      "authorizedForMerge": false,
+      "spaceName": "Specification"
+    }
+  },
+  {
+    "leftDocument": {
+      "projectId": "elibrary",
+      "projectName": "E-Library",
+      "spaceId": "Specification",
+      "locationPath": "Specification/Catalog Specification",
+      "id": "Catalog Specification",
+      "title": "Catalog Specification",
+      "revision": null,
+      "moduleXmlRevision": "6419",
+      "headRevision": "6421",
+      "authorizedForMerge": false,
+      "spaceName": "Specification"
+    },
+    "rightDocument": {
+      "projectId": "drivepilot",
+      "projectName": "Drive Pilot",
+      "spaceId": "Reports",
+      "locationPath": "Reports/Catalog Specification",
+      "id": "Catalog Specification",
+      "title": "Catalog Specification",
+      "revision": null,
+      "moduleXmlRevision": "5967",
+      "headRevision": "6421",
+      "authorizedForMerge": false,
+      "spaceName": "Reports"
+    }
+  },
+  {
+    "leftDocument": {
+      "projectId": "elibrary",
+      "projectName": "E-Library",
+      "spaceId": "Specification",
+      "locationPath": "Specification/Product Specification",
+      "id": "Product Specification",
+      "title": "Product Specification",
+      "revision": null,
+      "moduleXmlRevision": "6255",
+      "headRevision": "6421",
+      "authorizedForMerge": false,
+      "spaceName": "Specification"
+    },
+    "rightDocument": null
+  },
+  {
+    "leftDocument": {
+      "projectId": "elibrary",
+      "projectName": "E-Library",
+      "spaceId": "Testing",
+      "locationPath": "Testing/Test Specification",
+      "id": "Test Specification",
+      "title": "Test Specification",
+      "revision": null,
+      "moduleXmlRevision": "6313",
+      "headRevision": "6421",
+      "authorizedForMerge": false,
+      "spaceName": "Testing"
+    },
+    "rightDocument": null
+  },
+  {
+    "leftDocument": {
+      "projectId": "elibrary",
+      "projectName": "E-Library",
+      "spaceId": "_default",
+      "locationPath": "_default/Administration Specification",
+      "id": "Administration Specification",
+      "title": "Administration Specification",
+      "revision": null,
+      "moduleXmlRevision": "5943",
+      "headRevision": "6421",
+      "authorizedForMerge": false,
+      "spaceName": "Default Space"
+    },
+    "rightDocument": {
+      "projectId": "drivepilot",
+      "projectName": "Drive Pilot",
+      "spaceId": "Specification",
+      "locationPath": "Specification/Administration Specification",
+      "id": "Administration Specification",
+      "title": "Administration Specification",
+      "revision": null,
+      "moduleXmlRevision": "5986",
+      "headRevision": "6421",
+      "authorizedForMerge": false,
+      "spaceName": "Specification"
+    }
+  }
+]

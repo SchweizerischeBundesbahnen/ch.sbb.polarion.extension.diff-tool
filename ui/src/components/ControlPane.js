@@ -255,7 +255,7 @@ export default function ControlPane({diff_type}) {
           {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.COLLECTIONS_DIFF || diff_type === DiffTypes.DOCUMENTS_CONTENT_DIFF) &&
               <div className="form-check">
                 <input className="form-check-input" type="checkbox" value="" checked={context.state.hideChaptersIfNoDifference} id="hide-chapters"
-                       onChange={() => context.state.setHideChaptersIfNoDifference(!context.state.hideChaptersIfNoDifference)}/>
+                       onChange={() => context.state.setHideChaptersIfNoDifference(!context.state.hideChaptersIfNoDifference)} />
                 <label className="form-check-label" htmlFor="hide-chapters">
                   Hide chapters if no difference
                 </label>
@@ -273,17 +273,17 @@ export default function ControlPane({diff_type}) {
               </select>
             </div>
             <div className="select-set">
-              <label htmlFor="oreientation">
+              <label htmlFor="orientation">
                 Orientation:
               </label>
-              <select id="oreientation" className="form-select" value={orientation} onChange={(event) => setOrientation(event.target.value)}>
+              <select id="orientation" className="form-select" value={orientation} onChange={(event) => setOrientation(event.target.value)}>
                 <option value="landscape">Landscape</option>
                 <option value="portrait">Portrait</option>
               </select>
             </div>
             <div className="text-end">
               <button className="btn btn-secondary btn-sm form-button" onClick={exportToPDF} disabled={exportInProgress}>
-                Export {exportInProgress && <span className="loader" style={{display: "inline-block", width: "16px", verticalAlign: "text-top", marginLeft: "5px"}}></span>}
+                Export{exportInProgress && <span className="loader" style={{display: "inline-block", width: "16px", verticalAlign: "text-top", marginLeft: "15px"}}></span>}
               </button>
             </div>
           </div>

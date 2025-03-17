@@ -1,0 +1,14 @@
+[
+  {
+    "name": "aTest",
+    "scope": "project/elibrary/"
+  },
+  {
+    "name": "Default",
+    "scope": "project/elibrary/"
+  },
+  {
+    "name": "E-Library",
+    "scope": "project/elibrary/"
+  }
+]
