@@ -32,6 +32,9 @@ replay_pid*
 
 .vscode/*
 
+/ui/.nyc_output/
+/ui/cypress/screenshots/
+/ui/cypress/downloads/
 target/
 *.iml
 

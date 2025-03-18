@@ -13,10 +13,14 @@
     "uuid": "^11.0.0"
   },
   "devDependencies": {
+    "@cypress/code-coverage": "^3.13.12",
+    "babel-plugin-istanbul": "^7.0.0",
     "cross-spawn": "7.0.6",
     "cypress": "^14.2.0",
     "eslint": "8.57.1",
-    "eslint-config-next": "15.1.5"
+    "eslint-config-next": "15.1.5",
+    "istanbul-lib-coverage": "^3.2.2",
+    "nyc": "^17.1.0"
   },
   "name": "objects-diff",
   "private": true,
@@ -25,8 +29,11 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "cy:open": "cypress open",
-    "cy:headless": "cypress run --component"
+    "cy:open": "NEXT_PUBLIC_COVERAGE=true nyc cypress open",
+    "cy:headless": "cypress run --component",
+    "cy:headless:coverage": "NEXT_PUBLIC_COVERAGE=true nyc cypress run --component",
+    "cy:headless:record": "cypress run --component --record --key b581363c-8211-43ac-bf21-9bfd0ab0b519",
+    "nyc:report:coverage": "nyc report --reporter=html"
   },
   "version": "2.1.0"
 }
