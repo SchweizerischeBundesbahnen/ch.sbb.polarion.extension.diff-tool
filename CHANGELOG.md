@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.1.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.1.1...v5.1.2) (2025-03-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependency next to v15.2.3 [security] ([9cebce5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9cebce581852abe15de6ae16c4321bcc6b4941ba))
+* **deps:** update dependency next to v15.2.3 [security] ([0bf0c12](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/0bf0c12181f77487349bf18f4944e0cf1e090d0a))
+* **deps:** update dependency next to v15.2.3 [security] ([#223](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/223)) ([9ac4fb4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9ac4fb4d9ddab0e238e4da2349b0e14a2c4b8584))
+* **deps:** update dependency uuid to v11.1.0 ([7c9b1b3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/7c9b1b3694a198d4b5aab9dfc158c31f6e867e00))
+* **deps:** update nextjs monorepo to v15.2.4 ([85c0065](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/85c0065257046bc3223a19ad8a340f858a2bbe2c))
+* wrong hyperlinks in richtext at creation ([#220](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/220)) ([1e09927](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/1e09927b7eb7b8915454c7639bb47302281c48c1)), closes [#213](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/213)
+
 ## [5.1.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.1.0...v5.1.1) (2025-03-10)
 
 
