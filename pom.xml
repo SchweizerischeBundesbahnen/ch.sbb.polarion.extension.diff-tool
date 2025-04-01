@@ -59,6 +59,8 @@
 
         <pdf-exporter.version>8.0.0</pdf-exporter.version>
 
+        <awaitility.version>4.2.2</awaitility.version>
+
         <swagger-maven-plugin.version>2.2.22</swagger-maven-plugin.version>
 
         <!--suppress UnresolvedMavenProperty -->
@@ -139,6 +141,12 @@
             <artifactId>ch.sbb.polarion.extension.generic.app</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>${awaitility.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
