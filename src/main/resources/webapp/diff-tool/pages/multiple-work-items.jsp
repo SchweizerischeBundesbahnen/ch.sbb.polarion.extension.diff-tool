@@ -14,7 +14,7 @@
 <body onload="document.getElementById('source-query-input').addEventListener('keydown', (event) => {
     if (event.code === 'Enter') { // Apply query by pressing Enter key being in input field
         const newValue = document.getElementById('source-query-input').value;
-        top.location.href = DiffTool.replaceUrlParam(top.location.href, 'sourceQuery', newValue);
+        top.location.href = DiffTool.replaceUrlParam(top.location.href, 'sourceQuery', encodeURIComponent(newValue));
         top.location.reload()
     }
 });">
