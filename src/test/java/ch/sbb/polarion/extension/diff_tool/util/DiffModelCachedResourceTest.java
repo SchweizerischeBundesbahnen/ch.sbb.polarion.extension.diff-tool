@@ -5,6 +5,7 @@ import ch.sbb.polarion.extension.diff_tool.settings.DiffSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,10 +29,11 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class DiffModelCachedResourceTest {
 
-    private final String PROJECT_ID = "TEST_PROJECT";
-    private final String SETTING_NAME = "diff";
-    private final String CACHE_BUCKET_ID = "TEST_BUCKET";
-    private final String SCOPE = "TEST_SCOPE";
+    private static final String PROJECT_ID = "TEST_PROJECT";
+    private static final String SETTING_NAME = "diff";
+    private static final String CACHE_BUCKET_ID = "TEST_BUCKET";
+    private static final String SCOPE = "TEST_SCOPE";
+
     @Mock
     private DiffSettings mockDiffSettings;
     @Mock
@@ -141,7 +143,7 @@ class DiffModelCachedResourceTest {
         // Set the counter behavior with any argument matchers
         doAnswer(invocation -> {
             // Simulate some loading delay
-            Thread.sleep(50);
+            TimeUnit.MILLISECONDS.sleep(50);
             loadCounter.incrementAndGet();
             return mockDiffModel;
         }).when(testMock).read(anyString(), any(SettingId.class), any());

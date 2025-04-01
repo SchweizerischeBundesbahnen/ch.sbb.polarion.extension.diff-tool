@@ -41,6 +41,15 @@ public class DiffModelCachedResource {
      */
     private static class CacheHolder {
         static final Cache<String, DiffModel> CACHE = initCache(); // Initialized when the class is loaded
+
+        private static Cache<String, DiffModel> initCache() {
+            CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder().build();
+            cacheManager.init();
+            return cacheManager.createCache("diffModelCache",
+                    CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, DiffModel.class, ResourcePoolsBuilder.heap(CACHE_SIZE))
+                            .withExpiry(ExpiryPolicyBuilder.timeToIdleExpiration(Duration.of(CACHE_TIME_MINUTES, ChronoUnit.MINUTES)))
+                            .build());
+        }
     }
 
     /**
@@ -78,9 +87,7 @@ public class DiffModelCachedResource {
 
                 // If still null, load the model and cache it
                 DiffModel model = loadModel(projectId, settingName);
-                if (model != null) { // EHCache restricts caching null values
-                    CacheHolder.CACHE.put(key, model);
-                }
+                CacheHolder.CACHE.put(key, model);
                 return model;
             } finally {
                 KEY_LOCKS.remove(key);
@@ -92,14 +99,5 @@ public class DiffModelCachedResource {
         DiffSettings diffSettings = (DiffSettings) NamedSettingsRegistry.INSTANCE.getByFeatureName(DiffSettings.FEATURE_NAME);
         return settingName == null ? diffSettings.defaultValues() :
                 diffSettings.read(ScopeUtils.getScopeFromProject(projectId), SettingId.fromName(settingName), null);
-    }
-
-    private static Cache<String, DiffModel> initCache() {
-        CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder().build();
-        cacheManager.init();
-        return cacheManager.createCache("diffModelCache",
-                CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, DiffModel.class, ResourcePoolsBuilder.heap(CACHE_SIZE))
-                        .withExpiry(ExpiryPolicyBuilder.timeToIdleExpiration(Duration.of(CACHE_TIME_MINUTES, ChronoUnit.MINUTES)))
-                        .build());
     }
 }
