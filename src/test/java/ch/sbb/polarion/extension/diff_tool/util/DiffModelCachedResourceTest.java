@@ -22,6 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -142,7 +143,7 @@ class DiffModelCachedResourceTest {
         // Set the counter behavior with any argument matchers
         doAnswer(invocation -> {
             // Simulate some loading delay
-            TimeUnit.MILLISECONDS.sleep(50);
+            await().pollDelay(50, TimeUnit.MILLISECONDS).until(() -> true);
             loadCounter.incrementAndGet();
             return mockDiffModel;
         }).when(testMock).read(anyString(), any(SettingId.class), any());
