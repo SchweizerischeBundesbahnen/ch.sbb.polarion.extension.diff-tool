@@ -87,7 +87,7 @@ Common = {
   showAlert: function ({alertType, message, diff}) {
     const alert = document.querySelector(`.${this.prefix(diff)}.form-wrapper .alert.alert-${alertType}`);
     if (alert) {
-      alert.innerHTML = message;
+      alert.innerText = message;
       alert.style.display = "block";
     }
   },
