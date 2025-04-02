@@ -59,7 +59,7 @@
 
         <pdf-exporter.version>8.0.0</pdf-exporter.version>
 
-        <awaitility.version>4.2.2</awaitility.version>
+        <awaitility.version>4.3.0</awaitility.version>
 
         <swagger-maven-plugin.version>2.2.22</swagger-maven-plugin.version>
 
