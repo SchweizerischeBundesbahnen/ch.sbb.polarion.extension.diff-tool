@@ -228,6 +228,16 @@
                         <phase>generate-resources</phase>
                     </execution>
                     <execution>
+                        <id>install-playwright-browsers</id>
+                        <goals>
+                            <goal>npx</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <arguments>playwright install --with-deps</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>npm build</id>
                         <goals>
                             <goal>npm</goal>
