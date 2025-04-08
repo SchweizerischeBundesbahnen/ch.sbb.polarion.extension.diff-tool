@@ -273,10 +273,10 @@ export default function ControlPane({diff_type}) {
               </select>
             </div>
             <div className="select-set">
-              <label htmlFor="oreientation">
+              <label htmlFor="orientation">
                 Orientation:
               </label>
-              <select id="oreientation" className="form-select" value={orientation} onChange={(event) => setOrientation(event.target.value)}>
+              <select id="orientation" className="form-select" value={orientation} onChange={(event) => setOrientation(event.target.value)}>
                 <option value="landscape">Landscape</option>
                 <option value="portrait">Portrait</option>
               </select>
