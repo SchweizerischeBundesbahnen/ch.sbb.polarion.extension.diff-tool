@@ -1,5 +1,5 @@
 export default (phase, { defaultConfig }) => {
-  if (phase === "phase-development-server") {
+  if (phase === "phase-development-server" && process.env.PLAYWRIGHT_TESTS !== 'true') {
     return {
       /* development only config options here */
       /* proxy to Polarion resources */
