@@ -77,7 +77,7 @@ export default defineConfig({
     port: 3000,
     reuseExistingServer: !process.env.CI,
     env: {
-      NEXT_PUBLIC_BASE_URL: 'http://localhost:3000'
+      PLAYWRIGHT_TESTS: 'true'
     },
   },
 });
