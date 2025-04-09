@@ -41,7 +41,7 @@ export default function ControlPane({diff_type}) {
       }).then(data => {
         setConfigurations(JSON.parse(data).map(setting => setting.name));
       }).catch(errorResponse => {
-        Promise.resolve(errorResponse).then((error) => alert("Error occurred loading setting names" + (error && error.message ? ": " + error.message : "")));
+        Promise.resolve(errorResponse).then((error) => console.log("Error occurred loading setting names" + (error && error.message ? ": " + error.message : "")));
       });
     }
   }, [projectId]);
