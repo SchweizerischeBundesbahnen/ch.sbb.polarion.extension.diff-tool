@@ -10,7 +10,7 @@ export default function ExtensionInfo() {
     if (remote) {
       remote.sendRequest({
         method: "GET",
-        url: `/extension/info/`,
+        url: `/extension/info`,
         contentType: "application/json"
       }).then(response => {
         if (response.ok) {

@@ -1,0 +1,198 @@
+{
+  "leftDocument": {
+    "projectId": "elibrary",
+    "projectName": "E-Library",
+    "spaceId": "Specification",
+    "locationPath": "Specification/Product Specification",
+    "id": "Product Specification",
+    "title": "Product Specification",
+    "revision": null,
+    "moduleXmlRevision": "6429",
+    "headRevision": "6437",
+    "authorizedForMerge": true,
+    "spaceName": "Specification"
+  },
+  "rightDocument": {
+    "projectId": "drivepilot",
+    "projectName": "Drive Pilot",
+    "spaceId": "Design",
+    "locationPath": "Design/Product Design",
+    "id": "Product Design",
+    "title": "Product Design",
+    "revision": null,
+    "moduleXmlRevision": "5977",
+    "headRevision": "6437",
+    "authorizedForMerge": true,
+    "spaceName": "Design"
+  },
+  "pairedWorkItems": [
+    {
+      "leftWorkItem": {
+        "id": "EL-317",
+        "title": "Introduction",
+        "outlineNumber": "1",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "3163",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": {
+        "id": "EL-4290",
+        "title": "Introduction",
+        "outlineNumber": "1",
+        "projectId": "drivepilot",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "5323",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": {
+        "id": "EL-5",
+        "title": "Purpose",
+        "outlineNumber": "1.1",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "3182",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": {
+        "id": "EL-4291",
+        "title": "Purpose",
+        "outlineNumber": "1.1",
+        "projectId": "drivepilot",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "3181",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": {
+        "id": "EL-4969",
+        "title": "New requirement",
+        "outlineNumber": "1.1-1",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "3171",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": {
+        "id": "EL-4970",
+        "title": "New requirement",
+        "outlineNumber": "1.1-1",
+        "projectId": "drivepilot",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "3172",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": {
+        "id": "EL-4976",
+        "title": "Reverse direction item",
+        "outlineNumber": "1.1-2",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "3182",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": {
+        "id": "EL-4975",
+        "title": "Reverse direction item",
+        "outlineNumber": "1.1-2",
+        "projectId": "drivepilot",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "3182",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": {
+        "id": "EL-214",
+        "title": "Orphan header",
+        "outlineNumber": "1.2",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "2346",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": {
+        "id": "EL-4292",
+        "title": "Orphan header",
+        "outlineNumber": "1.2",
+        "projectId": "drivepilot",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "2571",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": {
+        "id": "EL-125",
+        "title": "Scope",
+        "outlineNumber": "1.3",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "2346",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": {
+        "id": "EL-4293",
+        "title": "Scope",
+        "outlineNumber": "1.3",
+        "projectId": "drivepilot",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "2571",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    }
+  ]
+}
