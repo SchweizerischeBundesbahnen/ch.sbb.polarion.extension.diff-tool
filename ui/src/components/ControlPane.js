@@ -282,7 +282,7 @@ export default function ControlPane({diff_type}) {
               </select>
             </div>
             <div className="text-end">
-              <button className="btn btn-secondary btn-sm form-button" onClick={exportToPDF} disabled={exportInProgress}>
+              <button className="btn btn-secondary btn-sm form-button" onClick={exportToPDF} disabled={exportInProgress} data-testid="export-button">
                 Export {exportInProgress && <span className="loader" style={{display: "inline-block", width: "16px", verticalAlign: "text-top", marginLeft: "5px"}}></span>}
               </button>
             </div>
