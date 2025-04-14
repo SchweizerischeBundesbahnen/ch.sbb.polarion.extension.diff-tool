@@ -22,7 +22,7 @@ export default function FieldsDiff({fieldId, fieldName, oldValue, newValue, issu
   }, [fieldId, context.state.showOutlineNumbersDiff]);
 
   return (
-      <div className={`container-fluid g-0 diff-wrapper ${display ? "d-block" : "d-none"}`}>
+      <div className={`container-fluid g-0 diff-wrapper ${display ? "d-block" : "d-none"}`} data-testid={fieldName}>
         <div className={`diff-header ${issues && issues.length > 0 ? "diff-issues" : ""}`} ref={setTriggerRef}>
           {fieldName}
         </div>
