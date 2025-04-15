@@ -61,7 +61,7 @@ public class ExecutionWorker {
 
         Integer workerThreads = ExecutionQueueMonitor.getSettings().getThreads().get(workerId);
         this.executor = new ThreadPoolExecutor(
-                workerThreads, workerThreads,
+                0, workerThreads,
                 0L, TimeUnit.MILLISECONDS,
                 taskQueue,
                 threadFactory
@@ -140,11 +140,19 @@ public class ExecutionWorker {
             throw new RejectedExecutionException("Service is shutting down");
         }
         countersRegistry.enqueue(task.getFeature());
-        Future<T> future = executor.submit(task);
+        Future<T> future;
+        try {
+            future = executor.submit(task);
+        } catch (RejectedExecutionException e) {
+            countersRegistry.dequeue(task.getFeature());
+            throw e;
+        }
         try {
             return future.get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RejectedExecutionException("Task execution failed: " + e.getMessage(), e);
+        } finally {
+            countersRegistry.completeExecution(task.getFeature());
         }
     }
 

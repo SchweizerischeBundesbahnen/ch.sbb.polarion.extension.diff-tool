@@ -8,6 +8,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
 <%! Version version = ExtensionInfo.getInstance().getVersion();%>
+<%! int maxThreadsCount = Runtime.getRuntime().availableProcessors();%>
 
 <head>
     <title>Execution Queue Management Panel</title>
@@ -80,6 +81,10 @@
         .chart-expand-button:hover {
             font-size: 26px;
         }
+
+        .center-column-value {
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -107,13 +112,11 @@
                         "            <option value='1'>1 min</option>" +
                         "            <option value='3'>3 min</option>" +
                         "            <option value='5'>5 min</option>" +
-                        "            <option value='10'>3 min</option>" +
                         "            <option value='15'>15 min</option>" +
                         "            <option value='30'>30 min</option>" +
                         "        </select>" +
                         "      </div>" +
-                        "      <a href='#' id='reset-chart-" + worker + "' class='footer-item'>Reset position</a>" +
-                        "      <a href='#' id='clear-chart-" + worker + "' class='footer-item'>Clear data</a>" +
+                        "      <a href='javascript:void(0);' id='reset-chart-" + worker + "' class='footer-item'>Reset position</a>" +
                         "    </div>" +
                         "  </div>" +
                         "</div>");
@@ -155,7 +158,7 @@
                         for (Feature feature : Feature.workerFeatures()) {
                             out.println("<tr>" +
                                     "  <td id='feature-" + feature.name() + "'>" + feature.name() + "']</td>" +
-                                    "  <td id='current-worker-" + feature.name() + "'> - </td>" +
+                                    "  <td id='current-worker-" + feature.name() + "' class='center-column-value'> - </td>" +
                                     "  <td>" +
                                     "<select id='new-worker-" + feature.name() + "'>" +
                                     "<option value=''>--- Choose a new worker ---</option>" +
@@ -178,11 +181,11 @@
                     </tr>
                     <%
                         for (int i = 1; i <= Feature.workerFeatures().size(); i++) {
-                            out.println("<tr>" +
+                            out.println("<tr id='worker-settings-" + i + "'>" +
                                     "  <td>Worker-" + i + "</td>" +
-                                    "  <td id='current-threads-" + i + "'> - </td>" +
+                                    "  <td id='current-threads-" + i + "' class='center-column-value'> - </td>" +
                                     "  <td>" +
-                                    "<input type='number' class='number-input' id='new-threads-" + i + "' placeholder='A new value' min='1' max='999'/>" +
+                                    "<input type='number' class='number-input' id='new-threads-" + i + "' placeholder='A new value' min='1' max='" + maxThreadsCount + "' title='Max threads count: " + maxThreadsCount + "'/>" +
                                     "</td>" +
                                     "</tr>");
                         }

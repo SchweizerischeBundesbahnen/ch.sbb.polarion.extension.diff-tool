@@ -14,12 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * of worker threads while blocking calling threads until completion.
  */
 @SuppressWarnings("unused")
-public class ExecutionQueueService { //extends AbstractModule {
-
-//    @Override
-//    protected void configure() {
-//        bind(ExecutionQueueService.class).toInstance(this);
-//    }
+public class ExecutionQueueService {
 
     private final Map<Integer, ExecutionWorker> workers = new ConcurrentHashMap<>();
 

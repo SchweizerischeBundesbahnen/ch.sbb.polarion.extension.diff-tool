@@ -31,15 +31,13 @@ public class FeatureExecutionTask<T> implements Callable<T> {
         countersRegistry.dequeue(feature);
         countersRegistry.registerExecution(feature);
 
-        Thread.sleep(2000);
+        Thread.sleep(500);
         RequestContextHolder.setRequestAttributes(requestAttributes);
         try {
             return task.call();
         } catch (Exception e) {
             logger.error("Execution failed", e);
             throw new RejectedExecutionException(e.getMessage(), e);
-        } finally {
-            countersRegistry.completeExecution(feature);
         }
     }
 

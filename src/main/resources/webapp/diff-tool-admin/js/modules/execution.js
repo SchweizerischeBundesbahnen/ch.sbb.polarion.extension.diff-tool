@@ -11,8 +11,6 @@ ctx.onClick(
     'cancel-toolbar-button', ctx.cancelEdit,
     'default-toolbar-button', revertToDefault,
     'revisions-toolbar-button', ctx.toggleRevisions,
-    // 'reset-cpu-chart', () => {ctx.cpu_chart.resetZoom()},
-    // 'clear-cpu-chart', clearChart
 );
 
 const colors = [
@@ -55,6 +53,7 @@ function parseAndSetSettings(jsonResponse) {
     if (settings.threads.hasOwnProperty(key)) {
       ctx.getElementById('current-threads-' + key).innerText = settings.threads[key];
       ctx.setValue('new-threads-' + key, '');
+      ctx.getElementById('new-threads-' + key).onblur = adjustThreadsCount;
     }
   }
 
@@ -62,16 +61,20 @@ function parseAndSetSettings(jsonResponse) {
     ctx.charts = {};
     ctx.fromFilter = {};
   }
-  const allWorkers = ["1", "2", "3", "4", "5", "6", "7", "8", "CPU_LOAD"];
+  const allWorkers = ['1', '2', '3', '4', '5', '6', '7', '8', 'CPU_LOAD'];
   ctx.usedWorkers = allWorkers.filter(w => usedWorkers.has(w));
 
   for (const worker of allWorkers) {
     let show = ctx.usedWorkers.includes(worker);
-    ctx.displayIf("chart-container-" + worker, show);
+    ctx.displayIf(`chart-container-${worker}`, show);
     if (show && !ctx.charts[worker]) {
-      ctx.getElementById('select-interval-' + worker).onchange = buildIntervalChangedHandler(worker);
       ctx.charts[worker] = initChart(worker);
-      ctx.fromFilter[String(worker)] = '';
+      ctx.getElementById('select-interval-' + worker).onchange = () => {
+        adjustFromFilterForWorker(worker);
+        clearChartData(worker);
+      };
+      ctx.getElementById('reset-chart-' + worker).onclick = () => ctx.charts[worker].resetZoom();
+      adjustFromFilterForWorker(worker);
     }
   }
 
@@ -84,11 +87,13 @@ function parseAndSetSettings(jsonResponse) {
   }
 }
 
-function buildIntervalChangedHandler(worker) {
-  return function () {
-    console.log(`Interval changed for worker ${worker} to ${this.value} seconds`)
-    //TODO
-  }
+function adjustFromFilterForWorker(worker) {
+  ctx.fromFilter[String(worker)] = formatTimestamp(getMinDateAllowedByIntervalDropdown(worker));
+}
+
+function getMinDateAllowedByIntervalDropdown(worker) {
+  let intervalMinutes = ctx.getValue('select-interval-' + worker);
+  return new Date(new Date().getTime() - 60 * 1000 * intervalMinutes);
 }
 
 function refreshData() {
@@ -209,6 +214,10 @@ function initChart(worker) {
   });
 }
 
+function clearChartData(worker) {
+  ctx.charts[worker].data.datasets.map(dataset => dataset.data = []);
+}
+
 function parseAndSetData(jsonResponse) {
   if (!ctx.charts) {
     console.log('Warning: no charts to insert data into.')
@@ -220,31 +229,38 @@ function parseAndSetData(jsonResponse) {
     let chart = ctx.charts[worker];
     let datasetCounter = 0;
     for (const key in ctx.currentSettings.workers) {
-      if(ctx.currentSettings.workers[key]?.toString() === worker) {
-
+      if (ctx.currentSettings.workers[key]?.toString() === worker) {
         ctx.fromFilter[String(worker)] = getLastArrayEntry(data[worker][key], {})['timestamp'];
-
-        chart.data.datasets[datasetCounter++].data.push(...data[worker][key].map(item => ({
+        let queuedPos = datasetCounter++;
+        chart.data.datasets[queuedPos].data = filterOldRecords(worker, chart.data.datasets[queuedPos].data.concat(data[worker][key].map(item => ({
           x: new Date(item.timestamp),
           y: item.queued
-        })));
-
-        chart.data.datasets[datasetCounter++].data.push(...data[worker][key].map(item => ({
+        }))));
+        console.log('Queued data size:', chart.data.datasets[queuedPos].data.length);
+        let executingPos = datasetCounter++;
+        chart.data.datasets[executingPos].data = filterOldRecords(worker, chart.data.datasets[executingPos].data.concat(data[worker][key].map(item => ({
           x: new Date(item.timestamp),
           y: item.executing
-        })));
-        chart.update();
+        }))));
+        console.log('Executing data size:', chart.data.datasets[queuedPos].data.length);
+
+        chart.update('none');
       }
     }
     if (worker === 'CPU_LOAD') {
       ctx.fromFilter[String(worker)] = getLastArrayEntry(data['COMMON']['CPU_LOAD'], {})['timestamp'];
-      chart.data.datasets[0].data.push(...data['COMMON']['CPU_LOAD'].map(item => ({
+      chart.data.datasets[0].data = filterOldRecords(worker, chart.data.datasets[0].data.concat(data['COMMON']['CPU_LOAD'].map(item => ({
         x: new Date(item.timestamp),
         y: parseFloat((item.value * 100).toFixed(2))
-      })));
+      }))));
     }
-    chart.update();
+    chart.update('none');
   }
+}
+
+function filterOldRecords(worker, pointsList) {
+  let cutoffDate = getMinDateAllowedByIntervalDropdown(worker);
+  return pointsList.filter(item => item.x >= cutoffDate);
 }
 
 function saveSettings() {
@@ -343,18 +359,6 @@ function revertToDefault() {
   }
 }
 
-function clearChart() {
-  ctx.callAsync({
-    method: 'DELETE',
-    url: `/polarion/${ctx.extension}/rest/internal/queueStatistics`,
-    contentType: 'application/json',
-    onOk: () => {
-    },
-    onError: () => {
-    }
-  });
-}
-
 const featuresLocalization = {
   'CPU_LOAD': 'CPU Load',
   'DIFF_DOCUMENTS': 'Diff docs',
@@ -368,11 +372,32 @@ const featuresLocalization = {
   'DIFF_TEXT': 'DIff text',
 }
 
+function formatTimestamp(date) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  const milliseconds = String(date.getUTCMilliseconds()).padStart(3, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}Z`;
+}
+
 function getLastArrayEntry(arr, defaultValue) {
   if (!arr || arr.length === 0) {
     return defaultValue; // Or throw an error, depending on desired behavior for empty arrays
   }
   return arr[arr.length - 1];
+}
+
+function adjustThreadsCount() {
+  let value = parseInt(this.value);
+  if (!value || value <= 0) {
+    this.value = '';
+    return;
+  }
+  let max = parseInt(this.getAttribute('max'));
+  this.value = value > max ? max : value;
 }
 
 readSettings();
