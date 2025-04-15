@@ -162,6 +162,7 @@
                                     "  <td>" +
                                     "<select id='new-worker-" + feature.name() + "'>" +
                                     "<option value=''>--- Choose a new worker ---</option>" +
+                                    "<option value='0'>Skip Queue</option>" +
                                     IntStream.rangeClosed(1, Feature.workerFeatures().size())
                                             .boxed()
                                             .map(String::valueOf).map(n -> "<option value='" + n + "'>" + n + "</option>").collect(Collectors.joining(" ")) +

@@ -39,7 +39,7 @@ function parseAndSetSettings(jsonResponse) {
     if (settings.workers.hasOwnProperty(key)) {
       const currentWorker = settings.workers[key].toString();
       usedWorkers.add(currentWorker);
-      ctx.getElementById('current-worker-' + key).innerText = currentWorker;
+      ctx.getElementById('current-worker-' + key).innerText = currentWorker === '0' ? '-' : currentWorker;
       let selector = ctx.getElementById('new-worker-' + key);
       selector.value = '';
       let options = selector.querySelectorAll("option");
@@ -362,7 +362,7 @@ function revertToDefault() {
 const featuresLocalization = {
   'CPU_LOAD': 'CPU Load',
   'DIFF_DOCUMENTS': 'Diff docs',
-  'DIFF_WORKITEMS_PAIRS': 'Diff WI pairs',
+  'DIFF_WORKITEMS_PAIRS': 'Find WI pairs',
   'DIFF_COLLECTIONS': 'Diff collections',
   'DIFF_DOCUMENT_WORKITEMS': 'Diff WI',
   'DIFF_DETACHED_WORKITEMS': 'Diff detached WI',

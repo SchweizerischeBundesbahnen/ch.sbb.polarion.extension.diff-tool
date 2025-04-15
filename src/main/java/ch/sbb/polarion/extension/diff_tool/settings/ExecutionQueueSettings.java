@@ -29,7 +29,7 @@ public class ExecutionQueueSettings extends GenericNamedSettings<ExecutionQueueM
 
         Map<Feature, Integer> workers = Feature.workerFeatures().stream().collect(Collectors.toMap(
                 feature -> feature,
-                feature -> DIFF_DOCUMENT_WORKITEMS.equals(feature) || DIFF_DETACHED_WORKITEMS.equals(feature) ? 2 : 1
+                feature -> 0
         ));
 
         Map<Integer, Integer> threads = IntStream.rangeClosed(1, Feature.workerFeatures().size()).boxed().collect(Collectors.toMap(
