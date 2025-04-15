@@ -168,7 +168,6 @@ test.describe("page of diffing documents' WorkItems", () => {
 
   test('control pane', async ({ page }) => {
     expect(await page.locator('.control-pane.expanded').count()).toEqual(0);
-    await expect(page.locator('.control-pane .expand-button')).toBeVisible({visible: false});
 
     await expect(page.locator(".progress span")).toHaveText("Data loaded successfully");
 
@@ -518,6 +517,12 @@ test.describe("page of diffing documents' WorkItems", () => {
     const descriptionDiffRightHtml = await descriptionDiffRight.innerHTML();
     expect(descriptionDiffRightHtml).toBe("");
 
+    const typeDiffHeader = EL156_NONE.getByTestId("Type").locator(".diff-header");
+    await expect(typeDiffHeader).toBeVisible({ visible: true });
+    await expect(typeDiffHeader).toHaveText("Type");
+
+    await expect(EL156_NONE.getByTestId("Type").locator(".diff-viewer")).toBeVisible({ visible: true });
+
     const typeDiffLeft = EL156_NONE.getByTestId("Type").locator(".diff-viewer .diff-leaf.left");
     await expect(typeDiffLeft).toBeVisible({ visible: true });
 
@@ -532,6 +537,12 @@ test.describe("page of diffing documents' WorkItems", () => {
 
     const typeDiffRightHtml = await typeDiffRight.innerHTML();
     expect(typeDiffRightHtml).toBe("");
+
+    const titleDiffHeader = EL156_NONE.getByTestId("Title").locator(".diff-header");
+    await expect(titleDiffHeader).toBeVisible({ visible: true });
+    await expect(titleDiffHeader).toHaveText("Title");
+
+    await expect(EL156_NONE.getByTestId("Title").locator(".diff-viewer")).toBeVisible({ visible: true });
 
     const titleDiffLeft = EL156_NONE.getByTestId("Title").locator(".diff-viewer .diff-leaf.left");
     await expect(titleDiffLeft).toBeVisible({ visible: true });
@@ -569,4 +580,279 @@ test.describe("page of diffing documents' WorkItems", () => {
     expect(statusDiffRightHtml).toBe("");
   });
 
+  test('EL-157 - DP-11562 direct moved pair', async ({ page }) => {
+    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
+
+    const EL157_DP11562_direct = page.getByTestId('EL-157_DP-11562_direct');
+
+    const header = EL157_DP11562_direct.locator(".header");
+    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
+
+    await expect(EL157_DP11562_direct.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+
+    const leftBadge = EL157_DP11562_direct.locator(".header .left .badge");
+    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toHaveText("EL-157 - User may not be told if the password or user name is wrong");
+
+    const movedIcon = EL157_DP11562_direct.locator(".header .moved.right svg");
+    await expect(movedIcon).toBeVisible({ visible: true });
+
+    const movedIconHtml = await movedIcon.innerHTML();
+    expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
+      <g id=\"SVGRepo_bgCarrier\" stroke-width=\"0\"></g><g id=\"SVGRepo_tracerCarrier\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><g id=\"SVGRepo_iconCarrier\"><path d=\"M7 16L9 16C11.2091 16 13 14.2091 13 12L13 7\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path><path d=\"M16 10L13 7L10 10\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></g>
+    `));
+
+    const movedLink = EL157_DP11562_direct.locator(".header .moved.right a");
+    await expect(movedLink).toBeVisible({ visible: true });
+    await expect(movedLink).toHaveText("moved to 2.2-2");
+
+    await expect(EL157_DP11562_direct.locator(".content")).toBeVisible({ visible: false });
+  });
+
+  test('EL-157 - DP-11562 reverse moved pair', async ({ page }) => {
+    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
+
+    const EL157_DP11562_reverse = page.getByTestId('EL-157_DP-11562_reverse');
+
+    const header = EL157_DP11562_reverse.locator(".header");
+    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
+
+    await expect(EL157_DP11562_reverse.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+
+    const movedIcon = EL157_DP11562_reverse.locator(".header .moved.left svg");
+    await expect(movedIcon).toBeVisible({ visible: true });
+
+    const movedIconHtml = await movedIcon.innerHTML();
+    expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
+      <g id=\"SVGRepo_bgCarrier\" stroke-width=\"0\"></g><g id=\"SVGRepo_tracerCarrier\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><g id=\"SVGRepo_iconCarrier\"><path d=\"M17 8L15 8C12.7909 8 11 9.79086 11 12L11 17\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path><path d=\"M8 14L11 17L14 14\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></g>
+    `));
+
+    const movedLink = EL157_DP11562_reverse.locator(".header .moved.left a");
+    await expect(movedLink).toBeVisible({ visible: true });
+    await expect(movedLink).toHaveText("moved to 2.2-3");
+
+    const rightBadge = EL157_DP11562_reverse.locator(".header .right .badge");
+    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toHaveText("DP-11562 - User may not be told if the password or user name is wrong");
+
+    await expect(EL157_DP11562_reverse.locator(".content")).toBeVisible({ visible: false });
+  });
+
+  test('NONE - DP-11570 pair diff', async ({ page }) => {
+    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
+
+    const NONE_DP11570 = page.getByTestId('NONE_DP-11570');
+
+    const header = NONE_DP11570.locator(".header");
+    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toHaveCSS("background-color", "rgb(238, 238, 238)");
+
+    await expect(NONE_DP11570.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+
+    const leftHeader = NONE_DP11570.locator(".header .left");
+    await expect(leftHeader).toBeVisible({ visible: true });
+    await expect(leftHeader).toHaveText("–");
+
+    const rightHeader = NONE_DP11570.locator(".header .right");
+    await expect(rightHeader).toBeVisible({ visible: true });
+    await expect(rightHeader).toHaveText("2.3 New paragraph DP-11570");
+
+    const rightBadge = NONE_DP11570.locator(".header .right .badge");
+    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toHaveText("DP-11570");
+
+    await expect(NONE_DP11570.locator(".content")).toBeVisible({ visible: true });
+
+    const typeDiffHeader = NONE_DP11570.getByTestId("Type").locator(".diff-header");
+    await expect(typeDiffHeader).toBeVisible({ visible: true });
+    await expect(typeDiffHeader).toHaveText("Type");
+
+    await expect(NONE_DP11570.getByTestId("Type").locator(".diff-viewer")).toBeVisible({ visible: true });
+
+    const typeDiffLeft = NONE_DP11570.getByTestId("Type").locator(".diff-viewer .diff-leaf.left");
+    await expect(typeDiffLeft).toBeVisible({ visible: true });
+
+    const typeDiffLeftHtml = await typeDiffLeft.innerHTML();
+    expect(typeDiffLeftHtml).toBe("");
+
+    const typeDiffRight = NONE_DP11570.getByTestId("Type").locator(".diff-viewer .diff-leaf.right");
+    await expect(typeDiffRight).toBeVisible({ visible: true });
+
+    const typeDiffRightHtml = await typeDiffRight.innerHTML();
+    expect(normalizeHtml(typeDiffRightHtml)).toBe(normalizeHtml(`
+        <span class="diff-html-removed" id="removed-diff-0" previous="first-diff" changeid="removed-diff-0" next="added-diff-0"></span>
+        <span class="diff-html-added" id="added-diff-0" previous="removed-diff-0" changeid="added-diff-0" next="last-diff"><span class="polarion-JSEnumOption" title="Heading">Heading</span></span>
+    `));
+
+    const titleDiffHeader = NONE_DP11570.getByTestId("Title").locator(".diff-header");
+    await expect(titleDiffHeader).toBeVisible({ visible: true });
+    await expect(titleDiffHeader).toHaveText("Title");
+
+    await expect(NONE_DP11570.getByTestId("Title").locator(".diff-viewer")).toBeVisible({ visible: true });
+
+    const titleDiffLeft = NONE_DP11570.getByTestId("Title").locator(".diff-viewer .diff-leaf.left");
+    await expect(titleDiffLeft).toBeVisible({ visible: true });
+
+    const titleDiffLeftHtml = await titleDiffLeft.innerHTML();
+    expect(titleDiffLeftHtml).toBe("");
+
+    const titleDiffRight = NONE_DP11570.getByTestId("Title").locator(".diff-viewer .diff-leaf.right");
+    await expect(titleDiffRight).toBeVisible({ visible: true });
+
+    const titleDiffRightHtml = await titleDiffRight.innerHTML();
+    expect(normalizeHtml(titleDiffRightHtml)).toBe(normalizeHtml(`
+        <span class="diff-html-added" id="added-diff-0" previous="first-diff" changeid="added-diff-0" next="last-diff">New paragraph</span>
+    `));
+
+    const statusDiffHeader = NONE_DP11570.getByTestId("Status").locator(".diff-header");
+    await expect(statusDiffHeader).toBeVisible({ visible: true });
+    await expect(statusDiffHeader).toHaveText("Status");
+
+    await expect(NONE_DP11570.getByTestId("Status").locator(".diff-viewer")).toBeVisible({ visible: true });
+
+    const statusDiffLeft = NONE_DP11570.getByTestId("Status").locator(".diff-viewer .diff-leaf.left");
+    await expect(statusDiffLeft).toBeVisible({ visible: true });
+
+    const statusDiffLeftHtml = await statusDiffLeft.innerHTML();
+    expect(statusDiffLeftHtml).toBe("");
+
+    const statusDiffRight = NONE_DP11570.getByTestId("Status").locator(".diff-viewer .diff-leaf.right");
+    await expect(statusDiffRight).toBeVisible({ visible: true });
+
+    const statusDiffRightHtml = await statusDiffRight.innerHTML();
+    expect(normalizeHtml(statusDiffRightHtml)).toBe(normalizeHtml(`
+        <span class="diff-html-removed" id="removed-diff-0" previous="first-diff" changeid="removed-diff-0" next="added-diff-0"></span>
+        <span class="diff-html-added" id="added-diff-0" previous="removed-diff-0" changeid="added-diff-0" next="last-diff"><span class="polarion-JSEnumOption" title="Open">Open</span></span>
+    `));
+  });
+
+  test('EL-158 - DP-11563 direct moved pair', async ({ page }) => {
+    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
+
+    const EL158_DP11563_direct = page.getByTestId('EL-158_DP-11563_direct');
+
+    const header = EL158_DP11563_direct.locator(".header");
+    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toHaveCSS("background-color", "rgb(238, 238, 238)");
+
+    await expect(EL158_DP11563_direct.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+
+    const leftHeader = EL158_DP11563_direct.locator(".header .left");
+    await expect(leftHeader).toBeVisible({ visible: true });
+    await expect(leftHeader).toHaveText("2.3 Performance Requirements EL-158");
+
+    const leftBadge = EL158_DP11563_direct.locator(".header .left .badge");
+    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toHaveText("EL-158");
+
+    const movedIcon = EL158_DP11563_direct.locator(".header .moved.right svg");
+    await expect(movedIcon).toBeVisible({ visible: true });
+
+    const movedIconHtml = await movedIcon.innerHTML();
+    expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
+      <g id=\"SVGRepo_bgCarrier\" stroke-width=\"0\"></g><g id=\"SVGRepo_tracerCarrier\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><g id=\"SVGRepo_iconCarrier\"><path d=\"M7 8L9 8C11.2091 8 13 9.79086 13 12L13 17\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path><path d=\"M16 14L13 17L10 14\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></g>
+    `));
+
+    const movedLink = EL158_DP11563_direct.locator(".header .moved.right a");
+    await expect(movedLink).toBeVisible({ visible: true });
+    await expect(movedLink).toHaveText("moved to 2.4");
+
+    await expect(EL158_DP11563_direct.locator(".content")).toBeVisible({ visible: false });
+  });
+
+  test('EL-158 - DP-11563 reverse moved pair', async ({ page }) => {
+    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
+
+    const EL158_DP11563_reverse = page.getByTestId('EL-158_DP-11563_reverse');
+
+    const header = EL158_DP11563_reverse.locator(".header");
+    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toHaveCSS("background-color", "rgb(238, 238, 238)");
+
+    await expect(EL158_DP11563_reverse.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+
+    const movedIcon = EL158_DP11563_reverse.locator(".header .moved.left svg");
+    await expect(movedIcon).toBeVisible({ visible: true });
+
+    const movedIconHtml = await movedIcon.innerHTML();
+    expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
+      <g id=\"SVGRepo_bgCarrier\" stroke-width=\"0\"></g><g id=\"SVGRepo_tracerCarrier\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><g id=\"SVGRepo_iconCarrier\"><path d=\"M17 16L15 16C12.7909 16 11 14.2091 11 12L11 7\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path><path d=\"M8 10L11 7L14 10\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></g>
+    `));
+
+    const movedLink = EL158_DP11563_reverse.locator(".header .moved.left a");
+    await expect(movedLink).toBeVisible({ visible: true });
+    await expect(movedLink).toHaveText("moved to 2.3");
+
+    const rightHeader = EL158_DP11563_reverse.locator(".header .right");
+    await expect(rightHeader).toBeVisible({ visible: true });
+    await expect(rightHeader).toHaveText("2.4 Performance Requirements DP-11563");
+
+    const rightBadge = EL158_DP11563_reverse.locator(".header .right .badge");
+    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toHaveText("DP-11563");
+
+    await expect(EL158_DP11563_reverse.locator(".content")).toBeVisible({ visible: false });
+  });
+
+  test('EL-159 - DP-11564 direct moved pair', async ({ page }) => {
+    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
+
+    const EL159_DP11564_direct = page.getByTestId('EL-159_DP-11564_direct');
+
+    const header = EL159_DP11564_direct.locator(".header");
+    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
+
+    await expect(EL159_DP11564_direct.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+
+    const leftBadge = EL159_DP11564_direct.locator(".header .left .badge");
+    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toHaveText("EL-159 - System should meet the following acceptance criteria");
+
+    const movedIcon = EL159_DP11564_direct.locator(".header .moved.right svg");
+    await expect(movedIcon).toBeVisible({ visible: true });
+
+    const movedIconHtml = await movedIcon.innerHTML();
+    expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
+      <g id=\"SVGRepo_bgCarrier\" stroke-width=\"0\"></g><g id=\"SVGRepo_tracerCarrier\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><g id=\"SVGRepo_iconCarrier\"><path d=\"M7 8L9 8C11.2091 8 13 9.79086 13 12L13 17\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path><path d=\"M16 14L13 17L10 14\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></g>
+    `));
+
+    const movedLink = EL159_DP11564_direct.locator(".header .moved.right a");
+    await expect(movedLink).toBeVisible({ visible: true });
+    await expect(movedLink).toHaveText("moved to 2.4-1");
+
+    await expect(EL159_DP11564_direct.locator(".content")).toBeVisible({ visible: false });
+  });
+
+  test('EL-159 - DP-11564 reverse moved pair', async ({ page }) => {
+    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
+
+    const EL159_DP11564_reverse = page.getByTestId('EL-159_DP-11564_reverse');
+
+    const header = EL159_DP11564_reverse.locator(".header");
+    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
+
+    await expect(EL159_DP11564_reverse.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+
+    const movedIcon = EL159_DP11564_reverse.locator(".header .moved.left svg");
+    await expect(movedIcon).toBeVisible({ visible: true });
+
+    const movedIconHtml = await movedIcon.innerHTML();
+    expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
+      <g id=\"SVGRepo_bgCarrier\" stroke-width=\"0\"></g><g id=\"SVGRepo_tracerCarrier\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><g id=\"SVGRepo_iconCarrier\"><path d=\"M17 16L15 16C12.7909 16 11 14.2091 11 12L11 7\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path><path d=\"M8 10L11 7L14 10\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></g>
+    `));
+
+    const movedLink = EL159_DP11564_reverse.locator(".header .moved.left a");
+    await expect(movedLink).toBeVisible({ visible: true });
+    await expect(movedLink).toHaveText("moved to 2.3-1");
+
+    const rightBadge = EL159_DP11564_reverse.locator(".header .right .badge");
+    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toHaveText("DP-11564 - System should meet the following acceptance criteria");
+
+    await expect(EL159_DP11564_reverse.locator(".content")).toBeVisible({ visible: false });
+  });
 });

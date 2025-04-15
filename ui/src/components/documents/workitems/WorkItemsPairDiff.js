@@ -261,7 +261,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
       <>
         <div className={`wi-diff ${getReferencedClass(workItemsPair)} container-fluid g-0`} style={{
           display: (workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.outlineNumber) || (workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.outlineNumber) ? 'block' : 'none'
-        }} data-testid={`${workItemsPair.leftWorkItem ? workItemsPair.leftWorkItem.id : "NONE"}_${workItemsPair.rightWorkItem ? workItemsPair.rightWorkItem.id : "NONE"}`}>
+        }} data-testid={`${workItemsPair.leftWorkItem ? workItemsPair.leftWorkItem.id : "NONE"}_${workItemsPair.rightWorkItem ? workItemsPair.rightWorkItem.id : "NONE"}${workItemsPair.leftWorkItem?.movedOutlineNumber ? "_direct" : (workItemsPair.rightWorkItem?.movedOutlineNumber ? "_reverse" : "")}`}>
           <div style={{
             backgroundColor: asHeaderInDocument ? "#eeeeee" : "#f6f6f6",
             display: isChapterVisible(leftChapter, true) || isChapterVisible(rightChapter, false) || !context.state.hideChaptersIfNoDifference || error ? 'flex' : 'none'
