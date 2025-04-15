@@ -23,7 +23,8 @@ public class ExecutionQueueQueueManagementApiController extends ExecutionQueueMa
     }
 
     @Override
-    public void refreshConfiguration() {
-        polarionService.callPrivileged(super::refreshConfiguration);
+    public void clearStatistics() {
+        polarionService.callPrivileged(super::clearStatistics);
     }
+
 }

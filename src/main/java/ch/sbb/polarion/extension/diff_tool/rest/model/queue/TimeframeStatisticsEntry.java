@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.rest.model.queue;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -18,7 +19,12 @@ public abstract class TimeframeStatisticsEntry {
     final String timestamp;
 
     public TimeframeStatisticsEntry() {
-        this.rawTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
+        this(OffsetDateTime.now(ZoneOffset.UTC));
+    }
+
+    @VisibleForTesting
+    public TimeframeStatisticsEntry(OffsetDateTime offsetDateTime) {
+        this.rawTimestamp = offsetDateTime;
         this.timestamp = rawTimestamp.format(DATE_FORMATTER);
     }
 }

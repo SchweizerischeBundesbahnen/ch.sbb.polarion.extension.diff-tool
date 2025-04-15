@@ -25,21 +25,27 @@ import java.util.Set;
 
 public class DiffToolRestApplication extends GenericRestApplication {
 
+    private final ExecutionQueueService executionService;
+    private final ExecutionQueueMonitor executionMonitor;
+
     public DiffToolRestApplication() {
+        ExecutionQueueSettings executionQueueSettings = new ExecutionQueueSettings();
         NamedSettingsRegistry.INSTANCE.register(
                 Arrays.asList(
                         new DiffSettings(),
                         new AuthorizationSettings(),
-                        new ExecutionQueueSettings()
+                        executionQueueSettings
                 )
         );
+        this.executionService = new ExecutionQueueService();
+        this.executionMonitor = new ExecutionQueueMonitor(executionService);
+        executionQueueSettings.setSettingsChangedCallback(executionMonitor::refreshConfiguration);
+
     }
 
     @Override
     @NotNull
     public Set<Object> getExtensionControllerSingletons() {
-        ExecutionQueueService executionService = new ExecutionQueueService();
-        ExecutionQueueMonitor executionMonitor = new ExecutionQueueMonitor(executionService);
         return Set.of(
                 new ConversionApiController(),
                 new ConversionInternalController(),

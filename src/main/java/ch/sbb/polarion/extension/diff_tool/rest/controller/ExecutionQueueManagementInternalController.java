@@ -79,22 +79,4 @@ public class ExecutionQueueManagementInternalController {
         executionMonitor.clearHistory();
     }
 
-    @POST
-    @Path("/refreshQueueConfiguration")
-    @Operation(summary = "Refresh configuration",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "List of revisions for the specified document",
-                            content = @Content(
-                                    mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(implementation = DocumentRevision.class)
-                            )
-                    )
-            }
-    )
-    public void refreshConfiguration() {
-        executionMonitor.refreshConfiguration();
-    }
-
 }

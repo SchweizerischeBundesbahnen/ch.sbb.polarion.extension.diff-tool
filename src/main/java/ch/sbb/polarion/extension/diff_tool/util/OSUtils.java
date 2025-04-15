@@ -13,4 +13,8 @@ public class OSUtils {
         return Math.max(0, ((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getCpuLoad());
     }
 
+    public int getMaxRecommendedParallelThreads() {
+        return Runtime.getRuntime().availableProcessors();
+    }
+
 }

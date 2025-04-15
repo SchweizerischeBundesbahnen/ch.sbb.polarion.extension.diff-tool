@@ -298,17 +298,8 @@ function saveSettings() {
       ctx.charts = undefined;
       ctx.showSaveSuccessAlert();
       ctx.setNewerVersionNotificationVisible(false);
-      // readAndFillRevisions();
-      // readSettings();
-      ctx.callAsync({
-        method: 'POST',
-        url: `/polarion/${ctx.extension}/rest/internal/refreshQueueConfiguration`,
-        contentType: 'application/json',
-        onOk: () => {
-          readSettings();
-        },
-        onError: () => ctx.setLoadingErrorNotificationVisible(true)
-      });
+
+      readSettings();
     },
     onError: () => ctx.showSaveErrorAlert()
   });

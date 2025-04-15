@@ -4,11 +4,12 @@
 <%@ page import="java.util.stream.Collectors" %>
 <%@ page import="java.util.stream.IntStream" %>
 <%@ page import="java.util.List" %>
+<%@ page import="ch.sbb.polarion.extension.diff_tool.util.OSUtils" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
 <%! Version version = ExtensionInfo.getInstance().getVersion();%>
-<%! int maxThreadsCount = Runtime.getRuntime().availableProcessors();%>
+<%! int maxThreadsCount = OSUtils.getMaxRecommendedParallelThreads();%>
 
 <head>
     <title>Execution Queue Management Panel</title>

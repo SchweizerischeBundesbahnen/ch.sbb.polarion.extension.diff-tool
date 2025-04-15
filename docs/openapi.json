@@ -863,27 +863,6 @@
         ]
       }
     },
-    "/api/refreshQueueConfiguration": {
-      "post": {
-        "operationId": "refreshConfiguration",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DocumentRevision"
-                }
-              }
-            },
-            "description": "List of revisions for the specified document"
-          }
-        },
-        "summary": "Refresh configuration",
-        "tags": [
-          "Queued Execution Management"
-        ]
-      }
-    },
     "/api/settings": {
       "get": {
         "operationId": "readFeaturesList_1",

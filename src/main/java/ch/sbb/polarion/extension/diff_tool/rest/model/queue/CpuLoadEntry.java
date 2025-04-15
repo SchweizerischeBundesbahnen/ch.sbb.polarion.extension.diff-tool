@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class CpuLoadEntry extends TimeframeStatisticsEntry {
 
-    public static String ENTRY_ID = "CPU_LOAD";
-
-    Double value = OSUtils.getCpuUsage();
+    private Double value = OSUtils.getCpuUsage();
 
 }
