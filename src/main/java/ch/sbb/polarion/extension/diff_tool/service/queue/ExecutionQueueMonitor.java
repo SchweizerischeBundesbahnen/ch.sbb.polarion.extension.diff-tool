@@ -29,9 +29,8 @@ public class ExecutionQueueMonitor {
     private static final int COLLECTING_INTERVAL_MS = 1000; // 1 second
     public static final int MAX_ENTRIES = 30 * 60_000 / COLLECTING_INTERVAL_MS; // amount of entries to keep in the history for the last 30 minutes
     private final ScheduledExecutorService scheduler;
-    //    @Inject
     private final ExecutionQueueService executionService;
-    private CircularFifoQueue<CpuLoadEntry> cpuHistory = new CircularFifoQueue<>(MAX_ENTRIES);
+    private final CircularFifoQueue<CpuLoadEntry> cpuHistory = new CircularFifoQueue<>(MAX_ENTRIES);
     private volatile boolean isRunning = false;
 
     public ExecutionQueueMonitor(ExecutionQueueService executionService) {

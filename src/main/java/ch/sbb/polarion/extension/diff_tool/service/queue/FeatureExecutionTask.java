@@ -27,7 +27,7 @@ public class FeatureExecutionTask<T> implements Callable<T> {
     }
 
     @Override
-    public T call() throws Exception {
+    public T call() {
         countersRegistry.dequeue(feature);
         countersRegistry.registerExecution(feature);
 

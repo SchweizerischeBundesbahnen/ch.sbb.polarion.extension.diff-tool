@@ -145,7 +145,7 @@ public class ExecutionWorker {
             future = executor.submit(task);
         } catch (RejectedExecutionException e) {
             countersRegistry.dequeue(task.getFeature());
-            throw e;
+            throw new QueueFullException(e.getMessage(), e);
         }
         try {
             return future.get();

@@ -53,7 +53,7 @@ public class ExecutionQueueSettings extends GenericNamedSettings<ExecutionQueueM
 
         Map<Integer, Integer> threads = IntStream.rangeClosed(1, Feature.workerFeatures().size()).boxed().collect(Collectors.toMap(
                 thread -> thread,
-                thread -> 2
+                thread -> 1
         ));
 
         return ExecutionQueueModel.builder()
