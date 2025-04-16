@@ -89,7 +89,7 @@ export default function MergePane({leftContext, rightContext, mergingContext, me
           </div>
         </div>
         <Modal title="Merge confirmation" cancelButtonTitle="Cancel" actionButtonTitle="Merge" actionButtonHandler={merge}
-               visible={modalVisible} setVisible={setModalVisible} className="modal-md">
+               visible={modalVisible} setVisible={setModalVisible} className="modal-md" testId="merge-confirmation-modal">
           <p>Are you sure you want to merge selected items {direction === LEFT_TO_RIGHT ? "from source to target" : "from target to source"} document?</p>
           {structuralChanges
               && <p style={{fontWeight: 'bolder'}}>Be aware that you have selected items to be merged which will lead to document&apos;s structural changes.

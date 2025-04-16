@@ -48,8 +48,8 @@ export default function ContentAnchorsDiff({ anchorsPair, currentIndex, mergingC
       backgroundColor: "#f6f6f6",
       display: 'flex'
     }} className="header row g-0">
-      <WorkItemHeader workItem={anchorsPair.leftAnchor} side={LEFT} selected={false} asHeaderInDocument={asHeaderInDocument}/>
-      <WorkItemHeader workItem={anchorsPair.rightAnchor} side={RIGHT} selected={false} asHeaderInDocument={asHeaderInDocument}/>
+      <WorkItemHeader workItem={anchorsPair.leftAnchor} side={LEFT} asHeaderInDocument={asHeaderInDocument}/>
+      <WorkItemHeader workItem={anchorsPair.rightAnchor} side={RIGHT} asHeaderInDocument={asHeaderInDocument}/>
     </div>
     {(leftDiffBelow || rightDiffBelow)
         && <ContentBlocksDiff oldValue={leftDiffBelow} newValue={rightDiffBelow} selected={belowDiffSelected} selectedCallback={() => changeDiffSelected(CONTENT_BELOW)}/>
