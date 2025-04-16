@@ -5,7 +5,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
-import com.google.common.collect.Streams;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
@@ -18,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 public final class DocumentsMergeContext extends SettingsAwareMergeContext {
     final DocumentIdentifier leftDocumentIdentifier;
@@ -100,7 +100,7 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext {
             return false;
         }
         AtomicBoolean linked = new AtomicBoolean(false);
-        Streams.concat(workItemA.getLinkedWorkItemsStructsDirect().stream(), workItemA.getLinkedWorkItemsStructsBack().stream()).forEach(linkedWorkItemStruct -> {
+        Stream.concat(workItemA.getLinkedWorkItemsStructsDirect().stream(), workItemA.getLinkedWorkItemsStructsBack().stream()).forEach(linkedWorkItemStruct -> {
             if (Objects.equals(linkedWorkItemStruct.getLinkedItem().getId(), workItemB.getId())
                     && Objects.equals(linkRole, linkedWorkItemStruct.getLinkRole().getId())) {
                 linked.set(true);
