@@ -1,0 +1,55 @@
+{
+  "success": true,
+  "targetModuleHasStructuralChanges": false,
+  "mergeNotAuthorized": false,
+  "mergeReport": {
+    "copied": [],
+    "conflicted": [],
+    "creationFailed": [],
+    "duplicateSkipped": [],
+    "moved": [],
+    "moveFailed": [],
+    "moveSkipped": [],
+    "mergeDetached": [],
+    "logs": "2025-04-17 06:22:43.241: 'CREATED' -- left WI 'EL-156', right WI 'DP-11599' -- workitem 'DP-11599' moved from 'Specification / Catalog Specification'",
+    "warnings": [],
+    "modified": [],
+    "deleted": [],
+    "created": [
+      {
+        "operationResultType": "CREATED",
+        "workItemsPair": {
+          "leftWorkItem": {
+            "id": "EL-156",
+            "title": "User must be informed on the login screen when Caps Lock is turned on",
+            "outlineNumber": "2.2-2",
+            "projectId": "elibrary",
+            "referenced": false,
+            "revision": null,
+            "lastRevision": "5976",
+            "movedOutlineNumber": null,
+            "moveDirection": null,
+            "externalProjectWorkItem": false,
+            "fields": []
+          },
+          "rightWorkItem": {
+            "id": "DP-11599",
+            "title": "User must be informed on the login screen when Caps Lock is turned on",
+            "outlineNumber": "2.1-3",
+            "projectId": "drivepilot",
+            "referenced": false,
+            "revision": null,
+            "lastRevision": "6461",
+            "movedOutlineNumber": null,
+            "moveDirection": null,
+            "externalProjectWorkItem": false,
+            "fields": []
+          }
+        },
+        "fieldId": null,
+        "documentsContentPair": null
+      }
+    ],
+    "prohibited": []
+  }
+}

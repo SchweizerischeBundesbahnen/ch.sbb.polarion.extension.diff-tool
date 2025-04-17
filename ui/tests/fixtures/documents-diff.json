@@ -224,6 +224,34 @@
     },
     {
       "leftWorkItem": {
+        "id": "EL-11575",
+        "title": "Another one requirement",
+        "outlineNumber": "2.1-3",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "6481",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": {
+        "id": "EL-11575",
+        "title": "Another one requirement",
+        "outlineNumber": "2.1-3",
+        "projectId": "elibrary",
+        "referenced": true,
+        "revision": "6480",
+        "lastRevision": "6481",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": {
         "id": "EL-153",
         "title": "Login Screen",
         "outlineNumber": "2.2",
