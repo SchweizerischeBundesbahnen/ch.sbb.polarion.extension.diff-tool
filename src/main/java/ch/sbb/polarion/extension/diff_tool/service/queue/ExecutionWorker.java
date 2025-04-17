@@ -4,34 +4,32 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.queue.EndpointCallEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.StatisticsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.ExecutionQueueModel;
+import com.polarion.core.util.logging.Logger;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static ch.sbb.polarion.extension.diff_tool.service.queue.ExecutionQueueMonitor.MAX_ENTRIES;
 
-@SuppressWarnings("unused")
 public class ExecutionWorker {
 
-    private static final int MAX_QUEUE_CAPACITY = 1000;
+    private static final Logger logger = Logger.getLogger(ExecutionWorker.class);
+    private static final int DEFAULT_MAX_QUEUE_CAPACITY = 1000;
 
-    private final BlockingQueue<Runnable> taskQueue;
     private final ThreadPoolExecutor executor;
     private final CountersRegistry countersRegistry = new CountersRegistry();
 
@@ -39,37 +37,28 @@ public class ExecutionWorker {
     private final Set<Feature> features = new HashSet<>();
     private final int workerId;
 
-    private volatile boolean running = true;
-
     public ExecutionWorker(int workerId) {
+        this(workerId, DEFAULT_MAX_QUEUE_CAPACITY);
+    }
+
+    @VisibleForTesting
+    public ExecutionWorker(int workerId, int queueCapacity) {
         this.workerId = workerId;
-        this.taskQueue = new LinkedBlockingQueue<>(MAX_QUEUE_CAPACITY);
         clearHistory();
         refreshConfiguration();
 
-        // Create a thread factory that names our worker threads
-        ThreadFactory threadFactory = new ThreadFactory() {
-            private final AtomicInteger counter = new AtomicInteger(1);
-
-            @Override
-            public Thread newThread(@NotNull Runnable r) {
-                Thread thread = new Thread(r, "QueueWorker-" + counter.getAndIncrement());
-                thread.setDaemon(true);
-                return thread;
-            }
-        };
-
-        Integer workerThreads = ExecutionQueueMonitor.getSettings().getThreads().get(workerId);
+        Integer workerThreads = ExecutionQueueModel.readAsSystemUser().getThreads().get(workerId);
         this.executor = new ThreadPoolExecutor(
                 0, workerThreads,
                 0L, TimeUnit.MILLISECONDS,
-                taskQueue,
-                threadFactory
+                new LinkedBlockingQueue<>(queueCapacity),
+                new NamedDaemonThreadFactory("ExecutionThread")
         );
     }
 
     public void refreshConfiguration() {
-        for (Map.Entry<Feature, Integer> entry : ExecutionQueueMonitor.getSettings().getWorkers().entrySet()) {
+        ExecutionQueueModel settings = ExecutionQueueModel.readAsSystemUser();
+        for (Map.Entry<Feature, Integer> entry : settings.getWorkers().entrySet()) {
             if (entry.getValue().equals(workerId)) {
                 features.add(entry.getKey());
             } else {
@@ -77,7 +66,7 @@ public class ExecutionWorker {
             }
         }
         if (executor != null) {
-            Integer workerThreads = ExecutionQueueMonitor.getSettings().getThreads().get(workerId);
+            Integer workerThreads = settings.getThreads().get(workerId);
             if (getWorkerThreadCount() != workerThreads) {
                 setWorkerThreadCount(workerThreads);
             }
@@ -123,22 +112,10 @@ public class ExecutionWorker {
         }
     }
 
-    /**
-     * Gets the current queue capacity.
-     *
-     * @return the maximum queue capacity
-     */
-    public int getQueueCapacity() {
-        return taskQueue.remainingCapacity() + taskQueue.size();
-    }
-
     @SneakyThrows
     public <T> T executeAndWait(FeatureExecutionTask<T> task) {
         task.setCountersRegistry(countersRegistry);
 
-        if (!running) {
-            throw new RejectedExecutionException("Service is shutting down");
-        }
         countersRegistry.enqueue(task.getFeature());
         Future<T> future;
         try {
@@ -149,7 +126,10 @@ public class ExecutionWorker {
         }
         try {
             return future.get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            logger.error("Task execution interrupted: " + e.getMessage(), e);
+            throw e;
+        } catch (ExecutionException e) {
             throw new RejectedExecutionException("Task execution failed: " + e.getMessage(), e);
         } finally {
             countersRegistry.completeExecution(task.getFeature());
@@ -164,18 +144,6 @@ public class ExecutionWorker {
         return countersRegistry.getExecutingCount(feature);
     }
 
-    /**
-     * Shuts down this service, waiting for all queued tasks to complete.
-     */
-    public void shutdown() throws InterruptedException {
-        running = false;
-        executor.shutdown();
-
-        if (!executor.awaitTermination(30, TimeUnit.SECONDS)) {
-            executor.shutdownNow();
-        }
-    }
-
     public void clearHistory() {
         for (Feature feature : Feature.values()) {
             history.put(feature, new CircularFifoQueue<>(MAX_ENTRIES));
@@ -187,4 +155,5 @@ public class ExecutionWorker {
         history.forEach((key, value) -> result.put(key, statisticsParams.filterQueue(String.valueOf(workerId), value)));
         return result;
     }
+
 }

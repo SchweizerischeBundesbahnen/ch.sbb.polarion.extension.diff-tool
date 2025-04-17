@@ -86,6 +86,16 @@
         .center-column-value {
             text-align: center;
         }
+
+        .more-info {
+            background: url(/polarion/ria/images/msginfo.png) no-repeat;
+            display: inline-block;
+            width: 17px;
+            height: 17px;
+            cursor: pointer;
+            margin-left: 5px;
+            margin-bottom: -3px;
+        }
     </style>
 </head>
 
@@ -158,7 +168,7 @@
                     <%
                         for (Feature feature : Feature.workerFeatures()) {
                             out.println("<tr>" +
-                                    "  <td id='feature-" + feature.name() + "'>" + feature.name() + "']</td>" +
+                                    "  <td><span id='feature-" + feature.name() + "'>" + feature.name() + "</span><div class='more-info' id='feature-more-info-" + feature.name() + "'></div></td>" +
                                     "  <td id='current-worker-" + feature.name() + "' class='center-column-value'> - </td>" +
                                     "  <td>" +
                                     "<select id='new-worker-" + feature.name() + "'>" +
@@ -207,11 +217,13 @@
     <h2>Quick Help</h2>
 
     <div class="quick-help-text">
-        <h3>Permissions</h3>
-        <p>The diffing functionality is unrestricted and available to all users.</p>
-        <p>On the other hand, the merging functionality can be restricted or permitted for specific global or project roles.</p>
-        <p>By default, only users with the global admin role have permission to merge.</p>
-        <p>Additionally, project administrators can configure merging permissions based on the needs of their specific project, allowing for more granular control.</p>
+        <h3>Workers</h3>
+        <p>Worker is a combination of a queue and its own executor. Current queue limit: <b>1000</b> entries.</p>
+        <p>Executor fetches entries from the queue and processes them in parallel mode (if threads count for particular worker > 1).</p>
+        <p>You can point specific endpoint call (AKA on this page as <b>Feature</b>) to a specific worker. This gives the opportunity to fine-tune CPU consumption.</p>
+        <h3>Threads count</h3>
+        <p>Max threads count depends on CPU cores/logical processors count.</p>
+        <p>Be careful setting high values for several workers because this can lead to high system resources consumption.</p>
     </div>
 </div>
 

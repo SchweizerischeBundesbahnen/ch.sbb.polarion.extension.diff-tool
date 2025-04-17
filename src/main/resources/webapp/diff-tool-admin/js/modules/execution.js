@@ -34,7 +34,8 @@ function parseAndSetSettings(jsonResponse) {
   usedWorkers.add("CPU_LOAD");
   for (const key in settings.workers) {
 
-    ctx.getElementById('feature-' + key).innerText = featuresLocalization[key];
+    ctx.getElementById('feature-' + key).innerText = featuresLocalization[key][0];
+    ctx.getElementById('feature-more-info-' + key).title = featuresLocalization[key][1];
 
     if (settings.workers.hasOwnProperty(key)) {
       const currentWorker = settings.workers[key].toString();
@@ -116,7 +117,7 @@ function initChart(worker) {
   let colorCounter = 0;
   if (worker === 'CPU_LOAD') {
     dataSet.datasets.push({
-      label: featuresLocalization['CPU_LOAD'],
+      label: featuresLocalization['CPU_LOAD'][0],
       data: [],
       borderColor: colors[colorCounter++],
       // tension: 0.1
@@ -125,12 +126,12 @@ function initChart(worker) {
     for (const key in ctx.currentSettings.workers) {
       if (ctx.currentSettings.workers[key]?.toString() === worker) {
         dataSet.datasets.push({
-          label: featuresLocalization[key] + ' (queue)',
+          label: featuresLocalization[key][0] + ' (queue)',
           data: [],
           borderColor: colors[colorCounter++],
         });
         dataSet.datasets.push({
-          label: featuresLocalization[key] + ' (running)',
+          label: featuresLocalization[key][0] + ' (running)',
           data: [],
           borderColor: colors[colorCounter++],
         })
@@ -236,13 +237,11 @@ function parseAndSetData(jsonResponse) {
           x: new Date(item.timestamp),
           y: item.queued
         }))));
-        console.log('Queued data size:', chart.data.datasets[queuedPos].data.length);
         let executingPos = datasetCounter++;
         chart.data.datasets[executingPos].data = filterOldRecords(worker, chart.data.datasets[executingPos].data.concat(data[worker][key].map(item => ({
           x: new Date(item.timestamp),
           y: item.executing
         }))));
-        console.log('Executing data size:', chart.data.datasets[queuedPos].data.length);
 
         chart.update('none');
       }
@@ -351,16 +350,16 @@ function revertToDefault() {
 }
 
 const featuresLocalization = {
-  'CPU_LOAD': 'CPU Load',
-  'DIFF_DOCUMENTS': 'Diff docs',
-  'DIFF_WORKITEMS_PAIRS': 'Find WI pairs',
-  'DIFF_COLLECTIONS': 'Diff collections',
-  'DIFF_DOCUMENT_WORKITEMS': 'Diff WI',
-  'DIFF_DETACHED_WORKITEMS': 'Diff detached WI',
-  'DIFF_DOCUMENTS_FIELDS': 'Diff docs fields',
-  'DIFF_DOCUMENTS_CONTENT': 'Diff docs content',
-  'DIFF_HTML': 'Diff HTML',
-  'DIFF_TEXT': 'DIff text',
+  'CPU_LOAD': ['CPU Load'],
+  'DIFF_DOCUMENTS': ['Diff docs', '/diff/documents request: gets difference of two live documents'],
+  'DIFF_WORKITEMS_PAIRS': ['Find WI pairs', '/diff/workitems-pairs request: finds pairs to specified WorkItems, for later diff'],
+  'DIFF_COLLECTIONS': ['Diff collections', '/diff/collections request: gets difference of two live document collections'],
+  'DIFF_DOCUMENT_WORKITEMS': ['Diff WI', '/diff/document-workitems request: gets difference of two WorkItems contained in LiveDoc'],
+  'DIFF_DETACHED_WORKITEMS': ['Diff detached WI', '/diff/detached-workitems request: gets difference of two WorkItems not necessarily contained in a document'],
+  'DIFF_DOCUMENTS_FIELDS': ['Diff docs fields', '/diff/documents-fields request: gets difference between fields of two live documents'],
+  'DIFF_DOCUMENTS_CONTENT': ['Diff docs content', '/diff/documents-content request: gets difference two live documents page content'],
+  'DIFF_HTML': ['Diff HTML', '/diff/html request: gets difference of two strings which contain HTML tags'],
+  'DIFF_TEXT': ['DIff text', '/diff/text request: gets difference of two strings which contain plain text'],
 }
 
 function formatTimestamp(date) {

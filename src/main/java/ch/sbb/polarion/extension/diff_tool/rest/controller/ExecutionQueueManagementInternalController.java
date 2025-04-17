@@ -4,7 +4,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.StatisticsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry;
-import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.queue.ExecutionQueueMonitor;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,7 +26,6 @@ import java.util.Map;
 @Path("/internal")
 @Tag(name = "Queued Execution Management")
 public class ExecutionQueueManagementInternalController {
-    protected final PolarionService polarionService = new PolarionService();
     private final ExecutionQueueMonitor executionMonitor;
 
     public ExecutionQueueManagementInternalController(ExecutionQueueMonitor executionMonitor) {

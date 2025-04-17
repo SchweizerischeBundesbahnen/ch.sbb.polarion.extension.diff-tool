@@ -1,11 +1,17 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.settings;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
+import ch.sbb.polarion.extension.diff_tool.settings.ExecutionQueueSettings;
+import ch.sbb.polarion.extension.generic.settings.NamedSettings;
+import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
+import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.settings.SettingsModel;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.polarion.core.util.logging.Logger;
+import com.polarion.platform.core.PlatformContext;
+import com.polarion.platform.security.ISecurityService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +19,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,4 +72,9 @@ public class ExecutionQueueModel extends SettingsModel {
         }
     }
 
+    public static ExecutionQueueModel readAsSystemUser() {
+        return PlatformContext.getPlatform().lookupService(ISecurityService.class).doAsSystemUser(
+                (PrivilegedAction<ExecutionQueueModel>) () -> (ExecutionQueueModel) NamedSettingsRegistry.INSTANCE.getByFeatureName(ExecutionQueueSettings.FEATURE_NAME).read(
+                        "", SettingId.fromName(NamedSettings.DEFAULT_NAME), null));
+    }
 }
