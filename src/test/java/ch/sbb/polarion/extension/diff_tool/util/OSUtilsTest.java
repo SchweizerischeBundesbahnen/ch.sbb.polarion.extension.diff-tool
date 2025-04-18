@@ -12,7 +12,7 @@ import static org.mockito.Mockito.*;
 class OSUtilsTest {
 
     @Test
-    void testReturnsValidCpuUsage() throws Exception {
+    void testReturnsValidCpuUsage() {
         OperatingSystemMXBean mockBean = mock(OperatingSystemMXBean.class);
         double expectedCpuLoad = 0.75;
 
