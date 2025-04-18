@@ -420,7 +420,6 @@ class DiffServiceTest {
     void testBuildWorkItem() {
         // Mock necessary objects
         IWorkItem mockWorkItem = mock(IWorkItem.class);
-        IModule mockModule = mock(IModule.class);
         Set<String> fieldIds = Set.of("description", "status");
 
         // Basic work item properties setup
