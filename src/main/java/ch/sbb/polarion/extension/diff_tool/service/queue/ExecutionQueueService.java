@@ -3,7 +3,7 @@ package ch.sbb.polarion.extension.diff_tool.service.queue;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.StatisticsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry;
-import ch.sbb.polarion.extension.diff_tool.rest.model.settings.ExecutionQueueModel;
+import ch.sbb.polarion.extension.diff_tool.settings.ExecutionQueueSettings;
 import lombok.SneakyThrows;
 
 import java.util.HashMap;
@@ -47,7 +47,7 @@ public class ExecutionQueueService {
 
     @SneakyThrows
     public <T> T executeAndWait(FeatureExecutionTask<T> task) {
-        Integer workerId = ExecutionQueueModel.readAsSystemUser().getWorkers().get(task.getFeature());
+        Integer workerId = ExecutionQueueSettings.readAsSystemUser().getWorkers().get(task.getFeature());
         if (workerId == 0) {
             return task.getTask().call();
         }

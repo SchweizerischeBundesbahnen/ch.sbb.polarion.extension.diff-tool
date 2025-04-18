@@ -4,16 +4,23 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.ExecutionQueueModel;
 import ch.sbb.polarion.extension.diff_tool.util.OSUtils;
 import ch.sbb.polarion.extension.generic.settings.GenericNamedSettings;
+import ch.sbb.polarion.extension.generic.settings.NamedSettings;
+import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
+import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
+import com.polarion.platform.core.PlatformContext;
+import com.polarion.platform.security.ISecurityService;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Setter
+@SuppressWarnings("java:S2160") //Override the "equals" not needed here by design
 public class ExecutionQueueSettings extends GenericNamedSettings<ExecutionQueueModel> {
     public static final String FEATURE_NAME = "executionQueue";
     private Runnable settingsChangedCallback;
@@ -60,5 +67,11 @@ public class ExecutionQueueSettings extends GenericNamedSettings<ExecutionQueueM
                 .workers(workers)
                 .threads(threads)
                 .build();
+    }
+
+    public static ExecutionQueueModel readAsSystemUser() {
+        return PlatformContext.getPlatform().lookupService(ISecurityService.class).doAsSystemUser(
+                (PrivilegedAction<ExecutionQueueModel>) () -> (ExecutionQueueModel) NamedSettingsRegistry.INSTANCE.getByFeatureName(FEATURE_NAME).read(
+                        "", SettingId.fromName(NamedSettings.DEFAULT_NAME), null));
     }
 }

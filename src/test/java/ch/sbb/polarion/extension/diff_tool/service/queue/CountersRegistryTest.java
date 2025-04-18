@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class CountersRegistryTest {
 
     @Test
-    public void testRegisterExecutionIncreasesCount() {
+    void testRegisterExecutionIncreasesCount() {
         CountersRegistry registry = new CountersRegistry();
 
         Feature feature = Feature.DIFF_HTML;
@@ -22,7 +22,7 @@ class CountersRegistryTest {
     }
 
     @Test
-    public void testCompleteExecutionOfNonRegisteredFeature() {
+    void testCompleteExecutionOfNonRegisteredFeature() {
         CountersRegistry registry = new CountersRegistry();
 
         Feature feature = Feature.DIFF_TEXT;
@@ -33,7 +33,7 @@ class CountersRegistryTest {
     }
 
     @Test
-    public void testCompleteExecutionDecreasesCount() {
+    void testCompleteExecutionDecreasesCount() {
         CountersRegistry registry = new CountersRegistry();
 
         Feature feature = Feature.DIFF_HTML;
@@ -49,7 +49,7 @@ class CountersRegistryTest {
     }
 
     @Test
-    public void testEnqueueIncreasesQueuedCount() {
+    void testEnqueueIncreasesQueuedCount() {
         CountersRegistry registry = new CountersRegistry();
 
         Feature feature = Feature.DIFF_HTML;
@@ -63,7 +63,7 @@ class CountersRegistryTest {
     }
 
     @Test
-    public void testDequeueDecreasesQueuedCount() {
+    void testDequeueDecreasesQueuedCount() {
         CountersRegistry registry = new CountersRegistry();
 
         Feature feature = Feature.DIFF_HTML;
@@ -79,7 +79,7 @@ class CountersRegistryTest {
     }
 
     @Test
-    public void testDequeueOfNonQueuedFeature() {
+    void testDequeueOfNonQueuedFeature() {
         CountersRegistry registry = new CountersRegistry();
 
         Feature feature = Feature.DIFF_TEXT;
@@ -90,7 +90,7 @@ class CountersRegistryTest {
     }
 
     @Test
-    public void testMultipleFeatures() {
+    void testMultipleFeatures() {
         CountersRegistry registry = new CountersRegistry();
 
         Feature feature1 = Feature.DIFF_HTML;

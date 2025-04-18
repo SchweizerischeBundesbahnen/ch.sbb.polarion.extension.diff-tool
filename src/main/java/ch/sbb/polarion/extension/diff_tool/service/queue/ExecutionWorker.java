@@ -5,12 +5,13 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.StatisticsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.ExecutionQueueModel;
+import ch.sbb.polarion.extension.diff_tool.settings.ExecutionQueueSettings;
 import com.polarion.core.util.logging.Logger;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static ch.sbb.polarion.extension.diff_tool.service.queue.ExecutionQueueMonitor.MAX_ENTRIES;
+import static ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry.MAX_HISTORY_ENTRIES;
 
 public class ExecutionWorker {
 
@@ -47,7 +48,7 @@ public class ExecutionWorker {
         clearHistory();
         refreshConfiguration();
 
-        Integer workerThreads = ExecutionQueueModel.readAsSystemUser().getThreads().get(workerId);
+        Integer workerThreads = ExecutionQueueSettings.readAsSystemUser().getThreads().get(workerId);
         this.executor = new ThreadPoolExecutor(
                 0, workerThreads,
                 0L, TimeUnit.MILLISECONDS,
@@ -57,7 +58,7 @@ public class ExecutionWorker {
     }
 
     public void refreshConfiguration() {
-        ExecutionQueueModel settings = ExecutionQueueModel.readAsSystemUser();
+        ExecutionQueueModel settings = ExecutionQueueSettings.readAsSystemUser();
         for (Map.Entry<Feature, Integer> entry : settings.getWorkers().entrySet()) {
             if (entry.getValue().equals(workerId)) {
                 features.add(entry.getKey());
@@ -146,12 +147,12 @@ public class ExecutionWorker {
 
     public void clearHistory() {
         for (Feature feature : Feature.values()) {
-            history.put(feature, new CircularFifoQueue<>(MAX_ENTRIES));
+            history.put(feature, new CircularFifoQueue<>(MAX_HISTORY_ENTRIES));
         }
     }
 
     public Map<Feature, List<TimeframeStatisticsEntry>> getHistory(StatisticsParams statisticsParams) {
-        Map<Feature, List<TimeframeStatisticsEntry>> result = new HashMap<>();
+        Map<Feature, List<TimeframeStatisticsEntry>> result = new EnumMap<>(Feature.class);
         history.forEach((key, value) -> result.put(key, statisticsParams.filterQueue(String.valueOf(workerId), value)));
         return result;
     }

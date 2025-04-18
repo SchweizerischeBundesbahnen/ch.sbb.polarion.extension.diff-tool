@@ -13,13 +13,13 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry.MAX_HISTORY_ENTRIES;
+
 public class ExecutionQueueMonitor {
     private static final Logger logger = Logger.getLogger(ExecutionQueueMonitor.class);
     private static final String EXECUTOR_COMMON = "COMMON"; // extra executor used for secondary activities (e.g., CPU Load)
-    private static final int COLLECTING_INTERVAL_MS = 1000; // 1 second
-    public static final int MAX_ENTRIES = 30 * 60_000 / COLLECTING_INTERVAL_MS; // number of entries to keep in the history for the last 30 minutes
     private final ExecutionQueueService executionService;
-    private final CircularFifoQueue<CpuLoadEntry> cpuHistory = new CircularFifoQueue<>(MAX_ENTRIES);
+    private final CircularFifoQueue<CpuLoadEntry> cpuHistory = new CircularFifoQueue<>(MAX_HISTORY_ENTRIES);
 
     public ExecutionQueueMonitor(ExecutionQueueService executionService) {
         this.executionService = executionService;

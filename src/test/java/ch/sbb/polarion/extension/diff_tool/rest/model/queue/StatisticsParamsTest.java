@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class StatisticsParamsTest {
 
     @Test
-    public void testFilterQueueWithValidFromDate() {
+    void testFilterQueueWithValidFromDate() {
         StatisticsParams statisticsParams = new StatisticsParams();
         String workerId = "worker1";
 
@@ -42,7 +42,7 @@ class StatisticsParamsTest {
     }
 
     @Test
-    public void testFilterQueueWithEmptyQueue() {
+    void testFilterQueueWithEmptyQueue() {
         StatisticsParams statisticsParams = new StatisticsParams();
         String workerId = "worker1";
 
@@ -63,7 +63,7 @@ class StatisticsParamsTest {
     }
 
     @Test
-    public void testFilterQueueWhenDateStringIsEmpty() {
+    void testFilterQueueWhenDateStringIsEmpty() {
         StatisticsParams params = new StatisticsParams();
         String workerId = "worker1";
 

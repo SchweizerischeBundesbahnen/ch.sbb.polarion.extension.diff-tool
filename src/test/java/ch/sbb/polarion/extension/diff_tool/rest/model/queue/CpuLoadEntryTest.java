@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class CpuLoadEntryTest {
 
     @Test
-    public void testNewInstanceInitializesWithCurrentCpuUsage() {
+    void testNewInstanceInitializesWithCurrentCpuUsage() {
         double expectedCpuUsage = 0.75;
 
         try (MockedStatic<OSUtils> osUtilsMock = Mockito.mockStatic(OSUtils.class)) {

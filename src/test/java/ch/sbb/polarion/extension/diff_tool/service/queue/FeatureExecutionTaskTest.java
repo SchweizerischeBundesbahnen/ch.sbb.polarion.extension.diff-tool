@@ -13,7 +13,7 @@ import static org.mockito.Mockito.*;
 class FeatureExecutionTaskTest {
 
     @Test
-    public void testTaskExecutionCompletesSuccessfully() throws Exception {
+    void testTaskExecutionCompletesSuccessfully() throws Exception {
         Feature feature = Feature.DIFF_DOCUMENTS;
         String expectedResult = "Success";
         Callable<String> mockTask = mock(Callable.class);
@@ -33,7 +33,7 @@ class FeatureExecutionTaskTest {
     }
 
     @Test
-    public void testTaskExecutionThrowsException() throws Exception {
+    void testTaskExecutionThrowsException() throws Exception {
         Feature feature = Feature.DIFF_COLLECTIONS;
         Callable<String> mockTask = mock(Callable.class);
         Exception originalException = new RuntimeException("Task failed");

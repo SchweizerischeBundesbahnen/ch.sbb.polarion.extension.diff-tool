@@ -28,7 +28,7 @@ public class StatisticsParams {
         if (StringUtils.isEmpty(dateString)) {
             return list;
         } else {
-            OffsetDateTime fromDate = OffsetDateTime.parse(dateString); //, TimeframeStatisticsEntry.DATE_FORMATTER);
+            OffsetDateTime fromDate = OffsetDateTime.parse(dateString);
             return list.stream().filter(entry -> entry.getRawTimestamp().isAfter(fromDate)).toList();
         }
     }

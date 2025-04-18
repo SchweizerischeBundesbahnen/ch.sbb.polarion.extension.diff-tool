@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class EndpointCallEntryTest {
 
     @Test
-    public void testConstructorWithParametersAndVerifyFieldValues() {
+    void testConstructorWithParametersAndVerifyFieldValues() {
         long queued = 100L;
         long executing = 50L;
 

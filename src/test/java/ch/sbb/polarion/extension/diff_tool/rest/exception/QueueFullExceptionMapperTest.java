@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class QueueFullExceptionMapperTest {
 
     @Test
-    public void testMapsRejectedExecutionExceptionToTooManyRequestsResponse() {
+    void testMapsRejectedExecutionExceptionToTooManyRequestsResponse() {
         QueueFullExceptionMapper mapper = new QueueFullExceptionMapper();
         QueueFullException exception = new QueueFullException("Too many requests", new RejectedExecutionException("Queue is full"));
 

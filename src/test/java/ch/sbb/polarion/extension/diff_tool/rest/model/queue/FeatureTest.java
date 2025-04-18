@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class FeatureTest {
 
     @Test
-    public void testWorkerFeaturesExcludesCpuLoad() {
+    void testWorkerFeaturesExcludesCpuLoad() {
         List<Feature> workerFeatures = Feature.workerFeatures();
 
         assertFalse(workerFeatures.contains(Feature.CPU_LOAD), "Worker features should not contain CPU_LOAD");

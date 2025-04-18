@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class NamedDaemonThreadFactoryTest {
 
     @Test
-    public void testThreadNamingPattern() {
+    void testThreadNamingPattern() {
         NamedDaemonThreadFactory factory = new NamedDaemonThreadFactory("test");
 
         Thread thread1 = factory.newThread(() -> {
@@ -30,7 +30,7 @@ class NamedDaemonThreadFactoryTest {
     }
 
     @Test
-    public void testCounterWraparound() {
+    void testCounterWraparound() {
         NamedDaemonThreadFactory factory = new NamedDaemonThreadFactory("counter-test");
 
         // Use reflection to set the counter to MAX_VALUE

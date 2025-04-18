@@ -6,6 +6,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.StatisticsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.ExecutionQueueModel;
+import ch.sbb.polarion.extension.diff_tool.settings.ExecutionQueueSettings;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
@@ -29,8 +30,8 @@ class ExecutionQueueMonitorTest {
             model.getThreads().put(i, 1);
         }
 
-        try (MockedStatic<ExecutionQueueModel> mockStaticModel = mockStatic(ExecutionQueueModel.class)) {
-            mockStaticModel.when(ExecutionQueueModel::readAsSystemUser).thenReturn(model);
+        try (MockedStatic<ExecutionQueueSettings> mockStaticSettings = mockStatic(ExecutionQueueSettings.class)) {
+            mockStaticSettings.when(ExecutionQueueSettings::readAsSystemUser).thenReturn(model);
 
             ExecutionQueueService executionService = new ExecutionQueueService();
             ExecutionQueueMonitor monitor = new ExecutionQueueMonitor(executionService);
@@ -73,11 +74,10 @@ class ExecutionQueueMonitorTest {
     }
 
     private void runTestEndpointCall(ExecutionQueueService executionService, ExecutionQueueModel model) {
-        try (MockedStatic<ExecutionQueueModel> mockStaticModel = mockStatic(ExecutionQueueModel.class)) {
-            mockStaticModel.when(ExecutionQueueModel::readAsSystemUser).thenReturn(model);
+        try (MockedStatic<ExecutionQueueSettings> mockStaticSettings = mockStatic(ExecutionQueueSettings.class)) {
+            mockStaticSettings.when(ExecutionQueueSettings::readAsSystemUser).thenReturn(model);
             executionService.executeAndWait(new FeatureExecutionTask<>(Feature.DIFF_HTML, () -> {
                 await().pollDelay(1, TimeUnit.SECONDS).until(() -> true);
-                System.out.println("noop");
                 return true;
             }));
         }

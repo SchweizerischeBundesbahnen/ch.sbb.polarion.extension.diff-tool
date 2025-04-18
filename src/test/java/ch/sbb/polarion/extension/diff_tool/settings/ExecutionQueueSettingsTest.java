@@ -69,7 +69,7 @@ class ExecutionQueueSettingsTest {
     }
 
     @Test
-    public void testDefaultValues() {
+    void testDefaultValues() {
         try (MockedStatic<ScopeUtils> mockScopeUtils = mockStatic(ScopeUtils.class)) {
             SettingsService mockedSettingsService = mock(SettingsService.class);
             mockScopeUtils.when(() -> ScopeUtils.getFileContent(any())).thenCallRealMethod();

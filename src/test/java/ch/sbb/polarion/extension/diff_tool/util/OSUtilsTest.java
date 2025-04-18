@@ -12,7 +12,7 @@ import static org.mockito.Mockito.*;
 class OSUtilsTest {
 
     @Test
-    public void testReturnsValidCpuUsage() throws Exception {
+    void testReturnsValidCpuUsage() throws Exception {
         OperatingSystemMXBean mockBean = mock(OperatingSystemMXBean.class);
         double expectedCpuLoad = 0.75;
 
@@ -26,7 +26,7 @@ class OSUtilsTest {
     }
 
     @Test
-    public void testReturnsAvailableProcessors() {
+    void testReturnsAvailableProcessors() {
         int expectedProcessors = Runtime.getRuntime().availableProcessors();
         int actualProcessors = OSUtils.getMaxRecommendedParallelThreads();
         assertEquals(expectedProcessors, actualProcessors);
