@@ -22,7 +22,6 @@ import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
-import com.google.common.collect.Streams;
 import com.polarion.alm.projects.IProjectService;
 import com.polarion.alm.projects.model.IFolder;
 import com.polarion.alm.projects.model.IProject;
@@ -553,7 +552,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
 
         Set<Pair<IWorkItem, IWorkItem>> pairs = new HashSet<>();
         AtomicBoolean moduleLinksExist = new AtomicBoolean(false);
-        Streams.concat(workItem.getLinkedWorkItemsStructsDirect().stream(), workItem.getLinkedWorkItemsStructsBack().stream()).forEach(linkedWorkItemStruct -> {
+        Stream.concat(workItem.getLinkedWorkItemsStructsDirect().stream(), workItem.getLinkedWorkItemsStructsBack().stream()).forEach(linkedWorkItemStruct -> {
             IWorkItem linkedStructItem = linkedWorkItemStruct.getLinkedItem();
             IWorkItem linkedWorkItem = oppositeWorkItems.stream().filter(w -> Objects.equals(w.getId(), linkedStructItem.getId())).findFirst().orElse(null);
 
@@ -629,7 +628,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
 
     @SuppressWarnings("squid:S1166") // Initial exception swallowed intentionally
     public List<IWorkItem> getPairedWorkItems(@NotNull IWorkItem toWorkItem, @NotNull String targetProjectId, @NotNull String linkRoleId) {
-        return Streams.concat(toWorkItem.getLinkedWorkItemsStructsDirect().stream(), toWorkItem.getLinkedWorkItemsStructsBack().stream())
+        return Stream.concat(toWorkItem.getLinkedWorkItemsStructsDirect().stream(), toWorkItem.getLinkedWorkItemsStructsBack().stream())
                 .filter(linkedWorkItemStruct -> linkedWorkItemStruct.getLinkRole() != null && linkedWorkItemStruct.getLinkRole().getId().equals(linkRoleId))
                 .map(linkedWorkItemStruct -> {
                     Optional<IWorkItem> optionalLinkedWorkItem = Optional.empty();
