@@ -3,18 +3,21 @@ package ch.sbb.polarion.extension.diff_tool.rest.controller;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DetachedWorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsDiffParams;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairs;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.StringsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiff;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPairDiffParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairs;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairsParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
 import ch.sbb.polarion.extension.diff_tool.service.DiffService;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
+import ch.sbb.polarion.extension.diff_tool.service.queue.FeatureExecutionTask;
+import ch.sbb.polarion.extension.diff_tool.service.queue.ExecutionQueueService;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +35,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.concurrent.Callable;
+
+import static ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature.*;
 
 @Hidden
 @Path("/internal")
@@ -39,6 +45,11 @@ import javax.ws.rs.core.MediaType;
 public class DiffInternalController {
     protected final PolarionService polarionService = new PolarionService();
     protected final DiffService diffService = new DiffService(polarionService);
+    private final ExecutionQueueService executionService;
+
+    public DiffInternalController(ExecutionQueueService executionService) {
+        this.executionService = executionService;
+    }
 
     @POST
     @Path("/diff/documents")
@@ -67,8 +78,10 @@ public class DiffInternalController {
         if (documentsDiffParams == null || documentsDiffParams.getLeftDocument() == null || documentsDiffParams.getRightDocument() == null || documentsDiffParams.getLinkRole() == null) {
             throw new BadRequestException("Parameters 'leftDocument', 'rightDocument' and 'linkRole' should be provided");
         }
-        return diffService.getDocumentsDiff(documentsDiffParams.getLeftDocument(), documentsDiffParams.getRightDocument(), documentsDiffParams.getLinkRole(),
-                documentsDiffParams.getConfigName(), documentsDiffParams.getConfigCacheBucketId());
+        return schedule(DIFF_DOCUMENTS, () ->
+                diffService.getDocumentsDiff(documentsDiffParams.getLeftDocument(), documentsDiffParams.getRightDocument(), documentsDiffParams.getLinkRole(),
+                        documentsDiffParams.getConfigName(), documentsDiffParams.getConfigCacheBucketId())
+        );
     }
 
     @POST
@@ -99,7 +112,7 @@ public class DiffInternalController {
                 || workItemsPairsParams.getRightProjectId() == null || CollectionUtils.isEmpty(workItemsPairsParams.getLeftWorkItemIds())) {
             throw new BadRequestException("Parameters 'leftProjectId', 'rightProjectId' and 'workItemIds' should be provided");
         }
-        return diffService.findWorkItemsPairs(workItemsPairsParams);
+        return schedule(DIFF_WORKITEMS_PAIRS, () -> diffService.findWorkItemsPairs(workItemsPairsParams));
     }
 
     @POST
@@ -129,7 +142,7 @@ public class DiffInternalController {
         if (collectionsDiffParams == null || collectionsDiffParams.getLeftCollection() == null || collectionsDiffParams.getRightCollection() == null) {
             throw new BadRequestException("Parameters 'leftCollection' and 'rightCollection' should be provided");
         }
-        return diffService.getCollectionsDiff(collectionsDiffParams);
+        return schedule(DIFF_COLLECTIONS, () -> diffService.getCollectionsDiff(collectionsDiffParams));
     }
 
     @POST
@@ -159,7 +172,7 @@ public class DiffInternalController {
         if (documentWorkItemsPairDiffParams == null || (documentWorkItemsPairDiffParams.getLeftWorkItem() == null && documentWorkItemsPairDiffParams.getRightWorkItem() == null)) {
             throw new BadRequestException("Either parameter 'leftWorkItem' or 'rightWorkItem' should be provided");
         }
-        return diffService.getDocumentWorkItemsPairDiff(documentWorkItemsPairDiffParams);
+        return schedule(DIFF_DOCUMENT_WORKITEMS, () -> diffService.getDocumentWorkItemsPairDiff(documentWorkItemsPairDiffParams));
     }
 
     @POST
@@ -189,7 +202,7 @@ public class DiffInternalController {
         if (detachedWorkItemsPairDiffParams == null || detachedWorkItemsPairDiffParams.getLeftWorkItem() == null) {
             throw new BadRequestException("'leftWorkItem' is required");
         }
-        return diffService.getDetachedWorkItemsPairDiff(detachedWorkItemsPairDiffParams);
+        return schedule(DIFF_DETACHED_WORKITEMS, () -> diffService.getDetachedWorkItemsPairDiff(detachedWorkItemsPairDiffParams));
     }
 
     @POST
@@ -219,8 +232,10 @@ public class DiffInternalController {
         if (params == null || params.getLeftDocument() == null || params.getRightDocument() == null) {
             throw new BadRequestException("Parameters 'leftDocument' and 'rightDocument' should be provided");
         }
-        return diffService.getDocumentsFieldsDiff(params.getLeftDocument(), params.getRightDocument(),
-                Boolean.TRUE.equals(params.getCompareEnumsById()), Boolean.TRUE.equals(params.getCompareOnlyMutualFields()));
+        return schedule(DIFF_DOCUMENTS_FIELDS, () ->
+                diffService.getDocumentsFieldsDiff(params.getLeftDocument(), params.getRightDocument(),
+                        Boolean.TRUE.equals(params.getCompareEnumsById()), Boolean.TRUE.equals(params.getCompareOnlyMutualFields()))
+        );
     }
 
     @POST
@@ -250,7 +265,7 @@ public class DiffInternalController {
         if (params == null || params.getLeftDocument() == null || params.getRightDocument() == null) {
             throw new BadRequestException("Parameters 'leftDocument' and 'rightDocument' should be provided");
         }
-        return diffService.getDocumentsContentDiff(params.getLeftDocument(), params.getRightDocument(), params.getLinkRole());
+        return schedule(DIFF_DOCUMENTS_CONTENT, () -> diffService.getDocumentsContentDiff(params.getLeftDocument(), params.getRightDocument(), params.getLinkRole()));
     }
 
     @POST
@@ -270,7 +285,7 @@ public class DiffInternalController {
             }
     )
     public StringsDiff diffHtml(@FormDataParam("html1") String html1, @FormDataParam("html2") String html2) {
-        return DiffToolUtils.diffHtml(html1, html2);
+        return schedule(DIFF_HTML, () -> DiffToolUtils.diffHtml(html1, html2));
     }
 
     @POST
@@ -290,6 +305,10 @@ public class DiffInternalController {
             }
     )
     public StringsDiff diffText(@FormDataParam("text1") String text1, @FormDataParam("text2") String text2) {
-        return DiffToolUtils.diffText(text1, text2);
+        return schedule(DIFF_TEXT, () -> DiffToolUtils.diffText(text1, text2));
+    }
+
+    public <T> T schedule(Feature feature, Callable<T> execution) {
+        return executionService.executeAndWait(new FeatureExecutionTask<>(feature, execution));
     }
 }

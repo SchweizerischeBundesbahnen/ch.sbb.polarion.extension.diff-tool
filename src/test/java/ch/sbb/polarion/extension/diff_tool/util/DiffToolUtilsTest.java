@@ -102,7 +102,7 @@ class DiffToolUtilsTest {
         assertFalse(result);
     }
 
-    public static Stream<Arguments> testDiffTextValues() {
+    static Stream<Arguments> testDiffTextValues() {
         return Stream.of(
                 Arguments.of(null, null, false, ""),
                 Arguments.of(null, "", false, ""),
@@ -125,7 +125,7 @@ class DiffToolUtilsTest {
         assertEquals(expectedDiffResult, diff.getResult());
     }
 
-    public static Stream<Arguments> testDiffHtmlValues() {
+    static Stream<Arguments> testDiffHtmlValues() {
         return Stream.of(
                 Arguments.of(null, null, ""),
                 Arguments.of(null, "", ""),

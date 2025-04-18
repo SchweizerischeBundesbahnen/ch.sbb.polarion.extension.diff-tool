@@ -814,6 +814,55 @@
         ]
       }
     },
+    "/api/queueStatistics": {
+      "delete": {
+        "operationId": "clearStatistics",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRevision"
+                }
+              }
+            },
+            "description": "List of revisions for the specified document"
+          }
+        },
+        "summary": "Clear gathered statistics",
+        "tags": [
+          "Queued Execution Management"
+        ]
+      },
+      "post": {
+        "operationId": "getStatistics",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatisticsParams"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRevision"
+                }
+              }
+            },
+            "description": "List of revisions for the specified document"
+          }
+        },
+        "summary": "Gets list of statistics items for each worker",
+        "tags": [
+          "Queued Execution Management"
+        ]
+      }
+    },
     "/api/settings": {
       "get": {
         "operationId": "readFeaturesList_1",
@@ -2084,6 +2133,20 @@
         },
         "type": "object"
       },
+      "StatisticsParams": {
+        "description": "Documents merge input data",
+        "properties": {
+          "from": {
+            "additionalProperties": {
+              "description": "Starting timestamps for each worker",
+              "type": "string"
+            },
+            "description": "Starting timestamps for each worker",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "StringsDiff": {
         "description": "Represents the result of comparing two strings",
         "properties": {
@@ -2093,6 +2156,14 @@
           },
           "result": {
             "description": "The result after comparing the strings",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TimeframeStatisticsEntry": {
+        "properties": {
+          "timestamp": {
             "type": "string"
           }
         },
