@@ -217,6 +217,158 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
   });
 
+  test('EL-11575 - EL-11575 pair diff', async ({ page }) => {
+    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
+
+    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+
+    const EL11575_EL11575 = page.getByTestId('EL-11575_EL-11575');
+
+    const header = EL11575_EL11575.locator(".header");
+    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
+
+    await expect(EL11575_EL11575.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+
+    const leftBadge = EL11575_EL11575.locator(".header .left .badge");
+    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toHaveText("EL-11575 - Another one requirement");
+
+    const rightBadge = EL11575_EL11575.locator(".header .right .badge");
+    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toHaveText("EL-11575 - Another one requirement");
+
+    const referencedWiLabel = EL11575_EL11575.locator(".header .right .referenced-wi");
+    await expect(referencedWiLabel).toBeVisible({ visible: true });
+    await expect(referencedWiLabel).toHaveText("R");
+
+    const revisionLabel = EL11575_EL11575.locator(".header .right .revision");
+    await expect(revisionLabel).toBeVisible({ visible: true });
+    await expect(revisionLabel).toHaveText("rev. 6480");
+
+    await expect(EL11575_EL11575.locator(".content")).toBeVisible({ visible: true });
+
+    const descriptionDiffHeader = EL11575_EL11575.getByTestId("Description").locator(".diff-header");
+    await expect(descriptionDiffHeader).toBeVisible({ visible: true });
+    await expect(descriptionDiffHeader).toHaveText("Description");
+
+    await expect(EL11575_EL11575.getByTestId("Description").locator(".diff-viewer")).toBeVisible({ visible: true });
+
+    const descriptionDiffLeft = EL11575_EL11575.getByTestId("Description").locator(".diff-viewer .diff-leaf.left");
+    await expect(descriptionDiffLeft).toBeVisible({ visible: true });
+
+    const descriptionDiffLeftHtml = await descriptionDiffLeft.innerHTML();
+    expect(normalizeHtml(descriptionDiffLeftHtml)).toBe(normalizeHtml(`
+        <span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeid=\"added-diff-0\" next=\"last-diff\">Another one requirement</span>
+    `));
+
+    const descriptionDiffRight = EL11575_EL11575.getByTestId("Description").locator(".diff-viewer .diff-leaf.right");
+    await expect(descriptionDiffRight).toBeVisible({ visible: true });
+    await expect(descriptionDiffRight).toHaveCSS("border-left", "5px dotted rgb(187, 187, 187)");
+
+    const descriptionDiffRightHtml = await descriptionDiffRight.innerHTML();
+    expect(normalizeHtml(descriptionDiffRightHtml)).toBe(normalizeHtml(`
+        <span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeid=\"removed-diff-0\" next=\"last-diff\">Another one requirement</span>
+    `));
+  });
+
+  test('EL-11600 - NONE pair diff', async ({ page }) => {
+    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
+
+    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+
+    const EL11600_NONE = page.getByTestId('EL-11600_NONE');
+
+    const header = EL11600_NONE.locator(".header");
+    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
+
+    await expect(EL11600_NONE.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+
+    const leftBadge = EL11600_NONE.locator(".header .left .badge");
+    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toHaveText("EL-11600 - Very important requirement");
+
+    const referencedWiLabel = EL11600_NONE.locator(".header .left .referenced-wi");
+    await expect(referencedWiLabel).toBeVisible({ visible: true });
+    await expect(referencedWiLabel).toHaveText("R");
+
+    const revisionLabel = EL11600_NONE.locator(".header .left .revision");
+    await expect(revisionLabel).toBeVisible({ visible: true });
+    await expect(revisionLabel).toHaveText("rev. 6480");
+
+    const rightHeader = EL11600_NONE.locator(".header .right");
+    await expect(rightHeader).toBeVisible({ visible: true });
+    await expect(rightHeader).toHaveText("–");
+
+    await expect(EL11600_NONE.locator(".content")).toBeVisible({ visible: true });
+
+    const typeDiffHeader = EL11600_NONE.getByTestId("Type").locator(".diff-header");
+    await expect(typeDiffHeader).toBeVisible({ visible: true });
+    await expect(typeDiffHeader).toHaveText("Type");
+
+    await expect(EL11600_NONE.getByTestId("Type").locator(".diff-viewer")).toBeVisible({ visible: true });
+
+    const typeDiffLeft = EL11600_NONE.getByTestId("Type").locator(".diff-viewer .diff-leaf.left");
+    await expect(typeDiffLeft).toBeVisible({ visible: true });
+    await expect(typeDiffLeft).toHaveCSS("border-left", "5px dotted rgb(187, 187, 187)");
+
+    const typeDiffLeftHtml = await typeDiffLeft.innerHTML();
+    expect(normalizeHtml(typeDiffLeftHtml)).toBe(normalizeHtml(`
+        <span class="diff-html-added" id="removed-diff-0" previous="first-diff" changeid="removed-diff-0" next="added-diff-0"></span>
+        <span class="diff-html-removed" id="added-diff-0" previous="removed-diff-0" changeid="added-diff-0" next="last-diff"><span class="polarion-JSEnumOption" title="Requirement - A nonfunctional requirement.">Requirement</span></span>
+    `));
+
+    const typeDiffRight = EL11600_NONE.getByTestId("Type").locator(".diff-viewer .diff-leaf.right");
+    await expect(typeDiffRight).toBeVisible({ visible: true });
+
+    const typeDiffRightHtml = await typeDiffRight.innerHTML();
+    expect(typeDiffRightHtml).toBe("");
+
+    const titleDiffHeader = EL11600_NONE.getByTestId("Title").locator(".diff-header");
+    await expect(titleDiffHeader).toBeVisible({ visible: true });
+    await expect(titleDiffHeader).toHaveText("Title");
+
+    await expect(EL11600_NONE.getByTestId("Title").locator(".diff-viewer")).toBeVisible({ visible: true });
+
+    const titleDiffLeft = EL11600_NONE.getByTestId("Title").locator(".diff-viewer .diff-leaf.left");
+    await expect(titleDiffLeft).toBeVisible({ visible: true });
+    await expect(titleDiffLeft).toHaveCSS("border-left", "5px dotted rgb(187, 187, 187)");
+
+    const titleDiffLeftHtml = await titleDiffLeft.innerHTML();
+    expect(normalizeHtml(titleDiffLeftHtml)).toBe(normalizeHtml(`
+        <span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeid=\"added-diff-0\" next=\"last-diff\">Very important requirement</span>
+    `));
+
+    const titleDiffRight = EL11600_NONE.getByTestId("Title").locator(".diff-viewer .diff-leaf.right");
+    await expect(titleDiffRight).toBeVisible({ visible: true });
+
+    const titleDiffRightHtml = await titleDiffRight.innerHTML();
+    expect(titleDiffRightHtml).toBe("");
+
+    const statusDiffHeader = EL11600_NONE.getByTestId("Status").locator(".diff-header");
+    await expect(statusDiffHeader).toBeVisible({ visible: true });
+    await expect(statusDiffHeader).toHaveText("Status");
+
+    await expect(EL11600_NONE.getByTestId("Status").locator(".diff-viewer")).toBeVisible({ visible: true });
+
+    const statusDiffLeft = EL11600_NONE.getByTestId("Status").locator(".diff-viewer .diff-leaf.left");
+    await expect(statusDiffLeft).toBeVisible({ visible: true });
+    await expect(statusDiffLeft).toHaveCSS("border-left", "5px dotted rgb(187, 187, 187)");
+
+    const statusDiffLeftHtml = await statusDiffLeft.innerHTML();
+    expect(normalizeHtml(statusDiffLeftHtml)).toBe(normalizeHtml(`
+        <span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeid=\"removed-diff-0\" next=\"added-diff-0\"></span>
+        <span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeid=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Draft\">Draft</span></span>
+    `));
+
+    const statusDiffRight = EL11600_NONE.getByTestId("Status").locator(".diff-viewer .diff-leaf.right");
+    await expect(statusDiffRight).toBeVisible({ visible: true });
+
+    const statusDiffRightHtml = await statusDiffRight.innerHTML();
+    expect(statusDiffRightHtml).toBe("");
+  });
+
   test('EL-153 - DP-11560 pair diff', async ({ page }) => {
     await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
 

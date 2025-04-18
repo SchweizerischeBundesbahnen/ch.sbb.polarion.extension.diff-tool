@@ -11,33 +11,36 @@
     "moveFailed": [],
     "moveSkipped": [],
     "mergeDetached": [],
-    "logs": "2025-04-16 15:38:22.215: 'MODIFIED' -- left WI 'EL-4977', right WI 'DP-11559' -- workitem 'DP-11559' modified with info from 'EL-4977'",
+    "logs": "2025-04-18 12:56:16.904: 'PROHIBITED' -- left WI 'EL-11575', right WI 'EL-11575' -- don't allow merging referenced work item into included one",
+    "modified": [],
+    "deleted": [],
+    "created": [],
     "warnings": [],
-    "modified": [
+    "prohibited": [
       {
-        "operationResultType": "MODIFIED",
+        "operationResultType": "PROHIBITED",
         "workItemsPair": {
           "leftWorkItem": {
-            "id": "EL-4977",
-            "title": "New Requirement",
-            "outlineNumber": "2.1-2",
+            "id": "EL-11575",
+            "title": "Another one requirement",
+            "outlineNumber": "2.1-3",
             "projectId": "elibrary",
             "referenced": false,
             "revision": null,
-            "lastRevision": "5976",
+            "lastRevision": "6481",
             "movedOutlineNumber": null,
             "moveDirection": null,
             "externalProjectWorkItem": false,
             "fields": []
           },
           "rightWorkItem": {
-            "id": "DP-11559",
-            "title": "New Requirement",
-            "outlineNumber": "2.1-2",
-            "projectId": "drivepilot",
-            "referenced": false,
-            "revision": null,
-            "lastRevision": "6461",
+            "id": "EL-11575",
+            "title": "Another one requirement",
+            "outlineNumber": "2.1-3",
+            "projectId": "elibrary",
+            "referenced": true,
+            "revision": "6480",
+            "lastRevision": "6481",
             "movedOutlineNumber": null,
             "moveDirection": null,
             "externalProjectWorkItem": false,
@@ -47,9 +50,6 @@
         "fieldId": null,
         "documentsContentPair": null
       }
-    ],
-    "deleted": [],
-    "created": [],
-    "prohibited": []
+    ]
   }
 }

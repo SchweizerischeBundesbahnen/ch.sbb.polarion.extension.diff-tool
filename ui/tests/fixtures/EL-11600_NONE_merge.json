@@ -1,0 +1,43 @@
+{
+  "success": true,
+  "targetModuleHasStructuralChanges": false,
+  "mergeNotAuthorized": false,
+  "mergeReport": {
+    "copied": [],
+    "conflicted": [],
+    "creationFailed": [
+      {
+        "operationResultType": "CREATION_FAILED",
+        "workItemsPair": {
+          "leftWorkItem": {
+            "id": "EL-11600",
+            "title": "Very important requirement",
+            "outlineNumber": "2.1-4",
+            "projectId": "elibrary",
+            "referenced": true,
+            "revision": "6480",
+            "lastRevision": "6481",
+            "movedOutlineNumber": null,
+            "moveDirection": null,
+            "externalProjectWorkItem": false,
+            "fields": []
+          },
+          "rightWorkItem": null
+        },
+        "fieldId": null,
+        "documentsContentPair": null
+      }
+    ],
+    "duplicateSkipped": [],
+    "moved": [],
+    "moveFailed": [],
+    "moveSkipped": [],
+    "mergeDetached": [],
+    "logs": "2025-04-18 13:30:48.940: 'CREATION_FAILED' -- left WI 'EL-11600', right WI 'null' -- new workitem based on source workitem 'EL-11600' NOT created",
+    "warnings": [],
+    "modified": [],
+    "created": [],
+    "deleted": [],
+    "prohibited": []
+  }
+}

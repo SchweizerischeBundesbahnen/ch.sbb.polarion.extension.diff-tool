@@ -317,7 +317,7 @@ public class MergeService {
         IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
         boolean moveRequested = pair.getLeftWorkItem().getMovedOutlineNumber() != null || pair.getRightWorkItem().getMovedOutlineNumber() != null;
 
-        if (!context.getTargetModule().getExternalWorkItems().contains(target)) { // do not merge data of referenced WIs
+        if (!context.getTargetModule().getExternalWorkItems().contains(target)) {
             if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
                 context.reportEntry(CONFLICTED, pair, "merge is not allowed: target workitem '%s' revision '%s' has been already changed to '%s'"
                         .formatted(target.getId(), context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision()));
@@ -332,7 +332,7 @@ public class MergeService {
                 polarionService.fixReferencedWorkItem(target, context.getTargetModule(), context.linkRoleObject);
                 reloadModule(context.getTargetModule());
             } else if (!moveRequested && !context.isAllowedReferencedWorkItemMerge()) {
-                context.reportEntry(PROHIBITED, pair, "can't merge into referenced workitem '%s' in target document '%s'".formatted(target.getId(), context.getTargetModule()));
+                context.reportEntry(PROHIBITED, pair, "can't merge into referenced workitem '%s' in target document '%s'".formatted(target.getId(), context.getTargetModule().getTitleWithSpace()));
             }
         }
 

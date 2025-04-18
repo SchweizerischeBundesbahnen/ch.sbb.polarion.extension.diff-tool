@@ -2,7 +2,7 @@
   "leftWorkItem": {
     "id": "EL-4977",
     "title": "New Requirement",
-    "outlineNumber": "2.1-3",
+    "outlineNumber": "2.1-2",
     "projectId": "elibrary",
     "referenced": false,
     "revision": null,
@@ -18,8 +18,8 @@
           "typeName": "java.lang.String",
           "subtype": null
         },
-        "value": "2.1-3",
-        "html": "2.1-3",
+        "value": "2.1-2",
+        "html": "2.1-2",
         "htmlDiff": null,
         "issues": []
       },
@@ -83,7 +83,7 @@
   "rightWorkItem": {
     "id": "DP-11559",
     "title": "New Requirement",
-    "outlineNumber": "2.1-3",
+    "outlineNumber": "2.1-2",
     "projectId": "drivepilot",
     "referenced": false,
     "revision": null,
@@ -99,8 +99,8 @@
           "typeName": "java.lang.String",
           "subtype": null
         },
-        "value": "2.1-3",
-        "html": "2.1-3",
+        "value": "2.1-2",
+        "html": "2.1-2",
         "htmlDiff": null,
         "issues": []
       },

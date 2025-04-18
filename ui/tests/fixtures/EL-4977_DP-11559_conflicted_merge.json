@@ -4,18 +4,9 @@
   "mergeNotAuthorized": false,
   "mergeReport": {
     "copied": [],
-    "conflicted": [],
-    "creationFailed": [],
-    "duplicateSkipped": [],
-    "moved": [],
-    "moveFailed": [],
-    "moveSkipped": [],
-    "mergeDetached": [],
-    "logs": "2025-04-16 15:38:22.215: 'MODIFIED' -- left WI 'EL-4977', right WI 'DP-11559' -- workitem 'DP-11559' modified with info from 'EL-4977'",
-    "warnings": [],
-    "modified": [
+    "conflicted": [
       {
-        "operationResultType": "MODIFIED",
+        "operationResultType": "CONFLICTED",
         "workItemsPair": {
           "leftWorkItem": {
             "id": "EL-4977",
@@ -48,6 +39,15 @@
         "documentsContentPair": null
       }
     ],
+    "creationFailed": [],
+    "duplicateSkipped": [],
+    "moved": [],
+    "moveFailed": [],
+    "moveSkipped": [],
+    "mergeDetached": [],
+    "logs": "2025-04-18 13:02:30.818: 'CONFLICTED' -- left WI 'EL-4977', right WI 'DP-11559' -- merge is not allowed: target workitem 'EL-4977' revision '5976' has been already changed to '6462'",
+    "warnings": [],
+    "modified": [],
     "deleted": [],
     "created": [],
     "prohibited": []
