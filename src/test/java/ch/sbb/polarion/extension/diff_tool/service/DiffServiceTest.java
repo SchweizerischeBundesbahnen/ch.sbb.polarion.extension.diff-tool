@@ -16,6 +16,7 @@ import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.ImageHandler;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
+import ch.sbb.polarion.extension.generic.fields.model.FieldMetadata;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
@@ -26,6 +27,7 @@ import com.polarion.platform.persistence.IDataService;
 import com.polarion.platform.persistence.IEnumOption;
 import com.polarion.platform.persistence.model.IRevision;
 import com.polarion.platform.persistence.model.ITypedList;
+import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.ICustomField;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.location.ILocation;
@@ -49,10 +51,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DiffServiceTest {
@@ -414,6 +414,49 @@ class DiffServiceTest {
                 .build();
 
         assertEquals(expectedResult, realResult);
+    }
+
+    @Test
+    void testBuildWorkItem() {
+        // Mock necessary objects
+        IWorkItem mockWorkItem = mock(IWorkItem.class);
+        IModule mockModule = mock(IModule.class);
+        Set<String> fieldIds = Set.of("description", "status");
+
+        // Basic work item properties setup
+        String workItemId = "TEST-123";
+        String title = "Test Work Item";
+        String projectId = "TestProject";
+        IContextId contextId = mock(IContextId.class);
+
+        when(mockWorkItem.getId()).thenReturn(workItemId);
+        when(mockWorkItem.getTitle()).thenReturn(title);
+        when(mockWorkItem.getProjectId()).thenReturn(projectId);
+        when(mockWorkItem.getRevision()).thenReturn("123");
+
+        when(mockWorkItem.getContextId()).thenReturn(contextId);
+
+        // Mock polarionService.getGeneralFields and polarionService.getCustomFields
+        FieldMetadata statusMetadata = createMockFieldMetadata("status");
+        when(polarionService.getGeneralFields(anyString(), any())).thenReturn(Set.of(statusMetadata));
+        FieldMetadata customFieldMetadata = createMockFieldMetadata("customField");
+        when(polarionService.getCustomFields(anyString(), any(), isNull())).thenReturn(Set.of(customFieldMetadata));
+
+        // Test with basic parameters
+        WorkItem result = diffService.buildWorkItem(mockWorkItem, fieldIds, null, false, null, false);
+
+        // Verify basic properties
+        assertNotNull(result);
+        assertEquals(workItemId, result.getId());
+        assertEquals(title, result.getTitle());
+        assertEquals(projectId, result.getProjectId());
+    }
+
+    private FieldMetadata createMockFieldMetadata(String fieldId) {
+        FieldMetadata metadata = mock(FieldMetadata.class);
+        when(metadata.getId()).thenReturn(fieldId);
+        lenient().when(metadata.getType()).thenReturn(mock(IEnumType.class));
+        return metadata;
     }
 
     @Test

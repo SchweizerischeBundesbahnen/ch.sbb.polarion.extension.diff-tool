@@ -575,7 +575,8 @@ public class DiffService {
                 DocumentReference.fromModuleLocation(workItemInDocument.getDocumentProjectId(), workItemInDocument.getDocumentLocationPath(), workItemInDocument.getDocumentRevision());
     }
 
-    private WorkItem buildWorkItem(@NotNull IWorkItem iWorkItem, @NotNull Set<String> fieldIds, @Nullable String outlineNumber,
+    @VisibleForTesting
+    WorkItem buildWorkItem(@NotNull IWorkItem iWorkItem, @NotNull Set<String> fieldIds, @Nullable String outlineNumber,
                                    boolean referenced, @Nullable DocumentReference documentReference, boolean compareEnumsById) {
         WorkItem workItem = WorkItem.of(iWorkItem, outlineNumber, referenced, (documentReference != null && !iWorkItem.getProjectId().equals(documentReference.projectId())));
         Set<FieldMetadata> fields = new HashSet<>(polarionService.getGeneralFields(IWorkItem.PROTO, iWorkItem.getContextId()));

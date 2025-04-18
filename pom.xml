@@ -149,6 +149,12 @@
             <version>${awaitility.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.polarion.thirdparty</groupId>
+            <artifactId>net.htmlparser.jericho_3.1.0</artifactId>
+            <version>${polarion.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
