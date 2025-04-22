@@ -4,6 +4,13 @@ import { test, expect } from '@playwright/test';
 // We do not mock REST API requests here, that's why they fail, and we are checking that UI correctly reflects this
 test.describe('data fetch failing', () => {
 
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/diff/**', async (route) => {
+      // Emulate network error
+      return route.abort();
+    });
+  });
+
   test('documents data fetch fails', async ({ page }) => {
     await page.goto('/documents?sourceProjectId=project1&sourceSpaceId=space1&sourceDocument=document1&targetProjectId=project2&targetSpaceId=space2&targetDocument=document2&linkRole=relates_to');
 
