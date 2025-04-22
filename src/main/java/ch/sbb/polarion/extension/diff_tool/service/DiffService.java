@@ -34,8 +34,6 @@ import ch.sbb.polarion.extension.diff_tool.util.OutlineNumberComparator;
 import ch.sbb.polarion.extension.diff_tool.util.RequestContextUtil;
 import ch.sbb.polarion.extension.generic.fields.model.FieldMetadata;
 import ch.sbb.polarion.extension.generic.util.ObjectUtils;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
@@ -125,7 +123,7 @@ public class DiffService {
     }
 
     private List<DocumentContentAnchorsPair> getPairedDocumentContentAnchors(IModule leftDocument, IModule rightDocument, List<WorkItemsPair> pairedWorkItems) {
-        List<DocumentContentAnchorsPair> pairedAnchors = Lists.newArrayList();
+        List<DocumentContentAnchorsPair> pairedAnchors = new ArrayList<>();
         DocumentsContentHandler documentsContentHandler = new DocumentsContentHandler();
         Map<String, DocumentContentAnchor> leftDocumentAnchors = documentsContentHandler.parse(leftDocument.getHomePageContent().getContent());
         leftDocumentAnchors.values().forEach(anchor -> {
@@ -577,11 +575,12 @@ public class DiffService {
                 DocumentReference.fromModuleLocation(workItemInDocument.getDocumentProjectId(), workItemInDocument.getDocumentLocationPath(), workItemInDocument.getDocumentRevision());
     }
 
-    private WorkItem buildWorkItem(@NotNull IWorkItem iWorkItem, @NotNull Set<String> fieldIds, @Nullable String outlineNumber,
+    @VisibleForTesting
+    WorkItem buildWorkItem(@NotNull IWorkItem iWorkItem, @NotNull Set<String> fieldIds, @Nullable String outlineNumber,
                                    boolean referenced, @Nullable DocumentReference documentReference, boolean compareEnumsById) {
         WorkItem workItem = WorkItem.of(iWorkItem, outlineNumber, referenced, (documentReference != null && !iWorkItem.getProjectId().equals(documentReference.projectId())));
-        Set<FieldMetadata> fields = Sets.union(polarionService.getGeneralFields(IWorkItem.PROTO, iWorkItem.getContextId()),
-                polarionService.getCustomFields(IWorkItem.PROTO, iWorkItem.getContextId(), Optional.ofNullable(iWorkItem.getType()).map(IEnumOption::getId).orElse(null)));
+        Set<FieldMetadata> fields = new HashSet<>(polarionService.getGeneralFields(IWorkItem.PROTO, iWorkItem.getContextId()));
+        fields.addAll(polarionService.getCustomFields(IWorkItem.PROTO, iWorkItem.getContextId(), Optional.ofNullable(iWorkItem.getType()).map(IEnumOption::getId).orElse(null)));
         for (String fieldId : fieldIds) {
             IType fieldType = fields.stream().filter(f -> f.getId().equals(fieldId)).map(FieldMetadata::getType).findFirst().orElse(null);
             workItem.addField(
@@ -721,8 +720,8 @@ public class DiffService {
     }
 
     private String postProcessDiff(@NotNull String diff, DiffContext context, List<DiffLifecycleHandler> handlers) {
-        for (DiffLifecycleHandler handler : Lists.reverse(handlers)) {
-            diff = handler.postProcess(diff, context);
+        for (int i = handlers.size() - 1; i >= 0; i--) {
+            diff = handlers.get(i).postProcess(diff, context);
         }
         return diff;
     }

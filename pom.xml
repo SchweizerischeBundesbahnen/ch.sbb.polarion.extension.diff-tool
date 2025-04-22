@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>8.1.0</version>
+        <version>8.1.1</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
@@ -148,6 +148,12 @@
             <artifactId>awaitility</artifactId>
             <version>${awaitility.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.polarion.thirdparty</groupId>
+            <artifactId>net.htmlparser.jericho_3.1.0</artifactId>
+            <version>${polarion.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
