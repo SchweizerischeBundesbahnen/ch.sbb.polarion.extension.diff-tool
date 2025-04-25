@@ -22,7 +22,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class DiffModelTest {
-    private static Stream<Arguments> testValuesForCss() {
+
+    private static Stream<Arguments> testValuesForDiffModel() {
         return Stream.of(
                 Arguments.of(null, null, Collections.emptyList(), Collections.emptyList(), Collections.emptyList()),
                 Arguments.of("", null, Collections.emptyList(), Collections.emptyList(), Collections.emptyList()),
@@ -79,7 +80,7 @@ class DiffModelTest {
     }
 
     @ParameterizedTest
-    @MethodSource("testValuesForCss")
+    @MethodSource("testValuesForDiffModel")
     void getProperExpectedResults(String locationContent, String expectedBundleTimestamp,
                                   List<DiffField> expectedFields, List<String> expectedStatusesToIgnore, List<String> expectedHyperlinkRoles) {
 

@@ -38,6 +38,15 @@
                   projectScope="true"
                   projectGroupScope="false"
                   repositoryScope="false"/>
+
+        <extender id="execution-queue"
+                  name="Execution Queue"
+                  parentNodeId="diff-tool"
+                  iconUrl="/polarion/diff-tool-admin/ui/images/menu/16x16/authorization.svg"
+                  pageUrl="/polarion/diff-tool-admin/pages/execution.jsp?scope=$scope$"
+                  projectScope="false"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
     </contribution>
 
     <contribution configuration-id="com.polarion.alm.wiki.renderingContext">
