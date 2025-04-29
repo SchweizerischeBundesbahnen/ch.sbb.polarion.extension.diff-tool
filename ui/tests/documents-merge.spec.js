@@ -809,4 +809,126 @@ test.describe("page of diffing documents' WorkItems", () => {
     }
   });
 
+
+  test('moved by merge', async ({ page }) => {
+    const requestPromise = page.waitForRequest(request => {
+      return request.url().includes('/merge/documents');
+    });
+
+    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
+
+    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+
+    await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
+    await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
+
+    const selectionCheckbox = page.getByTestId('EL-157_DP-11562_direct').locator('.merge-ticker input[type="checkbox"]').nth(0);
+    await selectionCheckbox.isVisible();
+    await selectionCheckbox.click();
+
+    const pairedSelectionCheckbox = page.getByTestId('EL-157_DP-11562_reverse').locator('.merge-ticker input[type="checkbox"]').nth(0);
+    await expect(pairedSelectionCheckbox).toBeVisible();
+    await expect(pairedSelectionCheckbox).toBeChecked();
+
+    const mergeButton = page.locator('.header .merge-pane .merge-button .btn').nth(0);
+    await expect(mergeButton).toBeEnabled();
+    await mergeButton.isEnabled();
+    await mergeButton.click();
+
+    await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible();
+    const mergeConfirmation = page.getByTestId("merge-confirmation");
+    await expect(mergeConfirmation).toBeVisible();
+    await expect(mergeConfirmation).toHaveText("Are you sure you want to merge selected items from source to target document?");
+    const structuralChangesWarning = page.getByTestId("merge-confirmation-structural-changes-warning");
+    await expect(structuralChangesWarning).toBeVisible();
+    await expect(structuralChangesWarning).toHaveCSS("font-weight", "700");
+    await expect(structuralChangesWarning).toHaveText("Be aware that you have selected items to be merged which will lead to document's structural changes. After merge is finished, diffs view will automatically be reloaded to actualize documents structure.");
+
+    const actionButton = page.getByTestId("merge-confirmation-modal-action-button");
+    await expect(actionButton).toBeVisible();
+    await expect(actionButton).toBeEnabled();
+
+    await actionButton.isVisible();
+    actionButton.click();
+
+    await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
+
+    const request = await requestPromise;
+
+    expect(request.method()).toBe('POST');
+    expect(request.url()).toContain('/merge/documents');
+
+    if (request.method() === 'POST') {
+      const postData = JSON.parse(request.postData() || '{}');
+      expect(postData.allowReferencedWorkItemMerge).toBe(false);
+      expect(postData.configName).toBe("Default");
+      expect(postData.direction).toBe(0);
+      expect(postData.linkRole).toBe("relates_to");
+
+      expect(postData.leftDocument.projectId).toBe("elibrary");
+      expect(postData.leftDocument.spaceId).toBe("Specification");
+      expect(postData.leftDocument.name).toBe("Catalog Specification");
+
+      expect(postData.rightDocument.projectId).toBe("drivepilot");
+      expect(postData.rightDocument.spaceId).toBe("Design");
+      expect(postData.rightDocument.name).toBe("Catalog Design");
+
+      expect(postData.pairs[0].leftWorkItem.projectId).toBe("elibrary");
+      expect(postData.pairs[0].leftWorkItem.id).toBe("EL-157");
+      expect(postData.pairs[0].leftWorkItem.outlineNumber).toBe("2.2-3");
+      expect(postData.pairs[0].leftWorkItem.externalProjectWorkItem).toBe(false);
+      expect(postData.pairs[0].leftWorkItem.referenced).toBe(false);
+      expect(postData.pairs[0].leftWorkItem.moveDirection).toBe(0);
+      expect(postData.pairs[0].leftWorkItem.movedOutlineNumber).toBe("2.2-2");
+      expect(postData.pairs[0].leftWorkItem.title).toBe("User may not be told if the password or user name is wrong");
+
+      expect(postData.pairs[0].rightWorkItem.projectId).toBe("drivepilot");
+      expect(postData.pairs[0].rightWorkItem.id).toBe("DP-11562");
+      expect(postData.pairs[0].rightWorkItem.outlineNumber).toBe("2.2-2");
+      expect(postData.pairs[0].rightWorkItem.externalProjectWorkItem).toBe(false);
+      expect(postData.pairs[0].rightWorkItem.referenced).toBe(false);
+      expect(postData.pairs[0].rightWorkItem.moveDirection).toBe(null);
+      expect(postData.pairs[0].rightWorkItem.movedOutlineNumber).toBe(null);
+      expect(postData.pairs[0].rightWorkItem.title).toBe("User may not be told if the password or user name is wrong");
+
+      const mergeResultModal = page.getByTestId("merge-result-modal");
+      await expect(mergeResultModal).toBeVisible();
+
+      const mergeResultModalTitle = mergeResultModal.locator(".modal-title");
+      await expect(mergeResultModalTitle).toBeVisible();
+      await expect(mergeResultModalTitle).toHaveText("Merge Report");
+
+      const mergeResultModalMessage = page.getByTestId("merge-completed-with-result");
+      await expect(mergeResultModalMessage).toBeVisible();
+      await expect(mergeResultModalMessage).toHaveText("Merge operation completed with following result:");
+
+      const mergeResultModalList = mergeResultModal.locator("ul");
+      await expect(mergeResultModalList).toBeVisible();
+      await expect(mergeResultModalList).toHaveText("Content of 1 items were modified.1 items were moved (structural changes).");
+
+      const mergeResultModalLogLink = page.getByTestId("see-full-log");
+      await expect(mergeResultModalLogLink).toBeVisible();
+      await expect(mergeResultModalLogLink).toHaveText("See full log");
+
+      const mergeResultModalLog = mergeResultModal.locator("pre");
+      await expect(mergeResultModalLog).toBeVisible({visible: false});
+
+      await mergeResultModalLogLink.click();
+
+      await expect(mergeResultModalLog).toBeVisible();
+      await expect(mergeResultModalLog).toHaveText("2025-04-29 14:09:21.218: 'MODIFIED' -- left WI 'EL-157', right WI 'DP-11562' -- workitem 'DP-11562' modified with info from 'EL-157'\n2025-04-29 14:09:21.227: 'MOVED' -- left WI 'EL-157', right WI 'DP-11562' -- workitem 'DP-11562' moved");
+
+      const structurealChangesWarning = page.getByTestId("structural-changes-warning");
+      await expect(structurealChangesWarning).toBeVisible();
+      await expect(structurealChangesWarning).toHaveText("The target document has just undergone some structural changes, which mean that no more merge actions are allowed using the current state of the view. The page will automatically be reloaded to actualize documents state.");
+
+      const cancelButton = page.getByTestId("merge-result-modal-cancel-button");
+      await expect(cancelButton).toBeVisible();
+      await expect(cancelButton).toBeEnabled();
+      await cancelButton.click();
+
+      await expect(mergeResultModal).toBeVisible({ visible: false});
+    }
+  });
+
 });

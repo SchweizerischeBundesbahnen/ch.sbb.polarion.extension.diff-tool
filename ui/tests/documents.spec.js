@@ -128,10 +128,8 @@ test.describe("page of diffing documents' WorkItems", () => {
 
     const expandButton = page.locator('.control-pane .expand-button');
     await expect(expandButton).toBeVisible({visible: true});
-    if (await expandButton.isVisible()) {
-      await expandButton.click();
-      expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
-    }
+    await expandButton.click();
+    expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
 
     page.locator("#paper-size").selectOption("A3");
     page.locator("#orientation").selectOption("portrait");
@@ -140,7 +138,10 @@ test.describe("page of diffing documents' WorkItems", () => {
       return request.url().includes('/conversion/html-to-pdf');
     });
 
-    page.getByTestId("export-button").click();
+    const exportButton = page.getByTestId("export-button");
+    await expect(exportButton).toBeVisible();
+    await expect(exportButton).toBeEnabled();
+    exportButton.dispatchEvent("click"); // We dispatch low level click-event here, instead of invoking Playwright's click() method to bypass button's "instability" resulted by its animation
 
     const exportRequest = await exportRequestPromise;
     expect(exportRequest.method()).toBe('POST');

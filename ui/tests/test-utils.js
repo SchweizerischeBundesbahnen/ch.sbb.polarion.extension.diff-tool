@@ -80,6 +80,8 @@ export const workItemsMergeFixtureDataProvider = (requestBody) => {
     fixtureFile = "EL-11575_EL-11575_merge_into_referenced.json";
   } else if (requestBody.pairs[0].leftWorkItem.id === "EL-11575" && requestBody.pairs[0].rightWorkItem.id === "EL-11575" && requestBody.direction === 1) {
     fixtureFile = "EL-11575_EL-11575_merge_from_referenced.json";
+  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-157" && requestBody.pairs[0].rightWorkItem.id === "DP-11562" && requestBody.direction === 0) {
+    fixtureFile = "EL-157_DP-11562_merge.json";
   }
 
   if (fixtureFile) {
