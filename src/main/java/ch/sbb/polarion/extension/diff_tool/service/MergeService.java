@@ -183,7 +183,7 @@ public class MergeService {
         });
 
         return MergeResult.builder()
-                .success(!context.getMergeReport().getCopied().isEmpty())
+                .success(!context.getMergeReport().getModified().isEmpty())
                 .mergeReport(context.getMergeReport())
                 .build();
     }
