@@ -58,10 +58,7 @@ test.describe("page of diffing documents' WorkItems", () => {
 
     await expect(page.getByTestId('RIGHT-doc-title')).toHaveText("Catalog DesignHEAD (rev. 6457)");
 
-    const mergePane = page.locator('.header .merge-pane');
-    await expect(mergePane).toBeVisible({visible: true}); // Expect merge pane is visible
-
-    await mergePane.isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const selectAllLabel = page.locator('.header .merge-pane label.select-all');
     await expect(selectAllLabel).toBeVisible();
