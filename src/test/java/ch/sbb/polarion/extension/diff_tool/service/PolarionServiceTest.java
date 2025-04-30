@@ -13,7 +13,6 @@ import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
-import com.google.common.collect.Lists;
 import com.polarion.alm.projects.IProjectService;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.projects.model.IUser;
@@ -225,7 +224,7 @@ class PolarionServiceTest {
         IWorkItem doc1Item4 = mockWorkItem(trackerProject, document1, "14", true, false, "open");
         IWorkItem doc1Item5 = mockWorkItem(trackerProject, document1, "15", true, false, "draft");
         IWorkItem doc1Item6 = mockWorkItem(trackerProject, document1, "16", true, false, "open");
-        when(document1.getAllWorkItems()).thenReturn(Lists.newArrayList(
+        when(document1.getAllWorkItems()).thenReturn(List.of(
                 doc1Item1,
                 doc1Item2,
                 doc1Item3,
@@ -238,7 +237,7 @@ class PolarionServiceTest {
         IWorkItem doc2Item2 = mockWorkItem(trackerProject, document2, "22", true, false, "in_progress");
         IWorkItem doc2Item3 = mockWorkItem(trackerProject, document2, "23", true, true, "done");
         IWorkItem doc2Item4 = mockWorkItem(trackerProject, document2, "24", true, false, "in_progress");
-        when(document2.getAllWorkItems()).thenReturn(Lists.newArrayList(
+        when(document2.getAllWorkItems()).thenReturn(List.of(
                 doc2Item1,
                 doc2Item2,
                 doc2Item3,
@@ -248,17 +247,17 @@ class PolarionServiceTest {
         IWorkItem doc3Item1 = mockWorkItem(trackerProject, document3, "31", true, false, "in_progress");
         IWorkItem doc3Item2 = mockWorkItem(trackerProject, document3, "32", true, false, "in_progress");
 
-        mockLinks(doc1Item1, Lists.newArrayList(mockLink(doc2Item1, LINK_ROLE_ID_1), mockLink(doc2Item1, LINK_ROLE_ID_2), mockLink(doc2Item2, LINK_ROLE_ID_1)), Lists.newArrayList(mockLink(doc2Item2, LINK_ROLE_ID_2)));
-        mockLinks(doc1Item2, Lists.newArrayList(mockLink(doc2Item1, LINK_ROLE_ID_1), mockLink(doc2Item2, LINK_ROLE_ID_2)), Lists.newArrayList(mockLink(doc2Item2, LINK_ROLE_ID_1)));
-        mockLinks(doc1Item3, Lists.newArrayList(mockLink(doc2Item1, LINK_ROLE_ID_1), mockLink(doc2Item2, LINK_ROLE_ID_1)), Lists.newArrayList());
-        mockLinks(doc1Item4, Lists.newArrayList(mockLink(doc2Item4, LINK_ROLE_ID_2)), Lists.newArrayList());
-        mockLinks(doc1Item5, Lists.newArrayList(mockLink(doc3Item1, LINK_ROLE_ID_1), mockLink(doc3Item2, LINK_ROLE_ID_2)), Lists.newArrayList());
-        mockLinks(doc1Item6, Lists.newArrayList(mockLink(doc1Item6, LINK_ROLE_ID_2)), Lists.newArrayList());
+        mockLinks(doc1Item1, List.of(mockLink(doc2Item1, LINK_ROLE_ID_1), mockLink(doc2Item1, LINK_ROLE_ID_2), mockLink(doc2Item2, LINK_ROLE_ID_1)), List.of(mockLink(doc2Item2, LINK_ROLE_ID_2)));
+        mockLinks(doc1Item2, List.of(mockLink(doc2Item1, LINK_ROLE_ID_1), mockLink(doc2Item2, LINK_ROLE_ID_2)), List.of(mockLink(doc2Item2, LINK_ROLE_ID_1)));
+        mockLinks(doc1Item3, List.of(mockLink(doc2Item1, LINK_ROLE_ID_1), mockLink(doc2Item2, LINK_ROLE_ID_1)), List.of());
+        mockLinks(doc1Item4, List.of(mockLink(doc2Item4, LINK_ROLE_ID_2)), List.of());
+        mockLinks(doc1Item5, List.of(mockLink(doc3Item1, LINK_ROLE_ID_1), mockLink(doc3Item2, LINK_ROLE_ID_2)), List.of());
+        mockLinks(doc1Item6, List.of(mockLink(doc1Item6, LINK_ROLE_ID_2)), List.of());
 
-        mockLinks(doc2Item1, Lists.newArrayList(), Lists.newArrayList(mockLink(doc1Item1, LINK_ROLE_ID_1), mockLink(doc1Item2, LINK_ROLE_ID_1), mockLink(doc1Item3, LINK_ROLE_ID_1)));
-        mockLinks(doc2Item2, Lists.newArrayList(mockLink(doc1Item2, LINK_ROLE_ID_1)), Lists.newArrayList(mockLink(doc1Item2, LINK_ROLE_ID_2), mockLink(doc1Item3, LINK_ROLE_ID_2)));
-        mockLinks(doc2Item3, Lists.newArrayList(), Lists.newArrayList());
-        mockLinks(doc2Item4, Lists.newArrayList(), Lists.newArrayList(mockLink(doc1Item4, LINK_ROLE_ID_2)));
+        mockLinks(doc2Item1, List.of(), List.of(mockLink(doc1Item1, LINK_ROLE_ID_1), mockLink(doc1Item2, LINK_ROLE_ID_1), mockLink(doc1Item3, LINK_ROLE_ID_1)));
+        mockLinks(doc2Item2, List.of(mockLink(doc1Item2, LINK_ROLE_ID_1)), List.of(mockLink(doc1Item2, LINK_ROLE_ID_2), mockLink(doc1Item3, LINK_ROLE_ID_2)));
+        mockLinks(doc2Item3, List.of(), List.of());
+        mockLinks(doc2Item4, List.of(), List.of(mockLink(doc1Item4, LINK_ROLE_ID_2)));
 
         ILinkRoleOpt role = mock(ILinkRoleOpt.class);
         lenient().when(role.getId()).thenReturn(LINK_ROLE_ID_1);
@@ -424,6 +423,7 @@ class PolarionServiceTest {
     }
 
     @Test
+    @SuppressWarnings("rawtypes")
     void testFillStandardFieldDefaultValueForEnums() {
         WorkItemField field = WorkItemField.builder().key(IWorkItem.KEY_SEVERITY).build();
 
