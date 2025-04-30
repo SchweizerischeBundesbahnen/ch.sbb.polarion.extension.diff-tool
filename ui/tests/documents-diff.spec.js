@@ -14,9 +14,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-183 - DP-11545 pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL183_DP11545 = page.getByTestId('EL-183_DP-11545');
     await expect(EL183_DP11545.locator(".header")).toBeVisible({ visible: false });
@@ -24,9 +22,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-184 - DP-11546 pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL184_DP11546 = page.getByTestId('EL-184_DP-11546');
     await expect(EL184_DP11546.locator(".header")).toBeVisible({ visible: false });
@@ -34,9 +30,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-144 - DP-11549 pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL144_DP11549 = page.getByTestId('EL-144_DP-11549');
 
@@ -66,9 +60,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-145 - DP-11550 pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL145_DP11550 = page.getByTestId('EL-145_DP-11550');
 
@@ -98,9 +90,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-101 - DP-11551 pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL101_DP11551 = page.getByTestId('EL-101_DP-11551');
 
@@ -122,9 +112,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-146 - DP-11552 pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL146_DP11552 = page.getByTestId('EL-146_DP-11552');
 
@@ -146,9 +134,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-4977 - DP-11559 pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL4977_DP11559 = page.getByTestId('EL-4977_DP-11559');
 
@@ -218,9 +204,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-11575 - EL-11575 pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL11575_EL11575 = page.getByTestId('EL-11575_EL-11575');
 
@@ -273,9 +257,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-11600 - NONE pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL11600_NONE = page.getByTestId('EL-11600_NONE');
 
@@ -370,9 +352,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-153 - DP-11560 pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL153_DP11560 = page.getByTestId('EL-153_DP-11560');
 
@@ -402,9 +382,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-11572 - DP-11571 pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL11572_DP11571 = page.getByTestId('EL-11572_DP-11571');
 
@@ -426,9 +404,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-156 - NONE pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL156_NONE = page.getByTestId('EL-156_NONE');
 
@@ -532,9 +508,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-157 - DP-11562 direct moved pair', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL157_DP11562_direct = page.getByTestId('EL-157_DP-11562_direct');
 
@@ -564,9 +538,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-157 - DP-11562 reverse moved pair', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL157_DP11562_reverse = page.getByTestId('EL-157_DP-11562_reverse');
 
@@ -596,9 +568,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('NONE - DP-11570 pair diff', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const NONE_DP11570 = page.getByTestId('NONE_DP-11570');
 
@@ -686,9 +656,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-158 - DP-11563 direct moved pair', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL158_DP11563_direct = page.getByTestId('EL-158_DP-11563_direct');
 
@@ -722,9 +690,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-158 - DP-11563 reverse moved pair', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL158_DP11563_reverse = page.getByTestId('EL-158_DP-11563_reverse');
 
@@ -758,9 +724,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-159 - DP-11564 direct moved pair', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL159_DP11564_direct = page.getByTestId('EL-159_DP-11564_direct');
 
@@ -790,9 +754,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
   });
 
   test('EL-159 - DP-11564 reverse moved pair', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL159_DP11564_reverse = page.getByTestId('EL-159_DP-11564_reverse');
 

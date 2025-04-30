@@ -124,7 +124,7 @@ test.describe("page of diffing documents' WorkItems", () => {
   test('export to PDF', async ({ page }) => {
     expect(await page.locator('.control-pane.expanded').count()).toEqual(0);
 
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const expandButton = page.locator('.control-pane .expand-button');
     await expect(expandButton).toBeVisible({visible: true});
@@ -149,9 +149,7 @@ test.describe("page of diffing documents' WorkItems", () => {
   });
 
   test('expand/collapse', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const EL4977_DP11559 = page.getByTestId('EL-4977_DP-11559');
 
@@ -180,9 +178,7 @@ test.describe("page of diffing documents' WorkItems", () => {
   });
 
   test('select all', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     // Check first that headers of WI pairs are not visually marked as selected. Also hidden ones will be taken by locator below, but for this test this is not important
     const allPairs = page.locator('.wi-diff');
@@ -232,9 +228,7 @@ test.describe("page of diffing documents' WorkItems", () => {
   });
 
   test('select single', async ({ page }) => {
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     const selectAllCheckbox = page.locator('.header .merge-pane label.select-all input[type="checkbox"]');
     await expect(selectAllCheckbox).toBeVisible();

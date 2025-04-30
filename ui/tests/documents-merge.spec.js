@@ -23,9 +23,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       route.continue();
     });
 
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
 
@@ -60,9 +58,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       return request.url().includes('/merge/documents');
     });
 
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
     await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
@@ -169,9 +165,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       return request.url().includes('/merge/documents');
     });
 
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
     await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
@@ -275,9 +269,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       return request.url().includes('/merge/documents');
     });
 
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
     await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
@@ -381,9 +373,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       return request.url().includes('/merge/documents');
     });
 
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
     await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
@@ -487,9 +477,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       return request.url().includes('/merge/documents');
     });
 
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
     await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
@@ -596,9 +584,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       return request.url().includes('/merge/documents');
     });
 
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
     await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
@@ -705,9 +691,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       return request.url().includes('/merge/documents');
     });
 
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
     await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
@@ -809,15 +793,12 @@ test.describe("page of diffing documents' WorkItems", () => {
     }
   });
 
-
   test('moved by merge', async ({ page }) => {
     const requestPromise = page.waitForRequest(request => {
       return request.url().includes('/merge/documents');
     });
 
-    await expect(page.locator('.header .merge-pane')).toBeVisible({visible: true});
-
-    await page.locator('.header .merge-pane').isVisible(); // Wait until merge pane is visible before next steps
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
     await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
