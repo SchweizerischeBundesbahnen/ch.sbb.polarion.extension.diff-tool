@@ -128,8 +128,8 @@ test.describe("page of diffing documents' WorkItems", () => {
     await expandButton.click();
     expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
 
-    page.locator("#paper-size").selectOption("A3");
-    page.locator("#orientation").selectOption("portrait");
+    await page.locator("#paper-size").selectOption("A3");
+    await page.locator("#orientation").selectOption("portrait");
 
     const exportRequestPromise = page.waitForRequest(request => {
       return request.url().includes('/conversion/html-to-pdf');
