@@ -14,13 +14,13 @@
     "uuid": "^11.0.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.51.1",
-    "@types/node": "^22.14.0",
+    "@playwright/test": "1.51.1",
+    "@types/node": "22.14.0",
     "cross-spawn": "7.0.6",
     "eslint": "8.57.1",
     "eslint-config-next": "15.3.1",
-    "istanbul-lib-coverage": "^3.2.2",
-    "nyc": "^17.1.0"
+    "istanbul-lib-coverage": "3.2.2",
+    "nyc": "17.1.0"
   },
   "name": "objects-diff",
   "private": true,
