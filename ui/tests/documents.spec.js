@@ -142,7 +142,7 @@ test.describe("page of diffing documents' WorkItems", () => {
 
     const exportRequest = await exportRequestPromise;
     expect(exportRequest.method()).toBe('POST');
-    expect(exportRequest.url().includes('/conversion/html-to-pdf?orientation=portrait&paperSize=A3')).toBeTruthy();
+    expect(exportRequest.url()).toContain('/conversion/html-to-pdf?orientation=portrait&paperSize=A3');
   });
 
   test('expand/collapse', async ({ page }) => {
