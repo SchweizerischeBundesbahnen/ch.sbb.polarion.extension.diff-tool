@@ -259,9 +259,9 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
 
   return (
       <>
-        <div className={`wi-diff ${getReferencedClass(workItemsPair)} container-fluid g-0`} style={{
+        <div className={`wi-diff ${selected ? "selected" : ""} ${getReferencedClass(workItemsPair)} container-fluid g-0`} style={{
           display: (workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.outlineNumber) || (workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.outlineNumber) ? 'block' : 'none'
-        }}>
+        }} data-testid={`${workItemsPair.leftWorkItem ? workItemsPair.leftWorkItem.id : "NONE"}_${workItemsPair.rightWorkItem ? workItemsPair.rightWorkItem.id : "NONE"}${workItemsPair.leftWorkItem?.movedOutlineNumber ? "_direct" : (workItemsPair.rightWorkItem?.movedOutlineNumber ? "_reverse" : "")}`}>
           <div style={{
             backgroundColor: asHeaderInDocument ? "#eeeeee" : "#f6f6f6",
             display: isChapterVisible(leftChapter, true) || isChapterVisible(rightChapter, false) || !context.state.hideChaptersIfNoDifference || error ? 'flex' : 'none'
@@ -270,8 +270,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
 
             <WorkItemHeader workItem={workItemsPair.leftWorkItem} asHeaderInDocument={asHeaderInDocument}
                             movedOutlineNumber={workItemsPair.rightWorkItem?.movedOutlineNumber}
-                            moveDirection={workItemsPair.rightWorkItem?.moveDirection}
-                            side={LEFT} selected={selected}/>
+                            moveDirection={workItemsPair.rightWorkItem?.moveDirection} side={LEFT} />
 
             {diffs && diffs.length > 0
                 && (!workItemsPair.rightWorkItem || !workItemsPair.rightWorkItem.movedOutlineNumber)
@@ -281,8 +280,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
 
             <WorkItemHeader workItem={workItemsPair.rightWorkItem} asHeaderInDocument={asHeaderInDocument}
                             movedOutlineNumber={workItemsPair.leftWorkItem?.movedOutlineNumber}
-                            moveDirection={workItemsPair.leftWorkItem?.moveDirection}
-                            side={RIGHT} selected={selected}/>
+                            moveDirection={workItemsPair.leftWorkItem?.moveDirection} side={RIGHT} />
           </div>
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
           {loading && <div className="loader wi-loader"></div>}

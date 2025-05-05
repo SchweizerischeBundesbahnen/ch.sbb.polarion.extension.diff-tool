@@ -1,0 +1,121 @@
+{
+  "leftWorkItem": {
+    "id": "EL-156",
+    "title": "User must be informed on the login screen when Caps Lock is turned on",
+    "outlineNumber": "2.2-2",
+    "projectId": "elibrary",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "1",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.2-2",
+        "html": "2.2-2",
+        "htmlDiff": "<span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">2.2-2</span>",
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "User must be informed on the login screen when Caps Lock is turned on",
+        "html": "User must be informed on the login screen when Caps Lock is turned on",
+        "htmlDiff": "<span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">User must be informed on the login screen when Caps Lock is turned on</span>",
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": "Requirement",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span>",
+        "htmlDiff": "<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"></span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span></span>",
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "User must be informed on the login screen when Caps Lock is turned on",
+        "html": "User must be informed on the login screen when Caps Lock is turned on",
+        "htmlDiff": "<span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">User must be informed on the login screen when Caps Lock is turned on</span>",
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Approved",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Approved\">Approved</span>",
+        "htmlDiff": "<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"></span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Approved\">Approved</span></span>",
+        "issues": []
+      }
+    ]
+  },
+  "rightWorkItem": null,
+  "fieldDiffs": [
+    {
+      "id": "outlineNumber",
+      "name": "Outline Number",
+      "diffLeft": "<span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">2.2-2</span>",
+      "diffRight": "",
+      "issues": []
+    },
+    {
+      "id": "description",
+      "name": "Description",
+      "diffLeft": "<span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">User must be informed on the login screen when Caps Lock is turned on</span>",
+      "diffRight": "",
+      "issues": []
+    },
+    {
+      "id": "type",
+      "name": "Type",
+      "diffLeft": "<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"></span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span></span>",
+      "diffRight": "",
+      "issues": []
+    },
+    {
+      "id": "title",
+      "name": "Title",
+      "diffLeft": "<span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">User must be informed on the login screen when Caps Lock is turned on</span>",
+      "diffRight": "",
+      "issues": []
+    },
+    {
+      "id": "status",
+      "name": "Status",
+      "diffLeft": "<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"></span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Approved\">Approved</span></span>",
+      "diffRight": "",
+      "issues": []
+    }
+  ]
+}

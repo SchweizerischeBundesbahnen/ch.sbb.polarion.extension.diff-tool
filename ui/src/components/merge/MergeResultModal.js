@@ -11,15 +11,15 @@ export default function MergeResultModal({visible, visibilityCallback, mergeDeni
 
   return (
       <Modal title="Merge Report" cancelButtonTitle="Close" visible={visible}
-             setVisible={visibilityCallback} className="modal-xl" onClose={onClose}>
+             setVisible={visibilityCallback} className="modal-xl" onClose={onClose} testId="merge-result-modal">
         <div style={{
           marginBottom: "10px"
         }}>
-          {mergeDeniedWarning && <p>Merge was aborted because some structural changes were done in target document meanwhile.</p>}
-          {mergeNotAuthorizedWarning && <p>You are not authorized to execute such merge request.</p>}
+          {mergeDeniedWarning && <p data-testid="merge-aborted">Merge was aborted because some structural changes were done in target document meanwhile.</p>}
+          {mergeNotAuthorizedWarning && <p data-testid="merge-not-authorized">You are not authorized to execute such merge request.</p>}
           {!mergeNotAuthorizedWarning && !mergeDeniedWarning &&
               <>
-                <p>
+                <p data-testid="merge-completed-with-result">
                   Merge operation completed with following result:
                 </p>
                 <ul>
@@ -37,7 +37,7 @@ export default function MergeResultModal({visible, visibilityCallback, mergeDeni
                   {mergeReport.detached?.length > 0 && <li><strong>{mergeReport.detached.length}</strong> items were moved out of documents.</li>}
                   {mergeReport.warnings?.length > 0 && <li><strong>{mergeReport.warnings.length}</strong> warnings.</li>}
                 </ul>
-                {mergeReport.logs && !mergeLogsVisible && <p><a href="#" onClick={() => setMergeLogsVisible(true)}>See full log</a></p>}
+                {mergeReport.logs && !mergeLogsVisible && <p><a href="#" data-testid="see-full-log" onClick={() => setMergeLogsVisible(true)}>See full log</a></p>}
                 {mergeReport.logs && mergeLogsVisible && <pre style={{
                   padding: "10px",
                   background: "#444",
@@ -51,7 +51,7 @@ export default function MergeResultModal({visible, visibilityCallback, mergeDeni
               </>
           }
         </div>
-        <div style={{display: !mergeDeniedWarning && structuralChangesWarning ? 'block' : 'none'}}>
+        <div style={{display: !mergeDeniedWarning && structuralChangesWarning ? 'block' : 'none'}} data-testid="structural-changes-warning">
           <p>The target document has just undergone some structural changes, which mean that no more merge actions are allowed using the current state of the view.
             The page will automatically be reloaded to actualize documents state.</p>
         </div>

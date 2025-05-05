@@ -1,0 +1,173 @@
+{
+  "leftWorkItem": {
+    "id": "EL-157",
+    "title": "User may not be told if the password or user name is wrong",
+    "outlineNumber": "2.2-3",
+    "projectId": "elibrary",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "1",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.2-3",
+        "html": "2.2-3",
+        "htmlDiff": "2.2-<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">2</span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">3</span>",
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "User may not be told if the password or user name is wrong",
+        "html": "User may not be told if the password or user name is wrong",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": "Requirement",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "User may not be told if the password or user name is wrong",
+        "html": "User may not be told if the password or user name is wrong",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Rejected",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Rejected\">Rejected</span>",
+        "htmlDiff": null,
+        "issues": []
+      }
+    ]
+  },
+  "rightWorkItem": {
+    "id": "DP-11562",
+    "title": "User may not be told if the password or user name is wrong",
+    "outlineNumber": "2.2-2",
+    "projectId": "drivepilot",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "6451",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.2-2",
+        "html": "2.2-2",
+        "htmlDiff": "2.2-<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">3</span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">2</span>",
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "User may not be told if the password or user name is wrong",
+        "html": "User may not be told if the password or user name is wrong",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": "Requirement",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "User may not be told if the password or user name is wrong",
+        "html": "User may not be told if the password or user name is wrong",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Rejected",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Rejected\">Rejected</span>",
+        "htmlDiff": null,
+        "issues": []
+      }
+    ]
+  },
+  "fieldDiffs": [
+    {
+      "id": "outlineNumber",
+      "name": "Outline Number",
+      "diffLeft": "2.2-<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">2</span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">3</span>",
+      "diffRight": "2.2-<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">3</span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">2</span>",
+      "issues": []
+    }
+  ]
+}

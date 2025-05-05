@@ -2,6 +2,9 @@ package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergePair;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
@@ -115,6 +118,30 @@ class MergeServiceTest {
     }
 
     @Test
+    void testDocumentsContentMergeFailedDueToStructuralChanges() {
+        NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
+
+        DocumentIdentifier documentIdentifier1 = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc1").revision("rev1").moduleXmlRevision("rev1").build();
+        DocumentIdentifier documentIdentifier2 = DocumentIdentifier.builder().projectId("project2").spaceId("space2").name("doc2").revision("rev2").moduleXmlRevision("rev2").build();
+
+        IModule module1 = mock(IModule.class);
+        when(polarionService.getModule(documentIdentifier1)).thenReturn(module1);
+
+        IModule module2 = mock(IModule.class);
+        when(module2.getLastRevision()).thenReturn("rev3");
+        when(polarionService.getModule(documentIdentifier2)).thenReturn(module2);
+
+        try (MockedStatic<DiffModelCachedResource> mockModelCache = mockStatic(DiffModelCachedResource.class)) {
+            mockModelCache.when(() -> DiffModelCachedResource.get(anyString(), anyString(), anyString())).thenReturn(mock(DiffModel.class));
+            DocumentsContentMergeParams mergeParams = new DocumentsContentMergeParams(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
+                    Collections.emptyList());
+            MergeResult mergeResult = mergeService.mergeDocumentsContent(mergeParams);
+            assertFalse(mergeResult.isSuccess());
+            assertTrue(mergeResult.isTargetModuleHasStructuralChanges());
+        }
+    }
+
+    @Test
     void testMergeFailedDueToNotAuthorized() {
         NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
 
@@ -149,6 +176,33 @@ class MergeServiceTest {
     }
 
     @Test
+    void testDocumentsContentMergeFailedDueToNotAuthorized() {
+        NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
+
+        DocumentIdentifier documentIdentifier1 = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc1").revision("rev1").moduleXmlRevision("rev1").build();
+        DocumentIdentifier documentIdentifier2 = DocumentIdentifier.builder().projectId("project2").spaceId("space2").name("doc2").revision("rev2").moduleXmlRevision("rev2").build();
+
+        IModule module1 = mock(IModule.class);
+        when(polarionService.getModule(documentIdentifier1)).thenReturn(module1);
+
+        IModule module2 = mock(IModule.class);
+        when(module2.getLastRevision()).thenReturn("rev2");
+        when(polarionService.getModule(documentIdentifier2)).thenReturn(module2);
+
+        when(polarionService.userAuthorizedForMerge(any())).thenReturn(false);
+
+        DocumentsContentMergeParams mergeParams = new DocumentsContentMergeParams(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
+                Collections.emptyList());
+
+        try (MockedStatic<DiffModelCachedResource> mockModelCache = mockStatic(DiffModelCachedResource.class)) {
+            mockModelCache.when(() -> DiffModelCachedResource.get(anyString(), anyString(), anyString())).thenReturn(mock(DiffModel.class));
+            MergeResult mergeResult = mergeService.mergeDocumentsContent(mergeParams);
+            assertFalse(mergeResult.isSuccess());
+            assertTrue(mergeResult.isMergeNotAuthorized());
+        }
+    }
+
+    @Test
     void testMergeDocumentsSuccess() {
         NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
         DocumentIdentifier doc1 = new DocumentIdentifier("project1", "space1", "doc1", "rev1", "rev1");
@@ -170,6 +224,8 @@ class MergeServiceTest {
 
         IWorkItem leftWorkItem = mock(IWorkItem.class);
         when(leftWorkItem.getId()).thenReturn("left");
+        IPObjectList iPObjectList = mock(IPObjectList.class);
+        when(leftWorkItem.getLinkedWorkItems()).thenReturn(iPObjectList);
 
         IWorkItem rightWorkItem = mock(IWorkItem.class);
         when(rightWorkItem.getId()).thenReturn("right");
@@ -182,13 +238,12 @@ class MergeServiceTest {
 
         WorkItemsPair workItemsPair = WorkItemsPair.builder().leftWorkItem(sourceWorkItem).rightWorkItem(targetWorkItem).build();
         workItemsPairs.add(workItemsPair);
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false);
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, true);
 
         when(polarionService.userAuthorizedForMerge(anyString())).thenReturn(true);
 
         when(mergeService.getWorkItem(workItemsPair.getLeftWorkItem())).thenReturn(leftWorkItem);
         when(mergeService.getWorkItem(workItemsPair.getRightWorkItem())).thenReturn(rightWorkItem);
-
 
         try (MockedStatic<DiffModelCachedResource> mockModelCache = mockStatic(DiffModelCachedResource.class); MockedStatic<TransactionalExecutor> transactionalExecutorMockedStatic = mockStatic(TransactionalExecutor.class)) {
             transactionalExecutorMockedStatic.when(() -> TransactionalExecutor.executeInWriteTransaction(any())).thenAnswer(arg -> {
@@ -205,6 +260,99 @@ class MergeServiceTest {
 
             MergeResult result = service.mergeDocuments(mergeParams);
             assertNotNull(result);
+        }
+    }
+
+    @Test
+    void testDocumentsContentMergeSuccess() {
+        NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
+        DocumentIdentifier doc1 = new DocumentIdentifier("project1", "space1", "doc1", "rev1", "rev1");
+        DocumentIdentifier doc2 = new DocumentIdentifier("project1", "space1", "doc1", "rev1", "rev1");
+
+        IModule leftModule = mock(IModule.class, RETURNS_DEEP_STUBS);
+        ILocation location = mock(ILocation.class);
+        when(leftModule.getModuleLocation()).thenReturn(location);
+        when(leftModule.getHomePageContent()).thenReturn(Text.html("""
+                <p id="polarion_1">Some text</p><div id="polarion_wiki macro name=module-workitem;params=id=left"></div>
+        """));
+        lenient().when(leftModule.getLastRevision()).thenReturn("rev1");
+        when(polarionService.getModule(doc1)).thenReturn(leftModule);
+
+        IModule rightModule = mock(IModule.class);
+        when(rightModule.getHomePageContent()).thenReturn(Text.html("""
+                <p id="polarion_1">Inserted paragraph</p><div id="polarion_wiki macro name=module-workitem;params=id=right"></div>
+        """));
+        when(rightModule.getLastRevision()).thenReturn("rev1");
+        when(rightModule.getProjectId()).thenReturn("project1");
+        when(polarionService.getModule(doc2)).thenReturn(rightModule);
+
+        List<DocumentsContentMergePair> workItemsPairs = new ArrayList<>();
+        DocumentsContentMergePair workItemsPair = DocumentsContentMergePair.builder().leftWorkItemId("left").rightWorkItemId("right").contentPosition(DocumentContentAnchor.ContentPosition.ABOVE).build();
+        workItemsPairs.add(workItemsPair);
+
+        DocumentsContentMergeParams mergeParams = new DocumentsContentMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, workItemsPairs);
+
+        when(polarionService.userAuthorizedForMerge(anyString())).thenReturn(true);
+
+        try (MockedStatic<DiffModelCachedResource> mockModelCache = mockStatic(DiffModelCachedResource.class); MockedStatic<TransactionalExecutor> transactionalExecutorMockedStatic = mockStatic(TransactionalExecutor.class)) {
+            transactionalExecutorMockedStatic.when(() -> TransactionalExecutor.executeInWriteTransaction(any())).thenAnswer(arg -> {
+                RunnableInWriteTransaction<?> runnable = arg.getArgument(0);
+                runnable.run(mock(WriteTransaction.class));
+                return runnable;
+            });
+
+            mockModelCache.when(() -> DiffModelCachedResource.get(anyString(), anyString(), anyString())).thenReturn(mock(DiffModel.class));
+
+            MergeService service = spy(mergeService);
+
+            MergeResult result = service.mergeDocumentsContent(mergeParams);
+            assertNotNull(result);
+            assertTrue(result.isSuccess());
+            assertEquals(1, result.getMergeReport().getModified().size());
+        }
+    }
+
+    @Test
+    void testDocumentsContentMergeNothing() {
+        NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
+        DocumentIdentifier doc1 = new DocumentIdentifier("project1", "space1", "doc1", "rev1", "rev1");
+        DocumentIdentifier doc2 = new DocumentIdentifier("project1", "space1", "doc1", "rev1", "rev1");
+
+        IModule leftModule = mock(IModule.class, RETURNS_DEEP_STUBS);
+        ILocation location = mock(ILocation.class);
+        when(leftModule.getModuleLocation()).thenReturn(location);
+        when(leftModule.getHomePageContent()).thenReturn(Text.html("""
+                <p id="polarion_1">Some text</p><div id="polarion_wiki macro name=module-workitem;params=id=left"></div>
+        """));
+        lenient().when(leftModule.getLastRevision()).thenReturn("rev1");
+        when(polarionService.getModule(doc1)).thenReturn(leftModule);
+
+        IModule rightModule = mock(IModule.class);
+        when(rightModule.getHomePageContent()).thenReturn(Text.html("""
+                <p id="polarion_1">Inserted paragraph</p><div id="polarion_wiki macro name=module-workitem;params=id=right"></div>
+        """));
+        when(rightModule.getLastRevision()).thenReturn("rev1");
+        when(rightModule.getProjectId()).thenReturn("project1");
+        when(polarionService.getModule(doc2)).thenReturn(rightModule);
+
+        DocumentsContentMergeParams mergeParams = new DocumentsContentMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, Collections.emptyList());
+
+        when(polarionService.userAuthorizedForMerge(anyString())).thenReturn(true);
+
+        try (MockedStatic<DiffModelCachedResource> mockModelCache = mockStatic(DiffModelCachedResource.class); MockedStatic<TransactionalExecutor> transactionalExecutorMockedStatic = mockStatic(TransactionalExecutor.class)) {
+            transactionalExecutorMockedStatic.when(() -> TransactionalExecutor.executeInWriteTransaction(any())).thenAnswer(arg -> {
+                RunnableInWriteTransaction<?> runnable = arg.getArgument(0);
+                runnable.run(mock(WriteTransaction.class));
+                return runnable;
+            });
+
+            mockModelCache.when(() -> DiffModelCachedResource.get(anyString(), anyString(), anyString())).thenReturn(mock(DiffModel.class));
+
+            MergeService service = spy(mergeService);
+
+            MergeResult result = service.mergeDocumentsContent(mergeParams);
+            assertNotNull(result);
+            assertFalse(result.isSuccess());
         }
     }
 
@@ -955,7 +1103,7 @@ class MergeServiceTest {
     }
 
     @Test
-    void testMergeDocumentsFields() {
+    void testMergeDocumentsFieldsSuccessful() {
         IModule source = mock(IModule.class);
         IModule target = mock(IModule.class);
         when(polarionService.getModule(any())).thenReturn(source, target);
@@ -977,6 +1125,34 @@ class MergeServiceTest {
                     MergeDirection.LEFT_TO_RIGHT, List.of("a", "b", "c")));
             assertTrue(mergeResult.isSuccess());
             assertEquals(3, mergeResult.getMergeReport().getCopied().size());
+        }
+    }
+
+    @Test
+    void testMergeDocumentsFieldsUnsuccessful() {
+        IModule source = mock(IModule.class);
+        IModule target = mock(IModule.class);
+        doThrow(IllegalArgumentException.class).when(target).setValue(anyString(), any());
+
+        when(polarionService.getModule(any())).thenReturn(source, target);
+
+        when(polarionService.userAuthorizedForMerge(any())).thenReturn(false);
+        MergeResult mergeResult = mergeService.mergeDocumentsFields(new DocumentsFieldsMergeParams(mock(DocumentIdentifier.class), mock(DocumentIdentifier.class),
+                MergeDirection.LEFT_TO_RIGHT, List.of("a", "b")));
+        assertFalse(mergeResult.isSuccess());
+        assertTrue(mergeResult.isMergeNotAuthorized());
+        try (MockedStatic<TransactionalExecutor> transactionalExecutorMockedStatic = mockStatic(TransactionalExecutor.class)) {
+            transactionalExecutorMockedStatic.when(() -> TransactionalExecutor.executeInWriteTransaction(any())).thenAnswer(arg -> {
+                RunnableInWriteTransaction<?> runnable = arg.getArgument(0);
+                runnable.run(mock(WriteTransaction.class));
+                return runnable;
+            });
+            when(polarionService.userAuthorizedForMerge(any())).thenReturn(true);
+
+            mergeResult = mergeService.mergeDocumentsFields(new DocumentsFieldsMergeParams(mock(DocumentIdentifier.class), mock(DocumentIdentifier.class),
+                    MergeDirection.LEFT_TO_RIGHT, List.of("a", "b")));
+            assertFalse(mergeResult.isSuccess());
+            assertEquals(2, mergeResult.getMergeReport().getWarnings().size());
         }
     }
 

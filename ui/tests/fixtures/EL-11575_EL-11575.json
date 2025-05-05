@@ -1,0 +1,173 @@
+{
+  "leftWorkItem": {
+    "id": "EL-11575",
+    "title": "Another one requirement",
+    "outlineNumber": "2.1-3",
+    "projectId": "elibrary",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "6481",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.1-3",
+        "html": "2.1-3",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "Another one requirement",
+        "html": "Another one requirement",
+        "htmlDiff": "<span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">Another one requirement</span>",
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": "Requirement",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "Another one requirement",
+        "html": "Another one requirement",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Draft",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Draft\">Draft</span>",
+        "htmlDiff": null,
+        "issues": []
+      }
+    ]
+  },
+  "rightWorkItem": {
+    "id": "EL-11575",
+    "title": "Another one requirement",
+    "outlineNumber": "2.1-3",
+    "projectId": "elibrary",
+    "referenced": true,
+    "revision": "6480",
+    "lastRevision": "6481",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.3-1",
+        "html": "2.3-1",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "",
+        "html": "",
+        "htmlDiff": "<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"last-diff\">Another one requirement</span>",
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": "Requirement",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "Another one requirement",
+        "html": "Another one requirement",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Draft",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Draft\">Draft</span>",
+        "htmlDiff": null,
+        "issues": []
+      }
+    ]
+  },
+  "fieldDiffs": [
+    {
+      "id": "description",
+      "name": "Description",
+      "diffLeft": "<span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">Another one requirement</span>",
+      "diffRight": "<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"last-diff\">Another one requirement</span>",
+      "issues": []
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "leftWorkItem": {
+    "id": "EL-101",
+    "title": "User name must be validated when a new user account is created",
+    "outlineNumber": "2.1-1",
+    "projectId": "elibrary",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "5976",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.1-1",
+        "html": "2.1-1",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "User name must be validated when a new user account is created",
+        "html": "User name must be validated when a new user account is created",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": "Requirement",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "User name must be validated when a new user account is created",
+        "html": "User name must be validated when a new user account is created",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Verified",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Verified\">Verified</span>",
+        "htmlDiff": null,
+        "issues": []
+      }
+    ]
+  },
+  "rightWorkItem": {
+    "id": "DP-11551",
+    "title": "User name must be validated when a new user account is created",
+    "outlineNumber": "2.1-1",
+    "projectId": "drivepilot",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "6451",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.1-1",
+        "html": "2.1-1",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "User name must be validated when a new user account is created",
+        "html": "User name must be validated when a new user account is created",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": "Requirement",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "User name must be validated when a new user account is created",
+        "html": "User name must be validated when a new user account is created",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Verified",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Verified\">Verified</span>",
+        "htmlDiff": null,
+        "issues": []
+      }
+    ]
+  },
+  "fieldDiffs": []
+}

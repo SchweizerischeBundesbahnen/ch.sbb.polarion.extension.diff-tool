@@ -1,0 +1,173 @@
+{
+  "leftWorkItem": {
+    "id": "EL-159",
+    "title": "System should meet the following acceptance criteria",
+    "outlineNumber": "2.3-1",
+    "projectId": "elibrary",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "1",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.3-1",
+        "html": "2.3-1",
+        "htmlDiff": "2.<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">4</span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">3</span>-1",
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "System should meet the following acceptance criteria<br/> <table class=\"polarion-Document-table\" id=\"polarion_wiki macro name=table\" style=\"width: 80%;margin-left: auto;margin-right: auto;border: 1px solid #CCCCCC;empty-cells: show;border-collapse: collapse;\"><tbody><tr><th style=\"font-weight: bold;font-size: 12px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Use Case</th><th style=\"font-weight: bold;font-size: 12px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Acceptable Response Time</th></tr><tr><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Open Application Portal</td><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">2 sec</td></tr><tr><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Render Search Result</td><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">1 sec</td></tr><tr><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Open Book Detail</td><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">0.5 sec</td></tr><tr><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Open Author Detail</td><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">0.5 sec</td></tr></tbody></table>",
+        "html": "System should meet the following acceptance criteria<br/> \n<table id=\"polarion_wiki macro name=table\" class=\"polarion-Document-table\" style=\"margin:auto;width: 80%;margin-left: auto;margin-right: auto;border: 1px solid #CCCCCC;empty-cells: show;border-collapse: collapse;max-width: 1024.0px;\">\n  <tbody>\n    <tr>\n      <th style=\"font-weight: bold;font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Use Case</th>\n      <th style=\"font-weight: bold;font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Acceptable Response Time</th>\n    </tr>\n    <tr>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Open Application Portal</td>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">2 sec</td>\n    </tr>\n    <tr>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Render Search Result</td>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">1 sec</td>\n    </tr>\n    <tr>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Open Book Detail</td>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">0.5 sec</td>\n    </tr>\n    <tr>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Open Author Detail</td>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">0.5 sec</td>\n    </tr>\n  </tbody>\n</table>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": "Requirement",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "System should meet the following acceptance criteria",
+        "html": "System should meet the following acceptance criteria",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Reviewed",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Reviewed\">Reviewed</span>",
+        "htmlDiff": null,
+        "issues": []
+      }
+    ]
+  },
+  "rightWorkItem": {
+    "id": "DP-11564",
+    "title": "System should meet the following acceptance criteria",
+    "outlineNumber": "2.4-1",
+    "projectId": "drivepilot",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "6451",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.4-1",
+        "html": "2.4-1",
+        "htmlDiff": "2.<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">3</span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">4</span>-1",
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "System should meet the following acceptance criteria<br/> <table class=\"polarion-Document-table\" id=\"polarion_wiki macro name=table\" style=\"width: 80%;margin-left: auto;margin-right: auto;border: 1px solid #CCCCCC;empty-cells: show;border-collapse: collapse;\"><tbody><tr><th style=\"font-weight: bold;font-size: 12px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Use Case</th><th style=\"font-weight: bold;font-size: 12px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Acceptable Response Time</th></tr><tr><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Open Application Portal</td><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">2 sec</td></tr><tr><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Render Search Result</td><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">1 sec</td></tr><tr><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Open Book Detail</td><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">0.5 sec</td></tr><tr><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Open Author Detail</td><td style=\"font-size: 12px;line-height: 18px;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">0.5 sec</td></tr></tbody></table>",
+        "html": "System should meet the following acceptance criteria<br/> \n<table id=\"polarion_wiki macro name=table\" class=\"polarion-Document-table\" style=\"margin:auto;width: 80%;margin-left: auto;margin-right: auto;border: 1px solid #CCCCCC;empty-cells: show;border-collapse: collapse;max-width: 1024.0px;\">\n  <tbody>\n    <tr>\n      <th style=\"font-weight: bold;font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Use Case</th>\n      <th style=\"font-weight: bold;font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Acceptable Response Time</th>\n    </tr>\n    <tr>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Open Application Portal</td>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">2 sec</td>\n    </tr>\n    <tr>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Render Search Result</td>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">1 sec</td>\n    </tr>\n    <tr>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Open Book Detail</td>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">0.5 sec</td>\n    </tr>\n    <tr>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">Open Author Detail</td>\n      <td style=\"font-size: 9pt;line-height: 1.5;text-align: left;vertical-align: top;height: 12px;border: 1px solid #CCCCCC;padding: 5px;\">0.5 sec</td>\n    </tr>\n  </tbody>\n</table>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": "Requirement",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "System should meet the following acceptance criteria",
+        "html": "System should meet the following acceptance criteria",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Reviewed",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Reviewed\">Reviewed</span>",
+        "htmlDiff": null,
+        "issues": []
+      }
+    ]
+  },
+  "fieldDiffs": [
+    {
+      "id": "outlineNumber",
+      "name": "Outline Number",
+      "diffLeft": "2.<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">4</span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">3</span>-1",
+      "diffRight": "2.<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">3</span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">4</span>-1",
+      "issues": []
+    }
+  ]
+}

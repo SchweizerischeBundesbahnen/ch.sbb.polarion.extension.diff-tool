@@ -17,6 +17,7 @@ import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";
 import CollectionHeader from "@/components/collections/CollectionHeader";
 import DocumentProjectHeader from "@/components/documents/DocumentProjectHeader";
 import MergeResultModal from "@/components/merge/MergeResultModal";
+import {DIFF_SIDES} from "@/components/diff/DiffLeaf";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument', 'linkRole'];
 
@@ -201,13 +202,13 @@ export default function DocumentsDiff({ enclosingCollections }) {
           <CollectionHeader collection={enclosingCollections.rightCollection} />
         </>}
         {!enclosingCollections && <>
-          <DocumentProjectHeader document={docsData.leftDocument} />
-          <DocumentProjectHeader document={docsData.rightDocument} />
+          <DocumentProjectHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />
+          <DocumentProjectHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />
         </>}
       </div>
       <div className="row g-0">
-        <DocumentHeader document={docsData.leftDocument} />
-        <DocumentHeader document={docsData.rightDocument} />
+        <DocumentHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />
+        <DocumentHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />
       </div>
 
       <ProgressBar loadingContext={loadingContext} />

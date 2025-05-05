@@ -359,6 +359,10 @@ a:hover {
   border-left: 5px dotted #bbb;
 }
 
+.wi-diff.selected .wi-header {
+  background-color: rgba(150, 190, 250, 0.2);
+}
+
 .wi-header {
   padding-bottom: .8rem;
   color: #004D73;

@@ -1,0 +1,123 @@
+{
+  "leftWorkItem": null,
+  "rightWorkItem": {
+    "id": "DP-11570",
+    "title": "New paragraph",
+    "outlineNumber": "2.3",
+    "projectId": "drivepilot",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "6452",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.3",
+        "html": "2.3",
+        "htmlDiff": "<span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">2.3</span>",
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "",
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": {
+          "name": null,
+          "hidden": false,
+          "properties": {},
+          "id": "heading",
+          "default": false,
+          "sequenceNumber": 0,
+          "phantom": true,
+          "enumId": "work-item-type"
+        },
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Heading\">Heading</span>",
+        "htmlDiff": "<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"></span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Heading\">Heading</span></span>",
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "New paragraph",
+        "html": "New paragraph",
+        "htmlDiff": "<span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">New paragraph</span>",
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Open",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Open\">Open</span>",
+        "htmlDiff": "<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"></span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Open\">Open</span></span>",
+        "issues": []
+      }
+    ]
+  },
+  "fieldDiffs": [
+    {
+      "id": "outlineNumber",
+      "name": "Outline Number",
+      "diffLeft": "",
+      "diffRight": "<span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">2.3</span>",
+      "issues": []
+    },
+    {
+      "id": "type",
+      "name": "Type",
+      "diffLeft": "",
+      "diffRight": "<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"></span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Heading\">Heading</span></span>",
+      "issues": []
+    },
+    {
+      "id": "title",
+      "name": "Title",
+      "diffLeft": "",
+      "diffRight": "<span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">New paragraph</span>",
+      "issues": []
+    },
+    {
+      "id": "status",
+      "name": "Status",
+      "diffLeft": "",
+      "diffRight": "<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"></span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Open\">Open</span></span>",
+      "issues": []
+    }
+  ]
+}

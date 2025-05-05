@@ -1,14 +1,10 @@
 import {useEffect, useState} from "react";
 import MovedItem from "@/components/documents/workitems/MovedItem";
 
-const TRANSPARENT_BACKGROUND = "rgba(255, 255, 255, 0)";
-const SELECTED_BACKGROUND = "rgba(150, 190, 250, 0.2)";
-
 export const LEFT = "left";
 export const RIGHT = "right";
 
-export function WorkItemHeader({workItem, asHeaderInDocument, movedOutlineNumber, moveDirection, side, selected}) {
-  const [backgroundColor, setBackgroundColor] = useState(TRANSPARENT_BACKGROUND);
+export function WorkItemHeader({workItem, asHeaderInDocument, movedOutlineNumber, moveDirection, side}) {
   const [id] = useState(workItem && workItem.outlineNumber && !movedOutlineNumber ? `${side}${workItem && workItem.outlineNumber}` : null);
 
   // workItem.outlineNumber may become empty on header deletion
@@ -56,16 +52,11 @@ export function WorkItemHeader({workItem, asHeaderInDocument, movedOutlineNumber
     );
   };
 
-  useEffect(() => {
-    setBackgroundColor(selected ? SELECTED_BACKGROUND : TRANSPARENT_BACKGROUND);
-  }, [selected]);
-
   return (
       <div style={{
         paddingLeft: asHeaderInDocument ? "2rem" : "5rem",
         fontWeight: asHeaderInDocument ? "600" : "300",
-        fontSize: fontSize,
-        backgroundColor: backgroundColor
+        fontSize: fontSize
       }} id={id} className={`wi-header col collapsed-border ${workItem && movedOutlineNumber ? "moved" : ""} ${side}`}>
         {workItem && !movedOutlineNumber && asHeaderInDocument && (workItem.outlineNumber + " " + workItem.title)} {workItem && !movedOutlineNumber && badgeContent()}
         {workItem && !movedOutlineNumber && workItem.referenced && referencedMarker(workItem.externalProjectWorkItem)}

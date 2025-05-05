@@ -41,7 +41,7 @@ export default function ControlPane({diff_type}) {
       }).then(data => {
         setConfigurations(JSON.parse(data).map(setting => setting.name));
       }).catch(errorResponse => {
-        Promise.resolve(errorResponse).then((error) => alert("Error occurred loading setting names" + (error && error.message ? ": " + error.message : "")));
+        Promise.resolve(errorResponse).then((error) => console.log("Error occurred loading setting names" + (error && error.message ? ": " + error.message : "")));
       });
     }
   }, [projectId]);
@@ -273,16 +273,16 @@ export default function ControlPane({diff_type}) {
               </select>
             </div>
             <div className="select-set">
-              <label htmlFor="oreientation">
+              <label htmlFor="orientation">
                 Orientation:
               </label>
-              <select id="oreientation" className="form-select" value={orientation} onChange={(event) => setOrientation(event.target.value)}>
+              <select id="orientation" className="form-select" value={orientation} onChange={(event) => setOrientation(event.target.value)}>
                 <option value="landscape">Landscape</option>
                 <option value="portrait">Portrait</option>
               </select>
             </div>
             <div className="text-end">
-              <button className="btn btn-secondary btn-sm form-button" onClick={exportToPDF} disabled={exportInProgress}>
+              <button className="btn btn-secondary btn-sm form-button" onClick={exportToPDF} disabled={exportInProgress} data-testid="export-button">
                 Export {exportInProgress && <span className="loader" style={{display: "inline-block", width: "16px", verticalAlign: "text-top", marginLeft: "5px"}}></span>}
               </button>
             </div>

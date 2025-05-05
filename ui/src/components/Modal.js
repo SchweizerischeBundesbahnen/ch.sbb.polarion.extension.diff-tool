@@ -1,4 +1,4 @@
-export default function Modal({title, cancelButtonTitle, actionButtonTitle, actionButtonHandler, onClose, visible, setVisible, className, children}) {
+export default function Modal({title, cancelButtonTitle, actionButtonTitle, actionButtonHandler, onClose, visible, setVisible, className, children, testId}) {
 
   const closeModal = () => {
     setVisible(false);
@@ -6,7 +6,7 @@ export default function Modal({title, cancelButtonTitle, actionButtonTitle, acti
   }
 
   return (
-      <div className={`modal fade ${className}`} tabIndex="-1" style={{
+      <div className={`modal fade ${className}`} data-testid={testId} tabIndex="-1" style={{
         display: visible ? 'flex' : 'none',
         opacity: visible ? 1 : 0,
         backgroundColor: 'rgba(255,255,255,0.7)',
@@ -22,9 +22,12 @@ export default function Modal({title, cancelButtonTitle, actionButtonTitle, acti
               {children}
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-sm btn-light" onClick={closeModal}>{cancelButtonTitle}</button>
+              <button type="button" className="btn btn-sm btn-light" data-testid={`${testId}-cancel-button`} onClick={closeModal}>{cancelButtonTitle}</button>
               {actionButtonTitle && actionButtonHandler
-                  && <button type="button" className="btn btn-sm btn-secondary" onClick={() => {closeModal(); actionButtonHandler();}}>{actionButtonTitle}</button>
+                  && <button type="button" className="btn btn-sm btn-secondary"
+                             data-testid={`${testId}-action-button`} onClick={() => {closeModal(); actionButtonHandler();}}>
+                    {actionButtonTitle}
+                  </button>
               }
             </div>
           </div>

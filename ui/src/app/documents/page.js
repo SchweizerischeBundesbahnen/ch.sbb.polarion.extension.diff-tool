@@ -12,7 +12,7 @@ import {useState} from "react";
 export default function DocumentsPage() {
   const searchParams = useSearchParams();
 
-  const [compareAsWorkItems] = useState(searchParams.get('compareAs') === 'Workitems');
+  const [compareAsWorkItems] = useState(!searchParams.get('compareAs') || searchParams.get('compareAs') === 'Workitems');
   const [compareAsFields] = useState(searchParams.get('compareAs') === 'Fields');
   const [compareAsContent] = useState(searchParams.get('compareAs') === 'Content');
 

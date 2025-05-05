@@ -1,0 +1,180 @@
+{
+  "leftWorkItem": {
+    "id": "EL-4977",
+    "title": "New Requirement",
+    "outlineNumber": "2.1-2",
+    "projectId": "elibrary",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "6456",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.1-2",
+        "html": "2.1-2",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "Some new requirement",
+        "html": "Some new requirement",
+        "htmlDiff": "<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">Modified </span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">Some new </span>requirement",
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": "Requirement",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "New Requirement",
+        "html": "New Requirement",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Reviewed",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Reviewed\">Reviewed</span>",
+        "htmlDiff": "<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"><span class=\"polarion-JSEnumOption\" title=\"Draft\">Draft</span></span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Reviewed\">Reviewed</span></span>",
+        "issues": []
+      }
+    ]
+  },
+  "rightWorkItem": {
+    "id": "DP-11559",
+    "title": "New Requirement",
+    "outlineNumber": "2.1-2",
+    "projectId": "drivepilot",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "6457",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.1-2",
+        "html": "2.1-2",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "Modified requirement",
+        "html": "Modified requirement",
+        "htmlDiff": "<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">Some new </span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">Modified </span>requirement",
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": "Requirement",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Requirement - A nonfunctional requirement.\">Requirement</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "New Requirement",
+        "html": "New Requirement",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Draft",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Draft\">Draft</span>",
+        "htmlDiff": "<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"><span class=\"polarion-JSEnumOption\" title=\"Reviewed\">Reviewed</span></span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Draft\">Draft</span></span>",
+        "issues": []
+      }
+    ]
+  },
+  "fieldDiffs": [
+    {
+      "id": "description",
+      "name": "Description",
+      "diffLeft": "<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">Modified </span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">Some new </span>requirement",
+      "diffRight": "<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">Some new </span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">Modified </span>requirement",
+      "issues": []
+    },
+    {
+      "id": "status",
+      "name": "Status",
+      "diffLeft": "<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"><span class=\"polarion-JSEnumOption\" title=\"Draft\">Draft</span></span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Reviewed\">Reviewed</span></span>",
+      "diffRight": "<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"><span class=\"polarion-JSEnumOption\" title=\"Reviewed\">Reviewed</span></span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Draft\">Draft</span></span>",
+      "issues": []
+    }
+  ]
+}

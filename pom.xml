@@ -234,6 +234,16 @@
                         <phase>generate-resources</phase>
                     </execution>
                     <execution>
+                        <id>install-playwright-browsers</id>
+                        <goals>
+                            <goal>npx</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <arguments>playwright install --with-deps</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>npm build</id>
                         <goals>
                             <goal>npm</goal>
@@ -241,6 +251,16 @@
                         <phase>generate-resources</phase>
                         <configuration>
                             <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm test</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>test</phase>
+                        <configuration>
+                            <arguments>run playwright:test:headless</arguments>
                         </configuration>
                     </execution>
                 </executions>

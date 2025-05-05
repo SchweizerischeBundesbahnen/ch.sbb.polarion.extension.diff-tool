@@ -1,0 +1,183 @@
+{
+  "leftWorkItem": {
+    "id": "EL-183",
+    "title": "Introduction",
+    "outlineNumber": "1",
+    "projectId": "elibrary",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "1",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "1",
+        "html": "1",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "",
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": {
+          "name": null,
+          "hidden": false,
+          "properties": {},
+          "id": "heading",
+          "default": false,
+          "sequenceNumber": 0,
+          "phantom": true,
+          "enumId": "work-item-type"
+        },
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Heading\">Heading</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "Introduction",
+        "html": "Introduction",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Open",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Open\">Open</span>",
+        "htmlDiff": null,
+        "issues": []
+      }
+    ]
+  },
+  "rightWorkItem": {
+    "id": "DP-11545",
+    "title": "Introduction",
+    "outlineNumber": "1",
+    "projectId": "drivepilot",
+    "referenced": false,
+    "revision": null,
+    "lastRevision": "6451",
+    "movedOutlineNumber": null,
+    "moveDirection": null,
+    "externalProjectWorkItem": false,
+    "fields": [
+      {
+        "id": "outlineNumber",
+        "name": "Outline Number",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "1",
+        "html": "1",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "description",
+        "name": "Description",
+        "type": {
+          "typeName": "com.polarion.core.util.types.Text",
+          "subtype": null
+        },
+        "value": "",
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "type": {
+          "enumerationId": "work-item-type"
+        },
+        "value": {
+          "name": null,
+          "hidden": false,
+          "properties": {},
+          "id": "heading",
+          "default": false,
+          "sequenceNumber": 0,
+          "phantom": true,
+          "enumId": "work-item-type"
+        },
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Heading\">Heading</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "title",
+        "name": "Title",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "Introduction",
+        "html": "Introduction",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "externalProjectWorkItem",
+        "name": "",
+        "type": null,
+        "value": false,
+        "html": "",
+        "htmlDiff": null,
+        "issues": []
+      },
+      {
+        "id": "status",
+        "name": "Status",
+        "type": {
+          "enumerationId": "status"
+        },
+        "value": "Open",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Open\">Open</span>",
+        "htmlDiff": null,
+        "issues": []
+      }
+    ]
+  },
+  "fieldDiffs": []
+}

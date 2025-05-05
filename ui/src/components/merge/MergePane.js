@@ -89,10 +89,10 @@ export default function MergePane({leftContext, rightContext, mergingContext, me
           </div>
         </div>
         <Modal title="Merge confirmation" cancelButtonTitle="Cancel" actionButtonTitle="Merge" actionButtonHandler={merge}
-               visible={modalVisible} setVisible={setModalVisible} className="modal-md">
-          <p>Are you sure you want to merge selected items {direction === LEFT_TO_RIGHT ? "from source to target" : "from target to source"} document?</p>
+               visible={modalVisible} setVisible={setModalVisible} className="modal-md" testId="merge-confirmation-modal">
+          <p data-testid="merge-confirmation">Are you sure you want to merge selected items {direction === LEFT_TO_RIGHT ? "from source to target" : "from target to source"} document?</p>
           {structuralChanges
-              && <p style={{fontWeight: 'bolder'}}>Be aware that you have selected items to be merged which will lead to document&apos;s structural changes.
+              && <p style={{fontWeight: 'bolder'}} data-testid="merge-confirmation-structural-changes-warning">Be aware that you have selected items to be merged which will lead to document&apos;s structural changes.
                 After merge is finished, diffs view will automatically be reloaded to actualize documents structure.</p>
           }
         </Modal>

@@ -10,7 +10,7 @@ export default function ExtensionInfo() {
     if (remote) {
       remote.sendRequest({
         method: "GET",
-        url: `/extension/info/`,
+        url: `/extension/info`,
         contentType: "application/json"
       }).then(response => {
         if (response.ok) {
@@ -21,7 +21,7 @@ export default function ExtensionInfo() {
       }).then(data => {
         setExtensionInfo(`v${data?.version?.bundleVersion} | ${data?.version?.bundleBuildTimestamp}`);
       }).catch(errorResponse => {
-        Promise.resolve(errorResponse).then((error) => alert("Error occurred loading extension info" + (error && error.message ? ": " + error.message : "")));
+        Promise.resolve(errorResponse).then((error) => console.log("Error occurred loading extension info" + (error && error.message ? ": " + error.message : "")));
       });
     }
   }, []);

@@ -194,7 +194,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
             display: 'flex'
           }} className="header row g-0">
             <MergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />
-            <WorkItemHeader workItem={workItemsPair.leftWorkItem} side={LEFT} selected={false}/>
+            <WorkItemHeader workItem={workItemsPair.leftWorkItem} side={LEFT} />
 
             {diffs && diffs.length > 0
                 && (!workItemsPair.rightWorkItem || !workItemsPair.rightWorkItem.movedOutlineNumber)
@@ -202,7 +202,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
             {(!diffs || diffs.length === 0) && !error && <FloatingButton fontAwesomeIcon={faEquals} disabled={true}/>}
             {(!diffs || diffs.length === 0) && error && <FloatingButton fontAwesomeIcon={faQuestion} disabled={true}/>}
 
-            <WorkItemHeader workItem={workItemsPair.rightWorkItem} side={RIGHT} selected={false}/>
+            <WorkItemHeader workItem={workItemsPair.rightWorkItem} side={RIGHT} />
           </div>
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
           {loading && <div className="loader wi-loader"></div>}

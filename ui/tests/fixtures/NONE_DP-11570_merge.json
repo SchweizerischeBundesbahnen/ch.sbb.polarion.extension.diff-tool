@@ -1,0 +1,43 @@
+{
+  "success": true,
+  "targetModuleHasStructuralChanges": false,
+  "mergeNotAuthorized": false,
+  "mergeReport": {
+    "copied": [],
+    "conflicted": [],
+    "creationFailed": [],
+    "duplicateSkipped": [],
+    "moved": [],
+    "moveFailed": [],
+    "moveSkipped": [],
+    "mergeDetached": [],
+    "logs": "2025-04-17 06:22:43.241: 'DELETED' -- left WI 'null', right WI 'DP-11570' -- workitem 'DP-11570' deleted in target document",
+    "warnings": [],
+    "modified": [],
+    "deleted": [
+      {
+        "operationResultType": "DELETED",
+        "workItemsPair": {
+          "leftWorkItem": null,
+          "rightWorkItem": {
+            "id": "DP-11570",
+            "title": "New paragraph",
+            "outlineNumber": "2.3",
+            "projectId": "drivepilot",
+            "referenced": false,
+            "revision": null,
+            "lastRevision": "6461",
+            "movedOutlineNumber": null,
+            "moveDirection": null,
+            "externalProjectWorkItem": false,
+            "fields": []
+          }
+        },
+        "fieldId": null,
+        "documentsContentPair": null
+      }
+    ],
+    "created": [],
+    "prohibited": []
+  }
+}

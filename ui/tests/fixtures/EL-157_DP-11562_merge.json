@@ -1,0 +1,89 @@
+{
+  "success": true,
+  "targetModuleHasStructuralChanges": true,
+  "mergeNotAuthorized": false,
+  "mergeReport": {
+    "copied": [],
+    "warnings": [],
+    "creationFailed": [],
+    "duplicateSkipped": [],
+    "moved": [
+      {
+        "operationResultType": "MOVED",
+        "workItemsPair": {
+          "leftWorkItem": {
+            "id": "EL-157",
+            "title": "User may not be told if the password or user name is wrong",
+            "outlineNumber": "2.2-3",
+            "projectId": "elibrary",
+            "referenced": false,
+            "revision": null,
+            "lastRevision": "1",
+            "movedOutlineNumber": "2.2-2",
+            "moveDirection": 0,
+            "externalProjectWorkItem": false,
+            "fields": []
+          },
+          "rightWorkItem": {
+            "id": "DP-11562",
+            "title": "User may not be told if the password or user name is wrong",
+            "outlineNumber": "2.2-2",
+            "projectId": "elibrary",
+            "referenced": false,
+            "revision": null,
+            "lastRevision": "6581",
+            "movedOutlineNumber": null,
+            "moveDirection": null,
+            "externalProjectWorkItem": false,
+            "fields": []
+          }
+        },
+        "fieldId": null,
+        "documentsContentPair": null
+      }
+    ],
+    "moveFailed": [],
+    "moveSkipped": [],
+    "mergeDetached": [],
+    "logs": "2025-04-29 14:09:21.218: 'MODIFIED' -- left WI 'EL-157', right WI 'DP-11562' -- workitem 'DP-11562' modified with info from 'EL-157'\n2025-04-29 14:09:21.227: 'MOVED' -- left WI 'EL-157', right WI 'DP-11562' -- workitem 'DP-11562' moved",
+    "conflicted": [],
+    "modified": [
+      {
+        "operationResultType": "MODIFIED",
+        "workItemsPair": {
+          "leftWorkItem": {
+            "id": "EL-157",
+            "title": "User may not be told if the password or user name is wrong",
+            "outlineNumber": "2.2-3",
+            "projectId": "elibrary",
+            "referenced": false,
+            "revision": null,
+            "lastRevision": "1",
+            "movedOutlineNumber": "2.2-2",
+            "moveDirection": 0,
+            "externalProjectWorkItem": false,
+            "fields": []
+          },
+          "rightWorkItem": {
+            "id": "DP-11562",
+            "title": "User may not be told if the password or user name is wrong",
+            "outlineNumber": "2.2-2",
+            "projectId": "elibrary",
+            "referenced": false,
+            "revision": null,
+            "lastRevision": "6581",
+            "movedOutlineNumber": null,
+            "moveDirection": null,
+            "externalProjectWorkItem": false,
+            "fields": []
+          }
+        },
+        "fieldId": null,
+        "documentsContentPair": null
+      }
+    ],
+    "created": [],
+    "deleted": [],
+    "prohibited": []
+  }
+}
