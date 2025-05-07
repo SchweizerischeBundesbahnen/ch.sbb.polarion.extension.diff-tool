@@ -32,6 +32,7 @@ class DocumentsContentHandlerTest {
             <p>Paragraph above</p>
             <div id="polarion_wiki macro name=module-workitem;params=id=AA-3"></div>
             <div id="polarion_wiki macro name=module-workitem;params=id=AA-4"></div>
+            <p>Paragraph below the last</p>
         """);
         assertEquals(4, contentAnchors.size());
         assertTrue(contentAnchors.containsKey("AA-1"));
@@ -39,6 +40,7 @@ class DocumentsContentHandlerTest {
         assertTrue(contentAnchors.containsKey("AA-3"));
         assertTrue(contentAnchors.containsKey("AA-4"));
         assertEquals("<p>Paragraph above</p>", contentAnchors.get("AA-3").getContentAbove());
+        assertEquals("<p>Paragraph below the last</p>", contentAnchors.get("AA-4").getContentBelow());
     }
 
     @Test
@@ -99,6 +101,13 @@ class DocumentsContentHandlerTest {
     }
 
     @Test
+    void testGetContentBelowLastAnchor() {
+        Document document = generateTestDocument();
+        List<Element> elements = handler.getContent(document, "AA-4", DocumentContentAnchor.ContentPosition.BELOW);
+        assertEquals("<p>Paragraph below the last</p>", elements.get(0).toString());
+    }
+
+    @Test
     void testInsertContentAboveAnchor() {
         Document document = generateTestDocument();
 
@@ -107,7 +116,7 @@ class DocumentsContentHandlerTest {
         boolean contentModified = handler.insertContent(document, "AA-3", DocumentContentAnchor.ContentPosition.ABOVE, Collections.singletonList(element));
         assertTrue(contentModified);
 
-        assertEquals(5, document.body().children().size());
+        assertEquals(6, document.body().children().size());
 
         element = document.body().children().get(0);
         assertEquals("h2", element.tagName());
@@ -135,7 +144,7 @@ class DocumentsContentHandlerTest {
         boolean contentModified = handler.insertContent(document, "AA-3", DocumentContentAnchor.ContentPosition.BELOW, Collections.singletonList(element));
         assertTrue(contentModified);
 
-        assertEquals(6, document.body().children().size());
+        assertEquals(7, document.body().children().size());
 
         element = document.body().children().get(0);
         assertEquals("h2", element.tagName());
@@ -164,7 +173,7 @@ class DocumentsContentHandlerTest {
         boolean removed = handler.removeContent(document, document.body().children().get(0), document.body().children().get(3));
         assertTrue(removed);
 
-        assertEquals(3, document.body().children().size());
+        assertEquals(4, document.body().children().size());
 
         Element element = document.body().children().get(0);
         assertEquals("h2", element.tagName());
@@ -197,7 +206,7 @@ class DocumentsContentHandlerTest {
         boolean inserted = handler.insertContent(document, document.body().children().get(1), elementsToInsert);
         assertTrue(inserted);
 
-        assertEquals(7, document.body().children().size());
+        assertEquals(8, document.body().children().size());
 
         element = document.body().children().get(0);
         assertEquals("h2", element.tagName());
@@ -229,7 +238,7 @@ class DocumentsContentHandlerTest {
         boolean inserted = handler.insertContent(document, null, elementsToInsert);
         assertTrue(inserted);
 
-        assertEquals(7, document.body().children().size());
+        assertEquals(8, document.body().children().size());
 
         element = document.body().children().get(0);
         assertEquals("p", element.tagName());
@@ -303,6 +312,7 @@ class DocumentsContentHandlerTest {
             <p>Paragraph above</p>
             <div id="polarion_wiki macro name=module-workitem;params=id=AA-3"></div>
             <div id="polarion_wiki macro name=module-workitem;params=id=AA-4"></div>
+            <p>Paragraph below the last</p>
         """);
     }
 }
