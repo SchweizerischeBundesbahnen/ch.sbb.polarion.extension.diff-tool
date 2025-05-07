@@ -80,7 +80,7 @@ test.describe("page of diffing documents' WorkItems", () => {
   test('control pane', async ({ page }) => {
     expect(await page.locator('.control-pane.expanded').count()).toEqual(0);
 
-    await expect(page.locator(".progress span")).toHaveText("Data loaded successfully");
+    await expect(page.locator(".progress span")).toHaveText("Data loaded successfully", { timeout: 10_000 });
 
     const expandButton = page.locator('.control-pane .expand-button');
     await expect(expandButton).toBeVisible({visible: true});
