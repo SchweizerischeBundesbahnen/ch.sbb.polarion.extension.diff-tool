@@ -135,6 +135,9 @@ public class MergeService {
         IModule source = polarionService.getModule(context.getSourceDocumentIdentifier());
         IModule target = polarionService.getModule(context.getTargetDocumentIdentifier());
 
+        if (!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), target.getLastRevision())) {
+            return MergeResult.builder().success(false).targetModuleHasStructuralChanges(true).build();
+        }
         if (!polarionService.userAuthorizedForMerge(target.getProjectId())) {
             return MergeResult.builder().success(false).mergeNotAuthorized(true).build();
         }

@@ -17,7 +17,7 @@ export default function MergeResultModal({visible, visibilityCallback, mergeDeni
         }}>
           {mergeDeniedWarning && <p data-testid="merge-aborted">Merge was aborted because some structural changes were done in target document meanwhile.</p>}
           {mergeNotAuthorizedWarning && <p data-testid="merge-not-authorized">You are not authorized to execute such merge request.</p>}
-          {!mergeNotAuthorizedWarning && !mergeDeniedWarning &&
+          {!mergeNotAuthorizedWarning && !mergeDeniedWarning && mergeReport &&
               <>
                 <p data-testid="merge-completed-with-result">
                   Merge operation completed with following result:

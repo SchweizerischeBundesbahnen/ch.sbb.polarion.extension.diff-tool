@@ -1,0 +1,130 @@
+{
+  "leftDocument": {
+    "projectId": "elibrary",
+    "projectName": "E-Library",
+    "spaceId": "Specification",
+    "locationPath": "Specification/Catalog Specification",
+    "id": "Catalog Specification",
+    "title": "Catalog Specification",
+    "revision": null,
+    "moduleXmlRevision": "6598",
+    "headRevision": "6599",
+    "authorizedForMerge": true,
+    "spaceName": "Specification"
+  },
+  "rightDocument": {
+    "projectId": "drivepilot",
+    "projectName": "E-Library",
+    "spaceId": "Design",
+    "locationPath": "Design/Catalog Design",
+    "id": "Catalog Design",
+    "title": "Catalog Design",
+    "revision": null,
+    "moduleXmlRevision": "6599",
+    "headRevision": "6599",
+    "authorizedForMerge": true,
+    "spaceName": "Design"
+  },
+  "pairedFields": [
+    {
+      "leftField": {
+        "id": "version",
+        "name": "Version",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "1.0",
+        "html": "1.0",
+        "htmlDiff": "<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">2</span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">1</span>.0",
+        "issues": []
+      },
+      "rightField": {
+        "id": "version",
+        "name": "Version",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "2.0",
+        "html": "2.0",
+        "htmlDiff": "<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">1</span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">2</span>.0",
+        "issues": []
+      }
+    },
+    {
+      "leftField": {
+        "id": "docType",
+        "name": "Document type",
+        "type": {
+          "enumerationId": "documents/document-type"
+        },
+        "value": "Product Specification",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Product Specification\"><img style=\"vertical-align:bottom;border:0px;margin-right:2px;\" src=\"/polarion/icons/default/enums/document_package.png?buildId=20241021-1118-2410-76db763e\" alt=\"\"/>Product Specification</span>",
+        "htmlDiff": null,
+        "issues": []
+      },
+      "rightField": {
+        "id": "docType",
+        "name": "Document Type",
+        "type": {
+          "enumerationId": "documents/document-type"
+        },
+        "value": "Product Specification",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Product Specification\"><img style=\"vertical-align:bottom;border:0px;margin-right:2px;\" src=\"/polarion/icons/default/enums/document_package.png?buildId=20241021-1118-2410-76db763e\" alt=\"\"/>Product Specification</span>",
+        "htmlDiff": null,
+        "issues": []
+      }
+    },
+    {
+      "leftField": {
+        "id": "docRevision",
+        "name": "Document Revision",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": null,
+        "html": "",
+        "htmlDiff": "<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"last-diff\">183</span>",
+        "issues": []
+      },
+      "rightField": {
+        "id": "docRevision",
+        "name": "Document Revision",
+        "type": {
+          "typeName": "java.lang.String",
+          "subtype": null
+        },
+        "value": "183",
+        "html": "183",
+        "htmlDiff": "<span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">183</span>",
+        "issues": []
+      }
+    },
+    {
+      "leftField": {
+        "id": "docLanguage",
+        "name": "Document Language",
+        "type": {
+          "enumerationId": "language"
+        },
+        "value": "Deutsch",
+        "html": "<span class=\"polarion-JSEnumOption\" title=\"Deutsch\">Deutsch</span>",
+        "htmlDiff": "<span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"></span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"><span class=\"polarion-JSEnumOption\" title=\"Deutsch\">Deutsch</span></span>",
+        "issues": []
+      },
+      "rightField": {
+        "id": "docLanguage",
+        "name": "Document Language",
+        "type": {
+          "enumerationId": "language"
+        },
+        "value": null,
+        "html": "",
+        "htmlDiff": "<span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\"><span class=\"polarion-JSEnumOption\" title=\"Deutsch\">Deutsch</span></span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\"></span>",
+        "issues": []
+      }
+    }
+  ]
+}
