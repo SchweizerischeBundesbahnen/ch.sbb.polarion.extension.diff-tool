@@ -16,6 +16,5 @@ Require-Bundle: com.polarion.portal.tomcat,
  org.ehcache,
  org.jsoup,
  ch.sbb.polarion.extension.pdf-exporter;resolution:=optional
-Import-Package: org.eclipse.core.runtime
-Guice-Modules: ch.sbb.polarion.extension.diff_tool.DiffToolModule,ch.sbb.polarion.extension.diff_tool.CopyToolModule
+Import-Package: org.osgi.framework,org.eclipse.core.runtime
 Export-Package: ch.sbb.polarion.extension.diff_tool
