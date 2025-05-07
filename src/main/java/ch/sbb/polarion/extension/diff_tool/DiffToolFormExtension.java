@@ -1,11 +1,10 @@
 package ch.sbb.polarion.extension.diff_tool;
 
-import com.google.inject.Inject;
-
 public class DiffToolFormExtension extends BaseFormExtension {
 
-    @Inject
+    public static final String DOCUMENTS_COMPARISON_FORM_EXTENSION_ID = "diff-tool";
+
     public DiffToolFormExtension() {
-        super(DiffToolModule.DOCUMENTS_COMPARISON_FORM_EXTENSION_ID, "Documents Comparison");
+        super(DOCUMENTS_COMPARISON_FORM_EXTENSION_ID, "Documents Comparison");
     }
 }
