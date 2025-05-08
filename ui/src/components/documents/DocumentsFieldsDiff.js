@@ -33,6 +33,7 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
   const [mergeError, setMergeError] = useState("");
   const [mergeErrorModalVisible, setMergeErrorModalVisible] = useState(false);
   const [mergeReport, setMergeReport] = useState({});
+  const [mergeDeniedWarning, setMergeDeniedWarning] = useState(false);  // means that merge operation was denied because displayed state of documents is not last one
   const [mergeNotAuthorizedWarning, setMergeNotAuthorizedWarning] = useState(false);  // means that merge to target document is not authorized for current user
   const [mergeReportModalVisible, setMergeReportModalVisible] = useState(false);
 
@@ -89,6 +90,7 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
     diffService.sendDocumentsFieldsMergeRequest(searchParams, direction, loadingContext, mergingContext, fieldsData)
         .then((data) => {
           setMergeReport(data.mergeReport);
+          setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);
           setMergeNotAuthorizedWarning(!data.success && data.mergeNotAuthorized);
           setMergeReportModalVisible(true);
         })
@@ -153,10 +155,10 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
     </Modal>
 
     <MergeResultModal visible={mergeReportModalVisible} visibilityCallback={setWarningModalVisibleAndReloadIfNeeded}
-                      mergeNotAuthorizedWarning={mergeNotAuthorizedWarning} mergeReport={mergeReport}/>
+                      mergeDeniedWarning={mergeDeniedWarning} mergeNotAuthorizedWarning={mergeNotAuthorizedWarning} mergeReport={mergeReport}/>
 
     {fieldsDiffs && fieldsDiffs.map((diff, index) => (
-        <div className="wi-diff row g-0" key={index} style={{position: 'relative'}}>
+        <div className="wi-diff row g-0" key={index} style={{position: 'relative'}} data-testid={`${diff.id}-field-diff`}>
           <div className="merge-ticker">
             <div className="form-check">
               <input className="form-check-input" type="checkbox" checked={mergingContext.isIndexSelected(index)} onChange={changeSelected(diff.id)}/>

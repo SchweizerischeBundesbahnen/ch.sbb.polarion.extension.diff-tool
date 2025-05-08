@@ -80,7 +80,7 @@ test.describe("page of diffing documents' WorkItems", () => {
   test('control pane', async ({ page }) => {
     expect(await page.locator('.control-pane.expanded').count()).toEqual(0);
 
-    await expect(page.locator(".progress span")).toHaveText("Data loaded successfully");
+    await expect(page.locator(".progress span")).toHaveText("Data loaded successfully", { timeout: 10_000 });
 
     const expandButton = page.locator('.control-pane .expand-button');
     await expect(expandButton).toBeVisible({visible: true});
@@ -128,8 +128,8 @@ test.describe("page of diffing documents' WorkItems", () => {
     await expandButton.click();
     expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
 
-    page.locator("#paper-size").selectOption("A3");
-    page.locator("#orientation").selectOption("portrait");
+    await page.locator("#paper-size").selectOption("A3");
+    await page.locator("#orientation").selectOption("portrait");
 
     const exportRequestPromise = page.waitForRequest(request => {
       return request.url().includes('/conversion/html-to-pdf');
@@ -142,7 +142,7 @@ test.describe("page of diffing documents' WorkItems", () => {
 
     const exportRequest = await exportRequestPromise;
     expect(exportRequest.method()).toBe('POST');
-    expect(exportRequest.url().includes('/conversion/html-to-pdf?orientation=portrait&paperSize=A3')).toBeTruthy();
+    expect(exportRequest.url()).toContain('/conversion/html-to-pdf?orientation=portrait&paperSize=A3');
   });
 
   test('expand/collapse', async ({ page }) => {

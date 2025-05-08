@@ -1,0 +1,21 @@
+{
+  "success": false,
+  "targetModuleHasStructuralChanges": false,
+  "mergeNotAuthorized": true,
+  "mergeReport": {
+    "copied": [],
+    "conflicted": [],
+    "creationFailed": [],
+    "duplicateSkipped": [],
+    "moved": [],
+    "moveFailed": [],
+    "moveSkipped": [],
+    "mergeDetached": [],
+    "logs": "2025-05-06 11:57:49.469: 'COPIED' -- field ID 'version' -- value successfully copied",
+    "warnings": [],
+    "modified": [],
+    "created": [],
+    "deleted": [],
+    "prohibited": []
+  }
+}
