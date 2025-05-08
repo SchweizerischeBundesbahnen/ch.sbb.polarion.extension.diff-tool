@@ -8,7 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith({MockitoExtension.class, PlatformContextMockExtension.class})
-public class DiffToolFormExtensionTest {
+class DiffToolFormExtensionTest {
     @Test
     void testConstructor() {
         DiffToolFormExtension diffToolFormExtension = new DiffToolFormExtension();
