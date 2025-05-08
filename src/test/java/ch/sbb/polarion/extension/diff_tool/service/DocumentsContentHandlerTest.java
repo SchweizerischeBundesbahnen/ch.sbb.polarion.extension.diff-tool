@@ -111,6 +111,9 @@ class DocumentsContentHandlerTest {
 
         elements = handler.getContent(document, "BB-0", DocumentContentAnchor.ContentPosition.BELOW);
         assertTrue(elements.isEmpty());
+
+        elements = handler.getContent(Jsoup.parse(""), "AA-1", DocumentContentAnchor.ContentPosition.BELOW);
+        assertTrue(elements.isEmpty());
     }
 
     @Test
