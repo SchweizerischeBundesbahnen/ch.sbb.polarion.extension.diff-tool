@@ -77,6 +77,7 @@ class DocumentsContentHandler {
         }
     }
 
+    @SuppressWarnings("java:S3776") // ignore cognitive complexity complaint
     @VisibleForTesting
     List<Element> getContent(@NotNull Document sourceDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentPosition contentPosition) {
         List<Element> content = new ArrayList<>();

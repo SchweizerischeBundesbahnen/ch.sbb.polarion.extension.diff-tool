@@ -101,10 +101,16 @@ class DocumentsContentHandlerTest {
     }
 
     @Test
-    void testGetContentBelowLastAnchor() {
+    void testGetContentAtTheEndOfDoc() {
         Document document = generateTestDocument();
         List<Element> elements = handler.getContent(document, "AA-4", DocumentContentAnchor.ContentPosition.BELOW);
         assertEquals("<p>Paragraph below the last</p>", elements.get(0).toString());
+
+        elements = handler.getContent(document, "AA-4", DocumentContentAnchor.ContentPosition.ABOVE);
+        assertTrue(elements.isEmpty());
+
+        elements = handler.getContent(document, "BB-0", DocumentContentAnchor.ContentPosition.BELOW);
+        assertTrue(elements.isEmpty());
     }
 
     @Test
