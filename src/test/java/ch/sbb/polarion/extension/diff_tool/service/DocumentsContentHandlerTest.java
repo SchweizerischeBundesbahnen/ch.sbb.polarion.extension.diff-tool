@@ -44,6 +44,11 @@ class DocumentsContentHandlerTest {
     }
 
     @Test
+    void testParseNoAnchors() {
+        assertTrue(handler.parse("").isEmpty());
+    }
+
+    @Test
     void testMergeDocuments() {
         IModule leftDocument = mock(IModule.class);
         when(leftDocument.getHomePageContent()).thenReturn(Text.html("""
