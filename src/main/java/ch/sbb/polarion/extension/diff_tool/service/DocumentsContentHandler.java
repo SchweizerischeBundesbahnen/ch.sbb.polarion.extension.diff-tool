@@ -53,6 +53,10 @@ class DocumentsContentHandler {
                 contentBuffer.append(element.outerHtml());
             }
         }
+        // put the rest content to the last anchor
+        if (!contentBuffer.isEmpty() && lastAnchor != null) {
+            lastAnchor.setContentBelow(contentBuffer.toString());
+        }
         return contentAnchors;
     }
 
@@ -73,6 +77,7 @@ class DocumentsContentHandler {
         }
     }
 
+    @SuppressWarnings("java:S3776") // ignore cognitive complexity complaint
     @VisibleForTesting
     List<Element> getContent(@NotNull Document sourceDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentPosition contentPosition) {
         List<Element> content = new ArrayList<>();
@@ -95,7 +100,8 @@ class DocumentsContentHandler {
                 content.clear();
             }
         }
-        return Collections.emptyList();
+        // even if there were no more work items below the anchor, we have to return the rest content
+        return elementPassed && contentPosition == DocumentContentAnchor.ContentPosition.BELOW && !content.isEmpty() ? content : Collections.emptyList();
     }
 
     @VisibleForTesting
