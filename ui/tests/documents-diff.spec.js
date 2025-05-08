@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 import { test, normalizeHtml } from './test-utils';
 
-test.describe("diffing of documents work items' WorkItems", () => {
+test.describe("diffing of documents' work items", () => {
 
   test.beforeEach(async ({ page, mockApi }) => {
     await mockApi.mockEndpoint({ url: '**/extension/info', fixtureFile: 'version-info.json' });
@@ -35,25 +35,25 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL144_DP11549 = page.getByTestId('EL-144_DP-11549');
 
     const header = EL144_DP11549.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(238, 238, 238)");
 
     await expect(EL144_DP11549.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: false });
 
     const leftHeader = EL144_DP11549.locator(".header .left");
-    await expect(leftHeader).toBeVisible({ visible: true });
+    await expect(leftHeader).toBeVisible();
     await expect(leftHeader).toHaveText("2 Requirements EL-144");
 
     const leftBadge = EL144_DP11549.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-144");
 
     const rightHeader = EL144_DP11549.locator(".header .right");
-    await expect(rightHeader).toBeVisible({ visible: true });
+    await expect(rightHeader).toBeVisible();
     await expect(rightHeader).toHaveText("2 Requirements DP-11549");
 
     const rightBadge = EL144_DP11549.locator(".header .right .badge");
-    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toBeVisible();
     await expect(rightBadge).toHaveText("DP-11549");
 
     await expect(EL144_DP11549.locator(".content")).toBeVisible({ visible: false });
@@ -65,25 +65,25 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL145_DP11550 = page.getByTestId('EL-145_DP-11550');
 
     const header = EL145_DP11550.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(238, 238, 238)");
 
     await expect(EL145_DP11550.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: false });
 
     const leftHeader = EL145_DP11550.locator(".header .left");
-    await expect(leftHeader).toBeVisible({ visible: true });
+    await expect(leftHeader).toBeVisible();
     await expect(leftHeader).toHaveText("2.1 User name and Password validation EL-145");
 
     const leftBadge = EL145_DP11550.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-145");
 
     const rightHeader = EL145_DP11550.locator(".header .right");
-    await expect(rightHeader).toBeVisible({ visible: true });
+    await expect(rightHeader).toBeVisible();
     await expect(rightHeader).toHaveText("2.1 User name and Password validation DP-11550");
 
     const rightBadge = EL145_DP11550.locator(".header .right .badge");
-    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toBeVisible();
     await expect(rightBadge).toHaveText("DP-11550");
 
     await expect(EL145_DP11550.locator(".content")).toBeVisible({ visible: false });
@@ -95,17 +95,17 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL101_DP11551 = page.getByTestId('EL-101_DP-11551');
 
     const header = EL101_DP11551.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
 
     await expect(EL101_DP11551.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: false });
 
     const leftBadge = EL101_DP11551.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-101 - User name must be validated when a new user account is created");
 
     const rightBadge = EL101_DP11551.locator(".header .right .badge");
-    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toBeVisible();
     await expect(rightBadge).toHaveText("DP-11551 - User name must be validated when a new user account is created");
 
     await expect(EL101_DP11551.locator(".content")).toBeVisible({ visible: false });
@@ -117,17 +117,17 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL146_DP11552 = page.getByTestId('EL-146_DP-11552');
 
     const header = EL146_DP11552.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
 
     await expect(EL146_DP11552.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: false });
 
     const leftBadge = EL146_DP11552.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-146 - User name may not contain spaces");
 
     const rightBadge = EL146_DP11552.locator(".header .right .badge");
-    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toBeVisible();
     await expect(rightBadge).toHaveText("DP-11552 - User name may not contain spaces");
 
     await expect(EL146_DP11552.locator(".content")).toBeVisible({ visible: false });
@@ -139,29 +139,29 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL4977_DP11559 = page.getByTestId('EL-4977_DP-11559');
 
     const header = EL4977_DP11559.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
 
     await expect(EL4977_DP11559.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
 
     const leftBadge = EL4977_DP11559.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-4977 - New Requirement");
 
     const rightBadge = EL4977_DP11559.locator(".header .right .badge");
-    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toBeVisible();
     await expect(rightBadge).toHaveText("DP-11559 - New Requirement");
 
-    await expect(EL4977_DP11559.locator(".content")).toBeVisible({ visible: true });
+    await expect(EL4977_DP11559.locator(".content")).toBeVisible();
 
     const descriptionDiffHeader = EL4977_DP11559.getByTestId("Description").locator(".diff-header");
-    await expect(descriptionDiffHeader).toBeVisible({ visible: true });
+    await expect(descriptionDiffHeader).toBeVisible();
     await expect(descriptionDiffHeader).toHaveText("Description");
 
-    await expect(EL4977_DP11559.getByTestId("Description").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(EL4977_DP11559.getByTestId("Description").locator(".diff-viewer")).toBeVisible();
 
     const descriptionDiffLeft = EL4977_DP11559.getByTestId("Description").locator(".diff-viewer .diff-leaf.left");
-    await expect(descriptionDiffLeft).toBeVisible({ visible: true });
+    await expect(descriptionDiffLeft).toBeVisible();
 
     const descriptionDiffLeftHtml = await descriptionDiffLeft.innerHTML();
     expect(normalizeHtml(descriptionDiffLeftHtml)).toBe(normalizeHtml(`
@@ -170,7 +170,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const descriptionDiffRight = EL4977_DP11559.getByTestId("Description").locator(".diff-viewer .diff-leaf.right");
-    await expect(descriptionDiffRight).toBeVisible({ visible: true });
+    await expect(descriptionDiffRight).toBeVisible();
 
     const descriptionDiffRightHtml = await descriptionDiffRight.innerHTML();
     expect(normalizeHtml(descriptionDiffRightHtml)).toBe(normalizeHtml(`
@@ -179,13 +179,13 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const statusDiffHeader = EL4977_DP11559.getByTestId("Status").locator(".diff-header");
-    await expect(statusDiffHeader).toBeVisible({ visible: true });
+    await expect(statusDiffHeader).toBeVisible();
     await expect(statusDiffHeader).toHaveText("Status");
 
-    await expect(EL4977_DP11559.getByTestId("Status").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(EL4977_DP11559.getByTestId("Status").locator(".diff-viewer")).toBeVisible();
 
     const statusDiffLeft = EL4977_DP11559.getByTestId("Status").locator(".diff-viewer .diff-leaf.left");
-    await expect(statusDiffLeft).toBeVisible({ visible: true });
+    await expect(statusDiffLeft).toBeVisible();
 
     const statusDiffLeftHtml = await statusDiffLeft.innerHTML();
     expect(normalizeHtml(statusDiffLeftHtml)).toBe(normalizeHtml(`
@@ -194,7 +194,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const statusDiffRight = EL4977_DP11559.getByTestId("Status").locator(".diff-viewer .diff-leaf.right");
-    await expect(statusDiffRight).toBeVisible({ visible: true });
+    await expect(statusDiffRight).toBeVisible();
 
     const statusDiffRightHtml = await statusDiffRight.innerHTML();
     expect(normalizeHtml(statusDiffRightHtml)).toBe(normalizeHtml(`
@@ -209,37 +209,37 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL11575_EL11575 = page.getByTestId('EL-11575_EL-11575');
 
     const header = EL11575_EL11575.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
 
-    await expect(EL11575_EL11575.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+    await expect(EL11575_EL11575.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible();
 
     const leftBadge = EL11575_EL11575.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-11575 - Another one requirement");
 
     const rightBadge = EL11575_EL11575.locator(".header .right .badge");
-    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toBeVisible();
     await expect(rightBadge).toHaveText("EL-11575 - Another one requirement");
 
     const referencedWiLabel = EL11575_EL11575.locator(".header .right .referenced-wi");
-    await expect(referencedWiLabel).toBeVisible({ visible: true });
+    await expect(referencedWiLabel).toBeVisible();
     await expect(referencedWiLabel).toHaveText("R");
 
     const revisionLabel = EL11575_EL11575.locator(".header .right .revision");
-    await expect(revisionLabel).toBeVisible({ visible: true });
+    await expect(revisionLabel).toBeVisible();
     await expect(revisionLabel).toHaveText("rev. 6480");
 
-    await expect(EL11575_EL11575.locator(".content")).toBeVisible({ visible: true });
+    await expect(EL11575_EL11575.locator(".content")).toBeVisible();
 
     const descriptionDiffHeader = EL11575_EL11575.getByTestId("Description").locator(".diff-header");
-    await expect(descriptionDiffHeader).toBeVisible({ visible: true });
+    await expect(descriptionDiffHeader).toBeVisible();
     await expect(descriptionDiffHeader).toHaveText("Description");
 
-    await expect(EL11575_EL11575.getByTestId("Description").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(EL11575_EL11575.getByTestId("Description").locator(".diff-viewer")).toBeVisible();
 
     const descriptionDiffLeft = EL11575_EL11575.getByTestId("Description").locator(".diff-viewer .diff-leaf.left");
-    await expect(descriptionDiffLeft).toBeVisible({ visible: true });
+    await expect(descriptionDiffLeft).toBeVisible();
 
     const descriptionDiffLeftHtml = await descriptionDiffLeft.innerHTML();
     expect(normalizeHtml(descriptionDiffLeftHtml)).toBe(normalizeHtml(`
@@ -247,7 +247,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const descriptionDiffRight = EL11575_EL11575.getByTestId("Description").locator(".diff-viewer .diff-leaf.right");
-    await expect(descriptionDiffRight).toBeVisible({ visible: true });
+    await expect(descriptionDiffRight).toBeVisible();
     await expect(descriptionDiffRight).toHaveCSS("border-left", "5px dotted rgb(187, 187, 187)");
 
     const descriptionDiffRightHtml = await descriptionDiffRight.innerHTML();
@@ -262,37 +262,37 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL11600_NONE = page.getByTestId('EL-11600_NONE');
 
     const header = EL11600_NONE.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
 
-    await expect(EL11600_NONE.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+    await expect(EL11600_NONE.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible();
 
     const leftBadge = EL11600_NONE.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-11600 - Very important requirement");
 
     const referencedWiLabel = EL11600_NONE.locator(".header .left .referenced-wi");
-    await expect(referencedWiLabel).toBeVisible({ visible: true });
+    await expect(referencedWiLabel).toBeVisible();
     await expect(referencedWiLabel).toHaveText("R");
 
     const revisionLabel = EL11600_NONE.locator(".header .left .revision");
-    await expect(revisionLabel).toBeVisible({ visible: true });
+    await expect(revisionLabel).toBeVisible();
     await expect(revisionLabel).toHaveText("rev. 6480");
 
     const rightHeader = EL11600_NONE.locator(".header .right");
-    await expect(rightHeader).toBeVisible({ visible: true });
+    await expect(rightHeader).toBeVisible();
     await expect(rightHeader).toHaveText("–");
 
-    await expect(EL11600_NONE.locator(".content")).toBeVisible({ visible: true });
+    await expect(EL11600_NONE.locator(".content")).toBeVisible();
 
     const typeDiffHeader = EL11600_NONE.getByTestId("Type").locator(".diff-header");
-    await expect(typeDiffHeader).toBeVisible({ visible: true });
+    await expect(typeDiffHeader).toBeVisible();
     await expect(typeDiffHeader).toHaveText("Type");
 
-    await expect(EL11600_NONE.getByTestId("Type").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(EL11600_NONE.getByTestId("Type").locator(".diff-viewer")).toBeVisible();
 
     const typeDiffLeft = EL11600_NONE.getByTestId("Type").locator(".diff-viewer .diff-leaf.left");
-    await expect(typeDiffLeft).toBeVisible({ visible: true });
+    await expect(typeDiffLeft).toBeVisible();
     await expect(typeDiffLeft).toHaveCSS("border-left", "5px dotted rgb(187, 187, 187)");
 
     const typeDiffLeftHtml = await typeDiffLeft.innerHTML();
@@ -302,19 +302,19 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const typeDiffRight = EL11600_NONE.getByTestId("Type").locator(".diff-viewer .diff-leaf.right");
-    await expect(typeDiffRight).toBeVisible({ visible: true });
+    await expect(typeDiffRight).toBeVisible();
 
     const typeDiffRightHtml = await typeDiffRight.innerHTML();
     expect(typeDiffRightHtml).toBe("");
 
     const titleDiffHeader = EL11600_NONE.getByTestId("Title").locator(".diff-header");
-    await expect(titleDiffHeader).toBeVisible({ visible: true });
+    await expect(titleDiffHeader).toBeVisible();
     await expect(titleDiffHeader).toHaveText("Title");
 
-    await expect(EL11600_NONE.getByTestId("Title").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(EL11600_NONE.getByTestId("Title").locator(".diff-viewer")).toBeVisible();
 
     const titleDiffLeft = EL11600_NONE.getByTestId("Title").locator(".diff-viewer .diff-leaf.left");
-    await expect(titleDiffLeft).toBeVisible({ visible: true });
+    await expect(titleDiffLeft).toBeVisible();
     await expect(titleDiffLeft).toHaveCSS("border-left", "5px dotted rgb(187, 187, 187)");
 
     const titleDiffLeftHtml = await titleDiffLeft.innerHTML();
@@ -323,19 +323,19 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const titleDiffRight = EL11600_NONE.getByTestId("Title").locator(".diff-viewer .diff-leaf.right");
-    await expect(titleDiffRight).toBeVisible({ visible: true });
+    await expect(titleDiffRight).toBeVisible();
 
     const titleDiffRightHtml = await titleDiffRight.innerHTML();
     expect(titleDiffRightHtml).toBe("");
 
     const statusDiffHeader = EL11600_NONE.getByTestId("Status").locator(".diff-header");
-    await expect(statusDiffHeader).toBeVisible({ visible: true });
+    await expect(statusDiffHeader).toBeVisible();
     await expect(statusDiffHeader).toHaveText("Status");
 
-    await expect(EL11600_NONE.getByTestId("Status").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(EL11600_NONE.getByTestId("Status").locator(".diff-viewer")).toBeVisible();
 
     const statusDiffLeft = EL11600_NONE.getByTestId("Status").locator(".diff-viewer .diff-leaf.left");
-    await expect(statusDiffLeft).toBeVisible({ visible: true });
+    await expect(statusDiffLeft).toBeVisible();
     await expect(statusDiffLeft).toHaveCSS("border-left", "5px dotted rgb(187, 187, 187)");
 
     const statusDiffLeftHtml = await statusDiffLeft.innerHTML();
@@ -345,7 +345,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const statusDiffRight = EL11600_NONE.getByTestId("Status").locator(".diff-viewer .diff-leaf.right");
-    await expect(statusDiffRight).toBeVisible({ visible: true });
+    await expect(statusDiffRight).toBeVisible();
 
     const statusDiffRightHtml = await statusDiffRight.innerHTML();
     expect(statusDiffRightHtml).toBe("");
@@ -357,25 +357,25 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL153_DP11560 = page.getByTestId('EL-153_DP-11560');
 
     const header = EL153_DP11560.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(238, 238, 238)");
 
     await expect(EL153_DP11560.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: false });
 
     const leftHeader = EL153_DP11560.locator(".header .left");
-    await expect(leftHeader).toBeVisible({ visible: true });
+    await expect(leftHeader).toBeVisible();
     await expect(leftHeader).toHaveText("2.2 Login Screen EL-153");
 
     const leftBadge = EL153_DP11560.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-153");
 
     const rightHeader = EL153_DP11560.locator(".header .right");
-    await expect(rightHeader).toBeVisible({ visible: true });
+    await expect(rightHeader).toBeVisible();
     await expect(rightHeader).toHaveText("2.2 Login Screen DP-11560");
 
     const rightBadge = EL153_DP11560.locator(".header .right .badge");
-    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toBeVisible();
     await expect(rightBadge).toHaveText("DP-11560");
 
     await expect(EL153_DP11560.locator(".content")).toBeVisible({ visible: false });
@@ -387,17 +387,17 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL11572_DP11571 = page.getByTestId('EL-11572_DP-11571');
 
     const header = EL11572_DP11571.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
 
     await expect(EL11572_DP11571.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: false });
 
     const leftBadge = EL11572_DP11571.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-11572 - New Requirement");
 
     const rightBadge = EL11572_DP11571.locator(".header .right .badge");
-    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toBeVisible();
     await expect(rightBadge).toHaveText("DP-11571 - New Requirement");
 
     await expect(EL11572_DP11571.locator(".content")).toBeVisible({ visible: false });
@@ -409,29 +409,29 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL156_NONE = page.getByTestId('EL-156_NONE');
 
     const header = EL156_NONE.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
 
-    await expect(EL156_NONE.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+    await expect(EL156_NONE.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible();
 
     const leftBadge = EL156_NONE.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-156 - User must be informed on the login screen when Caps Lock is turned on");
 
     const rightHeader = EL156_NONE.locator(".header .right");
-    await expect(rightHeader).toBeVisible({ visible: true });
+    await expect(rightHeader).toBeVisible();
     await expect(rightHeader).toHaveText("–");
 
-    await expect(EL156_NONE.locator(".content")).toBeVisible({ visible: true });
+    await expect(EL156_NONE.locator(".content")).toBeVisible();
 
     const descriptionDiffHeader = EL156_NONE.getByTestId("Description").locator(".diff-header");
-    await expect(descriptionDiffHeader).toBeVisible({ visible: true });
+    await expect(descriptionDiffHeader).toBeVisible();
     await expect(descriptionDiffHeader).toHaveText("Description");
 
-    await expect(EL156_NONE.getByTestId("Description").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(EL156_NONE.getByTestId("Description").locator(".diff-viewer")).toBeVisible();
 
     const descriptionDiffLeft = EL156_NONE.getByTestId("Description").locator(".diff-viewer .diff-leaf.left");
-    await expect(descriptionDiffLeft).toBeVisible({ visible: true });
+    await expect(descriptionDiffLeft).toBeVisible();
 
     const descriptionDiffLeftHtml = await descriptionDiffLeft.innerHTML();
     expect(normalizeHtml(descriptionDiffLeftHtml)).toBe(normalizeHtml(`
@@ -439,19 +439,19 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const descriptionDiffRight = EL156_NONE.getByTestId("Description").locator(".diff-viewer .diff-leaf.right");
-    await expect(descriptionDiffRight).toBeVisible({ visible: true });
+    await expect(descriptionDiffRight).toBeVisible();
 
     const descriptionDiffRightHtml = await descriptionDiffRight.innerHTML();
     expect(descriptionDiffRightHtml).toBe("");
 
     const typeDiffHeader = EL156_NONE.getByTestId("Type").locator(".diff-header");
-    await expect(typeDiffHeader).toBeVisible({ visible: true });
+    await expect(typeDiffHeader).toBeVisible();
     await expect(typeDiffHeader).toHaveText("Type");
 
-    await expect(EL156_NONE.getByTestId("Type").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(EL156_NONE.getByTestId("Type").locator(".diff-viewer")).toBeVisible();
 
     const typeDiffLeft = EL156_NONE.getByTestId("Type").locator(".diff-viewer .diff-leaf.left");
-    await expect(typeDiffLeft).toBeVisible({ visible: true });
+    await expect(typeDiffLeft).toBeVisible();
 
     const typeDiffLeftHtml = await typeDiffLeft.innerHTML();
     expect(normalizeHtml(typeDiffLeftHtml)).toBe(normalizeHtml(`
@@ -460,19 +460,19 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const typeDiffRight = EL156_NONE.getByTestId("Type").locator(".diff-viewer .diff-leaf.right");
-    await expect(typeDiffRight).toBeVisible({ visible: true });
+    await expect(typeDiffRight).toBeVisible();
 
     const typeDiffRightHtml = await typeDiffRight.innerHTML();
     expect(typeDiffRightHtml).toBe("");
 
     const titleDiffHeader = EL156_NONE.getByTestId("Title").locator(".diff-header");
-    await expect(titleDiffHeader).toBeVisible({ visible: true });
+    await expect(titleDiffHeader).toBeVisible();
     await expect(titleDiffHeader).toHaveText("Title");
 
-    await expect(EL156_NONE.getByTestId("Title").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(EL156_NONE.getByTestId("Title").locator(".diff-viewer")).toBeVisible();
 
     const titleDiffLeft = EL156_NONE.getByTestId("Title").locator(".diff-viewer .diff-leaf.left");
-    await expect(titleDiffLeft).toBeVisible({ visible: true });
+    await expect(titleDiffLeft).toBeVisible();
 
     const titleDiffLeftHtml = await titleDiffLeft.innerHTML();
     expect(normalizeHtml(titleDiffLeftHtml)).toBe(normalizeHtml(`
@@ -480,19 +480,19 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const titleDiffRight = EL156_NONE.getByTestId("Title").locator(".diff-viewer .diff-leaf.right");
-    await expect(titleDiffRight).toBeVisible({ visible: true });
+    await expect(titleDiffRight).toBeVisible();
 
     const titleDiffRightHtml = await titleDiffRight.innerHTML();
     expect(titleDiffRightHtml).toBe("");
 
     const statusDiffHeader = EL156_NONE.getByTestId("Status").locator(".diff-header");
-    await expect(statusDiffHeader).toBeVisible({ visible: true });
+    await expect(statusDiffHeader).toBeVisible();
     await expect(statusDiffHeader).toHaveText("Status");
 
-    await expect(EL156_NONE.getByTestId("Status").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(EL156_NONE.getByTestId("Status").locator(".diff-viewer")).toBeVisible();
 
     const statusDiffLeft = EL156_NONE.getByTestId("Status").locator(".diff-viewer .diff-leaf.left");
-    await expect(statusDiffLeft).toBeVisible({ visible: true });
+    await expect(statusDiffLeft).toBeVisible();
 
     const statusDiffLeftHtml = await statusDiffLeft.innerHTML();
     expect(normalizeHtml(statusDiffLeftHtml)).toBe(normalizeHtml(`
@@ -501,7 +501,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const statusDiffRight = EL156_NONE.getByTestId("Status").locator(".diff-viewer .diff-leaf.right");
-    await expect(statusDiffRight).toBeVisible({ visible: true });
+    await expect(statusDiffRight).toBeVisible();
 
     const statusDiffRightHtml = await statusDiffRight.innerHTML();
     expect(statusDiffRightHtml).toBe("");
@@ -513,17 +513,17 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL157_DP11562_direct = page.getByTestId('EL-157_DP-11562_direct');
 
     const header = EL157_DP11562_direct.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
 
-    await expect(EL157_DP11562_direct.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+    await expect(EL157_DP11562_direct.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible();
 
     const leftBadge = EL157_DP11562_direct.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-157 - User may not be told if the password or user name is wrong");
 
     const movedIcon = EL157_DP11562_direct.locator(".header .moved.right svg");
-    await expect(movedIcon).toBeVisible({ visible: true });
+    await expect(movedIcon).toBeVisible();
 
     const movedIconHtml = await movedIcon.innerHTML();
     expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
@@ -531,7 +531,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const movedLink = EL157_DP11562_direct.locator(".header .moved.right a");
-    await expect(movedLink).toBeVisible({ visible: true });
+    await expect(movedLink).toBeVisible();
     await expect(movedLink).toHaveText("moved to 2.2-2");
 
     await expect(EL157_DP11562_direct.locator(".content")).toBeVisible({ visible: false });
@@ -543,13 +543,13 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL157_DP11562_reverse = page.getByTestId('EL-157_DP-11562_reverse');
 
     const header = EL157_DP11562_reverse.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
 
-    await expect(EL157_DP11562_reverse.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+    await expect(EL157_DP11562_reverse.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible();
 
     const movedIcon = EL157_DP11562_reverse.locator(".header .moved.left svg");
-    await expect(movedIcon).toBeVisible({ visible: true });
+    await expect(movedIcon).toBeVisible();
 
     const movedIconHtml = await movedIcon.innerHTML();
     expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
@@ -557,11 +557,11 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const movedLink = EL157_DP11562_reverse.locator(".header .moved.left a");
-    await expect(movedLink).toBeVisible({ visible: true });
+    await expect(movedLink).toBeVisible();
     await expect(movedLink).toHaveText("moved to 2.2-3");
 
     const rightBadge = EL157_DP11562_reverse.locator(".header .right .badge");
-    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toBeVisible();
     await expect(rightBadge).toHaveText("DP-11562 - User may not be told if the password or user name is wrong");
 
     await expect(EL157_DP11562_reverse.locator(".content")).toBeVisible({ visible: false });
@@ -573,39 +573,39 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const NONE_DP11570 = page.getByTestId('NONE_DP-11570');
 
     const header = NONE_DP11570.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(238, 238, 238)");
 
-    await expect(NONE_DP11570.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+    await expect(NONE_DP11570.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible();
 
     const leftHeader = NONE_DP11570.locator(".header .left");
-    await expect(leftHeader).toBeVisible({ visible: true });
+    await expect(leftHeader).toBeVisible();
     await expect(leftHeader).toHaveText("–");
 
     const rightHeader = NONE_DP11570.locator(".header .right");
-    await expect(rightHeader).toBeVisible({ visible: true });
+    await expect(rightHeader).toBeVisible();
     await expect(rightHeader).toHaveText("2.3 New paragraph DP-11570");
 
     const rightBadge = NONE_DP11570.locator(".header .right .badge");
-    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toBeVisible();
     await expect(rightBadge).toHaveText("DP-11570");
 
-    await expect(NONE_DP11570.locator(".content")).toBeVisible({ visible: true });
+    await expect(NONE_DP11570.locator(".content")).toBeVisible();
 
     const typeDiffHeader = NONE_DP11570.getByTestId("Type").locator(".diff-header");
-    await expect(typeDiffHeader).toBeVisible({ visible: true });
+    await expect(typeDiffHeader).toBeVisible();
     await expect(typeDiffHeader).toHaveText("Type");
 
-    await expect(NONE_DP11570.getByTestId("Type").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(NONE_DP11570.getByTestId("Type").locator(".diff-viewer")).toBeVisible();
 
     const typeDiffLeft = NONE_DP11570.getByTestId("Type").locator(".diff-viewer .diff-leaf.left");
-    await expect(typeDiffLeft).toBeVisible({ visible: true });
+    await expect(typeDiffLeft).toBeVisible();
 
     const typeDiffLeftHtml = await typeDiffLeft.innerHTML();
     expect(typeDiffLeftHtml).toBe("");
 
     const typeDiffRight = NONE_DP11570.getByTestId("Type").locator(".diff-viewer .diff-leaf.right");
-    await expect(typeDiffRight).toBeVisible({ visible: true });
+    await expect(typeDiffRight).toBeVisible();
 
     const typeDiffRightHtml = await typeDiffRight.innerHTML();
     expect(normalizeHtml(typeDiffRightHtml)).toBe(normalizeHtml(`
@@ -614,19 +614,19 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const titleDiffHeader = NONE_DP11570.getByTestId("Title").locator(".diff-header");
-    await expect(titleDiffHeader).toBeVisible({ visible: true });
+    await expect(titleDiffHeader).toBeVisible();
     await expect(titleDiffHeader).toHaveText("Title");
 
-    await expect(NONE_DP11570.getByTestId("Title").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(NONE_DP11570.getByTestId("Title").locator(".diff-viewer")).toBeVisible();
 
     const titleDiffLeft = NONE_DP11570.getByTestId("Title").locator(".diff-viewer .diff-leaf.left");
-    await expect(titleDiffLeft).toBeVisible({ visible: true });
+    await expect(titleDiffLeft).toBeVisible();
 
     const titleDiffLeftHtml = await titleDiffLeft.innerHTML();
     expect(titleDiffLeftHtml).toBe("");
 
     const titleDiffRight = NONE_DP11570.getByTestId("Title").locator(".diff-viewer .diff-leaf.right");
-    await expect(titleDiffRight).toBeVisible({ visible: true });
+    await expect(titleDiffRight).toBeVisible();
 
     const titleDiffRightHtml = await titleDiffRight.innerHTML();
     expect(normalizeHtml(titleDiffRightHtml)).toBe(normalizeHtml(`
@@ -634,19 +634,19 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const statusDiffHeader = NONE_DP11570.getByTestId("Status").locator(".diff-header");
-    await expect(statusDiffHeader).toBeVisible({ visible: true });
+    await expect(statusDiffHeader).toBeVisible();
     await expect(statusDiffHeader).toHaveText("Status");
 
-    await expect(NONE_DP11570.getByTestId("Status").locator(".diff-viewer")).toBeVisible({ visible: true });
+    await expect(NONE_DP11570.getByTestId("Status").locator(".diff-viewer")).toBeVisible();
 
     const statusDiffLeft = NONE_DP11570.getByTestId("Status").locator(".diff-viewer .diff-leaf.left");
-    await expect(statusDiffLeft).toBeVisible({ visible: true });
+    await expect(statusDiffLeft).toBeVisible();
 
     const statusDiffLeftHtml = await statusDiffLeft.innerHTML();
     expect(statusDiffLeftHtml).toBe("");
 
     const statusDiffRight = NONE_DP11570.getByTestId("Status").locator(".diff-viewer .diff-leaf.right");
-    await expect(statusDiffRight).toBeVisible({ visible: true });
+    await expect(statusDiffRight).toBeVisible();
 
     const statusDiffRightHtml = await statusDiffRight.innerHTML();
     expect(normalizeHtml(statusDiffRightHtml)).toBe(normalizeHtml(`
@@ -661,21 +661,21 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL158_DP11563_direct = page.getByTestId('EL-158_DP-11563_direct');
 
     const header = EL158_DP11563_direct.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(238, 238, 238)");
 
-    await expect(EL158_DP11563_direct.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+    await expect(EL158_DP11563_direct.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible();
 
     const leftHeader = EL158_DP11563_direct.locator(".header .left");
-    await expect(leftHeader).toBeVisible({ visible: true });
+    await expect(leftHeader).toBeVisible();
     await expect(leftHeader).toHaveText("2.3 Performance Requirements EL-158");
 
     const leftBadge = EL158_DP11563_direct.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-158");
 
     const movedIcon = EL158_DP11563_direct.locator(".header .moved.right svg");
-    await expect(movedIcon).toBeVisible({ visible: true });
+    await expect(movedIcon).toBeVisible();
 
     const movedIconHtml = await movedIcon.innerHTML();
     expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
@@ -683,7 +683,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const movedLink = EL158_DP11563_direct.locator(".header .moved.right a");
-    await expect(movedLink).toBeVisible({ visible: true });
+    await expect(movedLink).toBeVisible();
     await expect(movedLink).toHaveText("moved to 2.4");
 
     await expect(EL158_DP11563_direct.locator(".content")).toBeVisible({ visible: false });
@@ -695,13 +695,13 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL158_DP11563_reverse = page.getByTestId('EL-158_DP-11563_reverse');
 
     const header = EL158_DP11563_reverse.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(238, 238, 238)");
 
-    await expect(EL158_DP11563_reverse.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+    await expect(EL158_DP11563_reverse.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible();
 
     const movedIcon = EL158_DP11563_reverse.locator(".header .moved.left svg");
-    await expect(movedIcon).toBeVisible({ visible: true });
+    await expect(movedIcon).toBeVisible();
 
     const movedIconHtml = await movedIcon.innerHTML();
     expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
@@ -709,15 +709,15 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const movedLink = EL158_DP11563_reverse.locator(".header .moved.left a");
-    await expect(movedLink).toBeVisible({ visible: true });
+    await expect(movedLink).toBeVisible();
     await expect(movedLink).toHaveText("moved to 2.3");
 
     const rightHeader = EL158_DP11563_reverse.locator(".header .right");
-    await expect(rightHeader).toBeVisible({ visible: true });
+    await expect(rightHeader).toBeVisible();
     await expect(rightHeader).toHaveText("2.4 Performance Requirements DP-11563");
 
     const rightBadge = EL158_DP11563_reverse.locator(".header .right .badge");
-    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toBeVisible();
     await expect(rightBadge).toHaveText("DP-11563");
 
     await expect(EL158_DP11563_reverse.locator(".content")).toBeVisible({ visible: false });
@@ -729,17 +729,17 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL159_DP11564_direct = page.getByTestId('EL-159_DP-11564_direct');
 
     const header = EL159_DP11564_direct.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
 
-    await expect(EL159_DP11564_direct.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+    await expect(EL159_DP11564_direct.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible();
 
     const leftBadge = EL159_DP11564_direct.locator(".header .left .badge");
-    await expect(leftBadge).toBeVisible({ visible: true });
+    await expect(leftBadge).toBeVisible();
     await expect(leftBadge).toHaveText("EL-159 - System should meet the following acceptance criteria");
 
     const movedIcon = EL159_DP11564_direct.locator(".header .moved.right svg");
-    await expect(movedIcon).toBeVisible({ visible: true });
+    await expect(movedIcon).toBeVisible();
 
     const movedIconHtml = await movedIcon.innerHTML();
     expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
@@ -747,7 +747,7 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const movedLink = EL159_DP11564_direct.locator(".header .moved.right a");
-    await expect(movedLink).toBeVisible({ visible: true });
+    await expect(movedLink).toBeVisible();
     await expect(movedLink).toHaveText("moved to 2.4-1");
 
     await expect(EL159_DP11564_direct.locator(".content")).toBeVisible({ visible: false });
@@ -759,13 +759,13 @@ test.describe("diffing of documents work items' WorkItems", () => {
     const EL159_DP11564_reverse = page.getByTestId('EL-159_DP-11564_reverse');
 
     const header = EL159_DP11564_reverse.locator(".header");
-    await expect(header).toBeVisible({ visible: true });
+    await expect(header).toBeVisible();
     await expect(header).toHaveCSS("background-color", "rgb(246, 246, 246)");
 
-    await expect(EL159_DP11564_reverse.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible({ visible: true });
+    await expect(EL159_DP11564_reverse.locator(".header .merge-ticker .form-check input[type='checkbox']")).toBeVisible();
 
     const movedIcon = EL159_DP11564_reverse.locator(".header .moved.left svg");
-    await expect(movedIcon).toBeVisible({ visible: true });
+    await expect(movedIcon).toBeVisible();
 
     const movedIconHtml = await movedIcon.innerHTML();
     expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
@@ -773,11 +773,11 @@ test.describe("diffing of documents work items' WorkItems", () => {
     `));
 
     const movedLink = EL159_DP11564_reverse.locator(".header .moved.left a");
-    await expect(movedLink).toBeVisible({ visible: true });
+    await expect(movedLink).toBeVisible();
     await expect(movedLink).toHaveText("moved to 2.3-1");
 
     const rightBadge = EL159_DP11564_reverse.locator(".header .right .badge");
-    await expect(rightBadge).toBeVisible({ visible: true });
+    await expect(rightBadge).toBeVisible();
     await expect(rightBadge).toHaveText("DP-11564 - System should meet the following acceptance criteria");
 
     await expect(EL159_DP11564_reverse.locator(".content")).toBeVisible({ visible: false });

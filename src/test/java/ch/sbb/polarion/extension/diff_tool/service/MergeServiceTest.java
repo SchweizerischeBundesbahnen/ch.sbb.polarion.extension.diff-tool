@@ -142,6 +142,23 @@ class MergeServiceTest {
     }
 
     @Test
+    void testDocumentsFieldsMergeFailedDueToStructuralChanges() {
+        IModule source = mock(IModule.class);
+        IModule target = mock(IModule.class);
+        when(target.getLastRevision()).thenReturn("rev3");
+        when(polarionService.getModule(any())).thenReturn(source, target);
+
+        DocumentIdentifier documentIdentifier1 = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc1").revision("rev1").moduleXmlRevision("rev1").build();
+        DocumentIdentifier documentIdentifier2 = DocumentIdentifier.builder().projectId("project2").spaceId("space2").name("doc2").revision("rev2").moduleXmlRevision("rev2").build();
+
+        MergeResult mergeResult = mergeService.mergeDocumentsFields(new DocumentsFieldsMergeParams(documentIdentifier1, documentIdentifier2,
+                MergeDirection.LEFT_TO_RIGHT, List.of("a", "b", "c")));
+
+        assertFalse(mergeResult.isSuccess());
+        assertTrue(mergeResult.isTargetModuleHasStructuralChanges());
+    }
+
+    @Test
     void testMergeFailedDueToNotAuthorized() {
         NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
 

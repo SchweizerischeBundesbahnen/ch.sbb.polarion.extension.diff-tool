@@ -2,13 +2,13 @@ import { test as base } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 
-export const fixtureDataProvider = (fixtureFile) => {
+const fixtureDataProvider = (fixtureFile) => {
   const filePath = path.join(__dirname, 'fixtures', fixtureFile);
   const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   return JSON.stringify(fixtureData)
 };
 
-export const workItemsDiffFixtureDataProvider = (requestBody) => {
+const workItemsDiffFixtureDataProvider = (requestBody) => {
   let fixtureFile;
   if (!requestBody.leftWorkItem) {
     if (requestBody.rightWorkItem.id === "DP-11570") {
@@ -60,7 +60,7 @@ export const workItemsDiffFixtureDataProvider = (requestBody) => {
   }
 };
 
-export const workItemsMergeFixtureDataProvider = (requestBody) => {
+const workItemsMergeFixtureDataProvider = (requestBody) => {
   let fixtureFile;
   if (!requestBody.pairs[0].leftWorkItem) {
     if (requestBody.pairs[0].rightWorkItem.id === "DP-11570") {
@@ -89,7 +89,27 @@ export const workItemsMergeFixtureDataProvider = (requestBody) => {
     const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     return JSON.stringify(fixtureData)
   } else {
-    console.log("merge fixture not found: ", requestBody);
+    console.log("workitems merge fixture not found: ", requestBody);
+    return {}
+  }
+};
+
+const fieldsMergeFixtureDataProvider = (requestBody) => {
+  let fixtureFile;
+  if (requestBody.fieldIds.includes("version")) {
+    fixtureFile = "version-field-merge.json";
+  } else if (requestBody.fieldIds.includes("docRevision")) {
+    fixtureFile = "docRevision-field-merge.json";
+  } else if (requestBody.fieldIds.includes("docLanguage")) {
+    fixtureFile = "docLanguage-field-merge.json";
+  }
+
+  if (fixtureFile) {
+    const filePath = path.join(__dirname, 'fixtures', fixtureFile);
+    const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    return JSON.stringify(fixtureData)
+  } else {
+    console.log("field merge fixture not found: ", requestBody);
     return {}
   }
 };
@@ -132,7 +152,7 @@ export const test = base.extend({
         });
       },
 
-      // Mock "/diff/document-workitems" endpoint which returns JSON response depending on data in request body
+      // Mock "/diff/documents" endpoint which emulates merge operation and returns JSON response depending on data in request body
       mockWorkItemsMergeEndpoint: async () => {
         await page.route("**/merge/documents", route => {
           const request = route.request();
@@ -149,7 +169,27 @@ export const test = base.extend({
             body: workItemsMergeFixtureDataProvider(requestBody)
           });
         });
+      },
+
+      // Mock "/diff/documents-fields" endpoint which emulates merge operation and returns JSON response depending on data in request body
+      mockFieldsMergeEndpoint: async () => {
+        await page.route("**/merge/documents-fields", route => {
+          const request = route.request();
+          let requestBody;
+          try {
+            requestBody = request.postDataJSON();
+          } catch (e) {
+            requestBody = {};
+          }
+
+          route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: fieldsMergeFixtureDataProvider(requestBody)
+          });
+        });
       }
+
     };
 
     // Use the fixture in the test
