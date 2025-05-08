@@ -45,7 +45,7 @@ class DocumentsContentHandlerTest {
 
     @Test
     void testParseNoAnchors() {
-        assertTrue(handler.parse("").isEmpty());
+        assertTrue(handler.parse("<p>Some paragraph</p>").isEmpty());
     }
 
     @Test
