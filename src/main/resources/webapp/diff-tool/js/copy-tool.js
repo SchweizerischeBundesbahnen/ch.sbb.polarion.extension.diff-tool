@@ -49,8 +49,14 @@ CopyTool = {
       const alert = document.getElementById(`creation-success`);
       const basePath = `//${window.location.host}${window.location.pathname}`;
       const anchor = alert.querySelector("a");
-      anchor.innerText = `${basePath}#/project/${response.projectId}/wiki/${response.spaceId}/${response.name}`;
-      anchor.href = `${basePath}#/project/${encodeURIComponent(response.projectId)}/wiki/${encodeURIComponent(response.spaceId)}/${encodeURIComponent(response.name)}`;
+
+      // do not use space if it is "_default"
+      const showSpace = response.spaceId && "_default" !== response.spaceId;
+      const spaceInnerText = showSpace ? `${response.spaceId}/` : "";
+      const spacePathPart = showSpace ? `${encodeURIComponent(response.spaceId)}/` : "";
+
+      anchor.innerText = `${basePath}#/project/${response.projectId}/${spaceInnerText}${response.name}`;
+      anchor.href = `${basePath}#/project/${encodeURIComponent(response.projectId)}/wiki/${spacePathPart}${encodeURIComponent(response.name)}`;
       anchor.target = "_blank";
       alert.style.display = "block";
     }).catch((error) => {
