@@ -1,6 +1,6 @@
 Common = {
 
-  loadSpaces: function (diff) {
+  loadSpaces: function (diff, postActionCallback) {
     const selectedProject = document.getElementById(`${this.prefix(diff)}-project-selector`).value;
     Common.actionInProgress({inProgress: true, message: "Loading spaces", diff: diff});
     const spaceSelector = document.getElementById(`${this.prefix(diff)}-space-selector`);
@@ -17,6 +17,10 @@ Common = {
         option.value = id;
         option.text = name;
         spaceSelector.appendChild(option);
+      }
+    }).then(() => {
+      if (postActionCallback) {
+        postActionCallback();
       }
     }).catch(() => {
       this.actionInProgress({inProgress: false, diff: diff});

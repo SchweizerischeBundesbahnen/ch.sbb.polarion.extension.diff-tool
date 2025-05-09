@@ -11,21 +11,13 @@ CopyTool = {
 
   projectChanged: function () {
     document.getElementById("create-document").disabled = true; // Disable "Create" button
-    Common.loadSpaces(false);
+    Common.loadSpaces(false, () =>
+        Common.reloadSettings(document.getElementById("copy-project-selector").value, false));
   },
 
   spaceChanged: function () {
-    const selectedProject = document.getElementById("copy-project-selector").value;
     const selectedSpace = document.getElementById("copy-space-selector").value;
-
-    document.getElementById("create-document").disabled = true; // Disable "Create" button
-
-    if (selectedSpace) {
-      document.getElementById("create-document").disabled = false;
-      if (this.settingsProjectId !== selectedProject) {
-        Common.reloadSettings(selectedProject, false);
-      }
-    }
+    document.getElementById("create-document").disabled = !selectedSpace;
   },
 
   createNewDocument: function () {
