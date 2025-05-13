@@ -1,0 +1,334 @@
+{
+  "leftDocument": {
+    "projectId": "elibrary",
+    "projectName": "E-Library",
+    "spaceId": "Specification",
+    "locationPath": "Specification/Building Specification v2",
+    "id": "Building Specification v2",
+    "title": "Building Specification v2",
+    "revision": null,
+    "moduleXmlRevision": "4672",
+    "headRevision": "4680",
+    "authorizedForMerge": true,
+    "spaceName": "Specification"
+  },
+  "rightDocument": {
+    "projectId": "drivepilot",
+    "projectName": "Drive Pilot",
+    "spaceId": "Specification",
+    "locationPath": "Specification/Building Specification v3",
+    "id": "Building Specification v3",
+    "title": "Building Specification v3",
+    "revision": null,
+    "moduleXmlRevision": "4680",
+    "headRevision": "4680",
+    "authorizedForMerge": true,
+    "spaceName": "Specification"
+  },
+  "pairedContentAnchors": [
+    {
+      "leftAnchor": {
+        "id": "EL-63010",
+        "title": "General Requirements",
+        "outlineNumber": "1",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_1\">\n  <br/>\n</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      },
+      "rightAnchor": {
+        "id": "DP-1152",
+        "title": "General Requirements",
+        "outlineNumber": "1",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_1\">\n  <br/>\n</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63011",
+        "title": "Project Overview",
+        "outlineNumber": "1.1",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_2\">This specification outlines the design, materials, and construction standards for the development of a two-story commercial office building with a gross floor area of approximately 2,500 m². The building shall comply with all applicable local, national, and EU building codes.</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      },
+      "rightAnchor": {
+        "id": "DP-1153",
+        "title": "Project Overview",
+        "outlineNumber": "1.1",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_2\">This specification outlines the design, materials, and construction standards for the development of a two-story commercial office building with a gross floor area of approximately 2,500 m². The building shall comply with all applicable local, national, and EU building codes.</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63012",
+        "title": "Scope of Work",
+        "outlineNumber": "1.2",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_3\">The contractor shall provide all labor, materials, tools, equipment, and supervision required to complete the building as specified. This includes site preparation, structural work, architectural finishes, MEP systems, and external works.</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_3\">The contractor shall <span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">be responsible for the full execution of the project, including the supply of all </span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"removed-diff-1\">provide all labor, </span>materials, <span class=\"diff-html-added\" id=\"removed-diff-1\" previous=\"added-diff-0\" changeId=\"removed-diff-1\" next=\"added-diff-1\">coordination of subcontractors</span><span class=\"diff-html-removed\" id=\"added-diff-1\" previous=\"removed-diff-1\" changeId=\"added-diff-1\" next=\"removed-diff-2\">tools</span>, <span class=\"diff-html-added\" id=\"removed-diff-2\" previous=\"added-diff-1\" changeId=\"removed-diff-2\" next=\"added-diff-2\">health and safety compliance</span><span class=\"diff-html-removed\" id=\"added-diff-2\" previous=\"removed-diff-2\" changeId=\"added-diff-2\" next=\"removed-diff-3\">equipment</span>, and <span class=\"diff-html-added\" id=\"removed-diff-3\" previous=\"added-diff-2\" changeId=\"removed-diff-3\" next=\"added-diff-3\">completion of works to a defect-free standard</span><span class=\"diff-html-removed\" id=\"added-diff-3\" previous=\"removed-diff-3\" changeId=\"added-diff-3\" next=\"removed-diff-4\">supervision required to complete the building as specified</span>. This <span class=\"diff-html-added\" id=\"removed-diff-4\" previous=\"added-diff-3\" changeId=\"removed-diff-4\" next=\"added-diff-4\">encompasses </span><span class=\"diff-html-removed\" id=\"added-diff-4\" previous=\"removed-diff-4\" changeId=\"added-diff-4\" next=\"removed-diff-5\">includes </span>site <span class=\"diff-html-added\" id=\"removed-diff-5\" previous=\"added-diff-4\" changeId=\"removed-diff-5\" next=\"added-diff-5\">clearance</span><span class=\"diff-html-removed\" id=\"added-diff-5\" previous=\"removed-diff-5\" changeId=\"added-diff-5\" next=\"removed-diff-6\">preparation</span>, <span class=\"diff-html-added\" id=\"removed-diff-6\" previous=\"added-diff-5\" changeId=\"removed-diff-6\" next=\"added-diff-6\">foundation works</span><span class=\"diff-html-removed\" id=\"added-diff-6\" previous=\"removed-diff-6\" changeId=\"added-diff-6\" next=\"removed-diff-7\">structural work</span>, <span class=\"diff-html-added\" id=\"removed-diff-7\" previous=\"added-diff-6\" changeId=\"removed-diff-7\" next=\"added-diff-7\">core construction</span><span class=\"diff-html-removed\" id=\"added-diff-7\" previous=\"removed-diff-7\" changeId=\"added-diff-7\" next=\"removed-diff-8\">architectural finishes</span>, MEP <span class=\"diff-html-added\" id=\"removed-diff-8\" previous=\"added-diff-7\" changeId=\"removed-diff-8\" next=\"added-diff-8\">installations</span><span class=\"diff-html-removed\" id=\"added-diff-8\" previous=\"removed-diff-8\" changeId=\"added-diff-8\" next=\"removed-diff-9\">systems</span>, <span class=\"diff-html-added\" id=\"removed-diff-9\" previous=\"added-diff-8\" changeId=\"removed-diff-9\" next=\"removed-diff-10\">interior fit-out, </span>and <span class=\"diff-html-added\" id=\"removed-diff-10\" previous=\"removed-diff-9\" changeId=\"removed-diff-10\" next=\"added-diff-9\">landscape </span><span class=\"diff-html-removed\" id=\"added-diff-9\" previous=\"removed-diff-10\" changeId=\"added-diff-9\" next=\"last-diff\">external </span>works.</p></div>"
+      },
+      "rightAnchor": {
+        "id": "DP-1154",
+        "title": "Scope of Work",
+        "outlineNumber": "1.2",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_3\">The contractor shall be responsible for the full execution of the project, including the supply of all materials, coordination of subcontractors, health and safety compliance, and completion of works to a defect-free standard. This encompasses site clearance, foundation works, core construction, MEP installations, interior fit-out, and landscape works.</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_3\">The contractor shall <span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">provide </span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"removed-diff-1\">be responsible for the full execution of the project, including the supply of </span>all <span class=\"diff-html-removed\" id=\"removed-diff-1\" previous=\"added-diff-0\" changeId=\"removed-diff-1\" next=\"removed-diff-2\">labor, </span>materials, <span class=\"diff-html-removed\" id=\"removed-diff-2\" previous=\"removed-diff-1\" changeId=\"removed-diff-2\" next=\"added-diff-1\">tools</span><span class=\"diff-html-added\" id=\"added-diff-1\" previous=\"removed-diff-2\" changeId=\"added-diff-1\" next=\"removed-diff-3\">coordination of subcontractors</span>, <span class=\"diff-html-removed\" id=\"removed-diff-3\" previous=\"added-diff-1\" changeId=\"removed-diff-3\" next=\"added-diff-2\">equipment</span><span class=\"diff-html-added\" id=\"added-diff-2\" previous=\"removed-diff-3\" changeId=\"added-diff-2\" next=\"removed-diff-4\">health and safety compliance</span>, and <span class=\"diff-html-removed\" id=\"removed-diff-4\" previous=\"added-diff-2\" changeId=\"removed-diff-4\" next=\"added-diff-3\">supervision required to complete the building as specified</span><span class=\"diff-html-added\" id=\"added-diff-3\" previous=\"removed-diff-4\" changeId=\"added-diff-3\" next=\"removed-diff-5\">completion of works to a defect-free standard</span>. This <span class=\"diff-html-removed\" id=\"removed-diff-5\" previous=\"added-diff-3\" changeId=\"removed-diff-5\" next=\"added-diff-4\">includes </span><span class=\"diff-html-added\" id=\"added-diff-4\" previous=\"removed-diff-5\" changeId=\"added-diff-4\" next=\"removed-diff-6\">encompasses </span>site <span class=\"diff-html-removed\" id=\"removed-diff-6\" previous=\"added-diff-4\" changeId=\"removed-diff-6\" next=\"added-diff-5\">preparation</span><span class=\"diff-html-added\" id=\"added-diff-5\" previous=\"removed-diff-6\" changeId=\"added-diff-5\" next=\"removed-diff-7\">clearance</span>, <span class=\"diff-html-removed\" id=\"removed-diff-7\" previous=\"added-diff-5\" changeId=\"removed-diff-7\" next=\"added-diff-6\">structural work</span><span class=\"diff-html-added\" id=\"added-diff-6\" previous=\"removed-diff-7\" changeId=\"added-diff-6\" next=\"removed-diff-8\">foundation works</span>, <span class=\"diff-html-removed\" id=\"removed-diff-8\" previous=\"added-diff-6\" changeId=\"removed-diff-8\" next=\"added-diff-7\">architectural finishes</span><span class=\"diff-html-added\" id=\"added-diff-7\" previous=\"removed-diff-8\" changeId=\"added-diff-7\" next=\"removed-diff-9\">core construction</span>, MEP <span class=\"diff-html-removed\" id=\"removed-diff-9\" previous=\"added-diff-7\" changeId=\"removed-diff-9\" next=\"added-diff-8\">systems</span><span class=\"diff-html-added\" id=\"added-diff-8\" previous=\"removed-diff-9\" changeId=\"added-diff-8\" next=\"added-diff-9\">installations</span>, <span class=\"diff-html-added\" id=\"added-diff-9\" previous=\"added-diff-8\" changeId=\"added-diff-9\" next=\"removed-diff-10\">interior fit-out, </span>and <span class=\"diff-html-removed\" id=\"removed-diff-10\" previous=\"added-diff-9\" changeId=\"removed-diff-10\" next=\"added-diff-10\">external </span><span class=\"diff-html-added\" id=\"added-diff-10\" previous=\"removed-diff-10\" changeId=\"added-diff-10\" next=\"last-diff\">landscape </span>works.</p></div>"
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63013",
+        "title": "Regulatory Compliance",
+        "outlineNumber": "1.3",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_4\">All work shall comply with the current editions of the Building Code, Fire Safety Regulations, Environmental Protection Acts, and Occupational Health and Safety legislation. Necessary permits and inspections must be obtained prior to commencement.</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_4\">All <span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">works must </span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"removed-diff-1\">work shall </span>comply with the <span class=\"diff-html-added\" id=\"removed-diff-1\" previous=\"added-diff-0\" changeId=\"removed-diff-1\" next=\"added-diff-1\">latest </span><span class=\"diff-html-removed\" id=\"added-diff-1\" previous=\"removed-diff-1\" changeId=\"added-diff-1\" next=\"removed-diff-2\">current </span>editions of <span class=\"diff-html-added\" id=\"removed-diff-2\" previous=\"added-diff-1\" changeId=\"removed-diff-2\" next=\"removed-diff-3\">applicable standards, including </span>the <span class=\"diff-html-added\" id=\"removed-diff-3\" previous=\"removed-diff-2\" changeId=\"removed-diff-3\" next=\"removed-diff-4\">National </span>Building Code, <span class=\"diff-html-added\" id=\"removed-diff-4\" previous=\"removed-diff-3\" changeId=\"removed-diff-4\" next=\"removed-diff-5\">EN standards, </span>Fire <span class=\"diff-html-added\" id=\"removed-diff-5\" previous=\"removed-diff-4\" changeId=\"removed-diff-5\" next=\"added-diff-2\">Protection Directives</span><span class=\"diff-html-removed\" id=\"added-diff-2\" previous=\"removed-diff-5\" changeId=\"added-diff-2\" next=\"removed-diff-6\">Safety Regulations</span>, Environmental <span class=\"diff-html-added\" id=\"removed-diff-6\" previous=\"added-diff-2\" changeId=\"removed-diff-6\" next=\"added-diff-3\">Regulations</span><span class=\"diff-html-removed\" id=\"added-diff-3\" previous=\"removed-diff-6\" changeId=\"added-diff-3\" next=\"removed-diff-7\">Protection Acts</span>, and <span class=\"diff-html-added\" id=\"removed-diff-7\" previous=\"added-diff-3\" changeId=\"removed-diff-7\" next=\"added-diff-4\">ISO 45001 for </span>Occupational Health and Safety <span class=\"diff-html-removed\" id=\"added-diff-4\" previous=\"removed-diff-7\" changeId=\"added-diff-4\" next=\"removed-diff-8\">legislation</span>. <span class=\"diff-html-added\" id=\"removed-diff-8\" previous=\"added-diff-4\" changeId=\"removed-diff-8\" next=\"added-diff-5\">The contractor shall be responsible for obtaining all statutory approvals, certifications, and compliance documentation</span><span class=\"diff-html-removed\" id=\"added-diff-5\" previous=\"removed-diff-8\" changeId=\"added-diff-5\" next=\"last-diff\">Necessary permits and inspections must be obtained prior to commencement</span>.</p></div>"
+      },
+      "rightAnchor": {
+        "id": "DP-1155",
+        "title": "Regulatory Compliance",
+        "outlineNumber": "1.3",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_4\">All works must comply with the latest editions of applicable standards, including the National Building Code, EN standards, Fire Protection Directives, Environmental Regulations, and ISO 45001 for Occupational Health and Safety. The contractor shall be responsible for obtaining all statutory approvals, certifications, and compliance documentation.</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_4\">All <span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">work shall </span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"removed-diff-1\">works must </span>comply with the <span class=\"diff-html-removed\" id=\"removed-diff-1\" previous=\"added-diff-0\" changeId=\"removed-diff-1\" next=\"added-diff-1\">current </span><span class=\"diff-html-added\" id=\"added-diff-1\" previous=\"removed-diff-1\" changeId=\"added-diff-1\" next=\"added-diff-2\">latest </span>editions of <span class=\"diff-html-added\" id=\"added-diff-2\" previous=\"added-diff-1\" changeId=\"added-diff-2\" next=\"added-diff-3\">applicable standards, including </span>the <span class=\"diff-html-added\" id=\"added-diff-3\" previous=\"added-diff-2\" changeId=\"added-diff-3\" next=\"added-diff-4\">National </span>Building Code, <span class=\"diff-html-added\" id=\"added-diff-4\" previous=\"added-diff-3\" changeId=\"added-diff-4\" next=\"removed-diff-2\">EN standards, </span>Fire <span class=\"diff-html-removed\" id=\"removed-diff-2\" previous=\"added-diff-4\" changeId=\"removed-diff-2\" next=\"added-diff-5\">Safety Regulations</span><span class=\"diff-html-added\" id=\"added-diff-5\" previous=\"removed-diff-2\" changeId=\"added-diff-5\" next=\"removed-diff-3\">Protection Directives</span>, Environmental <span class=\"diff-html-removed\" id=\"removed-diff-3\" previous=\"added-diff-5\" changeId=\"removed-diff-3\" next=\"added-diff-6\">Protection Acts</span><span class=\"diff-html-added\" id=\"added-diff-6\" previous=\"removed-diff-3\" changeId=\"added-diff-6\" next=\"added-diff-7\">Regulations</span>, and <span class=\"diff-html-added\" id=\"added-diff-7\" previous=\"added-diff-6\" changeId=\"added-diff-7\" next=\"removed-diff-4\">ISO 45001 for </span>Occupational Health and Safety<span class=\"diff-html-removed\" previous=\"added-diff-7\" changeId=\"removed-diff-4\" next=\"removed-diff-5\"> </span><span class=\"diff-html-removed\" id=\"removed-diff-4\" previous=\"added-diff-7\" changeId=\"removed-diff-4\" next=\"removed-diff-5\">legislation</span>. <span class=\"diff-html-removed\" id=\"removed-diff-5\" previous=\"removed-diff-4\" changeId=\"removed-diff-5\" next=\"added-diff-8\">Necessary permits and inspections must be obtained prior to commencement</span><span class=\"diff-html-added\" id=\"added-diff-8\" previous=\"removed-diff-5\" changeId=\"added-diff-8\" next=\"last-diff\">The contractor shall be responsible for obtaining all statutory approvals, certifications, and compliance documentation</span>.</p></div>"
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63014",
+        "title": "Architectural Specification",
+        "outlineNumber": "2",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_5\">\n  <br/>\n</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      },
+      "rightAnchor": {
+        "id": "DP-1156",
+        "title": "Architectural Specification",
+        "outlineNumber": "2",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_5\">\n  <br/>\n</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63015",
+        "title": "Building Envelope",
+        "outlineNumber": "2.1",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_6\">The external walls shall consist of cavity brickwork with mineral wool insulation and a ventilated rainscreen cladding system. All windows shall be triple-glazed aluminum frames with a thermal break, U-value not exceeding 1.0 W/m²K.</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      },
+      "rightAnchor": {
+        "id": "DP-1157",
+        "title": "Building Envelope",
+        "outlineNumber": "2.1",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_6\">The external walls shall consist of cavity brickwork with mineral wool insulation and a ventilated rainscreen cladding system. All windows shall be triple-glazed aluminum frames with a thermal break, U-value not exceeding 1.0 W/m²K.</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63016",
+        "title": "Internal Finishes",
+        "outlineNumber": "2.2",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_7\">Floor finishes will include ceramic tiles in wet areas, carpet tiles in office spaces, and polished concrete in circulation zones. Ceilings will be suspended acoustic tile systems with integrated LED lighting panels.</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_7\"><span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">Interior floor </span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"removed-diff-1\">Floor </span>finishes <span class=\"diff-html-added\" id=\"removed-diff-1\" previous=\"added-diff-0\" changeId=\"removed-diff-1\" next=\"added-diff-1\">shall </span><span class=\"diff-html-removed\" id=\"added-diff-1\" previous=\"removed-diff-1\" changeId=\"added-diff-1\" next=\"removed-diff-2\">will </span>include <span class=\"diff-html-added\" id=\"removed-diff-2\" previous=\"added-diff-1\" changeId=\"removed-diff-2\" next=\"removed-diff-3\">anti-slip </span>ceramic tiles in <span class=\"diff-html-added\" id=\"removed-diff-3\" previous=\"removed-diff-2\" changeId=\"removed-diff-3\" next=\"added-diff-2\">sanitary </span><span class=\"diff-html-removed\" id=\"added-diff-2\" previous=\"removed-diff-3\" changeId=\"added-diff-2\" next=\"removed-diff-4\">wet </span>areas, <span class=\"diff-html-added\" id=\"removed-diff-4\" previous=\"added-diff-2\" changeId=\"removed-diff-4\" next=\"removed-diff-5\">high-durability </span>carpet tiles <span class=\"diff-html-added\" id=\"removed-diff-5\" previous=\"removed-diff-4\" changeId=\"removed-diff-5\" next=\"removed-diff-6\">with integrated underlay </span>in office <span class=\"diff-html-added\" id=\"removed-diff-6\" previous=\"removed-diff-5\" changeId=\"removed-diff-6\" next=\"added-diff-3\">areas</span><span class=\"diff-html-removed\" id=\"added-diff-3\" previous=\"removed-diff-6\" changeId=\"added-diff-3\" next=\"removed-diff-7\">spaces</span>, and polished <span class=\"diff-html-added\" id=\"removed-diff-7\" previous=\"added-diff-3\" changeId=\"removed-diff-7\" next=\"added-diff-4\">epoxy resin </span><span class=\"diff-html-removed\" id=\"added-diff-4\" previous=\"removed-diff-7\" changeId=\"added-diff-4\" next=\"removed-diff-8\">concrete </span>in <span class=\"diff-html-added\" id=\"removed-diff-8\" previous=\"added-diff-4\" changeId=\"removed-diff-8\" next=\"added-diff-5\">corridors for long-term wear resistance. All paints and coatings used must be low-VOC and certified for indoor air quality compliance</span><span class=\"diff-html-removed\" id=\"added-diff-5\" previous=\"removed-diff-8\" changeId=\"added-diff-5\" next=\"last-diff\">circulation zones. Ceilings will be suspended acoustic tile systems with integrated LED lighting panels</span>.</p></div>"
+      },
+      "rightAnchor": {
+        "id": "DP-1158",
+        "title": "Internal Finishes",
+        "outlineNumber": "2.2",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_7\">Interior floor finishes shall include anti-slip ceramic tiles in sanitary areas, high-durability carpet tiles with integrated underlay in office areas, and polished epoxy resin in corridors for long-term wear resistance. All paints and coatings used must be low-VOC and certified for indoor air quality compliance.</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_7\"><span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">Floor </span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"removed-diff-1\">Interior floor </span>finishes <span class=\"diff-html-removed\" id=\"removed-diff-1\" previous=\"added-diff-0\" changeId=\"removed-diff-1\" next=\"added-diff-1\">will </span><span class=\"diff-html-added\" id=\"added-diff-1\" previous=\"removed-diff-1\" changeId=\"added-diff-1\" next=\"added-diff-2\">shall </span>include <span class=\"diff-html-added\" id=\"added-diff-2\" previous=\"added-diff-1\" changeId=\"added-diff-2\" next=\"removed-diff-2\">anti-slip </span>ceramic tiles in <span class=\"diff-html-removed\" id=\"removed-diff-2\" previous=\"added-diff-2\" changeId=\"removed-diff-2\" next=\"added-diff-3\">wet </span><span class=\"diff-html-added\" id=\"added-diff-3\" previous=\"removed-diff-2\" changeId=\"added-diff-3\" next=\"added-diff-4\">sanitary </span>areas, <span class=\"diff-html-added\" id=\"added-diff-4\" previous=\"added-diff-3\" changeId=\"added-diff-4\" next=\"added-diff-5\">high-durability </span>carpet tiles <span class=\"diff-html-added\" id=\"added-diff-5\" previous=\"added-diff-4\" changeId=\"added-diff-5\" next=\"removed-diff-3\">with integrated underlay </span>in office <span class=\"diff-html-removed\" id=\"removed-diff-3\" previous=\"added-diff-5\" changeId=\"removed-diff-3\" next=\"added-diff-6\">spaces</span><span class=\"diff-html-added\" id=\"added-diff-6\" previous=\"removed-diff-3\" changeId=\"added-diff-6\" next=\"removed-diff-4\">areas</span>, and polished <span class=\"diff-html-removed\" id=\"removed-diff-4\" previous=\"added-diff-6\" changeId=\"removed-diff-4\" next=\"added-diff-7\">concrete </span><span class=\"diff-html-added\" id=\"added-diff-7\" previous=\"removed-diff-4\" changeId=\"added-diff-7\" next=\"removed-diff-5\">epoxy resin </span>in <span class=\"diff-html-removed\" id=\"removed-diff-5\" previous=\"added-diff-7\" changeId=\"removed-diff-5\" next=\"added-diff-8\">circulation zones. Ceilings will be suspended acoustic tile systems with integrated LED lighting panels</span><span class=\"diff-html-added\" id=\"added-diff-8\" previous=\"removed-diff-5\" changeId=\"added-diff-8\" next=\"last-diff\">corridors for long-term wear resistance. All paints and coatings used must be low-VOC and certified for indoor air quality compliance</span>.</p></div>"
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63017",
+        "title": "Accessibility",
+        "outlineNumber": "2.3",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_8\">Floor finishes will include ceramic tiles in wet areas, carpet tiles in office spaces, and polished concrete in circulation zones. Ceilings will be suspended acoustic tile systems with integrated LED lighting panels.</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_8\"><span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">All entrances and internal routes shall comply with accessibility standards (EN 17210), including tactile indicators, automatic doors, and accessible WCs on each floor.</span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">Floor finishes will include ceramic tiles in wet areas, carpet tiles in office spaces, and polished concrete in circulation zones. Ceilings will be suspended acoustic tile systems with integrated LED lighting panels.</span></p></div>"
+      },
+      "rightAnchor": {
+        "id": "DP-1159",
+        "title": "Accessibility",
+        "outlineNumber": "2.3",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_8\">All entrances and internal routes shall comply with accessibility standards (EN 17210), including tactile indicators, automatic doors, and accessible WCs on each floor.</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_8\"><span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">Floor finishes will include ceramic tiles in wet areas, carpet tiles in office spaces, and polished concrete in circulation zones. Ceilings will be suspended acoustic tile systems with integrated LED lighting panels.</span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"last-diff\">All entrances and internal routes shall comply with accessibility standards (EN 17210), including tactile indicators, automatic doors, and accessible WCs on each floor.</span></p></div>"
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63018",
+        "title": "Structural Systems",
+        "outlineNumber": "3",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_9\">\n  <br/>\n</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      },
+      "rightAnchor": {
+        "id": "DP-1160",
+        "title": "Structural Systems",
+        "outlineNumber": "3",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_9\">\n  <br/>\n</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63019",
+        "title": "Foundations",
+        "outlineNumber": "3.1",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_10\">\n  <span style=\"font-weight: normal;\">Floor finishes will include ceramic tiles in wet areas, carpet tiles in office spaces, and polished concrete in circulation zones. Ceilings will be suspended acoustic tile systems with integrated LED lighting panels.</span>\n</p><p id=\"polarion_17\">\n  <br/>\n</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      },
+      "rightAnchor": {
+        "id": "DP-1161",
+        "title": "Foundations",
+        "outlineNumber": "3.1",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_10\">\n  <span style=\"font-weight: normal;\">Floor finishes will include ceramic tiles in wet areas, carpet tiles in office spaces, and polished concrete in circulation zones. Ceilings will be suspended acoustic tile systems with integrated LED lighting panels.</span>\n</p><p id=\"polarion_17\">\n  <br/>\n</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63020",
+        "title": "Superstructure",
+        "outlineNumber": "3.2",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_11\">The structural frame will be composed of steel columns and beams with composite metal decking. Lateral stability will be achieved through cross-bracing and shear walls integrated into stair cores.</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      },
+      "rightAnchor": {
+        "id": "DP-1162",
+        "title": "Superstructure",
+        "outlineNumber": "3.2",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_11\">The structural frame will be composed of steel columns and beams with composite metal decking. Lateral stability will be achieved through cross-bracing and shear walls integrated into stair cores.</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63021",
+        "title": "Roof Structure",
+        "outlineNumber": "3.3",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_12\">The roof structure shall consist of prefabricated timber trusses on steel purlins with a single-ply membrane roofing system. Thermal insulation and vapour control layers shall be installed per manufacturer’s specifications.</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_12\">The roof <span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"removed-diff-0\">structure </span>shall <span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"added-diff-0\" changeId=\"removed-diff-0\" next=\"added-diff-1\">utilize engineered </span><span class=\"diff-html-removed\" id=\"added-diff-1\" previous=\"removed-diff-0\" changeId=\"added-diff-1\" next=\"removed-diff-1\">consist of prefabricated </span>timber trusses <span class=\"diff-html-added\" id=\"removed-diff-1\" previous=\"added-diff-1\" changeId=\"removed-diff-1\" next=\"added-diff-2\">supported by cold-formed </span><span class=\"diff-html-removed\" id=\"added-diff-2\" previous=\"removed-diff-1\" changeId=\"added-diff-2\" next=\"removed-diff-2\">on </span>steel purlins <span class=\"diff-html-added\" id=\"removed-diff-2\" previous=\"added-diff-2\" changeId=\"removed-diff-2\" next=\"added-diff-3\">and </span><span class=\"diff-html-removed\" id=\"added-diff-3\" previous=\"removed-diff-2\" changeId=\"added-diff-3\" next=\"removed-diff-3\">with </span>a <span class=\"diff-html-added\" id=\"removed-diff-3\" previous=\"added-diff-3\" changeId=\"removed-diff-3\" next=\"added-diff-4\">high</span><span class=\"diff-html-removed\" id=\"added-diff-4\" previous=\"removed-diff-3\" changeId=\"added-diff-4\" next=\"removed-diff-4\">single</span>-<span class=\"diff-html-added\" id=\"removed-diff-4\" previous=\"added-diff-4\" changeId=\"removed-diff-4\" next=\"added-diff-5\">performance waterproofing </span><span class=\"diff-html-removed\" id=\"added-diff-5\" previous=\"removed-diff-4\" changeId=\"added-diff-5\" next=\"added-diff-6\">ply </span>membrane <span class=\"diff-html-removed\" id=\"added-diff-6\" previous=\"added-diff-5\" changeId=\"added-diff-6\" next=\"removed-diff-5\">roofing system</span>. <span class=\"diff-html-added\" id=\"removed-diff-5\" previous=\"added-diff-6\" changeId=\"removed-diff-5\" next=\"added-diff-7\">The assembly will include PIR rigid board </span><span class=\"diff-html-removed\" id=\"added-diff-7\" previous=\"removed-diff-5\" changeId=\"added-diff-7\" next=\"removed-diff-6\">Thermal </span>insulation <span class=\"diff-html-added\" id=\"removed-diff-6\" previous=\"added-diff-7\" changeId=\"removed-diff-6\" next=\"added-diff-8\">, </span><span class=\"diff-html-removed\" id=\"added-diff-8\" previous=\"removed-diff-6\" changeId=\"added-diff-8\" next=\"removed-diff-7\">and </span>vapour control layers <span class=\"diff-html-added\" id=\"removed-diff-7\" previous=\"added-diff-8\" changeId=\"removed-diff-7\" next=\"added-diff-9\">, and roof access provisions for maintenance. A green roof system is optional based on final sustainability requirements.</span><span class=\"diff-html-removed\" id=\"added-diff-9\" previous=\"removed-diff-7\" changeId=\"added-diff-9\" next=\"last-diff\">shall be installed per manufacturer&rsquo;s specifications.</span></p></div>"
+      },
+      "rightAnchor": {
+        "id": "DP-1163",
+        "title": "Roof Structure",
+        "outlineNumber": "3.3",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_12\">The roof shall utilize engineered timber trusses supported by cold-formed steel purlins and a high-performance waterproofing membrane. The assembly will include PIR rigid board insulation, vapour control layers, and roof access provisions for maintenance. A green roof system is optional based on final sustainability requirements.</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_12\">The roof <span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"removed-diff-1\">structure </span>shall <span class=\"diff-html-removed\" id=\"removed-diff-1\" previous=\"removed-diff-0\" changeId=\"removed-diff-1\" next=\"added-diff-0\">consist of prefabricated </span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-1\" changeId=\"added-diff-0\" next=\"removed-diff-2\">utilize engineered </span>timber trusses <span class=\"diff-html-removed\" id=\"removed-diff-2\" previous=\"added-diff-0\" changeId=\"removed-diff-2\" next=\"added-diff-1\">on </span><span class=\"diff-html-added\" id=\"added-diff-1\" previous=\"removed-diff-2\" changeId=\"added-diff-1\" next=\"removed-diff-3\">supported by cold-formed </span>steel purlins <span class=\"diff-html-removed\" id=\"removed-diff-3\" previous=\"added-diff-1\" changeId=\"removed-diff-3\" next=\"added-diff-2\">with </span><span class=\"diff-html-added\" id=\"added-diff-2\" previous=\"removed-diff-3\" changeId=\"added-diff-2\" next=\"removed-diff-4\">and </span>a <span class=\"diff-html-removed\" id=\"removed-diff-4\" previous=\"added-diff-2\" changeId=\"removed-diff-4\" next=\"added-diff-3\">single</span><span class=\"diff-html-added\" id=\"added-diff-3\" previous=\"removed-diff-4\" changeId=\"added-diff-3\" next=\"removed-diff-5\">high</span>-<span class=\"diff-html-removed\" id=\"removed-diff-5\" previous=\"added-diff-3\" changeId=\"removed-diff-5\" next=\"added-diff-4\">ply </span><span class=\"diff-html-added\" id=\"added-diff-4\" previous=\"removed-diff-5\" changeId=\"added-diff-4\" next=\"removed-diff-6\">performance waterproofing </span>membrane<span class=\"diff-html-removed\" previous=\"added-diff-4\" changeId=\"removed-diff-6\" next=\"removed-diff-7\"> </span><span class=\"diff-html-removed\" id=\"removed-diff-6\" previous=\"added-diff-4\" changeId=\"removed-diff-6\" next=\"removed-diff-7\">roofing system</span>. <span class=\"diff-html-removed\" id=\"removed-diff-7\" previous=\"removed-diff-6\" changeId=\"removed-diff-7\" next=\"added-diff-5\">Thermal </span><span class=\"diff-html-added\" id=\"added-diff-5\" previous=\"removed-diff-7\" changeId=\"added-diff-5\" next=\"removed-diff-8\">The assembly will include PIR rigid board </span>insulation<span class=\"diff-html-removed\" previous=\"added-diff-5\" changeId=\"removed-diff-8\" next=\"added-diff-6\"> </span><span class=\"diff-html-removed\" id=\"removed-diff-8\" previous=\"added-diff-5\" changeId=\"removed-diff-8\" next=\"added-diff-6\">and </span><span class=\"diff-html-added\" id=\"added-diff-6\" previous=\"removed-diff-8\" changeId=\"added-diff-6\" next=\"removed-diff-9\">, </span>vapour control layers<span class=\"diff-html-removed\" previous=\"added-diff-6\" changeId=\"removed-diff-9\" next=\"added-diff-7\"> </span><span class=\"diff-html-removed\" id=\"removed-diff-9\" previous=\"added-diff-6\" changeId=\"removed-diff-9\" next=\"added-diff-7\">shall be installed per manufacturer&rsquo;s specifications.</span><span class=\"diff-html-added\" id=\"added-diff-7\" previous=\"removed-diff-9\" changeId=\"added-diff-7\" next=\"last-diff\">, and roof access provisions for maintenance. A green roof system is optional based on final sustainability requirements.</span></p></div>"
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63022",
+        "title": "Building Services",
+        "outlineNumber": "4",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_13\">\n  <br/>\n</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      },
+      "rightAnchor": {
+        "id": "DP-1164",
+        "title": "Building Services",
+        "outlineNumber": "4",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_13\">\n  <br/>\n</p></div>",
+        "diffAbove": null,
+        "diffBelow": null
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63023",
+        "title": "HVAC System",
+        "outlineNumber": "4.1",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_14\">The HVAC system shall include a centralized air handling unit with heat recovery and VRF (Variable Refrigerant Flow) units for zone-based climate control. The system will be controlled via a BMS (Building Management System).</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_14\"><span class=\"diff-html-added\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">A hybrid </span><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"removed-diff-1\">The </span>HVAC system <span class=\"diff-html-added\" id=\"removed-diff-1\" previous=\"added-diff-0\" changeId=\"removed-diff-1\" next=\"added-diff-1\">will be installed, consisting of </span><span class=\"diff-html-removed\" id=\"added-diff-1\" previous=\"removed-diff-1\" changeId=\"added-diff-1\" next=\"removed-diff-2\">shall include </span>a centralized air handling unit <span class=\"diff-html-added\" id=\"removed-diff-2\" previous=\"added-diff-1\" changeId=\"removed-diff-2\" next=\"removed-diff-3\">(AHU) </span>with <span class=\"diff-html-added\" id=\"removed-diff-3\" previous=\"removed-diff-2\" changeId=\"removed-diff-3\" next=\"added-diff-2\">energy-efficient EC fans </span><span class=\"diff-html-removed\" id=\"added-diff-2\" previous=\"removed-diff-3\" changeId=\"added-diff-2\" next=\"removed-diff-4\">heat recovery </span>and <span class=\"diff-html-added\" id=\"removed-diff-4\" previous=\"added-diff-2\" changeId=\"removed-diff-4\" next=\"removed-diff-5\">a </span>VRF <span class=\"diff-html-added\" id=\"removed-diff-5\" previous=\"removed-diff-4\" changeId=\"removed-diff-5\" next=\"removed-diff-6\">network enabling individual room control. Demand-controlled ventilation </span>(<span class=\"diff-html-added\" id=\"removed-diff-6\" previous=\"removed-diff-5\" changeId=\"removed-diff-6\" next=\"added-diff-3\">DCV</span><span class=\"diff-html-removed\" id=\"added-diff-3\" previous=\"removed-diff-6\" changeId=\"added-diff-3\" next=\"removed-diff-7\">Variable Refrigerant Flow</span>) <span class=\"diff-html-added\" id=\"removed-diff-7\" previous=\"added-diff-3\" changeId=\"removed-diff-7\" next=\"added-diff-4\">will be implemented </span><span class=\"diff-html-removed\" id=\"added-diff-4\" previous=\"removed-diff-7\" changeId=\"added-diff-4\" next=\"removed-diff-8\">units for zone-</span>based <span class=\"diff-html-added\" id=\"removed-diff-8\" previous=\"added-diff-4\" changeId=\"removed-diff-8\" next=\"added-diff-5\">on occupancy sensors</span><span class=\"diff-html-removed\" id=\"added-diff-5\" previous=\"removed-diff-8\" changeId=\"added-diff-5\" next=\"removed-diff-9\">climate control</span>. <span class=\"diff-html-added\" id=\"removed-diff-9\" previous=\"added-diff-5\" changeId=\"removed-diff-9\" next=\"added-diff-6\">System monitoring and fault diagnostics </span><span class=\"diff-html-removed\" id=\"added-diff-6\" previous=\"removed-diff-9\" changeId=\"added-diff-6\" next=\"removed-diff-10\">The system </span>will be <span class=\"diff-html-added\" id=\"removed-diff-10\" previous=\"added-diff-6\" changeId=\"removed-diff-10\" next=\"added-diff-7\">fully integrated into the </span><span class=\"diff-html-removed\" id=\"added-diff-7\" previous=\"removed-diff-10\" changeId=\"added-diff-7\" next=\"removed-diff-11\">controlled via a BMS (</span>Building Management System<span class=\"diff-html-added\" previous=\"added-diff-7\" changeId=\"removed-diff-11\" next=\"last-diff\"> </span><span class=\"diff-html-added\" id=\"removed-diff-11\" previous=\"added-diff-7\" changeId=\"removed-diff-11\" next=\"last-diff\">(BMS</span>).</p></div>"
+      },
+      "rightAnchor": {
+        "id": "DP-1165",
+        "title": "HVAC System",
+        "outlineNumber": "4.1",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_14\">A hybrid HVAC system will be installed, consisting of a centralized air handling unit (AHU) with energy-efficient EC fans and a VRF network enabling individual room control. Demand-controlled ventilation (DCV) will be implemented based on occupancy sensors. System monitoring and fault diagnostics will be fully integrated into the Building Management System (BMS).</p><p id=\"polarion_16\">\n  <br/>\n</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_14\"><span class=\"diff-html-removed\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">The </span><span class=\"diff-html-added\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"removed-diff-1\">A hybrid </span>HVAC system <span class=\"diff-html-removed\" id=\"removed-diff-1\" previous=\"added-diff-0\" changeId=\"removed-diff-1\" next=\"added-diff-1\">shall include </span><span class=\"diff-html-added\" id=\"added-diff-1\" previous=\"removed-diff-1\" changeId=\"added-diff-1\" next=\"added-diff-2\">will be installed, consisting of </span>a centralized air handling unit <span class=\"diff-html-added\" id=\"added-diff-2\" previous=\"added-diff-1\" changeId=\"added-diff-2\" next=\"removed-diff-2\">(AHU) </span>with <span class=\"diff-html-removed\" id=\"removed-diff-2\" previous=\"added-diff-2\" changeId=\"removed-diff-2\" next=\"added-diff-3\">heat recovery </span><span class=\"diff-html-added\" id=\"added-diff-3\" previous=\"removed-diff-2\" changeId=\"added-diff-3\" next=\"added-diff-4\">energy-efficient EC fans </span>and <span class=\"diff-html-added\" id=\"added-diff-4\" previous=\"added-diff-3\" changeId=\"added-diff-4\" next=\"added-diff-5\">a </span>VRF <span class=\"diff-html-added\" id=\"added-diff-5\" previous=\"added-diff-4\" changeId=\"added-diff-5\" next=\"removed-diff-3\">network enabling individual room control. Demand-controlled ventilation </span>(<span class=\"diff-html-removed\" id=\"removed-diff-3\" previous=\"added-diff-5\" changeId=\"removed-diff-3\" next=\"added-diff-6\">Variable Refrigerant Flow</span><span class=\"diff-html-added\" id=\"added-diff-6\" previous=\"removed-diff-3\" changeId=\"added-diff-6\" next=\"removed-diff-4\">DCV</span>) <span class=\"diff-html-removed\" id=\"removed-diff-4\" previous=\"added-diff-6\" changeId=\"removed-diff-4\" next=\"added-diff-7\">units for zone-</span><span class=\"diff-html-added\" id=\"added-diff-7\" previous=\"removed-diff-4\" changeId=\"added-diff-7\" next=\"removed-diff-5\">will be implemented </span>based <span class=\"diff-html-removed\" id=\"removed-diff-5\" previous=\"added-diff-7\" changeId=\"removed-diff-5\" next=\"added-diff-8\">climate control</span><span class=\"diff-html-added\" id=\"added-diff-8\" previous=\"removed-diff-5\" changeId=\"added-diff-8\" next=\"removed-diff-6\">on occupancy sensors</span>. <span class=\"diff-html-removed\" id=\"removed-diff-6\" previous=\"added-diff-8\" changeId=\"removed-diff-6\" next=\"added-diff-9\">The system </span><span class=\"diff-html-added\" id=\"added-diff-9\" previous=\"removed-diff-6\" changeId=\"added-diff-9\" next=\"removed-diff-7\">System monitoring and fault diagnostics </span>will be <span class=\"diff-html-removed\" id=\"removed-diff-7\" previous=\"added-diff-9\" changeId=\"removed-diff-7\" next=\"added-diff-10\">controlled via a BMS (</span><span class=\"diff-html-added\" id=\"added-diff-10\" previous=\"removed-diff-7\" changeId=\"added-diff-10\" next=\"added-diff-11\">fully integrated into the </span>Building Management System <span class=\"diff-html-added\" id=\"added-diff-11\" previous=\"added-diff-10\" changeId=\"added-diff-11\" next=\"last-diff\">(BMS</span>).</p><p id=\"polarion_16\"><br></p></div>"
+      }
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63024",
+        "title": "Electrical Installation",
+        "outlineNumber": "4.2",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_15\">All wiring shall be in accordance with IEC 60364 standards. Lighting systems shall be LED-based with daylight sensors and motion detectors in common areas to reduce energy consumption.</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_15\"><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">All wiring shall be in accordance with IEC 60364 standards. Lighting systems shall be LED-based with daylight sensors and motion detectors in common areas to reduce energy consumption.</span></p></div>"
+      },
+      "rightAnchor": null
+    },
+    {
+      "leftAnchor": {
+        "id": "EL-63025",
+        "title": "Fire Protection",
+        "outlineNumber": "4.3",
+        "contentAbove": "",
+        "contentBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_16\">The building shall be equipped with a wet riser system, addressable fire alarm panels, smoke detectors in all rooms, and emergency lighting in escape routes. A certified fire strategy document shall guide all installation.</p></div>",
+        "diffAbove": null,
+        "diffBelow": "<div class=\"polarion-dle-pdf\"><p id=\"polarion_16\"><span class=\"diff-html-removed\" id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">The building shall be equipped with a wet riser system, addressable fire alarm panels, smoke detectors in all rooms, and emergency lighting in escape routes. A certified fire strategy document shall guide all installation.</span></p></div>"
+      },
+      "rightAnchor": null
+    }
+  ]
+}
