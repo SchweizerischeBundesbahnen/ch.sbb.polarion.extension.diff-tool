@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "targetModuleHasStructuralChanges": false,
+  "mergeNotAuthorized": false,
+  "mergeReport": {
+    "prohibited": [],
+    "deleted": [],
+    "mergeDetached": [],
+    "logs": "2025-05-13 14:29:54.586: 'MODIFIED' -- left WI 'EL-63012', right WI 'DP-1154' -- content below workitem 'DP-1154' modified with content below workitem 'EL-63012'",
+    "creationFailed": [],
+    "conflicted": [],
+    "moved": [],
+    "moveFailed": [],
+    "moveSkipped": [],
+    "modified": [
+      {
+        "operationResultType": "MODIFIED",
+        "workItemsPair": null,
+        "fieldId": null,
+        "documentsContentPair": {
+          "leftWorkItemId": "EL-63012",
+          "rightWorkItemId": "DP-1154",
+          "contentPosition": "BELOW"
+        }
+      }
+    ],
+    "duplicateSkipped": [],
+    "warnings": [],
+    "created": [],
+    "copied": []
+  }
+}

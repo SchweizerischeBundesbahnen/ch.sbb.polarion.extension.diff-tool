@@ -40,7 +40,7 @@ export default function ContentAnchorsDiff({ anchorsPair, currentIndex, mergingC
     mergingContext.setPairSelected(index, anchorsPair, newValue);
   }
 
-  return <div className={`wi-diff container-fluid g-0`}>
+  return <div className={`wi-diff container-fluid g-0`} data-testid={`${anchorsPair.leftAnchor ? anchorsPair.leftAnchor.id : "NONE"}_${anchorsPair.rightAnchor ? anchorsPair.rightAnchor.id : "NONE"}`}>
     {(leftDiffAbove || rightDiffAbove)
         && <ContentBlocksDiff oldValue={leftDiffAbove} newValue={rightDiffAbove} selected={aboveDiffSelected} selectedCallback={() => changeDiffSelected(CONTENT_ABOVE)} />
     }

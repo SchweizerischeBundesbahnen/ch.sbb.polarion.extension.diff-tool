@@ -1,0 +1,21 @@
+{
+  "success": false,
+  "targetModuleHasStructuralChanges": false,
+  "mergeNotAuthorized": true,
+  "mergeReport": {
+    "prohibited": [],
+    "deleted": [],
+    "mergeDetached": [],
+    "logs": "",
+    "creationFailed": [],
+    "conflicted": [],
+    "moved": [],
+    "moveFailed": [],
+    "moveSkipped": [],
+    "modified": [],
+    "duplicateSkipped": [],
+    "warnings": [],
+    "created": [],
+    "copied": []
+  }
+}
