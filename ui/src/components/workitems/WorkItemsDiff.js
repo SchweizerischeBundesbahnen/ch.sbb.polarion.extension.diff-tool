@@ -94,8 +94,8 @@ export default function WorkItemsDiff() {
   }
 
   return <div id="diff-body" className={`doc-diff ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
-    <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>
-      <div className="row g-0">
+    <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`} data-testid="diff-header">
+      <div className="row g-0" data-testid="project-header-row">
         <ProjectHeader project={workItemsData.leftProject} />
         <ProjectHeader project={workItemsData.rightProject} />
       </div>
@@ -106,7 +106,7 @@ export default function WorkItemsDiff() {
     <ErrorsOverlay loadingContext={loadingContext} />
     <MergeInProgressOverlay mergeInProgress={mergeInProgress} />
 
-    <Modal title="Redundant counterpart WorkItems" cancelButtonTitle="Close" visible={redundancyModalVisible} setVisible={setRedundancyModalVisible} className="modal-md">
+    <Modal title="Redundant counterpart WorkItems" cancelButtonTitle="Close" visible={redundancyModalVisible} setVisible={setRedundancyModalVisible} className="modal-md" testId={"redundancy-modal"}>
       <p>Following WorkItems in source project have multiple counterpart WorkItems in target project by selected link role, and therefor single counterpart can not be chosen:</p>
       <ul>
         {workItemsData.leftWorkItemIdsWithRedundancy.map((id, index) => {

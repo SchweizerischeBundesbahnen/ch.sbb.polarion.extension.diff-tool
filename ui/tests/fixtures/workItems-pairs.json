@@ -1,0 +1,45 @@
+{
+  "leftProject": {
+    "id": "elibrary",
+    "name": "E-Library",
+    "authorizedForMerge": true
+  },
+  "rightProject": {
+    "id": "elibrary",
+    "name": "E-Library",
+    "authorizedForMerge": true
+  },
+  "pairedWorkItems": [
+    {
+      "leftWorkItem": {
+        "id": "EL-16",
+        "title": "Failed: com.polarion.demo.LoginTest.testLogin",
+        "outlineNumber": null,
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "1",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": {
+        "id": "EL-18",
+        "title": "Failed: Login to the portal",
+        "outlineNumber": null,
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "1",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    }
+  ],
+  "leftWorkItemIdsWithRedundancy": [
+    "EL-1"
+  ]
+}
