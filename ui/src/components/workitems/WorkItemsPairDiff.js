@@ -192,7 +192,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
           <div style={{
             backgroundColor: "#f6f6f6",
             display: 'flex'
-          }} className="header row g-0">
+          }} className="header row g-0" data-testid={`${workItemsPair.leftWorkItem.id}-header`}>
             <MergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />
             <WorkItemHeader workItem={workItemsPair.leftWorkItem} side={LEFT} />
 

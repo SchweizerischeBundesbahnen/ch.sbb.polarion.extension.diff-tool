@@ -135,7 +135,6 @@ export const test = base.extend({
           });
         });
       },
-
       // Mock "/diff/documents" endpoint which emulates merge operation and returns JSON response depending on data in request body
       mockWorkItemsMergeEndpoint: async () => {
         await page.route("**/merge/documents", route => {

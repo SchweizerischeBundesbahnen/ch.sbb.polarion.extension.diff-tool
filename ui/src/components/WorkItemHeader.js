@@ -57,7 +57,7 @@ export function WorkItemHeader({workItem, asHeaderInDocument, movedOutlineNumber
         paddingLeft: asHeaderInDocument ? "2rem" : "5rem",
         fontWeight: asHeaderInDocument ? "600" : "300",
         fontSize: fontSize
-      }} id={id} className={`wi-header col collapsed-border ${workItem && movedOutlineNumber ? "moved" : ""} ${side}`}>
+      }} id={id} className={`wi-header col collapsed-border ${workItem && movedOutlineNumber ? "moved" : ""} ${side}`} data-testid={`${side}-wi`}>
         {workItem && !movedOutlineNumber && asHeaderInDocument && (workItem.outlineNumber + " " + workItem.title)} {workItem && !movedOutlineNumber && badgeContent()}
         {workItem && !movedOutlineNumber && workItem.referenced && referencedMarker(workItem.externalProjectWorkItem)}
         {workItem && !movedOutlineNumber && workItem.referenced && workItem.revision && !asHeaderInDocument && revisionLabel(workItem.revision)}
