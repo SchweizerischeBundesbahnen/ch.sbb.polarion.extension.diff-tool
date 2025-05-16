@@ -73,6 +73,7 @@ import lombok.SneakyThrows;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nullable;
 import javax.security.auth.Subject;
@@ -276,7 +277,8 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         }
     }
 
-    private void fixLinksInRichTextFields(@NotNull IModule targetModule, @NotNull String sourceProjectId, @NotNull String linkRoleId, @NotNull List<DiffField> diffFields) {
+    @VisibleForTesting
+    void fixLinksInRichTextFields(@NotNull IModule targetModule, @NotNull String sourceProjectId, @NotNull String linkRoleId, @NotNull List<DiffField> diffFields) {
         for (IWorkItem targetWorkItem : getWorkItemsForCleanUp(targetModule)) {
             for (DiffField field : diffFields) {
                 Object fieldValue = getFieldValue(targetWorkItem, field.getKey());

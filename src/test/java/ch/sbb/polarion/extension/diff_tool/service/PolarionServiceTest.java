@@ -1,13 +1,17 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.BaseDocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentDuplicateParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.WorkItemAttachmentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.settings.AuthorizationSettings;
+import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
@@ -16,6 +20,9 @@ import ch.sbb.polarion.extension.generic.util.ScopeUtils;
 import com.polarion.alm.projects.IProjectService;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.projects.model.IUser;
+import com.polarion.alm.shared.api.transaction.RunnableInWriteTransaction;
+import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
+import com.polarion.alm.shared.api.transaction.internal.InternalWriteTransaction;
 import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.model.IApprovalStruct;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
@@ -38,13 +45,19 @@ import com.polarion.subterra.base.data.model.ICustomField;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IType;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -67,7 +80,8 @@ class PolarionServiceTest {
     private static final String PROJECT_ID = "projectId";
     private static final String LINK_ROLE_ID_1 = "roleId1";
     private static final String LINK_ROLE_ID_2 = "roleId2";
-    @Mock
+
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private ITrackerService trackerService;
 
     @Mock
@@ -78,9 +92,35 @@ class PolarionServiceTest {
 
     private PolarionService polarionService;
 
+    @Mock
+    private InternalWriteTransaction internalWriteTransactionMock;
+
+    private MockedStatic<TransactionalExecutor> transactionalExecutorMockedStatic;
+
+    private MockedStatic<DiffModelCachedResource> mockModelCache;
+
     @BeforeEach
     void init() {
         polarionService = new PolarionService(trackerService, projectService, securityService, null, null);
+
+        mockModelCache = mockStatic(DiffModelCachedResource.class);
+        DiffModel cachedModel = mock(DiffModel.class);
+        mockModelCache.when(() -> DiffModelCachedResource.get(anyString(), anyString(), nullable(String.class))).thenReturn(cachedModel);
+
+        transactionalExecutorMockedStatic = Mockito.mockStatic(TransactionalExecutor.class);
+        internalWriteTransactionMock = mock(InternalWriteTransaction.class);
+        transactionalExecutorMockedStatic.when(() -> TransactionalExecutor.executeInWriteTransaction(any())).thenAnswer(invocation -> {
+            RunnableInWriteTransaction<?> runnable = invocation.getArgument(0);
+            return runnable.run(internalWriteTransactionMock);
+        });
+        transactionalExecutorMockedStatic.when(TransactionalExecutor::currentTransaction).thenReturn(internalWriteTransactionMock);
+
+    }
+
+    @AfterEach
+    void tearDown() {
+        mockModelCache.close();
+        transactionalExecutorMockedStatic.close();
     }
 
     @Test
@@ -275,6 +315,55 @@ class PolarionServiceTest {
                 Pair.of("ID-16", null),
                 Pair.of(null, "ID-23")
         )));
+    }
+
+    @Test
+    @SneakyThrows
+    void testCreateDocumentDuplicate() {
+        polarionService = mock(PolarionService.class);
+        when(polarionService.createDocumentDuplicate(anyString(), anyString(), anyString(), anyString(), any())).thenCallRealMethod();
+
+        // Use reflection to set the trackerService field
+        Field trackerServiceField = PolarionService.class.getSuperclass().getDeclaredField("trackerService");
+        trackerServiceField.setAccessible(true);
+        trackerServiceField.set(polarionService, trackerService);
+
+        when(trackerService.getFolderManager().existFolder(anyString(), anyString())).thenReturn(true);
+
+        IModule module = mock(IModule.class, RETURNS_DEEP_STUBS);
+        List<IWorkItem> externalWorkItems = List.of(mock(IWorkItem.class));
+        when(module.getExternalWorkItems()).thenReturn(externalWorkItems);
+        when(trackerService.getModuleManager().duplicate(any(), any(), any(), any(), nullable(ILinkRoleOpt.class), isNull(), isNull(), isNull(), isNull())).thenReturn(module);
+
+        BaseDocumentIdentifier targetDocumentIdentifier = mock(BaseDocumentIdentifier.class);
+        when(targetDocumentIdentifier.getProjectId()).thenReturn("targetProjectId");
+        when(targetDocumentIdentifier.getSpaceId()).thenReturn("targetSpaceId");
+
+        DocumentDuplicateParams duplicateParams = new DocumentDuplicateParams(targetDocumentIdentifier, "targetTitle", "linkRoleId", "configName");
+
+        // attempt to use unknown link role
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                polarionService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
+        assertEquals("No link role could be found by ID 'linkRoleId'", exception.getMessage());
+
+        // now let's omit the link role
+        duplicateParams.setLinkRoleId(null);
+
+        assertDoesNotThrow(() ->
+                polarionService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
+        verify(polarionService, times(0)).fixLinksInRichTextFields(any(), any(), nullable(String.class), any());
+        verify(polarionService, times(0)).fixReferencedWorkItem(any(), any(), any());
+
+        // provide link role + make it available
+        duplicateParams.setLinkRoleId("linkRoleId");
+        ILinkRoleOpt linkRole = mock(ILinkRoleOpt.class);
+        when(linkRole.getId()).thenReturn("linkRoleId");
+        when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(linkRole);
+
+        assertDoesNotThrow(() ->
+                polarionService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
+        verify(polarionService, times(1)).fixLinksInRichTextFields(any(), any(), nullable(String.class), any());
+        verify(polarionService, times(1)).fixReferencedWorkItem(any(), any(), any());
     }
 
     @Test
