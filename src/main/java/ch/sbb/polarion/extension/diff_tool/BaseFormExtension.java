@@ -19,6 +19,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,11 +39,13 @@ public class BaseFormExtension implements IFormExtension {
 
     private final String htmlFileName;
     private final String formExtensionDefaultLabel;
+    private final boolean allowEmptyLinkRole;
     PolarionService polarionService = new PolarionService();
 
-    public BaseFormExtension(String htmlFileName, String formExtensionDefaultLabel) {
+    public BaseFormExtension(String htmlFileName, String formExtensionDefaultLabel, boolean allowEmptyLinkRole) {
         this.htmlFileName = htmlFileName;
         this.formExtensionDefaultLabel = formExtensionDefaultLabel;
+        this.allowEmptyLinkRole = allowEmptyLinkRole;
     }
 
     @Override
@@ -62,7 +65,10 @@ public class BaseFormExtension implements IFormExtension {
             form = form.replace(PROJECT_OPTIONS_PLACEHOLDER, "<option disabled selected value> --- select project --- </option>"
                     + allProjects.stream().map(this::getProjectOption).collect(Collectors.joining()));
 
-            Collection<ILinkRoleOpt> linkRoles = polarionService.getLinkRoles(module.getProjectId());
+            List<ILinkRoleOpt> linkRoles = new ArrayList<>(polarionService.getLinkRoles(module.getProjectId()));
+            if (allowEmptyLinkRole) {
+                linkRoles.add(0, null);
+            }
             form = form.replace(LINK_ROLE_OPTIONS_PLACEHOLDER, linkRoles.stream().map(this::getLinkRoleOption).collect(Collectors.joining()));
 
             Collection<SettingName> settingNames = getSettingNames(ScopeUtils.getScopeFromProject(module.getProjectId()));
@@ -86,8 +92,10 @@ public class BaseFormExtension implements IFormExtension {
         return String.format(OPTION_TEMPLATE, projectId, "", displayOption);
     }
 
-    private @NotNull String getLinkRoleOption(@NotNull ILinkRoleOpt linkRole) {
-        return String.format(OPTION_TEMPLATE, linkRole.getId(), "", String.format("%s / %s", linkRole.getName(), linkRole.getOppositeName()));
+    private @NotNull String getLinkRoleOption(@Nullable ILinkRoleOpt linkRole) {
+        return String.format(OPTION_TEMPLATE,
+                linkRole == null ? "" : linkRole.getId(), "",
+                linkRole == null ? "none" : String.format("%s / %s", linkRole.getName(), linkRole.getOppositeName()));
     }
 
     @SuppressWarnings("unchecked")

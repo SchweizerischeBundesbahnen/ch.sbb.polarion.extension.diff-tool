@@ -211,10 +211,11 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         ITrackerProject targetTrackerProject = trackerService.getTrackerProject(targetProject);
         IContextId targetProjectContextId = targetTrackerProject.getContextId();
         ILocation targetLocation = Location.getLocation(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId());
-        ILinkRoleOpt linkRole = getLinkRoleById(documentDuplicateParams.getLinkRoleId(), targetTrackerProject);
-        if (linkRole == null) {
-            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", documentDuplicateParams.getLinkRoleId()));
-        }
+
+        // link role is optional
+        String linkRoleId = documentDuplicateParams.getLinkRoleId();
+        ILinkRoleOpt linkRole = StringUtils.isEmpty(linkRoleId) ? null :
+                Optional.ofNullable(getLinkRoleById(linkRoleId, targetTrackerProject)).orElseThrow(() -> new IllegalArgumentException(String.format("No link role could be found by ID '%s'", linkRoleId)));
 
         IModule sourceModule = getModule(sourceProjectId, sourceSpaceId, sourceDocumentName, revision);
         List<DiffField> allowedFields = DiffModelCachedResource.get(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(),
@@ -237,20 +238,22 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         }));
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            if (!sourceProjectId.equals(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())) {
+            if (linkRole != null && !sourceProjectId.equals(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())) {
                 fixLinksInRichTextFields(targetModule, sourceProjectId, linkRole.getId(), allowedFields);
             }
             cleanUpFields(targetModule, targetProjectContextId, allowedFields, new ListFieldCleaner());
             return null;
         });
 
-        TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            for (IWorkItem workItem : targetModule.getExternalWorkItems()) {
-                fixReferencedWorkItem(workItem, targetModule, linkRole);
-            }
-            targetModule.save();
-            return null;
-        });
+        if (linkRole != null) {
+            TransactionalExecutor.executeInWriteTransaction(transaction -> {
+                for (IWorkItem workItem : targetModule.getExternalWorkItems()) {
+                    fixReferencedWorkItem(workItem, targetModule, linkRole);
+                }
+                targetModule.save();
+                return null;
+            });
+        }
         // ----------
 
         return DocumentIdentifier.builder()
