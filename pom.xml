@@ -65,6 +65,8 @@
 
         <!--suppress UnresolvedMavenProperty -->
         <markdown2html-maven-plugin.failOnError>${env.MARKDOWN2HTML_MAVEN_PLUGIN_FAIL_ON_ERROR}</markdown2html-maven-plugin.failOnError>
+
+        <skipJsTests>false</skipJsTests>
     </properties>
 
     <profiles>
@@ -261,6 +263,7 @@
                         <phase>test</phase>
                         <configuration>
                             <arguments>run playwright:test:headless</arguments>
+                            <skip>${skipJsTests}</skip>
                         </configuration>
                     </execution>
                 </executions>

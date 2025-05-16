@@ -94,7 +94,7 @@ public class HyperlinksHandler implements DiffLifecycleHandler {
 
     private List<HyperlinkStruct> filterByRole(List<HyperlinkStruct> links, String roleId) {
         return links.stream()
-                .filter(s -> s.getRole() != null & Objects.equals(roleId, s.getRole().getId()))
+                .filter(s -> s.getRole() != null && Objects.equals(roleId, s.getRole().getId()))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 

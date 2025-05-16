@@ -73,6 +73,7 @@ import lombok.SneakyThrows;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nullable;
 import javax.security.auth.Subject;
@@ -211,10 +212,11 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         ITrackerProject targetTrackerProject = trackerService.getTrackerProject(targetProject);
         IContextId targetProjectContextId = targetTrackerProject.getContextId();
         ILocation targetLocation = Location.getLocation(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId());
-        ILinkRoleOpt linkRole = getLinkRoleById(documentDuplicateParams.getLinkRoleId(), targetTrackerProject);
-        if (linkRole == null) {
-            throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", documentDuplicateParams.getLinkRoleId()));
-        }
+
+        // link role is optional
+        String linkRoleId = documentDuplicateParams.getLinkRoleId();
+        ILinkRoleOpt linkRole = StringUtils.isEmpty(linkRoleId) ? null :
+                Optional.ofNullable(getLinkRoleById(linkRoleId, targetTrackerProject)).orElseThrow(() -> new IllegalArgumentException(String.format("No link role could be found by ID '%s'", linkRoleId)));
 
         IModule sourceModule = getModule(sourceProjectId, sourceSpaceId, sourceDocumentName, revision);
         List<DiffField> allowedFields = DiffModelCachedResource.get(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(),
@@ -237,20 +239,22 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         }));
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            if (!sourceProjectId.equals(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())) {
+            if (linkRole != null && !sourceProjectId.equals(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())) {
                 fixLinksInRichTextFields(targetModule, sourceProjectId, linkRole.getId(), allowedFields);
             }
             cleanUpFields(targetModule, targetProjectContextId, allowedFields, new ListFieldCleaner());
             return null;
         });
 
-        TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            for (IWorkItem workItem : targetModule.getExternalWorkItems()) {
-                fixReferencedWorkItem(workItem, targetModule, linkRole);
-            }
-            targetModule.save();
-            return null;
-        });
+        if (linkRole != null) {
+            TransactionalExecutor.executeInWriteTransaction(transaction -> {
+                for (IWorkItem workItem : targetModule.getExternalWorkItems()) {
+                    fixReferencedWorkItem(workItem, targetModule, linkRole);
+                }
+                targetModule.save();
+                return null;
+            });
+        }
         // ----------
 
         return DocumentIdentifier.builder()
@@ -273,7 +277,8 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         }
     }
 
-    private void fixLinksInRichTextFields(@NotNull IModule targetModule, @NotNull String sourceProjectId, @NotNull String linkRoleId, @NotNull List<DiffField> diffFields) {
+    @VisibleForTesting
+    void fixLinksInRichTextFields(@NotNull IModule targetModule, @NotNull String sourceProjectId, @NotNull String linkRoleId, @NotNull List<DiffField> diffFields) {
         for (IWorkItem targetWorkItem : getWorkItemsForCleanUp(targetModule)) {
             for (DiffField field : diffFields) {
                 Object fieldValue = getFieldValue(targetWorkItem, field.getKey());
