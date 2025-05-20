@@ -81,8 +81,6 @@ test.describe("page of diffing Collections c", () => {
     // Verify the modal is no longer visible
     await expect(targetConfigurationModal).not.toBeVisible();
 
-    // Adjust this part based on your implementation
-    await page.screenshot({ path: 'page-header.png', fullPage: true });
     const successAlert = page.getByTestId('app-alert-title')
     await expect(successAlert).toBeVisible();
   });

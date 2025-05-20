@@ -1,0 +1,58 @@
+{
+  "leftDocument": {
+    "projectId": "elibrary",
+    "projectName": "E-Library",
+    "spaceId": "Specification",
+    "locationPath": "Specification/Administration Specification",
+    "id": "Administration Specification",
+    "title": "Administration Specification",
+    "revision": null,
+    "moduleXmlRevision": "9430",
+    "headRevision": "9491",
+    "authorizedForMerge": true,
+    "spaceName": "Specification"
+  },
+  "rightDocument": {
+    "projectId": "drivepilot",
+    "projectName": "Drive Pilot",
+    "spaceId": "Specification",
+    "locationPath": "Specification/Administration Specification",
+    "id": "Administration Specification",
+    "title": "Administration Specification",
+    "revision": null,
+    "moduleXmlRevision": "9489",
+    "headRevision": "9491",
+    "authorizedForMerge": true,
+    "spaceName": "Specification"
+  },
+  "pairedWorkItems": [
+    {
+      "leftWorkItem": {
+        "id": "EL-14873",
+        "title": "User can be assigned into multiple user roles",
+        "outlineNumber": "2.1-1",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "9430",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": {
+        "id": "DP-536",
+        "title": "User can be assigned into multiple user roles",
+        "outlineNumber": "2.1-1",
+        "projectId": "drivepilot",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "9490",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    }
+  ]
+}
