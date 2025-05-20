@@ -16,6 +16,7 @@ import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";
 import MergeResultModal from "@/components/merge/MergeResultModal";
 import CollectionHeader from "@/components/collections/CollectionHeader";
 import DocumentProjectHeader from "@/components/documents/DocumentProjectHeader";
+import {DIFF_SIDES} from "@/components/diff/DiffLeaf";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument'];
 
@@ -130,8 +131,8 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
     <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>
       <div className="row g-0">
         {enclosingCollections && <>
-          <CollectionHeader collection={enclosingCollections.leftCollection}/>
-          <CollectionHeader collection={enclosingCollections.rightCollection}/>
+          <CollectionHeader collection={enclosingCollections.leftCollection} side={DIFF_SIDES.LEFT}/>
+          <CollectionHeader collection={enclosingCollections.rightCollection} side={DIFF_SIDES.RIGHT}/>
         </>}
         {!enclosingCollections && <>
           <DocumentProjectHeader document={fieldsData.leftDocument}/>

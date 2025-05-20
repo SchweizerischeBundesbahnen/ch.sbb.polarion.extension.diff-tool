@@ -16,6 +16,7 @@ import AppAlert from "@/components/AppAlert";
 import {useMergingContext} from "@/components/merge/useMergingContext";
 import Loading from "@/components/loading/Loading";
 import ContentAnchorsDiff, {CONTENT_ABOVE, CONTENT_BELOW} from "@/components/documents/ContentAnchorsDiff";
+import {DIFF_SIDES} from "@/components/diff/DiffLeaf";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument'];
 
@@ -115,8 +116,8 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
 
       <div className="row g-0">
         {enclosingCollections && <>
-          <CollectionHeader collection={enclosingCollections.leftCollection} />
-          <CollectionHeader collection={enclosingCollections.rightCollection} />
+          <CollectionHeader collection={enclosingCollections.leftCollection} side={DIFF_SIDES.LEFT} />
+          <CollectionHeader collection={enclosingCollections.rightCollection} side={DIFF_SIDES.RIGHT} />
         </>}
         {!enclosingCollections && <>
           <DocumentProjectHeader document={docsData.leftDocument} />
