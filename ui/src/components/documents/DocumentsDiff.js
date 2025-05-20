@@ -198,8 +198,8 @@ export default function DocumentsDiff({ enclosingCollections }) {
 
       <div className="row g-0">
         {enclosingCollections && <>
-          <CollectionHeader collection={enclosingCollections.leftCollection} />
-          <CollectionHeader collection={enclosingCollections.rightCollection} />
+          <CollectionHeader collection={enclosingCollections.leftCollection} side={DIFF_SIDES.LEFT} />
+          <CollectionHeader collection={enclosingCollections.rightCollection} side={DIFF_SIDES.RIGHT} />
         </>}
         {!enclosingCollections && <>
           <DocumentProjectHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />

@@ -1,0 +1,92 @@
+{
+  "leftCollection": {
+    "id": "1",
+    "name": "Specification v1.0",
+    "projectId": "elibrary",
+    "projectName": "E-Library"
+  },
+  "rightCollection": {
+    "id": "1",
+    "name": "System Specification v.1",
+    "projectId": "drivepilot",
+    "projectName": "Drive Pilot"
+  },
+  "pairedDocuments": [
+    {
+      "leftDocument": {
+        "projectId": "elibrary",
+        "projectName": "E-Library",
+        "spaceId": "Specification",
+        "locationPath": "Specification/Administration Specification",
+        "id": "Administration Specification",
+        "title": "Administration Specification",
+        "revision": null,
+        "moduleXmlRevision": "9430",
+        "headRevision": "9491",
+        "authorizedForMerge": false,
+        "spaceName": "Specification"
+      },
+      "rightDocument": {
+        "projectId": "drivepilot",
+        "projectName": "Drive Pilot",
+        "spaceId": "Specification",
+        "locationPath": "Specification/Administration Specification",
+        "id": "Administration Specification",
+        "title": "Administration Specification",
+        "revision": null,
+        "moduleXmlRevision": "9489",
+        "headRevision": "9491",
+        "authorizedForMerge": false,
+        "spaceName": "Specification"
+      }
+    },
+    {
+      "leftDocument": {
+        "projectId": "elibrary",
+        "projectName": "E-Library",
+        "spaceId": "Specification",
+        "locationPath": "Specification/Catalog Specification",
+        "id": "Catalog Specification",
+        "title": "Catalog Specification",
+        "revision": null,
+        "moduleXmlRevision": "1",
+        "headRevision": "9491",
+        "authorizedForMerge": false,
+        "spaceName": "Specification"
+      },
+      "rightDocument": null
+    },
+    {
+      "leftDocument": {
+        "projectId": "elibrary",
+        "projectName": "E-Library",
+        "spaceId": "Specification",
+        "locationPath": "Specification/Product Specification",
+        "id": "Product Specification",
+        "title": "Product Specification",
+        "revision": null,
+        "moduleXmlRevision": "8323",
+        "headRevision": "9491",
+        "authorizedForMerge": false,
+        "spaceName": "Specification"
+      },
+      "rightDocument": null
+    },
+    {
+      "leftDocument": {
+        "projectId": "elibrary",
+        "projectName": "E-Library",
+        "spaceId": "Testing",
+        "locationPath": "Testing/Test Specification",
+        "id": "Test Specification",
+        "title": "Test Specification",
+        "revision": null,
+        "moduleXmlRevision": "1",
+        "headRevision": "9491",
+        "authorizedForMerge": false,
+        "spaceName": "Testing"
+      },
+      "rightDocument": null
+    }
+  ]
+}

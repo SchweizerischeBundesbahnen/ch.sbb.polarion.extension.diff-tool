@@ -13,6 +13,7 @@ import useRemote from "@/services/useRemote";
 import Modal from "@/components/Modal";
 import DocumentsFieldsDiff from "@/components/documents/DocumentsFieldsDiff";
 import DocumentsContentDiff from "@/components/documents/DocumentsContentDiff";
+import {DIFF_SIDES} from "@/components/diff/DiffLeaf";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceCollectionId', 'targetProjectId', 'targetCollectionId'];
 
@@ -114,17 +115,17 @@ export default function CollectionsDiff() {
     return <div id="diff-body" className={`doc-diff ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
       <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>
         <div className="row g-0">
-          <CollectionHeader collection={collectionsData.leftCollection} />
-          <CollectionHeader collection={collectionsData.rightCollection} />
+          <CollectionHeader collection={collectionsData.leftCollection} side={DIFF_SIDES.LEFT} />
+          <CollectionHeader collection={collectionsData.rightCollection} side={DIFF_SIDES.RIGHT} />
         </div>
         <div className="row g-0">
-          <DocumentHeader document={selectedDocumentsPair.leftDocument} />
+          <DocumentHeader document={selectedDocumentsPair.leftDocument} side={DIFF_SIDES.LEFT}/>
           <div className="col collapsed-border" style={{
             color: "#bbb",
             fontWeight: "200"
           }}>
             No counterpart document in target collection. Do you want to create it?
-            <button className="btn btn-secondary btn-xs create-document-button" onClick={() => setTargetConfigurationModalVisible(true)}>
+            <button className="btn btn-secondary btn-xs create-document-button" onClick={() => setTargetConfigurationModalVisible(true)} data-testid="create-document-button">
               <FontAwesomeIcon icon={faSquarePlus} style={{ color: "#189418", marginRight: "4px", fontWeight: "600" }}/> Create document
             </button>
           </div>
@@ -135,7 +136,7 @@ export default function CollectionsDiff() {
                setTargetConfigurationModalVisible(false);
                createTargetDocument(selectedTargetConfiguration);
              }
-      }>
+      } testId={"target-configuration-modal"}>
         <p>To create target document please choose configuration with which it should be created:</p>
         <div style={{
           display: "flex",

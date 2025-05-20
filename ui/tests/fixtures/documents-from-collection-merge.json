@@ -1,0 +1,55 @@
+{
+  "success": true,
+  "targetModuleHasStructuralChanges": false,
+  "mergeNotAuthorized": false,
+  "mergeReport": {
+    "copied": [],
+    "warnings": [],
+    "conflicted": [],
+    "creationFailed": [],
+    "duplicateSkipped": [],
+    "moved": [],
+    "moveFailed": [],
+    "moveSkipped": [],
+    "mergeDetached": [],
+    "logs": "2025-05-20 08:17:41.743: 'MODIFIED' -- left WI 'EL-14873', right WI 'DP-537' -- workitem 'DP-537' modified with info from 'EL-14874'",
+    "prohibited": [],
+    "modified": [
+      {
+        "operationResultType": "MODIFIED",
+        "workItemsPair": {
+          "leftWorkItem": {
+            "id": "EL-14873",
+            "title": "User can be assigned into multiple user roles",
+            "outlineNumber": "2.1-1",
+            "projectId": "elibrary",
+            "referenced": false,
+            "revision": null,
+            "lastRevision": "9430",
+            "movedOutlineNumber": null,
+            "moveDirection": null,
+            "externalProjectWorkItem": false,
+            "fields": []
+          },
+          "rightWorkItem": {
+            "id": "DP-536",
+            "title": "User can be assigned into multiple user roles",
+            "outlineNumber": "2.1-1",
+            "projectId": "drivepilot",
+            "referenced": false,
+            "revision": null,
+            "lastRevision": "9490",
+            "movedOutlineNumber": null,
+            "moveDirection": null,
+            "externalProjectWorkItem": false,
+            "fields": []
+          }
+        },
+        "fieldId": null,
+        "documentsContentPair": null
+      }
+    ],
+    "deleted": [],
+    "created": []
+  }
+}

@@ -46,7 +46,10 @@ const workItemsMergeFixtureDataProvider = (requestBody) => {
     fixtureFile = "EL-11575_EL-11575_merge_from_referenced.json";
   } else if (requestBody.pairs[0].leftWorkItem.id === "EL-157" && requestBody.pairs[0].rightWorkItem.id === "DP-11562" && requestBody.direction === 0) {
     fixtureFile = "EL-157_DP-11562_merge.json";
+  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-14873" && requestBody.pairs[0].rightWorkItem.id === "DP-536") {
+    fixtureFile = "EL-14873_DP-536.json";
   }
+
 
   if (fixtureFile) {
     const filePath = path.join(__dirname, 'fixtures', fixtureFile);

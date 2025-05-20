@@ -1,0 +1,286 @@
+{
+  "leftDocument": {
+    "projectId": "elibrary",
+    "projectName": "E-Library",
+    "spaceId": "Specification",
+    "locationPath": "Specification/Administration Specification",
+    "id": "Administration Specification",
+    "title": "Administration Specification",
+    "revision": null,
+    "moduleXmlRevision": "9430",
+    "headRevision": "9487",
+    "authorizedForMerge": true,
+    "spaceName": "Specification"
+  },
+  "rightDocument": {
+    "projectId": "Project1",
+    "projectName": "Project1",
+    "spaceId": "Specification",
+    "locationPath": "Specification/Administration Specification",
+    "id": "Administration Specification",
+    "title": "Administration Specification",
+    "revision": null,
+    "moduleXmlRevision": "8420",
+    "headRevision": "9487",
+    "authorizedForMerge": true,
+    "spaceName": "Specification"
+  },
+  "pairedWorkItems": [
+    {
+      "leftWorkItem": {
+        "id": "EL-14868",
+        "title": "Introduction",
+        "outlineNumber": "1",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "9430",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": null
+    },
+    {
+      "leftWorkItem": {
+        "id": "EL-14869",
+        "title": "Purpose",
+        "outlineNumber": "1.1",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "9430",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": null
+    },
+    {
+      "leftWorkItem": {
+        "id": "EL-14870",
+        "title": "References",
+        "outlineNumber": "1.2",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "9430",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": null
+    },
+    {
+      "leftWorkItem": {
+        "id": "EL-14871",
+        "title": "Requirements",
+        "outlineNumber": "2",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "9430",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": null
+    },
+    {
+      "leftWorkItem": {
+        "id": "EL-14872",
+        "title": "User Roles",
+        "outlineNumber": "2.1",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "9430",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": null
+    },
+    {
+      "leftWorkItem": {
+        "id": "EL-14873",
+        "title": "User can be assigned into multiple user roles",
+        "outlineNumber": "2.1-1",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "9430",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": null
+    },
+    {
+      "leftWorkItem": {
+        "id": "EL-14874",
+        "title": "By default there are two roles:",
+        "outlineNumber": "2.1-2",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "9430",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": null
+    },
+    {
+      "leftWorkItem": {
+        "id": "EL-14875",
+        "title": "User role id conditions:",
+        "outlineNumber": "2.1-3",
+        "projectId": "elibrary",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "9430",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      },
+      "rightWorkItem": null
+    },
+    {
+      "leftWorkItem": null,
+      "rightWorkItem": {
+        "id": "PROJ-161",
+        "title": "Introduction",
+        "outlineNumber": "1",
+        "projectId": "Project1",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "8420",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": null,
+      "rightWorkItem": {
+        "id": "PROJ-187",
+        "title": "Purpose",
+        "outlineNumber": "1.1",
+        "projectId": "Project1",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "8420",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": null,
+      "rightWorkItem": {
+        "id": "PROJ-186",
+        "title": "References",
+        "outlineNumber": "1.2",
+        "projectId": "Project1",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "8420",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": null,
+      "rightWorkItem": {
+        "id": "PROJ-162",
+        "title": "Requirements",
+        "outlineNumber": "2",
+        "projectId": "Project1",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "8420",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": null,
+      "rightWorkItem": {
+        "id": "PROJ-163",
+        "title": "User Roles",
+        "outlineNumber": "2.1",
+        "projectId": "Project1",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "8420",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": null,
+      "rightWorkItem": {
+        "id": "PROJ-164",
+        "title": "User can be assigned into multiple user roles",
+        "outlineNumber": "2.1-1",
+        "projectId": "Project1",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "8420",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": null,
+      "rightWorkItem": {
+        "id": "PROJ-165",
+        "title": "By default there are two roles:",
+        "outlineNumber": "2.1-2",
+        "projectId": "Project1",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "8420",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    },
+    {
+      "leftWorkItem": null,
+      "rightWorkItem": {
+        "id": "PROJ-166",
+        "title": "User role id conditions:",
+        "outlineNumber": "2.1-3",
+        "projectId": "Project1",
+        "referenced": false,
+        "revision": null,
+        "lastRevision": "8433",
+        "movedOutlineNumber": null,
+        "moveDirection": null,
+        "externalProjectWorkItem": false,
+        "fields": []
+      }
+    }
+  ]
+}
