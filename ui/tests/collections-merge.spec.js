@@ -2,7 +2,7 @@ import { normalizeHtml, test } from "./test-utils";
 import { expect } from "@playwright/test";
 
 
-test.describe("page of diffing Collections c", () => {
+test.describe("page of diffing Collections", () => {
 
   test.beforeEach(async ({page, mockApi}) => {
     await mockApi.mockEndpoint({url: '**/extension/info', fixtureFile: 'version-info.json'});
