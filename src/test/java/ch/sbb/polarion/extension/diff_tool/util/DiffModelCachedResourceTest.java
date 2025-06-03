@@ -32,7 +32,7 @@ class DiffModelCachedResourceTest {
 
     private static final String PROJECT_ID = "TEST_PROJECT";
     private static final String SETTING_NAME = "diff";
-    private static final String CACHE_BUCKET_ID = DiffModelCachedResourceTest.class.getSimpleName() + "_TEST_BUCKET_ID";
+    private static final String CACHE_BUCKET_ID = "TEST_BUCKET";
     private static final String SCOPE = ScopeUtils.getScopeFromProject(PROJECT_ID);
 
     @Mock

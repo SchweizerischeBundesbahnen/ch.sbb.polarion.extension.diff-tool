@@ -96,6 +96,8 @@ public class DiffModelCachedResource {
     }
 
     private static DiffModel loadModel(String projectId, String settingName) {
+        System.out.println("Loading DiffModel for project: " + projectId + ", setting: " + settingName);
+        System.out.println("Scope from project: " + ScopeUtils.getScopeFromProject(projectId));
         DiffSettings diffSettings = (DiffSettings) NamedSettingsRegistry.INSTANCE.getByFeatureName(DiffSettings.FEATURE_NAME);
         return settingName == null ? diffSettings.defaultValues() :
                 diffSettings.read(ScopeUtils.getScopeFromProject(projectId), SettingId.fromName(settingName), null);
