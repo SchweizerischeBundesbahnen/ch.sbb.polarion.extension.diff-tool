@@ -47,7 +47,7 @@ class DiffModelCachedResourceTest {
         mockedScopeUtils = mockStatic(ScopeUtils.class);
         mockedScopeUtils.when(() -> ScopeUtils.getScopeFromProject(PROJECT_ID)).thenReturn(SCOPE);
         ILocation mockLocation = mock(ILocation.class);
-        mockedScopeUtils.when(() -> ScopeUtils.getContextLocation(SCOPE)).thenReturn(mockLocation);
+        mockedScopeUtils.when(() -> ScopeUtils.getContextLocation(any())).thenReturn(mockLocation);
 
         // Setup mock behavior
         lenient().when(mockDiffSettings.getFeatureName()).thenReturn(SETTING_NAME);
