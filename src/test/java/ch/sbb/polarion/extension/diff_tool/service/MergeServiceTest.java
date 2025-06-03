@@ -48,6 +48,7 @@ import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IStructType;
 import com.polarion.subterra.base.location.ILocation;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -84,6 +85,12 @@ class MergeServiceTest {
     @BeforeEach
     void init() {
         mergeService = new MergeService(polarionService);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Unregister our mock settings
+        NamedSettingsRegistry.INSTANCE.getAll().clear();
     }
 
     @Test

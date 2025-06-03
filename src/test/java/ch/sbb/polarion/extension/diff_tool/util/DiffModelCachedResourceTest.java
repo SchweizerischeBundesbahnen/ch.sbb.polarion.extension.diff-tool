@@ -64,9 +64,7 @@ class DiffModelCachedResourceTest {
     @AfterEach
     void tearDown() {
         // Close static mocks
-        if (mockedScopeUtils != null) {
-            mockedScopeUtils.close();
-        }
+        mockedScopeUtils.close();
 
         // Unregister our mock settings
         NamedSettingsRegistry.INSTANCE.getAll().clear();
@@ -186,6 +184,9 @@ class DiffModelCachedResourceTest {
             // Verify model was loaded only once despite concurrent access
             assertEquals(1, loadCounter.get(), "Model should be loaded only once");
         } finally {
+            // Unregister our mock settings
+            NamedSettingsRegistry.INSTANCE.getAll().clear();
+
             executorService.shutdownNow(); // Ensure executor is shut down
         }
     }
