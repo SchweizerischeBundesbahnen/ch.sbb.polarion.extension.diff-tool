@@ -1,5 +1,32 @@
 # Changelog
 
+## [5.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.1.2...v5.2.0) (2025-06-03)
+
+
+### Features
+
+* ability to copy LiveDoc without a link role ([#251](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/251)) ([d232eb8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d232eb8394f8c63bccde34ddf2a425631c5346c1)), closes [#250](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/250)
+* execution queue ([#227](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/227)) ([be654ab](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/be654ab6da7043ff798b28e1ee4a9697650565b7))
+
+
+### Bug Fixes
+
+* content at the last position isn't displayed in the diff ([#240](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/240)) ([7f84bd0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/7f84bd019d7f9d113b51819f824e5bf19efe626d)), closes [#239](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/239)
+* **deps:** update dependency @babel/runtime to v7.27.1 ([7e067cd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/7e067cdaf473baf325b2170970c8655d7075ece9))
+* **deps:** update dependency @babel/runtime to v7.27.1 ([4ae2e68](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/4ae2e6827a6cc73f94f1f5bcdada9b78382043c2))
+* **deps:** update dependency @babel/runtime to v7.27.3 ([9d742d3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9d742d318a0ea4dd9447efd0f6b28514898d6c2a))
+* **deps:** update dependency @babel/runtime to v7.27.4 ([8d71619](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/8d71619c554709130654a07382406a7f2875cf45))
+* **deps:** update dependency bootstrap to v5.3.6 ([fbed9ca](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/fbed9ca96012ba50b6c55e4acd30f039f16281fb))
+* **deps:** update dependency bootstrap to v5.3.6 ([6da800d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/6da800d723b232a76af05edb359a43e777bfb4e4))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v9.1.1 ([#254](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/254)) ([618e976](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/618e9767312b1b0922e0d0fb82210d4b42fbf05d))
+* **deps:** update nextjs monorepo to v15.3.2 ([e502ff7](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/e502ff719605b23594aad5816d52886489bccc5a))
+* **deps:** update nextjs monorepo to v15.3.3 ([1974771](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/19747713823d3904de12b2c9cacbb45985344a63))
+* extension registration using bundle activator ([#237](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/237)) ([88e7852](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/88e7852cd7f9cb0ef4ad448129d7c54176988dc6))
+* link to the newly created work item is broken ([#246](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/246)) ([51602c8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/51602c8e682a17ac618e921940adf2a9168301ca)), closes [#245](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/245)
+* list of configurations must be updated on target project selection ([#244](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/244)) ([13cb0e2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/13cb0e289bd406dd7090438354305cbfbb4c3437)), closes [#243](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/243)
+* sporadic build failure ([#258](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/258)) ([9e55a2e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9e55a2ec46a7d0497232badc75d08917444987bf))
+* sporadic build failure ([#259](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/259)) ([659e495](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/659e49594faf607bb6c6ae17cabcfb432ea19528))
+
 ## [5.1.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.1.1...v5.1.2) (2025-04-24)
 
 
