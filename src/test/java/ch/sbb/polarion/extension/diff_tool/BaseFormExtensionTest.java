@@ -77,6 +77,8 @@ class BaseFormExtensionTest {
     void tearDown() {
         polarionServiceMockedConstruction.close();
         mockScopeUtils.close();
+
+        NamedSettingsRegistry.INSTANCE.getAll().clear();
     }
 
     @Test

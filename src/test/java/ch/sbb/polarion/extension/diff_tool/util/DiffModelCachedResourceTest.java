@@ -5,7 +5,6 @@ import ch.sbb.polarion.extension.diff_tool.settings.DiffSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
-import com.polarion.subterra.base.location.ILocation;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,8 +45,6 @@ class DiffModelCachedResourceTest {
         // Setup ScopeUtils mock
         mockedScopeUtils = mockStatic(ScopeUtils.class);
         mockedScopeUtils.when(() -> ScopeUtils.getScopeFromProject(PROJECT_ID)).thenReturn(SCOPE);
-        ILocation mockLocation = mock(ILocation.class);
-        mockedScopeUtils.when(() -> ScopeUtils.getContextLocation(SCOPE)).thenReturn(mockLocation);
 
         // Setup mock behavior
         lenient().when(mockDiffSettings.getFeatureName()).thenReturn(SETTING_NAME);
@@ -64,9 +61,7 @@ class DiffModelCachedResourceTest {
     @AfterEach
     void tearDown() {
         // Close static mocks
-        if (mockedScopeUtils != null) {
-            mockedScopeUtils.close();
-        }
+        mockedScopeUtils.close();
 
         // Unregister our mock settings
         NamedSettingsRegistry.INSTANCE.getAll().clear();
@@ -186,6 +181,9 @@ class DiffModelCachedResourceTest {
             // Verify model was loaded only once despite concurrent access
             assertEquals(1, loadCounter.get(), "Model should be loaded only once");
         } finally {
+            // Unregister our mock settings
+            NamedSettingsRegistry.INSTANCE.getAll().clear();
+
             executorService.shutdownNow(); // Ensure executor is shut down
         }
     }
