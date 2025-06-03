@@ -32,8 +32,8 @@ class DiffModelCachedResourceTest {
 
     private static final String PROJECT_ID = "TEST_PROJECT";
     private static final String SETTING_NAME = "diff";
-    private static final String CACHE_BUCKET_ID = "TEST_BUCKET";
-    private static final String SCOPE = "TEST_SCOPE";
+    private static final String CACHE_BUCKET_ID = DiffModelCachedResourceTest.class.getSimpleName() + "_TEST_BUCKET_ID";
+    private static final String SCOPE = ScopeUtils.getScopeFromProject(PROJECT_ID);
 
     @Mock
     private DiffSettings mockDiffSettings;
@@ -47,11 +47,11 @@ class DiffModelCachedResourceTest {
         mockedScopeUtils = mockStatic(ScopeUtils.class);
         mockedScopeUtils.when(() -> ScopeUtils.getScopeFromProject(PROJECT_ID)).thenReturn(SCOPE);
         ILocation mockLocation = mock(ILocation.class);
-        mockedScopeUtils.when(() -> ScopeUtils.getContextLocation(any())).thenReturn(mockLocation);
+        mockedScopeUtils.when(() -> ScopeUtils.getContextLocation(SCOPE)).thenReturn(mockLocation);
 
         // Setup mock behavior
         lenient().when(mockDiffSettings.getFeatureName()).thenReturn(SETTING_NAME);
-        lenient().when(mockDiffSettings.read(eq(SCOPE), any(SettingId.class), isNull())).thenReturn(mockDiffModel);
+        lenient().when(mockDiffSettings.read(SCOPE, SettingId.fromName(SETTING_NAME), null)).thenReturn(mockDiffModel);
         lenient().when(mockDiffSettings.defaultValues()).thenReturn(mockDiffModel);
 
         // Register our mock settings with the actual registry
