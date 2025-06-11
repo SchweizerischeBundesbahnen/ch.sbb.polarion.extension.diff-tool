@@ -17,6 +17,7 @@ Require-Bundle: com.polarion.portal.tomcat,
  org.apache.commons.lang3,
  org.ehcache,
  org.jsoup,
+ org.apache.xercesImpl,
  ch.sbb.polarion.extension.pdf-exporter;resolution:=optional
 Import-Package: org.osgi.framework,org.eclipse.core.runtime
 Export-Package: ch.sbb.polarion.extension.diff_tool
