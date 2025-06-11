@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.2.0...v5.2.1) (2025-06-11)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @babel/runtime to v7.27.6 ([e8f0d02](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/e8f0d0276008bd57816c9021448f80de7d945dde))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v10.1.0 ([ff52dc1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ff52dc1180d508bd298ec37145c454021994a096))
+* reuse built-in xerces ([#264](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/264)) ([ff88163](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ff881636b96125f6f3460d9327d174a61b9ed348)), closes [#263](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/263)
+
 ## [5.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.1.2...v5.2.0) (2025-06-03)
 
 
