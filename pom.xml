@@ -55,6 +55,7 @@
         <web.app.name>${maven-jar-plugin.Extension-Context}</web.app.name>
 
         <html5diff.version>1.4.4</html5diff.version>
+        <xerces.version>2.12.2</xerces.version>
         <ehcache.version>3.8.0</ehcache.version>
 
         <pdf-exporter.version>8.3.1</pdf-exporter.version>
@@ -154,6 +155,12 @@
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <version>${awaitility.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>${xerces.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
