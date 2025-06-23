@@ -204,6 +204,7 @@ export const test = base.extend({
 
 export const normalizeHtml = (htmlString) => {
   return htmlString
+      .replace(/changes="([^"]*)"/g, (match) => match.replace(/&gt;/g, '>').replace(/&lt;/g, '<')) // replace encoded diff HTML inside 'changes' attribute
       .replace(/\s+/g, ' ')
       .replace(/> </g, '><')
       .trim();
