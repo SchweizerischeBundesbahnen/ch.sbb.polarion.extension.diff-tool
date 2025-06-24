@@ -38,9 +38,7 @@ function parseAndSetSettings(text) {
   setSelectedRoles('global_roles', settings.globalRoles);
   setSelectedRoles('project_roles', settings.projectRoles);
 
-  if (settings.bundleTimestamp !== ctx.getValueById('bundle-timestamp')) {
-    ctx.setNewerVersionNotificationVisible(true);
-  }
+  ctx.setNewerVersionNotificationVisible(settings.bundleTimestamp !== ctx.getValueById('bundle-timestamp'));
 }
 
 function saveSettings() {

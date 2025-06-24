@@ -26,9 +26,7 @@ function parseAndSetSettings(jsonResponse) {
 
   ctx.currentSettings = settings;
 
-  if (settings.bundleTimestamp !== ctx.getValueById('bundle-timestamp')) {
-    ctx.setNewerVersionNotificationVisible(true);
-  }
+  ctx.setNewerVersionNotificationVisible(settings.bundleTimestamp !== ctx.getValueById('bundle-timestamp'));
 
   const usedWorkers = new Set();
   usedWorkers.add("CPU_LOAD");
