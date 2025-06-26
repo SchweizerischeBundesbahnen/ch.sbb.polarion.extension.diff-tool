@@ -484,12 +484,12 @@ class PolarionServiceTest {
         IWorkItem workItem = mock(IWorkItem.class);
 
         polarionService.insertWorkItem(workItem, targetModule, mock(IModule.IStructureNode.class), 1, false);
-        verify(node, times(1)).setValue(eq("workItem"), eq(workItem));
-        verify(node, times(1)).setValue(eq("external"), eq(false));
+        verify(node, times(1)).setValue("workItem", workItem);
+        verify(node, times(1)).setValue("external", false);
 
         polarionService.insertWorkItem(workItem, targetModule, null, 1, true);
-        verify(node, times(2)).setValue(eq("workItem"), eq(workItem));
-        verify(node, times(1)).setValue(eq("external"), eq(true));
+        verify(node, times(2)).setValue("workItem", workItem);
+        verify(node, times(1)).setValue("external", true);
 
         IModule.IStructureNode structureNode = mock(IModule.IStructureNode.class);
         when(targetModule.getStructureNodeOfWI(workItem)).thenReturn(structureNode);
