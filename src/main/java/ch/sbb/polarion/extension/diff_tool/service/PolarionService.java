@@ -82,6 +82,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -321,10 +322,23 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             targetModule.moveIn(List.of(workItem));
         }
 
-        if (parentNode != null) {
-            IModule.IStructureNode insertedWorkItemNode = targetModule.getStructureNodeOfWI(workItem);
-            parentNode.addChild(insertedWorkItemNode, destinationIndex); // Placing inserted work item at required position in document
+        if (parentNode == null) {
+            parentNode = targetModule.getRootNode();
         }
+
+        // getStructureNodeOfWI may return null for items which are placed in recycle bin.
+        // the problem basically is that a workitem is still bound to module but not a single node use it
+        // so in this case we're adding a new node for it
+        IModule.IStructureNode insertedWorkItemNode = Optional.ofNullable(targetModule.getStructureNodeOfWI(workItem)).orElse(createNode(targetModule, workItem, referenced));
+        parentNode.addChild(insertedWorkItemNode, destinationIndex); // Placing inserted work item at required position in document
+    }
+
+    private IModule.IStructureNode createNode(@NotNull IModule targetModule, @NotNull IWorkItem workitem, boolean referenced) {
+        // taken from Module#createStructureNode(IModule.IStructureNode parent, IWorkItem workitem)
+        IModule.IStructureNode node = (IModule.IStructureNode) targetModule.getDataSvc().createStructureForTypeId(targetModule, "ModuleStructureNode", new HashMap<>());
+        node.setValue("workItem", workitem);
+        node.setValue("external", referenced);
+        return node;
     }
 
     private List<IWorkItem> getWorkItemsForCleanUp(@NotNull IModule module) {

@@ -468,6 +468,36 @@ class PolarionServiceTest {
     }
 
     @Test
+    void testInsertWorkItem() {
+
+        IModule targetModule = mock(IModule.class);
+
+        IDataService dataService = mock(IDataService.class);
+        when(targetModule.getDataSvc()).thenReturn(dataService);
+
+        IModule.IStructureNode rootNode = mock(IModule.IStructureNode.class);
+        when(targetModule.getRootNode()).thenReturn(rootNode);
+
+        IModule.IStructureNode node = mock(IModule.IStructureNode.class);
+        when(dataService.createStructureForTypeId(any(), anyString(), any())).thenReturn(node);
+
+        IWorkItem workItem = mock(IWorkItem.class);
+
+        polarionService.insertWorkItem(workItem, targetModule, mock(IModule.IStructureNode.class), 1, false);
+        verify(node, times(1)).setValue("workItem", workItem);
+        verify(node, times(1)).setValue("external", false);
+
+        polarionService.insertWorkItem(workItem, targetModule, null, 1, true);
+        verify(node, times(2)).setValue("workItem", workItem);
+        verify(node, times(1)).setValue("external", true);
+
+        IModule.IStructureNode structureNode = mock(IModule.IStructureNode.class);
+        when(targetModule.getStructureNodeOfWI(workItem)).thenReturn(structureNode);
+        polarionService.insertWorkItem(workItem, targetModule, null, 5, true);
+        verify(rootNode, times(1)).addChild(structureNode, 5);
+    }
+
+    @Test
     void testGetDeletableFields() {
         List<WorkItemField> standardFieldsDeletable = List.of(WorkItemField.builder().key("field_0").build());
 
