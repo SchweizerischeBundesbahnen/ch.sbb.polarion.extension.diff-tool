@@ -74,6 +74,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, CurrentContextExtension.class})
 @CurrentContextConfig("diff-tool")
+@SuppressWarnings({"unchecked", "rawtypes"})
 class MergeServiceTest {
     @Mock
     private PolarionService polarionService;
@@ -1483,6 +1484,41 @@ class MergeServiceTest {
 
         verify(workItem, times(1)).addHyperlink("new", newLink.getRole());
         assertFalse(workItem.getHyperlinks().contains(existingLink));
+    }
+
+    @Test
+    void testInsertWorkItem() {
+        IWorkItem workItem = mock(IWorkItem.class);
+        when(workItem.getProjectId()).thenReturn("projectId");
+
+        DocumentsMergeContext context = mock(DocumentsMergeContext.class);
+
+        IModule targetModule = mock(IModule.class);
+        IModule sourceModule = mock(IModule.class);
+
+        when(targetModule.getProjectId()).thenReturn("projectId");
+
+        when(context.getSourceModule()).thenReturn(sourceModule);
+        when(context.getTargetModule()).thenReturn(targetModule);
+
+        IModule.IStructureNode sourceNode = mock(IModule.IStructureNode.class);
+        IModule.IStructureNode sourceParentNode = mock(IModule.IStructureNode.class);
+        when(sourceNode.getParent()).thenReturn(sourceParentNode);
+        when(sourceModule.getStructureNodeOfWI(any())).thenReturn(sourceNode);
+
+        ArrayList<DocumentsMergeContext.AffectedModule> affectedModules = new ArrayList<>();
+        lenient().when(context.getAffectedModules()).thenReturn(affectedModules);
+
+        mergeService.insertWorkItem(workItem, context, false);
+        assertEquals(0, affectedModules.size());
+
+        when(workItem.getModule()).thenReturn(targetModule);
+        mergeService.insertWorkItem(workItem, context, false);
+        assertEquals(0, affectedModules.size());
+
+        when(workItem.getModule()).thenReturn(sourceModule);
+        mergeService.insertWorkItem(workItem, context, false);
+        assertEquals(1, affectedModules.size());
     }
 
     private static MergeTestContext sameProject() {

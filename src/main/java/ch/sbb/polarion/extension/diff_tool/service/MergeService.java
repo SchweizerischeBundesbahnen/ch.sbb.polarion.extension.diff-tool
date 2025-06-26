@@ -611,7 +611,7 @@ public class MergeService {
             IModule.IStructureNode destinationParentNode = context.getTargetModule().getStructureNodeOfWI(destinationParentWorkItem);
             int destinationIndex = sourceParentNode.getChildren().indexOf(sourceNode);
 
-            if (workItemToInsert.getModule() != null && !workItemToInsert.getModule().equals(context.affectedModules)) {
+            if (workItemToInsert.getModule() != null && !workItemToInsert.getModule().equals(context.getTargetModule())) {
                 IModule.IStructureNode sourceExternalNode = workItemToInsert.getModule().getStructureNodeOfWI(workItemToInsert);
                 IModule.IStructureNode sourceExternalParentNode = sourceExternalNode.getParent();
 
