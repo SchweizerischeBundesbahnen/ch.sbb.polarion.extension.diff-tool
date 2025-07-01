@@ -14,7 +14,7 @@
     "uuid": "^11.0.0"
   },
   "devDependencies": {
-    "@playwright/test": "1.53.1",
+    "@playwright/test": "1.53.2",
     "@types/node": "22.15.34",
     "cross-spawn": "7.0.6",
     "eslint": "8.57.1",
