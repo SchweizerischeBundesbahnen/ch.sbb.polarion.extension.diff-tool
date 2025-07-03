@@ -27,7 +27,7 @@ Additionally, the extension provides functionality to make a copy of selected do
 
 > [!IMPORTANT]
 > Starting from version 5.0.0 only latest version of Polarion is supported.
-> Right now it is Polarion 2410.
+> Right now it is Polarion 2506.
 
 ## Quick start
 
