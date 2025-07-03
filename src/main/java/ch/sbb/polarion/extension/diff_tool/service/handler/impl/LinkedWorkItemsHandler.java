@@ -3,7 +3,6 @@ package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
 import ch.sbb.polarion.extension.diff_tool.util.ModificationType;
-import com.polarion.alm.server.ServerUiContext;
 import com.polarion.alm.server.api.model.wi.linked.LinkedWorkItemRendererImpl;
 import com.polarion.alm.server.api.model.wi.linked.ProxyLinkedWorkItem;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
@@ -85,8 +84,8 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                                 resultRows.add(markChanged(renderLinkedItem(linkB, workItemB, false),
                                         // show links as same when it's a link to some 3rd project
                                         !sameProjectItems(workItemA, workItemB) && !sameProjectItems(workItemA, linkB.getLinkedItem()) && !sameProjectItems(workItemB, linkB.getLinkedItem()) ||
-                                        // or we compare work items from same project and link leads to the same revision
-                                        Objects.equals(linkA.getRevision(), linkB.getRevision()) && sameProjectItems(workItemA, workItemB) ? NONE : MODIFIED));
+                                                // or we compare work items from same project and link leads to the same revision
+                                                Objects.equals(linkA.getRevision(), linkB.getRevision()) && sameProjectItems(workItemA, workItemB) ? NONE : MODIFIED));
                                 toRemove.add(linkA);
                                 toRemove.add(linkB);
                             }
@@ -123,7 +122,9 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
     private String renderLinkedItem(ILinkedWorkItemStruct link, IWorkItem parentWorkItem, boolean backLink) {
         return TransactionalExecutor.executeSafelyInReadOnlyTransaction(trx -> {
             HtmlFragmentBuilder fragmentBuilder = RichTextRenderTarget.EDITOR.selectBuilderTarget(trx.context().createHtmlFragmentBuilderFor());
-            new LinkedWorkItemRendererImpl(ServerUiContext.getInstance(), new ProxyLinkedWorkItem(link, parentWorkItem, (InternalReadOnlyTransaction) trx, backLink)).withLinksToDocument().htmlTo(fragmentBuilder);
+            InternalReadOnlyTransaction internalReadOnlyTransaction = (InternalReadOnlyTransaction) trx;
+            ProxyLinkedWorkItem proxyLinkedWorkItem = new ProxyLinkedWorkItem(link, parentWorkItem, internalReadOnlyTransaction, backLink);
+            new LinkedWorkItemRendererImpl(proxyLinkedWorkItem, internalReadOnlyTransaction).withLinksToDocument().htmlTo(fragmentBuilder);
             return fragmentBuilder.toString().replace("white-space: normal", ""); // remove unwanted style
         });
     }
