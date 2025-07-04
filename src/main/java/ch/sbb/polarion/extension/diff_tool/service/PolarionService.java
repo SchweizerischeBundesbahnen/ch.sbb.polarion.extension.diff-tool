@@ -323,7 +323,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         }
 
         if (parentNode == null) {
-            parentNode = targetModule.getRootNode();
+            parentNode = targetModule.getRootNode().getChildren().get(0);
         }
 
         // getStructureNodeOfWI may return null for items which are placed in recycle bin.
