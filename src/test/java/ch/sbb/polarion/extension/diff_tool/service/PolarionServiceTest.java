@@ -478,6 +478,9 @@ class PolarionServiceTest {
         IModule.IStructureNode rootNode = mock(IModule.IStructureNode.class);
         when(targetModule.getRootNode()).thenReturn(rootNode);
 
+        IModule.IStructureNode parentRootNode = mock(IModule.IStructureNode.class);
+        when(rootNode.getChildren()).thenReturn(List.of(parentRootNode));
+
         IModule.IStructureNode node = mock(IModule.IStructureNode.class);
         when(dataService.createStructureForTypeId(any(), anyString(), any())).thenReturn(node);
 
@@ -494,7 +497,7 @@ class PolarionServiceTest {
         IModule.IStructureNode structureNode = mock(IModule.IStructureNode.class);
         when(targetModule.getStructureNodeOfWI(workItem)).thenReturn(structureNode);
         polarionService.insertWorkItem(workItem, targetModule, null, 5, true);
-        verify(rootNode, times(1)).addChild(structureNode, 5);
+        verify(parentRootNode, times(1)).addChild(structureNode, 5);
     }
 
     @Test
