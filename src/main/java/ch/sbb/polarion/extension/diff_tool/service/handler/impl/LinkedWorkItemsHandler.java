@@ -58,7 +58,12 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
         List<ILinkedWorkItemStruct> linksBBack = getLinks(workItemB, true);
 
         List<ILinkRoleOpt> allRoles = Stream.concat(Stream.concat(linksA.stream(), linksABack.stream()), Stream.concat(linksB.stream(), linksBBack.stream()))
-                .map(ILinkedWorkItemStruct::getLinkRole).distinct().sorted(Comparator.comparing(IEnumOption::getName)).toList();
+                .map(ILinkedWorkItemStruct::getLinkRole)
+                .filter(Objects::nonNull)
+                .filter(role -> role.getName() != null)
+                .distinct()
+                .sorted(Comparator.comparing(IEnumOption::getName))
+                .toList();
 
         if (workItemA != null && workItemB != null) {
             List<ILinkedWorkItemStruct> toRemove = new ArrayList<>();

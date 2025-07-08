@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,10 +30,12 @@ import java.util.Set;
 @Schema(description = "Represents a WorkItem")
 public final class WorkItem {
     @JsonIgnore
+    @ToString.Exclude
     @Setter(AccessLevel.NONE)
     private IWorkItem underlyingObject;
 
     @JsonIgnore
+    @ToString.Exclude
     private IModule module;
 
     @JsonIgnore
