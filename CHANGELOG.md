@@ -1,5 +1,25 @@
 # Changelog
 
+## [6.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.2.1...v6.0.0) (2025-07-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* Polarion 2506 support ([#279](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/279))
+
+### Features
+
+* Polarion 2506 support ([#279](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/279)) ([a8a03c4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/a8a03c44e27a0acf146f10dbf4debedb5f37961d)), closes [#278](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/278)
+
+
+### Bug Fixes
+
+* **deps:** update dependency bootstrap to v5.3.7 ([b7b3bc7](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/b7b3bc7cfdfb89d62bb8179e383d9d7d16399a81))
+* **deps:** update nextjs monorepo to v15.3.4 ([b225894](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/b225894978d6037e220bb87e562b86220b13b8d0))
+* **deps:** update nextjs monorepo to v15.3.5 ([74ae543](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/74ae543304585e34220609b0b53564df75d42697))
+* merge error during attempt to insert work item which is containe… ([#272](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/272)) ([ef248a0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ef248a064aaa24d6a08d866c31aa1cd99e4a05e0))
+* merge error during attempt to insert work item which is contained in the recycle bin ([ef248a0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ef248a064aaa24d6a08d866c31aa1cd99e4a05e0)), closes [#271](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/271)
+
 ## [5.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.2.0...v5.2.1) (2025-06-11)
 
 
