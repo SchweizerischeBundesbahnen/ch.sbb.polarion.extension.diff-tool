@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
+import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import ch.sbb.polarion.extension.diff_tool.util.ModificationType;
 import com.polarion.alm.server.api.model.wi.linked.LinkedWorkItemRendererImpl;
 import com.polarion.alm.server.api.model.wi.linked.ProxyLinkedWorkItem;
@@ -12,6 +13,7 @@ import com.polarion.alm.shared.api.utils.html.RichTextRenderTarget;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IWorkItem;
+import com.polarion.core.util.logging.Logger;
 import com.polarion.platform.persistence.IEnumOption;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
@@ -34,6 +36,7 @@ import static com.polarion.alm.tracker.model.IWorkItem.KEY_LINKED_WORK_ITEMS;
  */
 @NoArgsConstructor
 public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
+    private static final Logger logger = Logger.getLogger(LinkedWorkItemsHandler.class);
 
     @Override
     public @NotNull Pair<String, String> preProcess(@NotNull Pair<String, String> initialPair, @NotNull DiffContext context) {
@@ -59,10 +62,14 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
 
         List<ILinkRoleOpt> allRoles = Stream.concat(Stream.concat(linksA.stream(), linksABack.stream()), Stream.concat(linksB.stream(), linksBBack.stream()))
                 .map(ILinkedWorkItemStruct::getLinkRole)
-                .filter(Objects::nonNull)
-                .filter(role -> role.getName() != null)
+                .filter(role -> {
+                    if (role.getName() == null) {
+                        logger.warn("Link role '%s' with null name encountered: looks like the link role has been removed from configuration".formatted(role.getId()));
+                    }
+                    return true;
+                })
                 .distinct()
-                .sorted(Comparator.comparing(IEnumOption::getName))
+                .sorted(Comparator.comparing(IEnumOption::getName, Comparator.nullsLast(String::compareTo)))
                 .toList();
 
         if (workItemA != null && workItemB != null) {
