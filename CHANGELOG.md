@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.0.0...v6.0.1) (2025-07-10)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v9 ([#285](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/285)) ([dc5029e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/dc5029e619b42b184a418a3855e8e886e9ea8f55))
+
 ## [6.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v5.2.1...v6.0.0) (2025-07-04)
 
 
