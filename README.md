@@ -39,9 +39,9 @@ The extension should be copied to `<polarion_home>/polarion/extensions/ch.sbb.po
 ## Compatibility
 
 This extension is compatible with:
-* Polarion 2410
+* Polarion 2506
 * Java 17
-* [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v8
+* [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v9
 
 ## Build
 
