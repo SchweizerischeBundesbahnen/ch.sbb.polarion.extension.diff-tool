@@ -558,7 +558,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HyperlinkRole"
+                  "$ref": "#/components/schemas/LinkRole"
                 }
               }
             },
@@ -566,6 +566,37 @@
           }
         },
         "summary": "Gets list of all hyperlink roles in the specified project",
+        "tags": [
+          "Utility API"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/linked-workitem-roles": {
+      "get": {
+        "operationId": "getAllLinkedWorkItemRoles",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkRole"
+                }
+              }
+            },
+            "description": "List of all linked WorkItem roles for the specified project"
+          }
+        },
+        "summary": "Gets list of all linked WorkItem roles in the specified project",
         "tags": [
           "Utility API"
         ]
@@ -1831,26 +1862,6 @@
         },
         "type": "object"
       },
-      "HyperlinkRole": {
-        "properties": {
-          "combinedId": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "workItemTypeId": {
-            "type": "string"
-          },
-          "workItemTypeName": {
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "IStatusOpt": {
         "properties": {
           "default": {
@@ -1889,6 +1900,26 @@
       },
       "IType": {
         "description": "Type of the field",
+        "type": "object"
+      },
+      "LinkRole": {
+        "properties": {
+          "combinedId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "workItemTypeId": {
+            "type": "string"
+          },
+          "workItemTypeName": {
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "MergeReport": {

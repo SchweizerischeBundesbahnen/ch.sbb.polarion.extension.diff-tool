@@ -9,7 +9,7 @@ const ctx = new ExtensionContext({
 
 const conf = new ConfigurationsPane({
   ctx: ctx,
-  setConfigurationContentCallback: setDiffFields,
+  setConfigurationContentCallback: setConfiguration,
 });
 
 ctx.onClick(
@@ -27,6 +27,8 @@ const Fields = {
   removeButton: ctx.getElementById("remove-button"),
   hyperlinkSettingsContainer: ctx.getElementById("hyperlink-settings-container"),
   hyperlinkRolesSearchInput: ctx.getElementById("search-hyperlink-roles-input"),
+  linkedWorkitemSettingsContainer: ctx.getElementById("linked-workitem-settings-container"),
+  linkedWorkitemRolesSearchInput: ctx.getElementById("search-linked-workitem-roles-input"),
 
   init: function () {
     ctx.getElementById("fields-load-error").style.display = "none";
@@ -67,6 +69,37 @@ const Fields = {
       });
     });
 
+    this.linkedWorkitemRolesSearchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase().trim();
+      const options = LinkedWorkItemRoles.roles.options;
+
+      // Store currently selected values
+      const selectedValues = Array.from(LinkedWorkItemRoles.roles.selectedOptions)
+          .map(option => option.value);
+
+      const searchParts = searchTerm.split(/\s+/).filter(part => part.length > 0);
+
+      // Filter options
+      for (let i = 0; i < options.length; i++) {
+        const option = options[i];
+        const isMatch = searchParts.length === 0 ||
+            searchParts.every(part =>
+                option.text.toLowerCase().includes(part)
+            );
+
+        // Toggle visibility based on search match
+        option.hidden = !isMatch;
+      }
+
+      // Re-select previously selected options
+      selectedValues.forEach(value => {
+        const option = LinkedWorkItemRoles.roles.querySelector(`option[value="${value}"]`);
+        if (option) {
+          option.selected = true;
+        }
+      });
+    });
+
     return new Promise((resolve, reject) => {
       ctx.callAsync({
         method: 'GET',
@@ -100,6 +133,7 @@ const Fields = {
       this.addOption(this.selectedFields, field.key, field.wiTypeId);
     }
     this.checkHyperlinkSettingsVisibility();
+    this.checkLinkedWorkitemSettingsVisibility();
   },
 
   addFieldClicked: function () {
@@ -166,6 +200,10 @@ const Fields = {
 
   checkHyperlinkSettingsVisibility: function () {
     this.hyperlinkSettingsContainer.style.display = Array.from(Fields.selectedFields.options).some(option => option.value === 'hyperlinks') ? "flex" : "none";
+  },
+
+  checkLinkedWorkitemSettingsVisibility: function () {
+    this.linkedWorkitemSettingsContainer.style.display = Array.from(Fields.selectedFields.options).some(option => option.value === 'linkedWorkItems') ? "flex" : "none";
   }
 }
 
@@ -225,8 +263,36 @@ const HyperlinkRoles = {
         }
       });
     });
-  },
+  }
+}
 
+const LinkedWorkItemRoles = {
+  roles: ctx.getElementById("linked-workitem-roles"),
+
+  load: function () {
+    ctx.getElementById("linked-workitem-roles-load-error").style.display = "none";
+
+    return new Promise((resolve, reject) => {
+      ctx.callAsync({
+        method: 'GET',
+        url: `/polarion/${ctx.extension}/rest/internal/projects/${ctx.getValueById('project-id')}/linked-workitem-roles`,
+        contentType: 'application/json',
+        onOk: (responseText) => {
+          for (let role of JSON.parse(responseText)) {
+            const opt = document.createElement('option');
+            opt.value = `${role.id}`;
+            opt.innerHTML = `${role.name}`;
+            this.roles.appendChild(opt);
+          }
+          resolve();
+        },
+        onError: () => {
+          ctx.getElementById("linked-workitem-roles-load-error").style.display = "block";
+          reject();
+        }
+      });
+    });
+  }
 }
 
 function saveDiffFields() {
@@ -241,7 +307,8 @@ function saveDiffFields() {
         return {key: option.value, wiTypeId: "wiTypeId" in option.dataset ? option.dataset.wiTypeId : undefined}
       }),
       'statusesToIgnore': Array.from(Statuses.statusesToIgnore.selectedOptions).map(option => option.value),
-      'hyperlinkRoles': Array.from(HyperlinkRoles.roles.selectedOptions).map(option => option.value)
+      'hyperlinkRoles': Array.from(HyperlinkRoles.roles.selectedOptions).map(option => option.value),
+      'linkedWorkItemRoles': Array.from(LinkedWorkItemRoles.roles.selectedOptions).map(option => option.value)
     }),
     onOk: () => {
       ctx.showSaveSuccessAlert();
@@ -256,23 +323,24 @@ function revertToDefault() {
   if (confirm("Are you sure you want to return the default value?")) {
     loadDefaultContent()
         .then((responseText) => {
-          setDiffFields(responseText);
+          setConfiguration(responseText);
           ctx.showRevertedToDefaultAlert();
         })
   }
 }
 
-function setDiffFields(text) {
-  const diffFieldsModel = JSON.parse(text);
-  Fields.resetState(diffFieldsModel.diffFields);
-  Array.from(Statuses.statusesToIgnore.options).forEach(option => option.selected = diffFieldsModel.statusesToIgnore.includes(option.value));
-  Array.from(HyperlinkRoles.roles.options).forEach(option => option.selected = diffFieldsModel.hyperlinkRoles.includes(option.value));
-  if (diffFieldsModel.bundleTimestamp !== ctx.getValueById('bundle-timestamp')) {
+function setConfiguration(text) {
+  const diffModel = JSON.parse(text);
+  Fields.resetState(diffModel.diffFields);
+  Array.from(Statuses.statusesToIgnore.options).forEach(option => option.selected = diffModel.statusesToIgnore.includes(option.value));
+  Array.from(HyperlinkRoles.roles.options).forEach(option => option.selected = diffModel.hyperlinkRoles.includes(option.value));
+  Array.from(LinkedWorkItemRoles.roles.options).forEach(option => option.selected = diffModel.linkedWorkItemRoles.includes(option.value));
+  if (diffModel.bundleTimestamp !== ctx.getValueById('bundle-timestamp')) {
     loadDefaultContent()
         .then((responseText) => {
           const defaultDiffFieldsModel = JSON.parse(responseText);
-          ctx.setNewerVersionNotificationVisible(diffFieldsModel.diffFields && defaultDiffFieldsModel.diffFields
-              && (diffFieldsModel.diffFields.length !== defaultDiffFieldsModel.diffFields.length || diffFieldsModel.diffFields !== defaultDiffFieldsModel.diffFields));
+          ctx.setNewerVersionNotificationVisible(diffModel.diffFields && defaultDiffFieldsModel.diffFields
+              && (diffModel.diffFields.length !== defaultDiffFieldsModel.diffFields.length || diffModel.diffFields !== defaultDiffFieldsModel.diffFields));
         })
   }
 }
@@ -298,7 +366,8 @@ function loadDefaultContent() {
 Promise.all([
   Fields.init(),
   Statuses.load(),
-  HyperlinkRoles.load()
+  HyperlinkRoles.load(),
+  LinkedWorkItemRoles.load(),
 ]).then(() => {
   conf.loadConfigurationNames();
 });

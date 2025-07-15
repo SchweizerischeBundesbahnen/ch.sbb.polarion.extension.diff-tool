@@ -66,7 +66,7 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                     if (role.getName() == null) {
                         logger.warn("Link role '%s' with null name encountered: looks like the link role has been removed from configuration".formatted(role.getId()));
                     }
-                    return true;
+                    return context.diffModel.getLinkedWorkItemRoles().isEmpty() || context.diffModel.getLinkedWorkItemRoles().contains(role.getId());
                 })
                 .distinct()
                 .sorted(Comparator.comparing(IEnumOption::getName, Comparator.nullsLast(String::compareTo)))

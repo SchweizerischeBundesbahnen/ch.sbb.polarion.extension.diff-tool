@@ -725,6 +725,12 @@ public class MergeService {
 
         Collection<ILinkedWorkItemStruct> srcLinks = getLinks(source, false);
         Collection<ILinkedWorkItemStruct> targetLinks = getLinks(target, false);
+        if (!context.getDiffModel().getLinkedWorkItemRoles().isEmpty()) {
+            srcLinks = srcLinks.stream()
+                    .filter(link -> context.getDiffModel().getLinkedWorkItemRoles().contains(link.getLinkRole().getId())).toList();
+            targetLinks = targetLinks.stream()
+                    .filter(link -> context.getDiffModel().getLinkedWorkItemRoles().contains(link.getLinkRole().getId())).toList();
+        }
 
         List<ILinkedWorkItemStruct> sameLinks = new ArrayList<>();
         List<String> interlinkedSrcIds = new ArrayList<>();

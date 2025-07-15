@@ -14,7 +14,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
-import ch.sbb.polarion.extension.diff_tool.rest.model.settings.HyperlinkRole;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
 import ch.sbb.polarion.extension.diff_tool.settings.DiffSettings;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
@@ -1426,10 +1426,10 @@ class MergeServiceTest {
         when(workItem.getType()).thenReturn(typeOpt);
 
         when(workItem.getProjectId()).thenReturn("projectId");
-        HyperlinkRole hyperlinkRole = mock(HyperlinkRole.class);
-        when(hyperlinkRole.getId()).thenReturn("role");
-        when(hyperlinkRole.getWorkItemTypeId()).thenReturn("type");
-        when(polarionService.getHyperlinkRoles("projectId")).thenReturn(List.of(hyperlinkRole));
+        LinkRole linkRole = mock(LinkRole.class);
+        when(linkRole.getId()).thenReturn("role");
+        when(linkRole.getWorkItemTypeId()).thenReturn("type");
+        when(polarionService.getHyperlinkRoles("projectId")).thenReturn(List.of(linkRole));
 
         when(diffModel.getHyperlinkRoles()).thenReturn(List.of("", "type#role", "type#wrongHyperlinkRole"));
         when(context.getDiffModel()).thenReturn(diffModel);
@@ -1475,10 +1475,10 @@ class MergeServiceTest {
         List<HyperlinkStruct> newLinksList = List.of(newLink);
 
         when(workItem.getProjectId()).thenReturn("projectId");
-        HyperlinkRole hyperlinkRole = mock(HyperlinkRole.class);
-        when(hyperlinkRole.getId()).thenReturn("role");
-        when(hyperlinkRole.getWorkItemTypeId()).thenReturn("type");
-        when(polarionService.getHyperlinkRoles("projectId")).thenReturn(List.of(hyperlinkRole));
+        LinkRole linkRole = mock(LinkRole.class);
+        when(linkRole.getId()).thenReturn("role");
+        when(linkRole.getWorkItemTypeId()).thenReturn("type");
+        when(polarionService.getHyperlinkRoles("projectId")).thenReturn(List.of(linkRole));
 
         mergeService.mergeHyperlinks(workItem, newLinksList, context, pair);
 

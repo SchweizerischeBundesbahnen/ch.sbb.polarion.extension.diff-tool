@@ -27,6 +27,7 @@ public class DiffModel extends SettingsModel {
     private static final String DIFF_FIELDS = "DIFF FIELDS";
     private static final String STATUSES_TO_IGNORE = "STATUSES TO IGNORE";
     private static final String HYPERLINK_ROLES = "HYPERLINK ROLES";
+    private static final String LINKED_WORKITEM_ROLES = "LINKED WORKITEM ROLES";
 
     @Builder.Default
     private List<DiffField> diffFields = new ArrayList<>();
@@ -34,12 +35,15 @@ public class DiffModel extends SettingsModel {
     private List<String> statusesToIgnore = new ArrayList<>();
     @Builder.Default
     private List<String> hyperlinkRoles = new ArrayList<>();
+    @Builder.Default
+    private List<String> linkedWorkItemRoles = new ArrayList<>();
 
     @Override
     protected String serializeModelData() {
         return serializeEntry(DIFF_FIELDS, diffFields)
                 + serializeEntry(STATUSES_TO_IGNORE, statusesToIgnore)
-                + serializeEntry(HYPERLINK_ROLES, hyperlinkRoles);
+                + serializeEntry(HYPERLINK_ROLES, hyperlinkRoles)
+                + serializeEntry(LINKED_WORKITEM_ROLES, linkedWorkItemRoles);
     }
 
     @Override
@@ -69,6 +73,16 @@ public class DiffModel extends SettingsModel {
             try {
                 String[] rolesArray = new ObjectMapper().readValue(hyperlinkRolesString, String[].class);
                 hyperlinkRoles = new ArrayList<>(Arrays.asList(rolesArray));
+            } catch (JsonProcessingException e) {
+                throw new IllegalArgumentException("Hyperlink roles value couldn't be parsed", e);
+            }
+        }
+
+        String linkedWorkItemRolesString = deserializeEntry(LINKED_WORKITEM_ROLES, serializedString);
+        if (linkedWorkItemRolesString != null) {
+            try {
+                String[] rolesArray = new ObjectMapper().readValue(linkedWorkItemRolesString, String[].class);
+                linkedWorkItemRoles = new ArrayList<>(Arrays.asList(rolesArray));
             } catch (JsonProcessingException e) {
                 throw new IllegalArgumentException("Hyperlink roles value couldn't be parsed", e);
             }

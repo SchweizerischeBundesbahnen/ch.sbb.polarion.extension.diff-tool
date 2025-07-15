@@ -31,7 +31,6 @@ public class DiffSettings extends GenericNamedSettings<DiffModel> {
 
         return DiffModel.builder()
                 .diffFields(defaultFields)
-                .statusesToIgnore(Collections.emptyList())
                 .build();
     }
 }
