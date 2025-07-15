@@ -1206,7 +1206,7 @@ class MergeServiceTest {
                 Arguments.of(anotherProject(null), linksList(a1rev1role1), linksList(b1rev1role1), List.of(), List.of()),
 
                 // src has the same but another revision link - target link removed and added a new one
-                Arguments.of(sameProject(), linksList(a1rev2role1), linksList(a1rev1role1), List.of(),
+                Arguments.of(sameProject(), linksList(a1rev2role1, a1rev1role2), linksList(a1rev1role1), List.of(),
                         List.of(new AddLinkedItemInvocation("projA", "A-1", "2", "role1"))),
 
                 // interlinked items - link stays at its place
@@ -1248,6 +1248,7 @@ class MergeServiceTest {
 
         SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class);
         lenient().when(context.getLinkRole()).thenReturn("role1");
+        lenient().when(context.getDiffModel()).thenReturn(new DiffModel());
 
         mergeService.mergeLinkedWorkItems(source, target, context, new WorkItemsPair());
 
