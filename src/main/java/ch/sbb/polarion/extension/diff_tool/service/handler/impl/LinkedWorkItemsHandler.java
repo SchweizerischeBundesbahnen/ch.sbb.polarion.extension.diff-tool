@@ -18,6 +18,7 @@ import com.polarion.platform.persistence.IEnumOption;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -131,7 +132,8 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
         return String.join("", resultRows);
     }
 
-    private String renderLinkedItem(ILinkedWorkItemStruct link, IWorkItem parentWorkItem, boolean backLink) {
+    @VisibleForTesting
+    String renderLinkedItem(ILinkedWorkItemStruct link, IWorkItem parentWorkItem, boolean backLink) {
         return TransactionalExecutor.executeSafelyInReadOnlyTransaction(trx -> {
             HtmlFragmentBuilder fragmentBuilder = RichTextRenderTarget.EDITOR.selectBuilderTarget(trx.context().createHtmlFragmentBuilderFor());
             InternalReadOnlyTransaction internalReadOnlyTransaction = (InternalReadOnlyTransaction) trx;
@@ -141,11 +143,13 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
         });
     }
 
-    private String markChanged(String text, @NotNull ModificationType modificationType) {
+    @VisibleForTesting
+    String markChanged(String text, @NotNull ModificationType modificationType) {
         return "<div class=\"diff-lwi-container\"><div class=\"%s diff-lwi\">%s</div></div>".formatted(modificationType.getStyleName(), text);
     }
 
-    private boolean isInappropriateCaseForHandler(DiffContext context) {
+    @VisibleForTesting
+    boolean isInappropriateCaseForHandler(DiffContext context) {
         return context.pairedWorkItemsDiffer || !Stream.of(context.fieldA.getId(), context.fieldB.getId()).filter(Objects::nonNull).distinct().toList().equals(List.of(KEY_LINKED_WORK_ITEMS));
     }
 }

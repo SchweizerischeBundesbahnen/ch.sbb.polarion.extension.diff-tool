@@ -84,7 +84,7 @@ public class DiffModel extends SettingsModel {
                 String[] rolesArray = new ObjectMapper().readValue(linkedWorkItemRolesString, String[].class);
                 linkedWorkItemRoles = new ArrayList<>(Arrays.asList(rolesArray));
             } catch (JsonProcessingException e) {
-                throw new IllegalArgumentException("Hyperlink roles value couldn't be parsed", e);
+                throw new IllegalArgumentException("Linked WorkItem roles value couldn't be parsed", e);
             }
         }
     }

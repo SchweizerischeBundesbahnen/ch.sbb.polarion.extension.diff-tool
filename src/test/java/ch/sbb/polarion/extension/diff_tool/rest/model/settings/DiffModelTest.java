@@ -11,8 +11,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -99,6 +97,40 @@ class DiffModelTest {
         assertEquals(expectedStatusesToIgnore, model.getStatusesToIgnore());
         assertEquals(expectedHyperlinkRoles, model.getHyperlinkRoles());
         assertEquals(expectedLinkedWorkItemRoles, model.getLinkedWorkItemRoles());
+    }
+
+    private static Stream<Arguments> testInvalidValuesForDiffModel() {
+        return Stream.of(
+                Arguments.of(String.format(
+                                "-----BEGIN DIFF FIELDS-----%1$s" +
+                                "[{\"wrong_key\":\"any_value\"}]%1$s" +
+                                "-----END DIFF FIELDS-----%1$s",
+                        System.lineSeparator()), "Diff fields value couldn't be parsed"),
+                Arguments.of(String.format(
+                                "-----BEGIN STATUSES TO IGNORE-----%1$s" +
+                                "{\"wrong_key\":\"any_value\"}%1$s" +
+                                "-----END STATUSES TO IGNORE-----%1$s",
+                        System.lineSeparator()), "Statuses to ignore value couldn't be parsed"),
+                Arguments.of(String.format(
+                                "-----BEGIN HYPERLINK ROLES-----%1$s" +
+                                "{}%1$s" +
+                                "-----END HYPERLINK ROLES-----%1$s",
+                        System.lineSeparator()), "Hyperlink roles value couldn't be parsed"),
+                Arguments.of(String.format(
+                                "-----BEGIN LINKED WORKITEM ROLES-----%1$s" +
+                                "%1$s" +
+                                "-----END LINKED WORKITEM ROLES-----%1$s",
+                        System.lineSeparator()), "Linked WorkItem roles value couldn't be parsed")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("testInvalidValuesForDiffModel")
+    void getProperInvalidResults(String modelContent, String expectedMessage) {
+        DiffModel model = new DiffModel();
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> model.deserialize(modelContent));
+        assertEquals(expectedMessage, exception.getMessage());
     }
 
     @Test
