@@ -41,6 +41,7 @@
         }
         .select-column {
             width: 440px;
+            min-height: 200px;
         }
         .select-column select {
             height: 100%;
@@ -80,6 +81,9 @@
         <div id="hyperlink-roles-load-error" class="diff-fields-error" style="display: none; margin-bottom: 15px">
             There was an error loading list of available hyperlink roles.
         </div>
+        <div id="linked-workitem-roles-load-error" class="diff-fields-error" style="display: none; margin-bottom: 15px">
+            There was an error loading list of available roles of linked WorkItems.
+        </div>
 
         <div class="flex-container">
             <div class="column select-column">
@@ -113,6 +117,13 @@
                 <label for="hyperlink-roles">Hyperlink roles to diff and merge</label>
                 <input type="text" id="search-hyperlink-roles-input" placeholder="Filter items">
                 <select id="hyperlink-roles" multiple size="10" style="height: 200px">
+                </select>
+            </div>
+
+            <div id="linked-workitem-settings-container" class="column select-column">
+                <label for="hyperlink-roles">Roles of linked WorkItems to diff and merge</label>
+                <input type="text" id="search-linked-workitem-roles-input" placeholder="Filter items">
+                <select id="linked-workitem-roles" multiple size="10" style="height: 200px">
                 </select>
             </div>
         </div>

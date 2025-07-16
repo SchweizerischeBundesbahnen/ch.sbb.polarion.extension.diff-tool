@@ -1,7 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
-import ch.sbb.polarion.extension.diff_tool.rest.model.settings.HyperlinkRole;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
 import ch.sbb.polarion.extension.diff_tool.util.ModificationType;
@@ -51,7 +51,7 @@ public class HyperlinksHandler implements DiffLifecycleHandler {
         List<String> resultRows = new ArrayList<>();
         List<String> rolesToMerge = Optional.of(context.diffModel.getHyperlinkRoles())
                 .filter(settingsRoles -> !settingsRoles.isEmpty())
-                .orElseGet(() -> context.polarionService.getHyperlinkRoles(context.leftProjectId).stream().map(HyperlinkRole::getCombinedId).toList())
+                .orElseGet(() -> context.polarionService.getHyperlinkRoles(context.leftProjectId).stream().map(LinkRole::getCombinedId).toList())
                 .stream().filter(combinedId -> combinedId.startsWith(wiTypeId + "#"))
                 .map(combinedId -> combinedId.substring(combinedId.indexOf("#") + 1)).toList();
 

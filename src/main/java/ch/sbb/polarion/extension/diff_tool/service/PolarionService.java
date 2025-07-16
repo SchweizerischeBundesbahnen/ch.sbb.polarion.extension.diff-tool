@@ -8,7 +8,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
-import ch.sbb.polarion.extension.diff_tool.rest.model.settings.HyperlinkRole;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.FieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
@@ -423,15 +423,23 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     }
 
     @NotNull
-    public Collection<HyperlinkRole> getHyperlinkRoles(@NotNull String projectId) {
-        Set<HyperlinkRole> hyperlinks = new LinkedHashSet<>();
+    public Collection<LinkRole> getHyperlinkRoles(@NotNull String projectId) {
+        Set<LinkRole> roles = new LinkedHashSet<>();
         ITrackerProject trackerProject = getTrackerProject(projectId);
         for (ITypeOpt wiType : trackerProject.getWorkItemTypeEnum().getAllOptions()) {
-            hyperlinks.addAll(trackerProject.getHyperlinkRoleEnum()
+            roles.addAll(trackerProject.getHyperlinkRoleEnum()
                     .getAvailableOptions(wiType.getId()).stream()
-                    .map(e -> new HyperlinkRole(e.getId(), e.getName(), wiType.getId(), wiType.getName())).toList());
+                    .map(e -> new LinkRole(e.getId(), e.getName(), wiType.getId(), wiType.getName())).toList());
         }
-        return hyperlinks;
+        return roles;
+    }
+
+    @NotNull
+    public Collection<LinkRole> getLinkedWorkItemRoles(@NotNull String projectId) {
+        ITrackerProject trackerProject = getTrackerProject(projectId);
+        return trackerProject.getWorkItemLinkRoleEnum()
+                .getAllOptions().stream()
+                .map(e -> LinkRole.builder().id(e.getId()).name(e.getName()).build()).toList();
     }
 
     @SneakyThrows

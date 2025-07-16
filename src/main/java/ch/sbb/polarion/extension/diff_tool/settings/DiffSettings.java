@@ -7,7 +7,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class DiffSettings extends GenericNamedSettings<DiffModel> {
@@ -31,7 +30,6 @@ public class DiffSettings extends GenericNamedSettings<DiffModel> {
 
         return DiffModel.builder()
                 .diffFields(defaultFields)
-                .statusesToIgnore(Collections.emptyList())
                 .build();
     }
 }

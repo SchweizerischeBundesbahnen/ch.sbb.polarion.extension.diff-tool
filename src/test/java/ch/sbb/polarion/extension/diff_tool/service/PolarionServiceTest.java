@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.settings.AuthorizationSettings;
@@ -25,6 +26,7 @@ import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.internal.InternalWriteTransaction;
 import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.model.IApprovalStruct;
+import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
@@ -795,6 +797,80 @@ class PolarionServiceTest {
         } finally {
             NamedSettingsRegistry.INSTANCE.getAll().clear();
         }
+    }
+
+    @Test
+    void testGetHyperlinkRoles() {
+        IProject project = mock(IProject.class);
+        when(projectService.getProject(anyString())).thenReturn(project);
+
+        ITrackerProject trackerProject = mock(ITrackerProject.class, RETURNS_DEEP_STUBS);
+        when(trackerService.getTrackerProject((IProject) any())).thenReturn(trackerProject);
+
+        ITypeOpt workItemTypeMock = mock(ITypeOpt.class);
+        when(workItemTypeMock.getId()).thenReturn("workItemTypeId");
+        when(workItemTypeMock.getName()).thenReturn("Work Item Type");
+
+        when(trackerProject.getWorkItemTypeEnum().getAllOptions()).thenReturn(List.of(workItemTypeMock));
+
+        IHyperlinkRoleOpt iRole1 = mock(IHyperlinkRoleOpt.class);
+        when(iRole1.getId()).thenReturn("role1");
+        when(iRole1.getName()).thenReturn("Role 1");
+
+        IHyperlinkRoleOpt iRole2 = mock(IHyperlinkRoleOpt.class);
+        when(iRole2.getId()).thenReturn("role2");
+        when(iRole2.getName()).thenReturn("Role 2");
+
+        when(trackerProject.getHyperlinkRoleEnum().getAvailableOptions("workItemTypeId")).thenReturn(List.of(iRole1, iRole2));
+
+        Collection<LinkRole> linkRoles = polarionService.getHyperlinkRoles("projectId");
+
+        assertEquals(2, linkRoles.size());
+        LinkRole role1 = linkRoles.stream().filter(role -> "role1".equals(role.getId())).findFirst().orElse(null);
+        assertNotNull(role1);
+        assertEquals("Role 1", role1.getName());
+        assertEquals("workItemTypeId", role1.getWorkItemTypeId());
+        assertEquals("Work Item Type", role1.getWorkItemTypeName());
+
+        LinkRole role2 = linkRoles.stream().filter(role -> "role2".equals(role.getId())).findFirst().orElse(null);
+        assertNotNull(role2);
+        assertEquals("Role 2", role2.getName());
+        assertEquals("workItemTypeId", role2.getWorkItemTypeId());
+        assertEquals("Work Item Type", role2.getWorkItemTypeName());
+    }
+
+    @Test
+    void testGetLinkedWorkItemRoles() {
+        IProject project = mock(IProject.class);
+        when(projectService.getProject(anyString())).thenReturn(project);
+
+        ITrackerProject trackerProject = mock(ITrackerProject.class, RETURNS_DEEP_STUBS);
+        when(trackerService.getTrackerProject((IProject) any())).thenReturn(trackerProject);
+
+        ILinkRoleOpt iRole1 = mock(ILinkRoleOpt.class);
+        when(iRole1.getId()).thenReturn("role1");
+        when(iRole1.getName()).thenReturn("Role 1");
+
+        ILinkRoleOpt iRole2 = mock(ILinkRoleOpt.class);
+        when(iRole2.getId()).thenReturn("role2");
+        when(iRole2.getName()).thenReturn("Role 2");
+
+        when(trackerProject.getWorkItemLinkRoleEnum().getAllOptions()).thenReturn(List.of(iRole1, iRole2));
+
+        Collection<LinkRole> linkRoles = polarionService.getLinkedWorkItemRoles("projectId");
+
+        assertEquals(2, linkRoles.size());
+        LinkRole role1 = linkRoles.stream().filter(role -> "role1".equals(role.getId())).findFirst().orElse(null);
+        assertNotNull(role1);
+        assertEquals("Role 1", role1.getName());
+        assertNull(role1.getWorkItemTypeId());
+        assertNull(role1.getWorkItemTypeName());
+
+        LinkRole role2 = linkRoles.stream().filter(role -> "role2".equals(role.getId())).findFirst().orElse(null);
+        assertNotNull(role2);
+        assertEquals("Role 2", role2.getName());
+        assertNull(role2.getWorkItemTypeId());
+        assertNull(role2.getWorkItemTypeName());
     }
 
     private IModule mockDocument(String name, Date created) {
