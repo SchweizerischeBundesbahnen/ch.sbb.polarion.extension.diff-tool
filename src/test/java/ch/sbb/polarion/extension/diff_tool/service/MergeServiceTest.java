@@ -1248,7 +1248,7 @@ class MergeServiceTest {
 
         SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class);
         lenient().when(context.getLinkRole()).thenReturn("role1");
-        lenient().when(context.getDiffModel()).thenReturn(new DiffModel());
+        lenient().when(context.getDiffModel()).thenReturn(DiffModel.builder().linkedWorkItemRoles(List.of("role1")).build());
 
         mergeService.mergeLinkedWorkItems(source, target, context, new WorkItemsPair());
 
