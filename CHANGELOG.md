@@ -1,5 +1,23 @@
 # Changelog
 
+## [6.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.0.1...v6.1.0) (2025-07-20)
+
+
+### Features
+
+* Add possibility to filter out linked WorkItems by role during diffing/merging ([#290](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/290)) ([ba48508](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ba48508d44777a9f27cf75359dbfad0a3e71d0eb)), closes [#277](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/277)
+
+
+### Bug Fixes
+
+* **deps:** update nextjs monorepo to v15.4.1 ([12acedc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/12acedcfd0286cf2dcc311b56d72c54d9a3aeb10))
+* **deps:** update nextjs monorepo to v15.4.2 ([e23b6bf](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/e23b6bf9e5af9f4b9c50970e9be004bd2ebf6514))
+
+
+### Documentation
+
+* update compatibility information for Polarion and PDF-Exporter versions ([#288](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/288)) ([0903b8e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/0903b8ee9c653e6f9a029b3efe7f6fe4d49ca882))
+
 ## [6.0.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.0.0...v6.0.1) (2025-07-10)
 
 
