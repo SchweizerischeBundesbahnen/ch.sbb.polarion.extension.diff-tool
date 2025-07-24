@@ -44,6 +44,7 @@ import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.model.IPObjectList;
+import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IStructType;
@@ -979,6 +980,9 @@ class MergeServiceTest {
         IModule sourceModule = mock(IModule.class);
         IModule targetModule = mock(IModule.class);
         when(targetModule.getProjectId()).thenReturn("projectA");
+        ITrackerProject targetProjectMock = mock(ITrackerProject.class);
+        when(targetProjectMock.getContextId()).thenReturn(mock(IContextId.class));
+        when(targetModule.getProject()).thenReturn(targetProjectMock);
         when(context.getTargetModule()).thenReturn(targetModule);
 
         when(polarionService.getPairedWorkItems(iWorkItem, "projectA", null)).thenReturn(List.of());
