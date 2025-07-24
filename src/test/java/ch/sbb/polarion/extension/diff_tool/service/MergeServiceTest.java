@@ -968,7 +968,6 @@ class MergeServiceTest {
                 WorkItemField.builder().key("status").build(),
                 WorkItemField.builder().key("priority").build()
         ));
-
         WorkItemsPair pair = mock(WorkItemsPair.class);
         IWorkItem iWorkItem = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
 
