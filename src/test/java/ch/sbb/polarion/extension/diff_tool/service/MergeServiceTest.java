@@ -11,6 +11,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Project;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
@@ -86,6 +87,11 @@ class MergeServiceTest {
 
     @BeforeEach
     void init() {
+        when(polarionService.getStandardFields()).thenReturn(List.of(
+                WorkItemField.builder().key("title").build(),
+                WorkItemField.builder().key("status").build(),
+                WorkItemField.builder().key("priority").build()
+        ));
         mergeService = new MergeService(polarionService);
     }
 
@@ -973,6 +979,10 @@ class MergeServiceTest {
         when(context.getTargetWorkItem(pair)).thenReturn(target);
 
         DiffModel diffModel = mock(DiffModel.class);
+        when(diffModel.getDiffFields()).thenReturn(List.of(
+                DiffField.builder().key("title").build(),
+                DiffField.builder().key("status").build()
+        ));
         when(context.getDiffModel()).thenReturn(diffModel);
 
         when(source.getId()).thenReturn("sourceId");
