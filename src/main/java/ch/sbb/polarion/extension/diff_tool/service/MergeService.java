@@ -9,9 +9,13 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
+import ch.sbb.polarion.extension.diff_tool.service.cleaners.FieldCleaner;
+import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
+import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import com.polarion.alm.shared.api.model.document.internal.InternalDocument;
 import com.polarion.alm.shared.api.model.document.internal.InternalUpdatableDocument;
@@ -36,6 +40,7 @@ import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.spi.EnumOption;
+import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IStructType;
@@ -512,6 +517,8 @@ public class MergeService {
                 createdWorkItem.addLinkedItem(sourceWorkItem, new LinkRoleOpt(new EnumOption(roleEnumId, context.linkRole)), null, false);
             }
             removeWrongHyperlinks(createdWorkItem, context, pair);
+            cleanUpFields(createdWorkItem, context.getTargetModule().getProject().getContextId(), context.getDiffModel().getDiffFields(), new NonListFieldCleaner());
+            cleanUpFields(createdWorkItem, context.getTargetModule().getProject().getContextId(), context.getDiffModel().getDiffFields(), new ListFieldCleaner());
             createdWorkItem.save();
 
             reloadModule(context.getTargetModule());
@@ -525,6 +532,15 @@ public class MergeService {
             return createdWorkItem; // return newly created WI
         } else {
             return sourceWorkItem; // return the same WI coz there is no simple way to get created WI when copying references
+        }
+    }
+
+    void cleanUpFields(@NotNull IWorkItem workItem, @NotNull IContextId projectContextId, @NotNull List<DiffField> allowedFields, @NotNull FieldCleaner cleaner) {
+        List<WorkItemField> standardFieldsDeletable = polarionService.getStandardFields().stream().filter(PolarionService.deletableFieldsFilter).toList();
+        for (WorkItemField field : polarionService.getDeletableFields(workItem, projectContextId, standardFieldsDeletable)) {
+            if (polarionService.isFieldToCleanUp(allowedFields, field, workItem.getType())) {
+                cleaner.clean(workItem, field);
+            }
         }
     }
 

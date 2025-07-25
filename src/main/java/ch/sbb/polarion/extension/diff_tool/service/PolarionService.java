@@ -103,7 +103,7 @@ import java.util.stream.Stream;
 public class PolarionService extends ch.sbb.polarion.extension.generic.service.PolarionService {
 
     private static final Logger logger = Logger.getLogger(PolarionService.class);
-    private static final Predicate<WorkItemField> deletableFieldsFilter = field -> !field.isReadOnly();
+    static final Predicate<WorkItemField> deletableFieldsFilter = field -> !field.isReadOnly();
     private static final Set<String> fieldsNotToCleanUp = new HashSet<>(Arrays.asList(
             IUniqueObject.KEY_PROJECT,
             IWorkItem.KEY_MODULE,
