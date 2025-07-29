@@ -11,6 +11,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Project;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
@@ -44,6 +45,7 @@ import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.model.IPObjectList;
+import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IStructType;
@@ -961,6 +963,13 @@ class MergeServiceTest {
 
     @Test
     void testCopyWorkItemWhenTargetIsNull() {
+        when(polarionService.getStandardFields()).thenReturn(List.of(
+                WorkItemField.builder().key("title").build(),
+                WorkItemField.builder().key("status").build(),
+                WorkItemField.builder().key("priority").build()
+        ));
+        when(polarionService.getDeletableFields(any(), any(), any())).thenCallRealMethod();
+
         WorkItemsPair pair = mock(WorkItemsPair.class);
         IWorkItem iWorkItem = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
 
@@ -972,6 +981,10 @@ class MergeServiceTest {
         when(context.getTargetWorkItem(pair)).thenReturn(target);
 
         DiffModel diffModel = mock(DiffModel.class);
+        when(diffModel.getDiffFields()).thenReturn(List.of(
+                DiffField.builder().key("title").build(),
+                DiffField.builder().key("status").build()
+        ));
         when(context.getDiffModel()).thenReturn(diffModel);
 
         when(source.getId()).thenReturn("sourceId");
@@ -979,6 +992,9 @@ class MergeServiceTest {
         IModule sourceModule = mock(IModule.class);
         IModule targetModule = mock(IModule.class);
         when(targetModule.getProjectId()).thenReturn("projectA");
+        ITrackerProject targetProjectMock = mock(ITrackerProject.class);
+        when(targetProjectMock.getContextId()).thenReturn(mock(IContextId.class));
+        when(targetModule.getProject()).thenReturn(targetProjectMock);
         when(context.getTargetModule()).thenReturn(targetModule);
 
         when(polarionService.getPairedWorkItems(iWorkItem, "projectA", null)).thenReturn(List.of());
