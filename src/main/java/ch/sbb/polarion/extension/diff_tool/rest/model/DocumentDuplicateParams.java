@@ -25,6 +25,9 @@ public class DocumentDuplicateParams {
     @Schema(description = "The configuration name to use for the duplication, which specifies which fields of work items to copy", defaultValue = NamedSettings.DEFAULT_NAME)
     private String configName;
 
+    @Schema(description = "Declares how references should be handled during copy operation", defaultValue = "DEFAULT")
+    private HandleReferencesType handleReferences;
+
     public String getConfigName() {
         return configName != null ? configName : NamedSettings.DEFAULT_NAME;
     }
