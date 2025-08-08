@@ -1,7 +1,5 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
-import ch.sbb.polarion.extension.diff_tool.rest.model.BaseDocumentIdentifier;
-import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentDuplicateParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.WorkItemAttachmentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
@@ -9,7 +7,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
-import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.settings.AuthorizationSettings;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
@@ -20,12 +17,10 @@ import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
 import com.polarion.alm.projects.IProjectService;
 import com.polarion.alm.projects.model.IProject;
-import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.shared.api.transaction.RunnableInWriteTransaction;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.internal.InternalWriteTransaction;
 import com.polarion.alm.tracker.ITrackerService;
-import com.polarion.alm.tracker.model.IApprovalStruct;
 import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
@@ -45,9 +40,7 @@ import com.polarion.platform.security.ISecurityService;
 import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.ICustomField;
 import com.polarion.subterra.base.data.model.IEnumType;
-import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IType;
-import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +52,6 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -317,189 +309,6 @@ class PolarionServiceTest {
                 Pair.of("ID-16", null),
                 Pair.of(null, "ID-23")
         )));
-    }
-
-    @Test
-    @SneakyThrows
-    void testCreateDocumentDuplicate() {
-        polarionService = mock(PolarionService.class);
-        when(polarionService.createDocumentDuplicate(anyString(), anyString(), anyString(), anyString(), any())).thenCallRealMethod();
-
-        // Use reflection to set the trackerService field
-        Field trackerServiceField = PolarionService.class.getSuperclass().getDeclaredField("trackerService");
-        trackerServiceField.setAccessible(true);
-        trackerServiceField.set(polarionService, trackerService);
-
-        when(trackerService.getFolderManager().existFolder(anyString(), anyString())).thenReturn(true);
-
-        IModule module = mock(IModule.class, RETURNS_DEEP_STUBS);
-        List<IWorkItem> externalWorkItems = List.of(mock(IWorkItem.class));
-        when(module.getExternalWorkItems()).thenReturn(externalWorkItems);
-        when(trackerService.getModuleManager().duplicate(any(), any(), any(), any(), nullable(ILinkRoleOpt.class), isNull(), isNull(), isNull(), isNull())).thenReturn(module);
-
-        BaseDocumentIdentifier targetDocumentIdentifier = mock(BaseDocumentIdentifier.class);
-        when(targetDocumentIdentifier.getProjectId()).thenReturn("targetProjectId");
-        when(targetDocumentIdentifier.getSpaceId()).thenReturn("targetSpaceId");
-
-        DocumentDuplicateParams duplicateParams = new DocumentDuplicateParams(targetDocumentIdentifier, "targetTitle", "linkRoleId", "configName");
-
-        // attempt to use unknown link role
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                polarionService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
-        assertEquals("No link role could be found by ID 'linkRoleId'", exception.getMessage());
-
-        // now let's omit the link role
-        duplicateParams.setLinkRoleId(null);
-
-        assertDoesNotThrow(() ->
-                polarionService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
-        verify(polarionService, times(0)).fixLinksInRichTextFields(any(), any(), nullable(String.class), any());
-        verify(polarionService, times(0)).fixReferencedWorkItem(any(), any(), any());
-
-        // provide link role + make it available
-        duplicateParams.setLinkRoleId("linkRoleId");
-        ILinkRoleOpt linkRole = mock(ILinkRoleOpt.class);
-        when(linkRole.getId()).thenReturn("linkRoleId");
-        when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(linkRole);
-
-        assertDoesNotThrow(() ->
-                polarionService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
-        verify(polarionService, times(1)).fixLinksInRichTextFields(any(), any(), nullable(String.class), any());
-        verify(polarionService, times(1)).fixReferencedWorkItem(any(), any(), any());
-    }
-
-    @Test
-    void testCleanUpNonListFields() {
-        IDataService dataService = mock(IDataService.class);
-        when(trackerService.getDataService()).thenReturn(dataService);
-
-        IPrototype workItemPrototype = mock(IPrototype.class);
-        when(workItemPrototype.getKeyType(anyString())).thenReturn(mock(IType.class));
-        when(dataService.getPrototype(IWorkItem.PROTO)).thenReturn(workItemPrototype);
-        IPObject workItemInstance = mock(IPObject.class);
-        when(dataService.createInstance(IWorkItem.PROTO)).thenReturn(workItemInstance);
-
-        when(workItemPrototype.getKeyNames()).thenReturn(Arrays.asList("field_1", "field_2"));
-        when(workItemPrototype.isKeyDefined("field_1")).thenReturn(true);
-        when(workItemPrototype.isKeyRequired("field_1")).thenReturn(true);
-        when(workItemPrototype.isKeyReadOnly("field_1")).thenReturn(false);
-        when(workItemPrototype.isKeyDefined("field_2")).thenReturn(true);
-        when(workItemPrototype.isKeyRequired("field_2")).thenReturn(false);
-        when(workItemPrototype.isKeyReadOnly("field_2")).thenReturn(true);
-
-        when(workItemInstance.getFieldLabel("field_1")).thenReturn("Field 1");
-        when(workItemInstance.getFieldLabel("field_2")).thenReturn("Field 2");
-
-        ICustomFieldsService customFieldsService = mock(ICustomFieldsService.class);
-        when(dataService.getCustomFieldsService()).thenReturn(customFieldsService);
-
-        Collection<ICustomField> customFields = new ArrayList<>();
-        ICustomField customField1 = mock(ICustomField.class);
-        when(customField1.getId()).thenReturn("field_3");
-        when(customField1.getName()).thenReturn("Field 3");
-        when(customField1.isRequired()).thenReturn(true);
-        when(customField1.getDefaultValue()).thenReturn("Default 3");
-        customFields.add(customField1);
-        ICustomField customField2 = mock(ICustomField.class);
-        when(customField2.getId()).thenReturn("field_4");
-        when(customField2.getName()).thenReturn("Field 4");
-        when(customField2.isRequired()).thenReturn(false);
-        when(customField2.getDefaultValue()).thenReturn("Default 4");
-        customFields.add(customField2);
-
-        IContextId contextId = mock(IContextId.class);
-
-        ITypeOpt workItemType = mock(ITypeOpt.class);
-        when(workItemType.getId()).thenReturn("type");
-        when(workItemType.getName()).thenReturn("Type");
-
-        when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, null)).thenReturn(customFields);
-        when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, workItemType.getId())).thenReturn(List.of());
-
-        IModule module = mock(IModule.class);
-        IWorkItem workItem = mock(IWorkItem.class);
-        when(workItem.getType()).thenReturn(workItemType);
-        when(workItem.getPrototype()).thenReturn(workItemPrototype);
-        when(module.getAllWorkItems()).thenReturn(List.of(workItem));
-        polarionService.cleanUpFields(module, contextId, Collections.emptyList(), new NonListFieldCleaner());
-
-        verify(workItem, never()).setValue(eq("field_1"), any());
-        verify(workItem, never()).setValue(eq("field_2"), any());
-        verify(workItem, times(1)).setValue(eq("field_3"), eq("Default 3"));
-        verify(workItem, times(1)).setValue(eq("field_4"), eq(null));
-    }
-
-    @Test
-    void testCleanUpListFields() {
-        IDataService dataService = mock(IDataService.class);
-        when(trackerService.getDataService()).thenReturn(dataService);
-
-        ICustomFieldsService customFieldsService = mock(ICustomFieldsService.class);
-        when(dataService.getCustomFieldsService()).thenReturn(customFieldsService);
-
-        IPrototype workItemPrototype = mock(IPrototype.class);
-        when(dataService.getPrototype(IWorkItem.PROTO)).thenReturn(workItemPrototype);
-        IPObject workItemInstance = mock(IPObject.class);
-        when(dataService.createInstance(IWorkItem.PROTO)).thenReturn(workItemInstance);
-
-        when(workItemPrototype.getKeyNames()).thenReturn(List.of(IWorkItem.KEY_APPROVALS));
-        when(workItemPrototype.isKeyDefined(IWorkItem.KEY_APPROVALS)).thenReturn(true);
-
-        IContextId contextId = mock(IContextId.class);
-
-        ITypeOpt workItemType = mock(ITypeOpt.class);
-        when(workItemType.getId()).thenReturn("type");
-
-        when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, null)).thenReturn(Collections.emptyList());
-        when(customFieldsService.getCustomFields(IWorkItem.PROTO, contextId, workItemType.getId())).thenReturn(Collections.emptyList());
-
-        IModule module = mock(IModule.class);
-        IWorkItem workItem = mock(IWorkItem.class);
-        when(workItem.getType()).thenReturn(workItemType);
-        when(workItem.getFieldType(anyString())).thenReturn(mock(IListType.class));
-        when(module.getAllWorkItems()).thenReturn(List.of(workItem));
-
-        IUser user = mock(IUser.class);
-        IApprovalStruct approvalStruct = mock(IApprovalStruct.class);
-        when(approvalStruct.getUser()).thenReturn(user);
-        when(workItem.getApprovals()).thenReturn(List.of(approvalStruct));
-
-        polarionService.cleanUpFields(module, contextId, Collections.emptyList(), new ListFieldCleaner());
-
-        verify(workItem, times(1)).removeApprovee(user);
-    }
-
-    @Test
-    void testInsertWorkItem() {
-
-        IModule targetModule = mock(IModule.class);
-
-        IDataService dataService = mock(IDataService.class);
-        when(targetModule.getDataSvc()).thenReturn(dataService);
-
-        IModule.IStructureNode rootNode = mock(IModule.IStructureNode.class);
-        when(targetModule.getRootNode()).thenReturn(rootNode);
-
-        IModule.IStructureNode parentRootNode = mock(IModule.IStructureNode.class);
-        when(rootNode.getChildren()).thenReturn(List.of(parentRootNode));
-
-        IModule.IStructureNode node = mock(IModule.IStructureNode.class);
-        when(dataService.createStructureForTypeId(any(), anyString(), any())).thenReturn(node);
-
-        IWorkItem workItem = mock(IWorkItem.class);
-
-        polarionService.insertWorkItem(workItem, targetModule, mock(IModule.IStructureNode.class), 1, false);
-        verify(node, times(1)).setValue("workItem", workItem);
-        verify(node, times(1)).setValue("external", false);
-
-        polarionService.insertWorkItem(workItem, targetModule, null, 1, true);
-        verify(node, times(2)).setValue("workItem", workItem);
-        verify(node, times(1)).setValue("external", true);
-
-        IModule.IStructureNode structureNode = mock(IModule.IStructureNode.class);
-        when(targetModule.getStructureNodeOfWI(workItem)).thenReturn(structureNode);
-        polarionService.insertWorkItem(workItem, targetModule, null, 5, true);
-        verify(parentRootNode, times(1)).addChild(structureNode, 5);
     }
 
     @Test

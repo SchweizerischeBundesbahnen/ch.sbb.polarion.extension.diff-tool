@@ -9,6 +9,8 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
+import ch.sbb.polarion.extension.diff_tool.service.DocumentCopyService;
+import ch.sbb.polarion.extension.diff_tool.service.MergeService;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.generic.util.ExtensionInfo;
 import com.polarion.alm.projects.model.IProject;
@@ -42,6 +44,7 @@ public class UtilityInternalController {
     private static final String MISSING_PROJECT_ID_MESSAGE = "'projectId' should be provided";
 
     protected final PolarionService polarionService = new PolarionService();
+    private final DocumentCopyService duplicateService = new DocumentCopyService(polarionService, new MergeService(polarionService));
 
     @GET
     @Path("/projects/{projectId}/spaces")
@@ -135,7 +138,7 @@ public class UtilityInternalController {
         if (StringUtils.isBlank(sourceProjectId) || StringUtils.isBlank(sourceSpaceId) || StringUtils.isBlank(sourceDocumentName) || documentDuplicateParams == null) {
             throw new BadRequestException("'projectId', 'spaceId', 'documentName' and request body should be provided");
         }
-        return polarionService.createDocumentDuplicate(sourceProjectId, sourceSpaceId, sourceDocumentName, revision, documentDuplicateParams);
+        return duplicateService.createDocumentDuplicate(sourceProjectId, sourceSpaceId, sourceDocumentName, revision, documentDuplicateParams);
     }
 
     @GET

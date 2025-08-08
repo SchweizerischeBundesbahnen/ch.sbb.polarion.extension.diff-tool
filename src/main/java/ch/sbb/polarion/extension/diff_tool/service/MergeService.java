@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.report.MergeReportEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.HandleReferencesType;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
@@ -52,6 +53,7 @@ import org.jetbrains.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -117,7 +119,7 @@ public class MergeService {
         if (!context.getAffectedModules().isEmpty()) {
             TransactionalExecutor.executeInWriteTransaction(transaction -> {
                 context.getAffectedModules().forEach(module -> {
-                    polarionService.insertWorkItem(module.getWorkItem(), module.getModule(), module.getParentNode(), module.getDestinationIndex(), true);
+                    insertNode(module.getWorkItem(), module.getModule(), module.getParentNode(), module.getDestinationIndex(), true);
                     reloadModule(module.getModule());
                 });
                 return null;
@@ -337,7 +339,7 @@ public class MergeService {
             }
         } else {
             if (!target.getProjectId().equals(context.getTargetModule().getProjectId())) {
-                polarionService.fixReferencedWorkItem(target, context.getTargetModule(), context.linkRoleObject);
+                fixReferencedWorkItem(target, context.getTargetModule(), context, HandleReferencesType.DEFAULT);
                 reloadModule(context.getTargetModule());
             } else if (!moveRequested && !context.isAllowedReferencedWorkItemMerge()) {
                 context.reportEntry(PROHIBITED, pair, "can't merge into referenced workitem '%s' in target document '%s'".formatted(target.getId(), context.getTargetModule().getTitleWithSpace()));
@@ -639,7 +641,7 @@ public class MergeService {
                         .build();
                 context.getAffectedModules().add(affectedModule);
             }
-            polarionService.insertWorkItem(workItemToInsert, context.getTargetModule(), destinationParentNode, destinationIndex, referenced);
+            insertNode(workItemToInsert, context.getTargetModule(), destinationParentNode, destinationIndex, referenced);
         }
         return workItemToInsert;
     }
@@ -809,6 +811,69 @@ public class MergeService {
                 target.addLinkedItem(srcLink.getLinkedItem(), srcLink.getLinkRole(), srcLink.getRevision(), srcLink.isSuspect());
             }
         }
+    }
+
+    /**
+     * If a document contains a work item which is referenced (external) and belongs to a different project, depending on the 'handleReferences' value we:
+     * <ul>
+     *   <li>ALWAYS_OVERWRITE: replace reference with a newly created new workitem in the target project</li>
+     *   <li>DEFAULT: replace it with a reference to its counterpart if it's found or just remove reference if no counterpart found</li>
+     * </ul>
+     *
+     * WARNING: this method modifies module data (like references/un-references work items),
+     * but does not persist module, which should be done in caller code which should run in write transaction!
+     */
+    public void fixReferencedWorkItem(@NotNull IWorkItem referencedWorkItem, @NotNull IModule targetModule, @NotNull SettingsAwareMergeContext context, HandleReferencesType handleReferences) {
+        if (!referencedWorkItem.getProjectId().equals(targetModule.getProjectId())) {
+            IWorkItem workItemInHead = referencedWorkItem.getRevision() == null ? referencedWorkItem : polarionService.getWorkItem(referencedWorkItem.getProjectId(), referencedWorkItem.getId());
+            IWorkItem pairedWorkItem = context.linkRole.isEmpty() ? null : polarionService.getPairedWorkItems(workItemInHead, targetModule.getProjectId(), context.linkRole).stream().findFirst().orElse(null);
+
+            IModule.IStructureNode nodeToBeRemoved = targetModule.getStructureNodeOfWI(referencedWorkItem);
+            IModule.IStructureNode parentNode = nodeToBeRemoved.getParent();
+            int destinationIndex = parentNode.getChildren().indexOf(nodeToBeRemoved);
+            if (HandleReferencesType.ALWAYS_OVERWRITE.equals(handleReferences)) {
+                IWorkItem newWorkItem = polarionService.getTrackerProject(targetModule.getProjectId()).createWorkItem(Objects.requireNonNull(referencedWorkItem.getType()).getId());
+                ILinkRoleOpt linkRole = polarionService.getLinkRoleById(context.linkRole, targetModule.getProject());
+                if (linkRole != null) {
+                    newWorkItem.addLinkedItem(workItemInHead, linkRole, null, false);
+                }
+                newWorkItem.setValue("module", targetModule);
+                newWorkItem.save();
+
+                merge(referencedWorkItem, newWorkItem, context, null);
+                insertNode(newWorkItem, targetModule, parentNode, destinationIndex, false);
+            } else if (pairedWorkItem != null) {
+                insertNode(pairedWorkItem, targetModule, parentNode, destinationIndex, true);
+            }
+            targetModule.unreference(referencedWorkItem);
+        }
+    }
+
+    @VisibleForTesting
+    void insertNode(@NotNull IWorkItem workItem, @NotNull IModule targetModule, @Nullable IModule.IStructureNode parentNode, int destinationIndex, boolean referenced) {
+        if (referenced) {
+            targetModule.addExternalWorkItem(workItem);
+        } else {
+            targetModule.moveIn(List.of(workItem));
+        }
+
+        if (parentNode == null) {
+            parentNode = targetModule.getRootNode().getChildren().get(0);
+        }
+
+        // getStructureNodeOfWI may return null for items which are placed in recycle bin.
+        // the problem basically is that a workitem is still bound to module but not a single node use it
+        // so in this case we're adding a new node for it
+        IModule.IStructureNode insertedWorkItemNode = Optional.ofNullable(targetModule.getStructureNodeOfWI(workItem)).orElse(createNode(targetModule, workItem, referenced));
+        parentNode.addChild(insertedWorkItemNode, destinationIndex); // Placing inserted work item at required position in document
+    }
+
+    private IModule.IStructureNode createNode(@NotNull IModule targetModule, @NotNull IWorkItem workitem, boolean referenced) {
+        // taken from Module#createStructureNode(IModule.IStructureNode parent, IWorkItem workitem)
+        IModule.IStructureNode node = (IModule.IStructureNode) targetModule.getDataSvc().createStructureForTypeId(targetModule, "ModuleStructureNode", new HashMap<>());
+        node.setValue("workItem", workitem);
+        node.setValue("external", referenced);
+        return node;
     }
 
     @Nullable

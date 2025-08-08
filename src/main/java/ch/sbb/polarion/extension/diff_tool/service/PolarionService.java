@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
-import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentDuplicateParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.WorkItemAttachmentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
@@ -9,15 +8,10 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
-import ch.sbb.polarion.extension.diff_tool.service.cleaners.FieldCleaner;
-import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
-import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.LinksHandler;
 import ch.sbb.polarion.extension.diff_tool.settings.AuthorizationSettings;
-import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache;
 import ch.sbb.polarion.extension.diff_tool.util.RequestContextUtil;
-import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
@@ -42,7 +36,6 @@ import com.polarion.alm.shared.rt.RichTextRenderingContext;
 import com.polarion.alm.shared.rt.parts.FieldRichTextRenderer;
 import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.internal.baseline.BaseObjectBaselinesSearch;
-import com.polarion.alm.tracker.internal.model.WorkItem;
 import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.IBaseline;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
@@ -56,7 +49,6 @@ import com.polarion.alm.tracker.model.ipi.IInternalBaselinesManager;
 import com.polarion.alm.ui.shared.FieldRenderType;
 import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.Logger;
-import com.polarion.core.util.types.Text;
 import com.polarion.platform.IPlatformService;
 import com.polarion.platform.persistence.ICustomFieldsService;
 import com.polarion.platform.persistence.model.IPObject;
@@ -66,14 +58,12 @@ import com.polarion.platform.security.ISecurityService;
 import com.polarion.platform.service.repository.IRepositoryService;
 import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.ICustomField;
-import com.polarion.subterra.base.location.ILocation;
 import com.polarion.subterra.base.location.Location;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nullable;
 import javax.security.auth.Subject;
@@ -82,7 +72,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -177,182 +166,6 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     public @NotNull IModule getDocumentWithFilledRevision(@NotNull String projectId, @NotNull String spaceId, @NotNull String documentName, @Nullable String revision) {
         IModule module = super.getModule(projectId, spaceId, documentName, revision);
         return (revision == null || module.getRevision() != null) ? module : getModule(projectId, spaceId, documentName, getDocumentRevisions(module).get(0).getName());
-    }
-
-    /**
-     * Creates a new document as a duplicate of source document
-     */
-    public DocumentIdentifier createDocumentDuplicate(@NotNull String sourceProjectId, @NotNull String sourceSpaceId, @NotNull String sourceDocumentName,
-                                                      @Nullable String revision, @NotNull DocumentDuplicateParams documentDuplicateParams) {
-        try {
-            if (getModule(new DocumentIdentifier(documentDuplicateParams.getTargetDocumentIdentifier())) != null) {
-                throw new IllegalStateException(String.format("Document '%s' already exists in project '%s' and space '%s'",
-                        documentDuplicateParams.getTargetDocumentIdentifier().getName(), documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(),
-                        documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId()));
-            }
-        } catch (ObjectNotFoundException ex) {
-            // Target Document doesn't exist, thus we can create it
-        }
-        if (StringUtils.isEmptyTrimmed(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId())) {
-            throw new IllegalArgumentException("Target 'spaceId' should be provided");
-        }
-        if (StringUtils.isEmptyTrimmed(documentDuplicateParams.getTargetDocumentTitle())) {
-            throw new IllegalArgumentException("Target 'documentName' should be provided");
-        }
-
-        if (!trackerService.getFolderManager().existFolder(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(), documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId())) {
-            IFolder sourceSpace = trackerService.getFolderManager().getFolder(sourceProjectId, sourceSpaceId);
-            TransactionalExecutor.executeInWriteTransaction(transaction -> {
-                trackerService.getFolderManager().createFolder(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(),
-                        documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId(), sourceSpace.getTitleOrName());
-                return null;
-            });
-        }
-
-        IProject targetProject = getProject(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId());
-        ITrackerProject targetTrackerProject = trackerService.getTrackerProject(targetProject);
-        IContextId targetProjectContextId = targetTrackerProject.getContextId();
-        ILocation targetLocation = Location.getLocation(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId());
-
-        // link role is optional
-        String linkRoleId = documentDuplicateParams.getLinkRoleId();
-        ILinkRoleOpt linkRole = StringUtils.isEmpty(linkRoleId) ? null :
-                Optional.ofNullable(getLinkRoleById(linkRoleId, targetTrackerProject)).orElseThrow(() -> new IllegalArgumentException(String.format("No link role could be found by ID '%s'", linkRoleId)));
-
-        IModule sourceModule = getModule(sourceProjectId, sourceSpaceId, sourceDocumentName, revision);
-        List<DiffField> allowedFields = DiffModelCachedResource.get(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(),
-                documentDuplicateParams.getConfigName(), null).getDiffFields();
-
-        // ---------
-        // Following calls are intentionally split into separate transactions as list fields during documents duplication
-        // are becoming visible in Polarion's API only as soon as document's creation transaction is closed, meaning that cleaning them up
-        // should be done in a separate transaction
-        IModule targetModule = Objects.requireNonNull(TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            IModule createdModule = trackerService.getModuleManager().duplicate(sourceModule, targetProject, targetLocation,
-                    documentDuplicateParams.getTargetDocumentIdentifier().getName(), linkRole, null, null, null, null);
-            createdModule.setTitle(documentDuplicateParams.getTargetDocumentTitle());
-            createdModule.updateTitleHeading(documentDuplicateParams.getTargetDocumentTitle());
-            createdModule.save();
-
-            cleanUpFields(createdModule, targetProjectContextId, allowedFields, new NonListFieldCleaner());
-
-            return createdModule;
-        }));
-
-        TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            if (linkRole != null && !sourceProjectId.equals(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())) {
-                fixLinksInRichTextFields(targetModule, sourceProjectId, linkRole.getId(), allowedFields);
-            }
-            cleanUpFields(targetModule, targetProjectContextId, allowedFields, new ListFieldCleaner());
-            return null;
-        });
-
-        if (linkRole != null) {
-            TransactionalExecutor.executeInWriteTransaction(transaction -> {
-                for (IWorkItem workItem : targetModule.getExternalWorkItems()) {
-                    fixReferencedWorkItem(workItem, targetModule, linkRole);
-                }
-                targetModule.save();
-                return null;
-            });
-        }
-        // ----------
-
-        return DocumentIdentifier.builder()
-                .projectId(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())
-                .spaceId(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId())
-                .name(Objects.requireNonNull(targetModule).getModuleName())
-                .moduleXmlRevision(targetModule.getLastRevision())
-                .build();
-    }
-
-    void cleanUpFields(@NotNull IModule module, @NotNull IContextId projectContextId, @NotNull List<DiffField> allowedFields, @NotNull FieldCleaner cleaner) {
-        List<WorkItemField> standardFieldsDeletable = getStandardFields().stream().filter(deletableFieldsFilter).toList();
-        for (IWorkItem workItem : getWorkItemsForCleanUp(module)) {
-            for (WorkItemField field : getDeletableFields(workItem, projectContextId, standardFieldsDeletable)) {
-                if (isFieldToCleanUp(allowedFields, field, workItem.getType())) {
-                    cleaner.clean(workItem, field);
-                }
-            }
-            workItem.save();
-        }
-    }
-
-    @VisibleForTesting
-    void fixLinksInRichTextFields(@NotNull IModule targetModule, @NotNull String sourceProjectId, @NotNull String linkRoleId, @NotNull List<DiffField> diffFields) {
-        for (IWorkItem targetWorkItem : getWorkItemsForCleanUp(targetModule)) {
-            for (DiffField field : diffFields) {
-                Object fieldValue = getFieldValue(targetWorkItem, field.getKey());
-                if (fieldValue instanceof Text text) {
-                    IWorkItem sourceWorkItem = getPairedWorkItems(targetWorkItem, sourceProjectId, linkRoleId).stream().findFirst().orElse(null);
-                    if (sourceWorkItem != null) {
-                        fieldValue = new Text(text.getType(), replaceLinksToPairedWorkItems(sourceWorkItem, targetWorkItem, linkRoleId, text.getContent()));
-                        setFieldValue(targetWorkItem, field.getKey(), fieldValue);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * WARNING: this method just references/un-references work items in module, but does not persist module, which should be done in caller code which should run in write transaction!
-     */
-    public void fixReferencedWorkItem(@NotNull IWorkItem referencedWorkItem, @NotNull IModule targetModule, @NotNull ILinkRoleOpt linkRole) {
-        // If a document contains a work item which is referenced (external) and belongs to a different project,
-        // we are trying here to replace it by a reference of its counterpart item belonging to document's project, if possible.
-        // If counterpart work item wasn't found such reference will be just removed
-        if (!referencedWorkItem.getProjectId().equals(targetModule.getProjectId())) {
-            IWorkItem workItemInHead = referencedWorkItem.getRevision() == null ? referencedWorkItem : getWorkItem(referencedWorkItem.getProjectId(), referencedWorkItem.getId());
-            IWorkItem pairedWorkItem = getPairedWorkItems(workItemInHead, targetModule.getProjectId(), linkRole.getId()).stream().findFirst().orElse(null);
-            if (pairedWorkItem != null) {
-                IModule.IStructureNode nodeToBeRemoved = targetModule.getStructureNodeOfWI(referencedWorkItem);
-                IModule.IStructureNode parentNode = nodeToBeRemoved.getParent();
-                int destinationIndex = parentNode.getChildren().indexOf(nodeToBeRemoved);
-
-                insertWorkItem(pairedWorkItem, targetModule, parentNode, destinationIndex, true);
-            }
-            targetModule.unreference(referencedWorkItem);
-        }
-    }
-
-    public void insertWorkItem(@NotNull IWorkItem workItem, @NotNull IModule targetModule, @Nullable IModule.IStructureNode parentNode, int destinationIndex, boolean referenced) {
-        if (referenced) {
-            targetModule.addExternalWorkItem(workItem);
-        } else {
-            targetModule.moveIn(List.of(workItem));
-        }
-
-        if (parentNode == null) {
-            parentNode = targetModule.getRootNode().getChildren().get(0);
-        }
-
-        // getStructureNodeOfWI may return null for items which are placed in recycle bin.
-        // the problem basically is that a workitem is still bound to module but not a single node use it
-        // so in this case we're adding a new node for it
-        IModule.IStructureNode insertedWorkItemNode = Optional.ofNullable(targetModule.getStructureNodeOfWI(workItem)).orElse(createNode(targetModule, workItem, referenced));
-        parentNode.addChild(insertedWorkItemNode, destinationIndex); // Placing inserted work item at required position in document
-    }
-
-    private IModule.IStructureNode createNode(@NotNull IModule targetModule, @NotNull IWorkItem workitem, boolean referenced) {
-        // taken from Module#createStructureNode(IModule.IStructureNode parent, IWorkItem workitem)
-        IModule.IStructureNode node = (IModule.IStructureNode) targetModule.getDataSvc().createStructureForTypeId(targetModule, "ModuleStructureNode", new HashMap<>());
-        node.setValue("workItem", workitem);
-        node.setValue("external", referenced);
-        return node;
-    }
-
-    private List<IWorkItem> getWorkItemsForCleanUp(@NotNull IModule module) {
-        List<IWorkItem> externalWorkItems = module.getExternalWorkItems();
-        return module.getAllWorkItems().stream().filter(item -> {
-            if (item.isUnresolvable() || externalWorkItems.contains(item)) {
-                return false;
-            }
-            if (item instanceof WorkItem workItem) {
-                return !workItem.isHeading();
-            } else {
-                return true;
-            }
-        }).toList();
     }
 
     List<WorkItemField> getDeletableFields(@NotNull IWorkItem workItem, @NotNull IContextId projectContextId, @NotNull List<WorkItemField> standardFieldsDeletable) {
