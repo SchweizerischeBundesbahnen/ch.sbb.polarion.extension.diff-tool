@@ -3,6 +3,7 @@ package ch.sbb.polarion.extension.diff_tool.service;
 import ch.sbb.polarion.extension.diff_tool.rest.model.BaseDocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentDuplicateParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.HandleReferencesType;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
@@ -19,6 +20,7 @@ import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
+import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.ICustomFieldsService;
 import com.polarion.platform.persistence.IDataService;
 import com.polarion.platform.persistence.model.IPObject;
@@ -132,6 +134,7 @@ class DocumentCopyServiceTest {
         when(trackerService.getModuleManager().getModule(eq(targetProject), any())).thenReturn(existingModule);
 
         when(trackerService.getDataService().getPrototype(IWorkItem.PROTO).getKeyNames()).thenReturn(List.of());
+//        when(trackerService.getFolderManager()).thenReturn(List.of());
 
         // attempt to copy on top of existing module
         Exception exception = assertThrows(IllegalStateException.class, () ->
@@ -139,6 +142,13 @@ class DocumentCopyServiceTest {
         assertEquals("Document 'targetModuleName' already exists in project 'targetProjectId' and space 'targetSpaceId'", exception.getMessage());
 
         when(existingModule.isUnresolvable()).thenReturn(true);
+
+        duplicateParams.setTargetDocumentTitle("");
+        // empty doc title
+        exception = assertThrows(IllegalArgumentException.class, () ->
+                copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
+        assertEquals("Target 'documentName' should be provided", exception.getMessage());
+        duplicateParams.setTargetDocumentTitle("title");
 
         // attempt to use unknown link role
         exception = assertThrows(IllegalArgumentException.class, () ->
@@ -148,9 +158,11 @@ class DocumentCopyServiceTest {
         // now let's omit the link role
         duplicateParams.setLinkRoleId(null);
 
+        when(polarionService.getTrackerService().getFolderManager().existFolder(anyString(), anyString())).thenReturn(false);
         assertDoesNotThrow(() ->
                 copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
         verify(copyService, times(0)).fixLinksInRichTextFields(any(), any(), nullable(String.class), any());
+        verify(trackerService.getFolderManager(), times(1)).createFolder(nullable(String.class), nullable(String.class), nullable(String.class));
 
         // provide link role + make it available
         duplicateParams.setLinkRoleId("linkRoleId");
@@ -161,6 +173,26 @@ class DocumentCopyServiceTest {
         assertDoesNotThrow(() ->
                 copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
         verify(copyService, times(1)).fixLinksInRichTextFields(any(), any(), nullable(String.class), any());
+    }
+
+    @Test
+    void testFixLinksInRichTextFields() {
+        IModule targetModule = mock(IModule.class, RETURNS_DEEP_STUBS);
+        DiffField diffField = mock(DiffField.class);
+        when(diffField.getKey()).thenReturn("richTextField");
+
+        IWorkItem workItem = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
+        when(targetModule.getExternalWorkItems()).thenReturn(List.of());
+        when(targetModule.getAllWorkItems()).thenReturn(List.of(workItem));
+
+        when(workItem.getCustomField("richTextField")).thenReturn(Text.html("richTextField"));
+
+        IWorkItem pairedWorkItem = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
+        doReturn(List.of(pairedWorkItem)).when(polarionService).getPairedWorkItems(any(), anyString(), anyString());
+
+        copyService.fixLinksInRichTextFields(targetModule, "sourceProject", "linkRole", List.of(diffField));
+
+        verify(polarionService).setFieldValue(workItem, "richTextField", Text.html("richTextField"));
     }
 
     @Test
