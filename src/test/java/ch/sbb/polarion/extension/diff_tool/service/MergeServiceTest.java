@@ -891,7 +891,7 @@ class MergeServiceTest {
         when(source.getId()).thenReturn("sourceId");
 
         IModule sourceModule = mock(IModule.class);
-        IModule targetModule = mockTargetModule();;
+        IModule targetModule = mockTargetModule();
 
         when(targetModule.getProjectId()).thenReturn("projectA");
         when(context.getTargetModule()).thenReturn(targetModule);

@@ -134,7 +134,6 @@ class DocumentCopyServiceTest {
         when(trackerService.getModuleManager().getModule(eq(targetProject), any())).thenReturn(existingModule);
 
         when(trackerService.getDataService().getPrototype(IWorkItem.PROTO).getKeyNames()).thenReturn(List.of());
-//        when(trackerService.getFolderManager()).thenReturn(List.of());
 
         // attempt to copy on top of existing module
         Exception exception = assertThrows(IllegalStateException.class, () ->
@@ -253,8 +252,8 @@ class DocumentCopyServiceTest {
 
         verify(workItem, never()).setValue(eq("field_1"), any());
         verify(workItem, never()).setValue(eq("field_2"), any());
-        verify(workItem, times(1)).setValue(eq("field_3"), eq("Default 3"));
-        verify(workItem, times(1)).setValue(eq("field_4"), eq(null));
+        verify(workItem, times(1)).setValue("field_3", "Default 3");
+        verify(workItem, times(1)).setValue("field_4", null);
     }
 
     @Test
