@@ -4,7 +4,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMerge
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.service.MergeService;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;

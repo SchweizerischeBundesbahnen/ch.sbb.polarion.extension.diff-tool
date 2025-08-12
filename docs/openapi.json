@@ -1413,6 +1413,15 @@
             "description": "The configuration name to use for the duplication, which specifies which fields of work items to copy",
             "type": "string"
           },
+          "handleReferences": {
+            "default": "DEFAULT",
+            "description": "Declares how references should be handled during copy operation",
+            "enum": [
+              "DEFAULT",
+              "ALWAYS_OVERWRITE"
+            ],
+            "type": "string"
+          },
           "linkRoleId": {
             "description": "ID of link role by which work items in target document will be linked with counterparts from source document",
             "type": "string"

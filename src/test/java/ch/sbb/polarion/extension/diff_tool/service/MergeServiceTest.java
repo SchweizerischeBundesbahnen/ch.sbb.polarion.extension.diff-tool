@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.HandleReferencesType;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergePair;
@@ -38,12 +39,13 @@ import com.polarion.alm.tracker.internal.model.HyperlinkStruct;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
-import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
+import com.polarion.platform.persistence.IDataService;
+import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.IEnumType;
@@ -54,19 +56,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationResultType.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -583,7 +581,7 @@ class MergeServiceTest {
 
         service.updateAndMoveItem(pair, context);
         assertNotNull(context.getMergeReport().getEntriesByType(MODIFIED));
-        verify(polarionService).fixReferencedWorkItem(rightWorkItem, rightModule, ilinkRoleOpt);
+        verify(service).fixReferencedWorkItem(rightWorkItem, rightModule, context, HandleReferencesType.DEFAULT);
     }
 
     @Test
@@ -772,7 +770,7 @@ class MergeServiceTest {
     void testInsertWorkItemSameProject() {
         IWorkItem sourceWorkItem = mock(IWorkItem.class);
         IWorkItem destinationParentWorkItem = mock(IWorkItem.class);
-        IModule targetModule = mock(IModule.class);
+        IModule targetModule = mockTargetModule();
         IModule sourceModule = mock(IModule.class);
         IModule.IStructureNode sourceNode = mock(IModule.IStructureNode.class);
         IModule.IStructureNode sourceParentNode = mock(IModule.IStructureNode.class);
@@ -798,14 +796,13 @@ class MergeServiceTest {
         IWorkItem result = mergeService.insertWorkItem(sourceWorkItem, context, true);
 
         assertEquals(sourceWorkItem, result);
-        verify(polarionService, times(1)).insertWorkItem(eq(sourceWorkItem), eq(targetModule), any(), anyInt(), eq(true));
     }
 
     @Test
     void testInsertWorkItemDifferentProjectWithPairedItem() {
         IWorkItem sourceWorkItem = mock(IWorkItem.class);
         IWorkItem pairedWorkItem = mock(IWorkItem.class);
-        IModule targetModule = mock(IModule.class);
+        IModule targetModule = mockTargetModule();
         IModule sourceModule = mock(IModule.class);
         IModule.IStructureNode sourceNode = mock(IModule.IStructureNode.class);
         IModule.IStructureNode sourceParentNode = mock(IModule.IStructureNode.class);
@@ -853,7 +850,7 @@ class MergeServiceTest {
         when(source.getId()).thenReturn("sourceId");
 
         IModule sourceModule = mock(IModule.class);
-        IModule targetModule = mock(IModule.class);
+        IModule targetModule = mockTargetModule();
         when(targetModule.getProjectId()).thenReturn("projectA");
         when(context.getTargetModule()).thenReturn(targetModule);
 
@@ -894,7 +891,7 @@ class MergeServiceTest {
         when(source.getId()).thenReturn("sourceId");
 
         IModule sourceModule = mock(IModule.class);
-        IModule targetModule = mock(IModule.class);
+        IModule targetModule = mockTargetModule();
 
         when(targetModule.getProjectId()).thenReturn("projectA");
         when(context.getTargetModule()).thenReturn(targetModule);
@@ -913,6 +910,7 @@ class MergeServiceTest {
         MergeService service = spy(mergeService);
         when(service.getWorkItem(source)).thenReturn(iWorkItem);
         doNothing().when(service).reloadModule(targetModule);
+
         boolean result = service.createOrDeleteItem(pair, context, mock(WriteTransaction.class));
 
         assertTrue(result);
@@ -936,7 +934,7 @@ class MergeServiceTest {
         when(source.getId()).thenReturn("sourceId");
 
         IModule sourceModule = mock(IModule.class);
-        IModule targetModule = mock(IModule.class);
+        IModule targetModule = mockTargetModule();
         when(targetModule.getProjectId()).thenReturn("projectA");
         when(context.getTargetModule()).thenReturn(targetModule);
 
@@ -1197,95 +1195,6 @@ class MergeServiceTest {
         }
     }
 
-    private static Stream<Arguments> testValuesForMergeLinkedWorkItems() {
-        ILinkedWorkItemStruct a1rev1role1 = mockLink("projA", "A-1", "1", "role1", ParentModule.SRC);
-        ILinkedWorkItemStruct a1rev1role2 = mockLink("projA", "A-1", "2", "role2", ParentModule.SRC);
-        ILinkedWorkItemStruct a1rev2role1 = mockLink("projA", "A-1", "2", "role1", ParentModule.SRC);
-        ILinkedWorkItemStruct b1rev1role1 = mockLink("projB", "B-1", "1", "role1", ParentModule.SRC);
-        ILinkedWorkItemStruct t1rev1role1 = mockLink("projB", "T-1", "1", "role1", ParentModule.TARGET);
-        ILinkedWorkItemStruct s1rev1role1 = mockLink("projA", "S-1", "1", "role1", ParentModule.SRC);
-        ILinkedWorkItemStruct c1rev1role1 = mockLink("projC", "C-1", "1", "role1", ParentModule.OTHER);
-        return Stream.of(
-                // nothing to merge
-                Arguments.of(sameProject(), linksList(), linksList(), List.of(), List.of()),
-
-                // link without source pair will be removed
-                Arguments.of(sameProject(), linksList(), linksList(a1rev1role1), List.of(), List.of()),
-
-                // now (when same src link exist) initial link will be left in place
-                Arguments.of(sameProject(), linksList(a1rev1role1), linksList(a1rev1role1), List.of(a1rev1role1), List.of()),
-
-                // role must be the same
-                Arguments.of(sameProject(), linksList(a1rev1role2), linksList(a1rev1role1), List.of(), List.of()),
-
-                // link project must be the same too
-                Arguments.of(anotherProject(null), linksList(a1rev1role1), linksList(b1rev1role1), List.of(), List.of()),
-
-                // src has the same but another revision link - target link removed and added a new one
-                Arguments.of(sameProject(), linksList(a1rev2role1, a1rev1role2), linksList(a1rev1role1), List.of(),
-                        List.of(new AddLinkedItemInvocation("projA", "A-1", "2", "role1"))),
-
-                // interlinked items - link stays at its place
-                Arguments.of(anotherProject(null), linksList(t1rev1role1), linksList(s1rev1role1), List.of(s1rev1role1), List.of()),
-
-                // link to another project - copy it
-                Arguments.of(anotherProject(null), linksList(c1rev1role1), linksList(), List.of(), List.of(new AddLinkedItemInvocation("projC", "C-1", "1", "role1"))),
-
-                // store link to paired work item from target project
-                Arguments.of(anotherProject(polarionService -> {
-                            IWorkItem oppositeWorkItem = mockWorkItem("projB", "B-1", "3", null, null);
-                            lenient().when(polarionService.getPairedWorkItems(any(), anyString(), anyString())).thenReturn(List.of(oppositeWorkItem));
-                        }),
-                        linksList(a1rev1role1), linksList(), List.of(), List.of(new AddLinkedItemInvocation("projB", "B-1", "3", "role1")))
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("testValuesForMergeLinkedWorkItems")
-    void testMergeLinkedWorkItems(MergeTestContext testContext,
-                                  List<ILinkedWorkItemStruct> sourceList, List<ILinkedWorkItemStruct> targetList,
-                                  List<ILinkedWorkItemStruct> resultTargetList, List<AddLinkedItemInvocation> addLinkedItemInvocations) {
-        IWorkItem source = mockWorkItem(testContext.srcProjectId, "S-1", "1", testContext.srcModule, sourceList);
-        IWorkItem target = mockWorkItem(testContext.targetProjectId, "T-1", "1", testContext.targetModule, targetList);
-
-        for (ILinkedWorkItemStruct item : sourceList) {
-            switch (((ParentModule) item.getValue("parentModule"))) {
-                case SRC -> when(item.getLinkedItem().getModule()).thenReturn(testContext.srcModule());
-                case TARGET -> when(item.getLinkedItem().getModule()).thenReturn(testContext.targetModule());
-                case OTHER -> when(item.getLinkedItem().getModule()).thenReturn(testContext.otherModule());
-                case NONE -> when(item.getLinkedItem().getModule()).thenReturn(null
-                );
-            }
-        }
-
-        if (testContext.polarionServiceConsumer != null) {
-            testContext.polarionServiceConsumer.accept(polarionService);
-        }
-
-        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class);
-        lenient().when(context.getLinkRole()).thenReturn("role1");
-        lenient().when(context.getDiffModel()).thenReturn(DiffModel.builder().linkedWorkItemRoles(List.of("role1")).build());
-
-        mergeService.mergeLinkedWorkItems(source, target, context, new WorkItemsPair());
-
-        if (resultTargetList.isEmpty()) {
-            assertTrue(targetList.isEmpty());
-        } else {
-            assertTrue(targetList.size() == resultTargetList.size() && targetList.containsAll(resultTargetList));
-        }
-
-        if (addLinkedItemInvocations.isEmpty()) {
-            verify(target, times(0)).addLinkedItem(any(), any(), anyString(), anyBoolean());
-        } else {
-            for (AddLinkedItemInvocation invocation : addLinkedItemInvocations) {
-                verify(target, times(1)).addLinkedItem(
-                        argThat(arg -> arg.getProjectId().equals(invocation.projectId) && arg.getId().equals(invocation.workItemId)),
-                        argThat(arg -> arg.getId().equals(invocation.linkRole)),
-                        eq(invocation.linkRevision), anyBoolean());
-            }
-        }
-    }
-
     @Test
     void testMoveWhenTargetDestinationNodeExists() {
         IModule.IStructureNode sourceNode = mock(IModule.IStructureNode.class);
@@ -1460,57 +1369,13 @@ class MergeServiceTest {
     }
 
     @Test
-    void testMergeHyperlinksNewLinksAdded() {
-        IWorkItem workItem = mock(IWorkItem.class);
-        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class);
-        DiffModel diffModel = mock(DiffModel.class);
-
-        when(context.getDiffModel()).thenReturn(diffModel);
-        when(diffModel.getHyperlinkRoles()).thenReturn(List.of("", "type#role"));
-
-        WorkItemsPair pair = mock(WorkItemsPair.class);
-
-        ITypeOpt typeOpt = mock(ITypeOpt.class);
-        when(typeOpt.getId()).thenReturn("type");
-        when(workItem.getType()).thenReturn(typeOpt);
-
-        HyperlinkStruct existingLink = mock(HyperlinkStruct.class);
-        IHyperlinkRoleOpt iHyperlinkRoleOpt = mock(IHyperlinkRoleOpt.class);
-        when(iHyperlinkRoleOpt.getId()).thenReturn("role");
-        when(existingLink.getRole()).thenReturn(iHyperlinkRoleOpt);
-
-        HyperlinkStruct newLink = mock(HyperlinkStruct.class);
-        when(newLink.getRole()).thenReturn(iHyperlinkRoleOpt);
-
-        when(existingLink.getUri()).thenReturn("existing");
-        when(newLink.getUri()).thenReturn("new");
-
-        List<HyperlinkStruct> hyperlinks = new ArrayList<>();
-        hyperlinks.add(existingLink);
-        when(workItem.getHyperlinks()).thenReturn(hyperlinks);
-
-        List<HyperlinkStruct> newLinksList = List.of(newLink);
-
-        when(workItem.getProjectId()).thenReturn("projectId");
-        LinkRole linkRole = mock(LinkRole.class);
-        when(linkRole.getId()).thenReturn("role");
-        when(linkRole.getWorkItemTypeId()).thenReturn("type");
-        when(polarionService.getHyperlinkRoles("projectId")).thenReturn(List.of(linkRole));
-
-        mergeService.mergeHyperlinks(workItem, newLinksList, context, pair);
-
-        verify(workItem, times(1)).addHyperlink("new", newLink.getRole());
-        assertFalse(workItem.getHyperlinks().contains(existingLink));
-    }
-
-    @Test
     void testInsertWorkItem() {
         IWorkItem workItem = mock(IWorkItem.class);
         when(workItem.getProjectId()).thenReturn("projectId");
 
         DocumentsMergeContext context = mock(DocumentsMergeContext.class);
 
-        IModule targetModule = mock(IModule.class);
+        IModule targetModule = mockTargetModule();
         IModule sourceModule = mock(IModule.class);
 
         when(targetModule.getProjectId()).thenReturn("projectId");
@@ -1538,63 +1403,44 @@ class MergeServiceTest {
         assertEquals(1, affectedModules.size());
     }
 
-    private static MergeTestContext sameProject() {
-        return new MergeTestContext("projA", "projA", mockModule("projA"), mockModule("projB"), mockModule("projC"), null);
+    @Test
+    void testInsertNode() {
+
+        IModule targetModule = mock(IModule.class);
+
+        IDataService dataService = mock(IDataService.class);
+        when(targetModule.getDataSvc()).thenReturn(dataService);
+
+        IModule.IStructureNode rootNode = mock(IModule.IStructureNode.class);
+        when(targetModule.getRootNode()).thenReturn(rootNode);
+
+        IModule.IStructureNode parentRootNode = mock(IModule.IStructureNode.class);
+        when(rootNode.getChildren()).thenReturn(List.of(parentRootNode));
+
+        IModule.IStructureNode node = mock(IModule.IStructureNode.class);
+        when(dataService.createStructureForTypeId(any(), anyString(), any())).thenReturn(node);
+
+        IWorkItem workItem = mock(IWorkItem.class);
+
+        mergeService.insertNode(workItem, targetModule, mock(IModule.IStructureNode.class), 1, false);
+        verify(node, times(1)).setValue("workItem", workItem);
+        verify(node, times(1)).setValue("external", false);
+
+        mergeService.insertNode(workItem, targetModule, null, 1, true);
+        verify(node, times(2)).setValue("workItem", workItem);
+        verify(node, times(1)).setValue("external", true);
+
+        IModule.IStructureNode structureNode = mock(IModule.IStructureNode.class);
+        when(targetModule.getStructureNodeOfWI(workItem)).thenReturn(structureNode);
+        mergeService.insertNode(workItem, targetModule, null, 5, true);
+        verify(parentRootNode, times(1)).addChild(structureNode, 5);
     }
 
-    private static MergeTestContext anotherProject(Consumer<PolarionService> polarionServiceConsumer) {
-        return new MergeTestContext("projA", "projB", mockModule("projA"), mockModule("projB"), mockModule("projC"), polarionServiceConsumer);
-    }
-
-    private enum ParentModule {SRC, TARGET, OTHER, NONE}
-
-    private record MergeTestContext(String srcProjectId, String targetProjectId, IModule srcModule, IModule targetModule, IModule otherModule, Consumer<PolarionService> polarionServiceConsumer) {
-    }
-
-    private record AddLinkedItemInvocation(String projectId, String workItemId, String linkRevision, String linkRole) {
-    }
-
-    private static List<ILinkedWorkItemStruct> linksList(ILinkedWorkItemStruct... links) {
-        return new ArrayList<>(List.of(links));
-    }
-
-    private static IModule mockModule(String projectId) {
-        IModule module = mock(IModule.class);
-        when(module.getProjectId()).thenReturn(projectId);
-        ILocation location = mock(ILocation.class);
-        when(module.getModuleLocation()).thenReturn(location);
-        when(location.removeRevision()).thenReturn(location);
+    private IModule mockTargetModule() {
+        IModule module = mock(IModule.class, RETURNS_DEEP_STUBS);
+        IDataService dataService = mock(IDataService.class);
+        when(dataService.createStructureForTypeId(nullable(IPObject.class), nullable(String.class), nullable(Map.class))).thenReturn(mock(IModule.IStructureNode.class));
+        when(module.getDataSvc()).thenReturn(dataService);
         return module;
     }
-
-    private static ILinkedWorkItemStruct mockLink(String projectId, String workItemId, String linkRevision, String linkRole, ParentModule parentModule) {
-        ILinkedWorkItemStruct linkMock = mock(ILinkedWorkItemStruct.class);
-        IWorkItem workItemMock = mock(IWorkItem.class);
-        lenient().when(workItemMock.getId()).thenReturn(workItemId);
-        lenient().when(workItemMock.getProjectId()).thenReturn(projectId);
-        lenient().when(linkMock.getLinkedItem()).thenReturn(workItemMock);
-        lenient().when(linkMock.getRevision()).thenReturn(linkRevision);
-
-        IModule module = mock(IModule.class);
-        when(module.getProjectId()).thenReturn(projectId);
-        when(workItemMock.getModule()).thenReturn(module);
-
-        when(linkMock.getValue(eq("parentModule"))).thenReturn(parentModule);
-
-        ILinkRoleOpt linkRoleOpt = mock(ILinkRoleOpt.class);
-        lenient().when(linkRoleOpt.getId()).thenReturn(linkRole);
-        lenient().when(linkMock.getLinkRole()).thenReturn(linkRoleOpt);
-        return linkMock;
-    }
-
-    private static IWorkItem mockWorkItem(String projectId, String id, String revision, IModule module, Collection<ILinkedWorkItemStruct> links) {
-        IWorkItem item = mock(IWorkItem.class);
-        lenient().when(item.getId()).thenReturn(id);
-        lenient().when(item.getProjectId()).thenReturn(projectId);
-        lenient().when(item.getRevision()).thenReturn(revision);
-        lenient().when(item.getModule()).thenReturn(module);
-        lenient().when(item.getLinkedWorkItemsStructsDirect()).thenReturn(links);
-        return item;
-    }
-
 }

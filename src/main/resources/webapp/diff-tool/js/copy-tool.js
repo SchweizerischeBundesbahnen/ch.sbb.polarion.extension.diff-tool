@@ -34,7 +34,8 @@ CopyTool = {
       },
       targetDocumentTitle: this.sourceDocumentTitle,
       linkRoleId: linkRole,
-      configName: config
+      configName: config,
+      handleReferences: document.getElementById("overwrite-referenced-workitems").checked ? 'ALWAYS_OVERWRITE' : 'DEFAULT',
     }
     const revisionUrlPart = this.sourceRevision ? `?revision=${this.sourceRevision}` : '';
 
