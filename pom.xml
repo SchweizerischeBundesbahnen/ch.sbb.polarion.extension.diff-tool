@@ -58,7 +58,7 @@
         <xerces.version>2.12.2</xerces.version>
         <ehcache.version>3.8.0</ehcache.version>
 
-        <pdf-exporter.version>9.1.1</pdf-exporter.version>
+        <pdf-exporter.version>9.2.0</pdf-exporter.version>
 
         <awaitility.version>4.3.0</awaitility.version>
 
