@@ -54,8 +54,7 @@
 
         <web.app.name>${maven-jar-plugin.Extension-Context}</web.app.name>
 
-        <html5diff.version>1.4.4</html5diff.version>
-        <xerces.version>2.12.2</xerces.version>
+        <html5diff.version>1.4.5</html5diff.version>
         <ehcache.version>3.8.0</ehcache.version>
 
         <pdf-exporter.version>9.3.0</pdf-exporter.version>
@@ -116,17 +115,6 @@
             <groupId>ch.sbb.html5diff</groupId>
             <artifactId>html5diff</artifactId>
             <version>${html5diff.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>xml-apis</groupId>
-                    <artifactId>xml-apis</artifactId>
-                </exclusion>
-                <!-- xerces will be taken from the Polarion (see manifest) -->
-                <exclusion>
-                    <groupId>xerces</groupId>
-                    <artifactId>xercesImpl</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
@@ -154,12 +142,6 @@
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <version>${awaitility.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>xerces</groupId>
-            <artifactId>xercesImpl</artifactId>
-            <version>${xerces.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
