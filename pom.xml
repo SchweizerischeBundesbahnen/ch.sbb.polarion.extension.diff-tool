@@ -54,7 +54,7 @@
 
         <web.app.name>${maven-jar-plugin.Extension-Context}</web.app.name>
 
-        <html5diff.version>1.4.4</html5diff.version>
+        <html5diff.version>1.4.5</html5diff.version>
         <xerces.version>2.12.2</xerces.version>
         <ehcache.version>3.8.0</ehcache.version>
 
