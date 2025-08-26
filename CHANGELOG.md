@@ -1,5 +1,19 @@
 # Changelog
 
+## [6.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.2.0...v6.2.1) (2025-08-26)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @fortawesome/react-fontawesome to v0.2.5 ([6f4202a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/6f4202aec53c75cf0e0d447040f98aecc13c5d8c))
+* **deps:** update dependency @fortawesome/react-fontawesome to v0.2.6 ([6402ed6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/6402ed65fff98d7e97d17c1e1eedaaee1425f836))
+* **deps:** update dependency @fortawesome/react-fontawesome to v3 ([#307](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/307)) ([1d64fe1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/1d64fe15cf259ebe47b5fd5f87df5c71066110af))
+* **deps:** update dependency ch.sbb.html5diff:html5diff to v1.4.5 ([608f738](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/608f73831b91d8ce1023c6e5fa68b051c92a5a86))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v9.2.0 ([ef655f8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ef655f83f858cdb890b4f9bcc7ece18e929adf98))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v9.3.0 ([472730b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/472730b57735a9ad78dbc2513fd2ce791aeb653b))
+* **deps:** update nextjs monorepo to v15.4.7 ([76658f0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/76658f06de57bb2523633160a8bd3ee8864486e0))
+* **deps:** update nextjs monorepo to v15.5.0 ([2e136ef](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2e136ef5648f8b8fe1037847142c8a69b573e6b6))
+
 ## [6.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.1.1...v6.2.0) (2025-08-15)
 
 
