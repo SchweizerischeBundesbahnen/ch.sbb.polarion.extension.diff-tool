@@ -33,15 +33,20 @@ import com.polarion.alm.shared.dle.compare.merge.DuplicateWorkItemAction;
 import com.polarion.alm.tracker.internal.model.HyperlinkStruct;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
+import com.polarion.alm.tracker.internal.model.TestSteps;
 import com.polarion.alm.tracker.internal.model.module.Module;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.ITestStepKeyOpt;
+import com.polarion.alm.tracker.model.ITestSteps;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
+import com.polarion.platform.persistence.ICustomFieldsService;
 import com.polarion.platform.persistence.spi.EnumOption;
 import com.polarion.subterra.base.data.identification.IContextId;
+import com.polarion.subterra.base.data.model.ICustomField;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IStructType;
@@ -56,6 +61,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -67,6 +73,10 @@ import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationRe
 import static ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils.*;
 
 public class MergeService {
+
+    private static final String TEST_STEPS = "steps";
+    private static final String TEST_STEP_KEYS = "keys";
+    private static final String TEST_STEP_VALUES = "values";
 
     private static final CompareOptions MERGE_OPTION = CompareOptions.create().forMerge(true).build();
     private final PolarionService polarionService;
@@ -699,13 +709,38 @@ public class MergeService {
             } else if (IWorkItem.KEY_LINKED_WORK_ITEMS.equals(field.getKey())) {
                 mergeLinkedWorkItems(source, target, context, pair);
             } else {
-                if (fieldValue instanceof Text text) {
+                validateCustomFieldTypesAccordance(source, target, field);
+
+                if (fieldValue instanceof TestSteps testSteps) {
+                    fieldValue = polarionService.getTrackerService().getDataService().createStructureForTypeId(target, ITestSteps.STRUCTURE_ID, getTestStepsData(testSteps));
+                } else if (fieldValue instanceof Text text) {
                     fieldValue = new Text(text.getType(), polarionService.replaceLinksToPairedWorkItems(source, target, context.linkRole, text.getContent()));
                 }
                 polarionService.setFieldValue(target, field.getKey(), fieldValue);
             }
         }
         target.save();
+    }
+
+    private void validateCustomFieldTypesAccordance(IWorkItem source, IWorkItem target, DiffField field) {
+        if (!source.getPrototype().isKeyDefined(field.getKey())) { // If field is a custom field in source item...
+            ICustomFieldsService customFieldsService = polarionService.getTrackerService().getDataService().getCustomFieldsService();
+            ICustomField sourceCustomField = customFieldsService.getCustomField(source, field.getKey());
+            ICustomField targetCustomField = customFieldsService.getCustomField(target, field.getKey());
+            if (!sourceCustomField.getType().equals(targetCustomField.getType())) { // ...and if types of this custom field in source and in target items are not equal then throw an error
+                throw new IllegalStateException(String.format("Can't merge fields with different types, check that fields with key '%s' have the same type in source and target work item", field.getKey()));
+            }
+        }
+    }
+
+    @VisibleForTesting
+    Map<String, List<?>> getTestStepsData(TestSteps testSteps) {
+        Map<String, List<?>> testStepsData = new HashMap<>();
+
+        testStepsData.put(TEST_STEP_KEYS, testSteps.getKeys().stream().map(ITestStepKeyOpt::getId).toList());
+        testStepsData.put(TEST_STEPS, testSteps.getSteps().stream().map(testStep -> Map.of(TEST_STEP_VALUES, testStep.getValues())).toList());
+
+        return testStepsData;
     }
 
     @VisibleForTesting
