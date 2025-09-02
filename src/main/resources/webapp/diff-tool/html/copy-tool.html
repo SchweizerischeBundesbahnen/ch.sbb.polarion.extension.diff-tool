@@ -37,8 +37,10 @@
     </div>
 
     <div class='property-wrapper'>
-        <input type='checkbox' id='overwrite-referenced-workitems'/>
-        <label for='overwrite-referenced-workitems'>Always overwrite referenced workitems</label>
+        <label for='handle-refs-selector' class="fixed-width w-1">Referenced workitems:</label>
+        <select id='handle-refs-selector'>
+            {HANDLE_REFS_OPTIONS}
+        </select>
     </div>
 
     <div class='buttons-wrapper'>
