@@ -595,6 +595,70 @@ class MergeServiceTest {
     }
 
     @Test
+    void testFixReferencedWorkItem() {
+        MergeService service = spy(mergeService);
+        doNothing().when(service).merge(any(), any(), any(), nullable(WorkItemsPair.class));
+        doNothing().when(service).insertNode(any(), any(), any(), anyInt(), anyBoolean());
+
+        IWorkItem pairedWorkItem = mock(IWorkItem.class);
+        when(polarionService.getPairedWorkItems(any(), any(), any())).thenReturn(List.of(pairedWorkItem));
+
+        IWorkItem referencedWorkItem = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
+        when(referencedWorkItem.getProjectId()).thenReturn("srcProjectId");
+
+        IModule targetModule = mock(IModule.class, RETURNS_DEEP_STUBS);
+        when(targetModule.getProjectId()).thenReturn("targetProjectId");
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class);
+
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        when(polarionService.getTrackerProject("targetProjectId")).thenReturn(trackerProject);
+        when(trackerProject.createWorkItem(any())).thenReturn(mock(IWorkItem.class));
+        when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
+
+        when(context.getLinkRole()).thenReturn("linkRoleId");
+        service.fixReferencedWorkItem(referencedWorkItem, targetModule, context, HandleReferencesType.DEFAULT);
+        verify(targetModule, times(1)).unreference(referencedWorkItem);
+        verify(service, times(1)).insertNode(any(), any(), any(), anyInt(), eq(true));
+
+        when(context.getLinkRole()).thenReturn("");
+        service.fixReferencedWorkItem(referencedWorkItem, targetModule, context, HandleReferencesType.DEFAULT);
+        verify(targetModule, times(2)).unreference(referencedWorkItem);
+        verify(service, times(1)).insertNode(any(), any(), any(), anyInt(), eq(true));
+
+        when(context.getLinkRole()).thenReturn("linkRoleId");
+        service.fixReferencedWorkItem(referencedWorkItem, targetModule, context, HandleReferencesType.KEEP);
+        verify(targetModule, times(3)).unreference(referencedWorkItem);
+        verify(service, times(2)).insertNode(any(), any(), any(), anyInt(), eq(true));
+
+        when(context.getLinkRole()).thenReturn("");
+        service.fixReferencedWorkItem(referencedWorkItem, targetModule, context, HandleReferencesType.KEEP);
+        verify(targetModule, times(3)).unreference(referencedWorkItem);
+        verify(service, times(2)).insertNode(any(), any(), any(), anyInt(), eq(true));
+
+        when(context.getLinkRole()).thenReturn("linkRoleId");
+        service.fixReferencedWorkItem(referencedWorkItem, targetModule, context, HandleReferencesType.CREATE_MISSING);
+        verify(targetModule, times(4)).unreference(referencedWorkItem);
+        verify(service, times(0)).insertNode(any(), any(), any(), anyInt(), eq(false));
+        verify(service, times(3)).insertNode(any(), any(), any(), anyInt(), eq(true));
+
+        when(context.getLinkRole()).thenReturn("");
+        service.fixReferencedWorkItem(referencedWorkItem, targetModule, context, HandleReferencesType.CREATE_MISSING);
+        verify(targetModule, times(5)).unreference(referencedWorkItem);
+        verify(service, times(1)).insertNode(any(), any(), any(), anyInt(), eq(false));
+        verify(service, times(3)).insertNode(any(), any(), any(), anyInt(), eq(true));
+
+        when(context.getLinkRole()).thenReturn("linkRoleId");
+        service.fixReferencedWorkItem(referencedWorkItem, targetModule, context, HandleReferencesType.ALWAYS_OVERWRITE);
+        verify(targetModule, times(6)).unreference(referencedWorkItem);
+        verify(service, times(2)).insertNode(any(), any(), any(), anyInt(), eq(false));
+
+        when(context.getLinkRole()).thenReturn("");
+        service.fixReferencedWorkItem(referencedWorkItem, targetModule, context, HandleReferencesType.ALWAYS_OVERWRITE);
+        verify(targetModule, times(7)).unreference(referencedWorkItem);
+        verify(service, times(3)).insertNode(any(), any(), any(), anyInt(), eq(false));
+    }
+
+    @Test
     void testMoveWorkItemOutOfDocument() {
         NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
         DocumentIdentifier doc1 = new DocumentIdentifier("project1", "space1", "doc1", "rev1", "rev1");

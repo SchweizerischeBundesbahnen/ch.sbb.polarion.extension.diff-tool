@@ -700,7 +700,8 @@ public class MergeService {
         module.save();
     }
 
-    private void merge(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, WorkItemsPair pair) {
+    @VisibleForTesting
+    void merge(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, WorkItemsPair pair) {
         for (DiffField field : context.getDiffModel().getDiffFields()) {
             Object fieldValue = polarionService.getFieldValue(source, field.getKey());
             if (IWorkItem.KEY_HYPERLINKS.equals(field.getKey()) && (fieldValue == null || fieldValue instanceof Collection<?>)) {
@@ -733,6 +734,7 @@ public class MergeService {
     }
 
     @VisibleForTesting
+    @SuppressWarnings("java:S1452") // wildcard usage is appropriate here
     Map<String, List<?>> getTestStepsData(TestSteps testSteps) {
         Map<String, List<?>> testStepsData = new HashMap<>();
 
@@ -849,26 +851,21 @@ public class MergeService {
     }
 
     /**
-     * If a document contains a work item which is referenced (external) and belongs to a different project, depending on the 'handleReferences' value we:
-     * <ul>
-     *   <li>ALWAYS_OVERWRITE: replace reference with a newly created new workitem in the target project</li>
-     *   <li>DEFAULT: replace it with a reference to its counterpart if it's found or just remove reference if no counterpart found</li>
-     * </ul>
-     *
+     * If a document contains a work item which is referenced (external) and belongs to a different project, depending on the 'handleReferences'.
      * WARNING: this method modifies module data (like references/un-references work items),
      * but does not persist module, which should be done in caller code which should run in write transaction!
      */
     public void fixReferencedWorkItem(@NotNull IWorkItem referencedWorkItem, @NotNull IModule targetModule, @NotNull SettingsAwareMergeContext context, HandleReferencesType handleReferences) {
         if (!referencedWorkItem.getProjectId().equals(targetModule.getProjectId())) {
             IWorkItem workItemInHead = referencedWorkItem.getRevision() == null ? referencedWorkItem : polarionService.getWorkItem(referencedWorkItem.getProjectId(), referencedWorkItem.getId());
-            IWorkItem pairedWorkItem = context.linkRole.isEmpty() ? null : polarionService.getPairedWorkItems(workItemInHead, targetModule.getProjectId(), context.linkRole).stream().findFirst().orElse(null);
+            IWorkItem pairedWorkItem = context.getLinkRole().isEmpty() ? null : polarionService.getPairedWorkItems(workItemInHead, targetModule.getProjectId(), context.getLinkRole()).stream().findFirst().orElse(null);
 
             IModule.IStructureNode nodeToBeRemoved = targetModule.getStructureNodeOfWI(referencedWorkItem);
             IModule.IStructureNode parentNode = nodeToBeRemoved.getParent();
             int destinationIndex = parentNode.getChildren().indexOf(nodeToBeRemoved);
-            if (HandleReferencesType.ALWAYS_OVERWRITE.equals(handleReferences)) {
+            if (HandleReferencesType.ALWAYS_OVERWRITE.equals(handleReferences) || (pairedWorkItem == null && HandleReferencesType.CREATE_MISSING.equals(handleReferences))) {
                 IWorkItem newWorkItem = polarionService.getTrackerProject(targetModule.getProjectId()).createWorkItem(Objects.requireNonNull(referencedWorkItem.getType()).getId());
-                ILinkRoleOpt linkRole = polarionService.getLinkRoleById(context.linkRole, targetModule.getProject());
+                ILinkRoleOpt linkRole = polarionService.getLinkRoleById(context.getLinkRole(), targetModule.getProject());
                 if (linkRole != null) {
                     newWorkItem.addLinkedItem(workItemInHead, linkRole, null, false);
                 }
@@ -879,6 +876,8 @@ public class MergeService {
                 insertNode(newWorkItem, targetModule, parentNode, destinationIndex, false);
             } else if (pairedWorkItem != null) {
                 insertNode(pairedWorkItem, targetModule, parentNode, destinationIndex, true);
+            } else if (HandleReferencesType.KEEP.equals(handleReferences)) {
+                return;
             }
             targetModule.unreference(referencedWorkItem);
         }

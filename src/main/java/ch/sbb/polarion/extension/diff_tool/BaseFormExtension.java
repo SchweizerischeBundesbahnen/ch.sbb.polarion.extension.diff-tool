@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.HandleReferencesType;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.settings.DiffSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
@@ -35,6 +36,7 @@ public class BaseFormExtension implements IFormExtension {
     private static final String PROJECT_OPTIONS_PLACEHOLDER = "{PROJECT_OPTIONS}";
     private static final String LINK_ROLE_OPTIONS_PLACEHOLDER = "{LINK_ROLE_OPTIONS}";
     private static final String CONFIG_OPTIONS_PLACEHOLDER = "{CONFIG_OPTIONS}";
+    private static final String HANDLE_REFS_PLACEHOLDER = "{HANDLE_REFS_OPTIONS}";
     private static final String SOURCE_DOC_PARAMS_PLACEHOLDER = "{SOURCE_DOC_PARAMS}";
 
     private final String htmlFileName;
@@ -73,6 +75,8 @@ public class BaseFormExtension implements IFormExtension {
 
             Collection<SettingName> settingNames = getSettingNames(ScopeUtils.getScopeFromProject(module.getProjectId()));
             form = form.replace(CONFIG_OPTIONS_PLACEHOLDER, generateSettingOptions(settingNames));
+
+            form = form.replace(HANDLE_REFS_PLACEHOLDER, generateHandleReferencesOptions());
 
             String params = fillParams(module.getProjectId(), module.getModuleFolder(), module.getModuleName(), module.getTitleOrName(), Objects.requireNonNullElse(module.getRevision(), ""));
             // replace with the string like "e-library","specification","Product Specification",null
@@ -121,6 +125,11 @@ public class BaseFormExtension implements IFormExtension {
         } else {
             return String.format(OPTION_TEMPLATE, NamedSettings.DEFAULT_NAME, SELECTED, NamedSettings.DEFAULT_NAME);
         }
+    }
+
+    private String generateHandleReferencesOptions() {
+        return Arrays.stream(HandleReferencesType.values())
+                .map(t -> OPTION_TEMPLATE.formatted(t.name(), "title=\"%s\"".formatted(t.getDescription()), t.getTitle())).collect(Collectors.joining());
     }
 
     @Override

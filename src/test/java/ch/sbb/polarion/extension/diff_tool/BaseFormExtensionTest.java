@@ -108,6 +108,23 @@ class BaseFormExtensionTest {
 
     }
 
+    @Test
+    void testHandleReferences() {
+
+        when(module.getProjectId()).thenReturn("projectId");
+
+        projects = List.of();
+        linkRoles = List.of();
+
+        mockScopeUtils.when(() -> ScopeUtils.getScopeFromProject(any())).thenReturn("testScope");
+        mockScopeUtils.when(() -> ScopeUtils.getFileContent(any())).thenReturn("{HANDLE_REFS_OPTIONS}");
+
+        HtmlFragmentBuilder builder1 = mock(HtmlFragmentBuilder.class);
+        when(sharedContext.createHtmlFragmentBuilderFor().gwt()).thenReturn(builder1);
+        new TestFormExtension(true).render(formExtensionContext);
+        verify(builder1, times(1)).html(matches(".*DEFAULT.*CREATE_MISSING.*KEEP.*ALWAYS_OVERWRITE"));
+    }
+
     private ILinkRoleOpt mockLinkRoleOpt(String id, String name, String oppositeName) {
         ILinkRoleOpt linkRoleOpt = mock(ILinkRoleOpt.class);
         when(linkRoleOpt.getId()).thenReturn(id);

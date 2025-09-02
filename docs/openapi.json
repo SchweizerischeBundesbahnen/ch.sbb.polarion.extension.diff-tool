@@ -1418,6 +1418,8 @@
             "description": "Declares how references should be handled during copy operation",
             "enum": [
               "DEFAULT",
+              "CREATE_MISSING",
+              "KEEP",
               "ALWAYS_OVERWRITE"
             ],
             "type": "string"

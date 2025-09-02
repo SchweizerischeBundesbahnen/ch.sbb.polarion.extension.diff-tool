@@ -25,6 +25,7 @@ CopyTool = {
     const selectedSpace = document.getElementById("copy-space-selector").value;
     const linkRole = document.getElementById("copy-link-role-selector").value;
     const config = document.getElementById("copy-config-selector").value;
+    const handleRefs = document.getElementById("handle-refs-selector").value;
 
     const requestBody = {
       targetDocumentIdentifier: {
@@ -35,7 +36,7 @@ CopyTool = {
       targetDocumentTitle: this.sourceDocumentTitle,
       linkRoleId: linkRole,
       configName: config,
-      handleReferences: document.getElementById("overwrite-referenced-workitems").checked ? 'ALWAYS_OVERWRITE' : 'DEFAULT',
+      handleReferences: handleRefs,
     }
     const revisionUrlPart = this.sourceRevision ? `?revision=${this.sourceRevision}` : '';
 
