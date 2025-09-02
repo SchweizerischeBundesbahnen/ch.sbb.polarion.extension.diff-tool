@@ -414,6 +414,7 @@ class MergeServiceTest {
         when(leftWorkItem.getId()).thenReturn("left");
         when(leftWorkItem.getProjectId()).thenReturn("project1");
         when(leftWorkItem.getLastRevision()).thenReturn("rev1");
+        when(leftWorkItem.getPrototype()).thenReturn(mock(IPrototype.class));
 
         when(leftModule.getOutlineNumberOfWorkitem(leftWorkItem)).thenReturn("1");
 
