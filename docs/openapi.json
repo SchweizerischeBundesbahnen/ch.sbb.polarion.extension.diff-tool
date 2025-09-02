@@ -1832,10 +1832,6 @@
           },
           "type": {
             "$ref": "#/components/schemas/IType"
-          },
-          "value": {
-            "description": "Value of the field",
-            "type": "object"
           }
         },
         "type": "object"

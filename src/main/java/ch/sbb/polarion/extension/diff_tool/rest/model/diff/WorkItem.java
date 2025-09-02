@@ -144,6 +144,7 @@ public final class WorkItem {
         private IType type;
 
         @Schema(description = "Value of the field")
+        @JsonIgnore
         private Object value;
 
         @Schema(description = "HTML representation of the field")
