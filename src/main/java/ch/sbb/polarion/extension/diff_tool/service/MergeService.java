@@ -708,14 +708,7 @@ public class MergeService {
             } else if (IWorkItem.KEY_LINKED_WORK_ITEMS.equals(field.getKey())) {
                 mergeLinkedWorkItems(source, target, context, pair);
             } else {
-                if (!source.getPrototype().isKeyDefined(field.getKey())) { // If field is a custom field in source item...
-                    ICustomFieldsService customFieldsService = polarionService.getTrackerService().getDataService().getCustomFieldsService();
-                    ICustomField sourceCustomField = customFieldsService.getCustomField(source, field.getKey());
-                    ICustomField targetCustomField = customFieldsService.getCustomField(target, field.getKey());
-                    if (!sourceCustomField.getType().equals(targetCustomField.getType())) { // ...and if types of this custom field in source and in target items are not equal then throw an error
-                        throw new IllegalStateException(String.format("Can't merge fields with different types, check that fields with key '%s' have the same type in source and target work item", field.getKey()));
-                    }
-                }
+                validateCustomFieldTypesAccordance(source, target, field);
 
                 if (fieldValue instanceof TestSteps testSteps) {
                     fieldValue = polarionService.getTrackerService().getDataService().createStructureForTypeId(target, ITestSteps.STRUCTURE_ID, getTestStepsData(testSteps));
@@ -726,6 +719,17 @@ public class MergeService {
             }
         }
         target.save();
+    }
+
+    private void validateCustomFieldTypesAccordance(IWorkItem source, IWorkItem target, DiffField field) {
+        if (!source.getPrototype().isKeyDefined(field.getKey())) { // If field is a custom field in source item...
+            ICustomFieldsService customFieldsService = polarionService.getTrackerService().getDataService().getCustomFieldsService();
+            ICustomField sourceCustomField = customFieldsService.getCustomField(source, field.getKey());
+            ICustomField targetCustomField = customFieldsService.getCustomField(target, field.getKey());
+            if (!sourceCustomField.getType().equals(targetCustomField.getType())) { // ...and if types of this custom field in source and in target items are not equal then throw an error
+                throw new IllegalStateException(String.format("Can't merge fields with different types, check that fields with key '%s' have the same type in source and target work item", field.getKey()));
+            }
+        }
     }
 
     @VisibleForTesting

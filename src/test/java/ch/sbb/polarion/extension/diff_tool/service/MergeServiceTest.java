@@ -1530,7 +1530,7 @@ class MergeServiceTest {
         when(testStepsMock.getSteps()).thenReturn(List.of(testStepMock));
 
         Map<String, List<?>> testStepsData = mergeService.getTestStepsData(testStepsMock);
-        assertEquals(testStepsData.size(), 2);
+        assertEquals(2, testStepsData.size());
         assertTrue(testStepsData.containsKey("keys"));
         assertTrue(testStepsData.containsKey("steps"));
 
