@@ -734,6 +734,7 @@ public class MergeService {
     }
 
     @VisibleForTesting
+    @SuppressWarnings("java:S1452") // wildcard usage is appropriate here
     Map<String, List<?>> getTestStepsData(TestSteps testSteps) {
         Map<String, List<?>> testStepsData = new HashMap<>();
 
