@@ -45,6 +45,7 @@ import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.spi.EnumOption;
 import com.polarion.subterra.base.data.identification.IContextId;
+import com.polarion.subterra.base.data.model.ICustomField;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IStructType;
@@ -702,10 +703,15 @@ public class MergeService {
             } else if (IWorkItem.KEY_LINKED_WORK_ITEMS.equals(field.getKey())) {
                 mergeLinkedWorkItems(source, target, context, pair);
             } else {
-                if (!polarionService.getTrackerService().getDataService().getCustomFieldsService().getCustomField(source, field.getKey()).getType()
-                        .equals(polarionService.getTrackerService().getDataService().getCustomFieldsService().getCustomField(target, field.getKey()).getType())) {
-                    throw new IllegalStateException(String.format("Can't merge fields with different types, check that fields with key '%s' have the same type in source and target work item", field.getKey()));
-                } else if (fieldValue instanceof TestSteps testSteps) {
+                if (!source.getPrototype().isKeyDefined(field.getKey())) { // If field is a custom field in source item...
+                    ICustomField sourceCustomField = polarionService.getTrackerService().getDataService().getCustomFieldsService().getCustomField(source, field.getKey());
+                    ICustomField targetCustomField = polarionService.getTrackerService().getDataService().getCustomFieldsService().getCustomField(target, field.getKey());
+                    if (!sourceCustomField.getType().equals(targetCustomField.getType())) { // ...and if types of this custom field in source and in target items are not equal then throw an error
+                        throw new IllegalStateException(String.format("Can't merge fields with different types, check that fields with key '%s' have the same type in source and target work item", field.getKey()));
+                    }
+                }
+
+                if (fieldValue instanceof TestSteps testSteps) {
                     fieldValue = polarionService.getTrackerService().getDataService().createStructureForTypeId(target, ITestSteps.STRUCTURE_ID, getTestStepsData(testSteps));
                 } else if (fieldValue instanceof Text text) {
                     fieldValue = new Text(text.getType(), polarionService.replaceLinksToPairedWorkItems(source, target, context.linkRole, text.getContent()));
@@ -716,7 +722,8 @@ public class MergeService {
         target.save();
     }
 
-    private Map<String, List<?>> getTestStepsData(TestSteps testSteps) {
+    @VisibleForTesting
+    Map<String, List<?>> getTestStepsData(TestSteps testSteps) {
         Map<String, List<?>> testStepsData = new HashMap<>();
 
         testStepsData.put("keys", testSteps.getKeys().stream().map(ITestStepKeyOpt::getId).toList());

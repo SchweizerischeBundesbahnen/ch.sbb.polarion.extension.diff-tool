@@ -38,9 +38,12 @@ import com.polarion.alm.shared.dle.compare.DleWorkItemsComparator;
 import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.internal.model.HyperlinkStruct;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
+import com.polarion.alm.tracker.internal.model.TestStep;
+import com.polarion.alm.tracker.internal.model.TestSteps;
 import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.ITestStepKeyOpt;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
@@ -49,6 +52,7 @@ import com.polarion.platform.persistence.IDataService;
 import com.polarion.platform.persistence.internal.CustomFieldsService;
 import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.IPObjectList;
+import com.polarion.platform.persistence.model.IPrototype;
 import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.CustomField;
 import com.polarion.subterra.base.data.model.IEnumType;
@@ -431,7 +435,6 @@ class MergeServiceTest {
         DiffModel diffModel = mock(DiffModel.class);
 
         List<DiffField> diffFields = new ArrayList<>();
-        diffFields.add(DiffField.builder().key("title").build());
         diffFields.add(DiffField.builder().key("title").build());
 
         when(diffModel.getDiffFields()).thenReturn(diffFields);
@@ -1413,7 +1416,6 @@ class MergeServiceTest {
 
     @Test
     void testInsertNode() {
-
         IModule targetModule = mock(IModule.class);
 
         IDataService dataService = mock(IDataService.class);
@@ -1442,6 +1444,109 @@ class MergeServiceTest {
         when(targetModule.getStructureNodeOfWI(workItem)).thenReturn(structureNode);
         mergeService.insertNode(workItem, targetModule, null, 5, true);
         verify(parentRootNode, times(1)).addChild(structureNode, 5);
+    }
+
+    @Test
+    void testNotCorrespondingFieldTypesThrowsError() {
+        NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
+        DocumentIdentifier doc1 = new DocumentIdentifier("project1", "space1", "doc1", "rev1", "rev1");
+        DocumentIdentifier doc2 = new DocumentIdentifier("project2", "space2", "doc2", "rev1", "rev1");
+
+        CustomField sourceCustomFieldMock = mock(CustomField.class);
+        IType sourceTypeMock = mock(IType.class);
+        when(sourceCustomFieldMock.getType()).thenReturn(sourceTypeMock);
+        CustomField targetCustomFieldMock = mock(CustomField.class);
+        IType targetTypeMock = mock(IType.class);
+        when(targetCustomFieldMock.getType()).thenReturn(targetTypeMock);
+        CustomFieldsService customFieldsServiceMock = mock(CustomFieldsService.class);
+        when(customFieldsServiceMock.getCustomField(argThat(obj -> obj instanceof IWorkItem workItem && workItem.getProjectId().equals("project1")), any())).thenReturn(sourceCustomFieldMock);
+        when(customFieldsServiceMock.getCustomField(argThat(obj -> obj instanceof IWorkItem workItem && workItem.getProjectId().equals("project2")), any())).thenReturn(targetCustomFieldMock);
+        IDataService dataServiceMock = mock(IDataService.class);
+        when(dataServiceMock.getCustomFieldsService()).thenReturn(customFieldsServiceMock);
+        ITrackerService trackerServiceMock = mock(ITrackerService.class);
+        when(trackerServiceMock.getDataService()).thenReturn(dataServiceMock);
+        when(polarionService.getTrackerService()).thenReturn(trackerServiceMock);
+
+        IModule leftModule = mock(IModule.class);
+        ILocation leftLocation = mock(ILocation.class);
+        when(leftLocation.getLocationPath()).thenReturn("space1/doc1");
+        when(leftModule.getModuleLocation()).thenReturn(leftLocation);
+        lenient().when(leftModule.getLastRevision()).thenReturn("rev1");
+        when(polarionService.getModule(doc1)).thenReturn(leftModule);
+
+        IModule rightModule = mock(IModule.class);
+        ILocation rightLocation = mock(ILocation.class);
+        when(rightLocation.getLocationPath()).thenReturn("space2/doc2");
+        when(rightModule.getModuleLocation()).thenReturn(rightLocation);
+        lenient().when(rightModule.getLastRevision()).thenReturn("rev1");
+        when(polarionService.getModule(doc2)).thenReturn(rightModule);
+
+        IWorkItem leftWorkItem = mock(IWorkItem.class);
+        when(leftWorkItem.getId()).thenReturn("left");
+        when(leftWorkItem.getProjectId()).thenReturn("project1");
+        when(leftWorkItem.getLastRevision()).thenReturn("rev1");
+        when(leftWorkItem.getPrototype()).thenReturn(mock(IPrototype.class));
+
+        IWorkItem rightWorkItem = mock(IWorkItem.class);
+        when(rightWorkItem.getId()).thenReturn("right");
+        when(rightWorkItem.getProjectId()).thenReturn("project2");
+        when(rightWorkItem.getLastRevision()).thenReturn("rev1");
+
+        List<WorkItemsPair> workItemsPairs = new ArrayList<>();
+        workItemsPairs.add(WorkItemsPair.of(leftWorkItem, rightWorkItem));
+        DiffModel diffModel = mock(DiffModel.class);
+
+        List<DiffField> diffFields = new ArrayList<>();
+        diffFields.add(DiffField.builder().key("testSteps").build());
+
+        when(diffModel.getDiffFields()).thenReturn(diffFields);
+        when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false);
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, mergeParams.isAllowedReferencedWorkItemMerge());
+
+        when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
+        when(polarionService.getWorkItem("project2", "right", null)).thenReturn(rightWorkItem);
+
+        WorkItemsPair pair = WorkItemsPair.of(leftWorkItem, rightWorkItem);
+
+        assertThrows(IllegalStateException.class, () -> mergeService.updateAndMoveItem(pair, context), "Can't merge fields with different types, check that fields with key 'testSteps' have the same type in source and target work item");
+    }
+
+    @Test
+    void testGetTestStepsData() {
+        TestSteps testStepsMock = mock(TestSteps.class);
+
+        ITestStepKeyOpt testStepKeyOptKey = mock(ITestStepKeyOpt.class);
+        when(testStepKeyOptKey.getId()).thenReturn("key");
+        ITestStepKeyOpt testStepKeyOptDescription = mock(ITestStepKeyOpt.class);
+        when(testStepKeyOptDescription.getId()).thenReturn("description");
+        ITestStepKeyOpt testStepKeyOptResult = mock(ITestStepKeyOpt.class);
+        when(testStepKeyOptResult.getId()).thenReturn("result");
+        when(testStepsMock.getKeys()).thenReturn(List.of(testStepKeyOptKey, testStepKeyOptDescription, testStepKeyOptResult));
+
+        TestStep testStepMock = mock(TestStep.class);
+        when(testStepMock.getValues()).thenReturn(List.of(Text.plain("key1"), Text.plain("description1"), Text.plain("result1")));
+        when(testStepsMock.getSteps()).thenReturn(List.of(testStepMock));
+
+        Map<String, List<?>> testStepsData = mergeService.getTestStepsData(testStepsMock);
+        assertEquals(testStepsData.size(), 2);
+        assertTrue(testStepsData.containsKey("keys"));
+        assertTrue(testStepsData.containsKey("steps"));
+
+        List<?> keys = testStepsData.get("keys");
+        assertEquals(3, keys.size());
+        assertEquals("key", keys.get(0));
+        assertEquals("description", keys.get(1));
+        assertEquals("result", keys.get(2));
+
+        List<?> steps = testStepsData.get("steps");
+        assertEquals(1, steps.size());
+
+        List<?> step = (List<?>) ((Map<?,?>) steps.get(0)).get("values");
+        assertEquals(3, step.size());
+        assertEquals(Text.plain("key1"), step.get(0));
+        assertEquals(Text.plain("description1"), step.get(1));
+        assertEquals(Text.plain("result1"), step.get(2));
     }
 
     private IModule mockTargetModule() {
