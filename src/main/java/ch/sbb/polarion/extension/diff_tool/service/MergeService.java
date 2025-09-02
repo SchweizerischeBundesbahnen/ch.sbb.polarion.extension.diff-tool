@@ -33,10 +33,13 @@ import com.polarion.alm.shared.dle.compare.merge.DuplicateWorkItemAction;
 import com.polarion.alm.tracker.internal.model.HyperlinkStruct;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
+import com.polarion.alm.tracker.internal.model.TestSteps;
 import com.polarion.alm.tracker.internal.model.module.Module;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.ITestStepKeyOpt;
+import com.polarion.alm.tracker.model.ITestSteps;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
@@ -56,6 +59,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -698,13 +702,27 @@ public class MergeService {
             } else if (IWorkItem.KEY_LINKED_WORK_ITEMS.equals(field.getKey())) {
                 mergeLinkedWorkItems(source, target, context, pair);
             } else {
-                if (fieldValue instanceof Text text) {
+                if (!polarionService.getTrackerService().getDataService().getCustomFieldsService().getCustomField(source, field.getKey()).getType()
+                        .equals(polarionService.getTrackerService().getDataService().getCustomFieldsService().getCustomField(target, field.getKey()).getType())) {
+                    throw new IllegalStateException(String.format("Can't merge fields with different types, check that fields with key '%s' have the same type in source and target work item", field.getKey()));
+                } else if (fieldValue instanceof TestSteps testSteps) {
+                    fieldValue = polarionService.getTrackerService().getDataService().createStructureForTypeId(target, ITestSteps.STRUCTURE_ID, getTestStepsData(testSteps));
+                } else if (fieldValue instanceof Text text) {
                     fieldValue = new Text(text.getType(), polarionService.replaceLinksToPairedWorkItems(source, target, context.linkRole, text.getContent()));
                 }
                 polarionService.setFieldValue(target, field.getKey(), fieldValue);
             }
         }
         target.save();
+    }
+
+    private Map<String, List<?>> getTestStepsData(TestSteps testSteps) {
+        Map<String, List<?>> testStepsData = new HashMap<>();
+
+        testStepsData.put("keys", testSteps.getKeys().stream().map(ITestStepKeyOpt::getId).toList());
+        testStepsData.put("steps", testSteps.getSteps().stream().map(testStep -> Map.of("values", testStep.getValues())).toList());
+
+        return testStepsData;
     }
 
     @VisibleForTesting

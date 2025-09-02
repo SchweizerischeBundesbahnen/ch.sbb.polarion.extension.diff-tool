@@ -35,6 +35,7 @@ import com.polarion.alm.shared.api.utils.collections.StrictList;
 import com.polarion.alm.shared.dle.compare.DleWIsMergeAction;
 import com.polarion.alm.shared.dle.compare.DleWIsMergeActionExecuter;
 import com.polarion.alm.shared.dle.compare.DleWorkItemsComparator;
+import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.internal.model.HyperlinkStruct;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
@@ -45,12 +46,15 @@ import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.IDataService;
+import com.polarion.platform.persistence.internal.CustomFieldsService;
 import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.subterra.base.data.identification.IContextId;
+import com.polarion.subterra.base.data.model.CustomField;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IStructType;
+import com.polarion.subterra.base.data.model.IType;
 import com.polarion.subterra.base.location.ILocation;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -386,6 +390,8 @@ class MergeServiceTest {
         NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
         DocumentIdentifier doc1 = new DocumentIdentifier("project1", "space1", "doc1", "rev1", "rev1");
         DocumentIdentifier doc2 = new DocumentIdentifier("project1", "space1", "doc2", "rev1", "rev1");
+
+        mockCustomFields();
 
         IModule leftModule = mock(IModule.class);
         ILocation leftLocation = mock(ILocation.class);
@@ -961,6 +967,8 @@ class MergeServiceTest {
 
     @Test
     void testCopyWorkItemWhenTargetIsNull() {
+        mockCustomFields();
+
         when(polarionService.getStandardFields()).thenReturn(List.of(
                 WorkItemField.builder().key("title").build(),
                 WorkItemField.builder().key("status").build(),
@@ -1442,5 +1450,17 @@ class MergeServiceTest {
         when(dataService.createStructureForTypeId(nullable(IPObject.class), nullable(String.class), nullable(Map.class))).thenReturn(mock(IModule.IStructureNode.class));
         when(module.getDataSvc()).thenReturn(dataService);
         return module;
+    }
+
+    private void mockCustomFields() {
+        CustomField customFieldMock = mock(CustomField.class);
+        when(customFieldMock.getType()).thenReturn(mock(IType.class));
+        CustomFieldsService customFieldsServiceMock = mock(CustomFieldsService.class);
+        when(customFieldsServiceMock.getCustomField(any(), any())).thenReturn(customFieldMock);
+        IDataService dataServiceMock = mock(IDataService.class);
+        when(dataServiceMock.getCustomFieldsService()).thenReturn(customFieldsServiceMock);
+        ITrackerService trackerServiceMock = mock(ITrackerService.class);
+        when(trackerServiceMock.getDataService()).thenReturn(dataServiceMock);
+        when(polarionService.getTrackerService()).thenReturn(trackerServiceMock);
     }
 }
