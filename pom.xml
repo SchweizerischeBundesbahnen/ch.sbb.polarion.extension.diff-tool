@@ -45,7 +45,7 @@
 
     <properties>
         <node.version>v20.11.0</node.version>
-        <frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
+        <frontend-maven-plugin.version>1.15.4</frontend-maven-plugin.version>
 
         <maven-jar-plugin.Extension-Context>diff-tool</maven-jar-plugin.Extension-Context>
         <maven-jar-plugin.Automatic-Module-Name>ch.sbb.polarion.extension.diff_tool</maven-jar-plugin.Automatic-Module-Name>
