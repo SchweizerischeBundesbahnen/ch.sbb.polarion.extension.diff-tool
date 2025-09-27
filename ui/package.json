@@ -11,7 +11,7 @@
     "react-dom": "^18",
     "react-popper": "^2.3.0",
     "react-popper-tooltip": "^4.4.2",
-    "uuid": "^11.0.0"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@playwright/test": "1.55.1",
