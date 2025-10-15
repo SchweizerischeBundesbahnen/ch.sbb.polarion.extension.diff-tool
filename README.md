@@ -189,13 +189,13 @@ Also, `isDifferent` can be used if you need to show something specific for cases
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `leftProjectId` | `String` | Yes | The project ID of the left (reference) work item for comparison context |
-| `workItemA` | `IWorkItem` | No | The first work item to compare (left side). Can be `null`. |
-| `workItemB` | `IWorkItem` | No | The second work item to compare (right side). Can be `null`. |
-| `configName` | `String` | Yes | The name of the diff configuration to use (e.g., "Default"). Determines which fields are compared and how differences are calculated. |
-| `linkRole` | `String` | No | The role/type of link between paired work items (e.g., "parent", "relates_to"). Can be `null` if no link relationship needs to be considered. |
+| Parameter       | Type        | Required | Description                                                                                                                                   |
+|-----------------|-------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `leftProjectId` | `String`    | Yes      | The project ID of the left (reference) work item for comparison context                                                                       |
+| `workItemA`     | `IWorkItem` | No       | The first work item to compare (left side). Can be `null`.                                                                                    |
+| `workItemB`     | `IWorkItem` | No       | The second work item to compare (right side). Can be `null`.                                                                                  |
+| `configName`    | `String`    | Yes      | The name of the diff configuration to use (e.g., "Default"). Determines which fields are compared and how differences are calculated.         |
+| `linkRole`      | `String`    | No       | The role/type of link between paired work items (e.g., "parent", "relates_to"). Can be `null` if no link relationship needs to be considered. |
 
 ### Returns
 
