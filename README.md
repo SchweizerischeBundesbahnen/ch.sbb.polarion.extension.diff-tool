@@ -218,7 +218,7 @@ Also, `isDifferent` can be used if you need to show something specific for cases
 #set($wiA = $workItems.get(0))
 #set($wiB = $workItems.get(1))
 
- #set($diffResult = $diffTool.diffWorkItems($wiA, $wiB, "Default", ""))
+ #set($diffResult = $diffTool.diffWorkItems($projectId, $wiA, $wiB, "Default", ""))
 
 
 <h3>Work Item Differences</h3>
