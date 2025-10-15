@@ -159,7 +159,7 @@ Default value is `2`. Increasing this value may speed up the process but can als
 This extension provides REST API. OpenAPI Specification can be obtained [here](docs/openapi.json).
 
 ## Calling diff methods from Velocity Context
-
+### Diffing text or HTML content
 `diffText` and `diffHtml` functions are available in Velocity context referenced by `$diffTool` variable.
 Example:
 
@@ -182,4 +182,62 @@ Also, `isDifferent` can be used if you need to show something specific for cases
 #else
   No changes
 #end
+```
+### Diffing work items w/o document context
+
+`diffWorkItems` compares two work items and returns a WorkItemsPairDiff object containing all differences.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `leftProjectId` | `String` | Yes | The project ID of the left (reference) work item for comparison context |
+| `workItemA` | `IWorkItem` | No | The first work item to compare (left side). Can be `null`. |
+| `workItemB` | `IWorkItem` | No | The second work item to compare (right side). Can be `null`. |
+| `configName` | `String` | Yes | The name of the diff configuration to use (e.g., "Default"). Determines which fields are compared and how differences are calculated. |
+| `linkRole` | `String` | No | The role/type of link between paired work items (e.g., "parent", "relates_to"). Can be `null` if no link relationship needs to be considered. |
+
+### Returns
+
+`WorkItemsPairDiff` - An object containing all field-level differences between the work items, accessible via `fieldDiffsMap` where each entry contains the field name and diff values.
+
+### Example Usage
+
+```velocity
+## Get current project object
+#set($projectId = $page.fields().project().projectId())
+#set($project = $projectService.getProject($projectId))
+
+<h2>Selected Work Items in Project: $project.name</h2>
+
+
+## Example: Specific IDs in this project
+#set($query = "project.id:$projectId AND (id:EL-1 OR id:EL-2)")
+#set($workItems = $trackerService.queryWorkItems($query, "id"))
+
+#set($wiA = $workItems.get(0))
+#set($wiB = $workItems.get(1))
+
+ #set($diffResult = $diffTool.diffWorkItems($wiA, $wiB, "Default", ""))
+
+
+<h3>Work Item Differences</h3>
+
+<table border="1" cellspacing="0" cellpadding="5">
+  <tr>
+    <th>Field</th>
+    <th>$wiA.id</th>
+    <th>$wiB.id</th>
+  </tr>
+
+## Loop through all field differences
+#foreach($fieldId in $diffResult.fieldDiffsMap.keySet())
+  #set($fieldDiff = $diffResult.fieldDiffsMap.get($fieldId))
+  <tr>
+    <td>$fieldDiff.getName()</td>
+    <td>$fieldDiff.getDiffLeft()</td>
+    <td>$fieldDiff.getDiffRight()</td>
+  </tr>
+#end
+</table>
 ```
