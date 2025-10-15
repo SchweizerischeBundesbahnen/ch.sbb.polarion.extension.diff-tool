@@ -192,8 +192,8 @@ Also, `isDifferent` can be used if you need to show something specific for cases
 | Parameter       | Type        | Required | Description                                                                                                                                   |
 |-----------------|-------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------|
 | `leftProjectId` | `String`    | Yes      | The project ID of the left (reference) work item for comparison context                                                                       |
-| `workItemA`     | `IWorkItem` | No       | The first work item to compare (left side). Can be `null`.                                                                                    |
-| `workItemB`     | `IWorkItem` | No       | The second work item to compare (right side). Can be `null`.                                                                                  |
+| `leftWorkItem`  | `IWorkItem` | No       | The first work item to compare (left side). Can be `null`.                                                                                    |
+| `rightWorkItem` | `IWorkItem` | No       | The second work item to compare (right side). Can be `null`.                                                                                  |
 | `configName`    | `String`    | Yes      | The name of the diff configuration to use (e.g., "Default"). Determines which fields are compared and how differences are calculated.         |
 | `linkRole`      | `String`    | No       | The role/type of link between paired work items (e.g., "parent", "relates_to"). Can be `null` if no link relationship needs to be considered. |
 
@@ -215,10 +215,10 @@ Also, `isDifferent` can be used if you need to show something specific for cases
 #set($query = "project.id:$projectId AND (id:EL-1 OR id:EL-2)")
 #set($workItems = $trackerService.queryWorkItems($query, "id"))
 
-#set($wiA = $workItems.get(0))
-#set($wiB = $workItems.get(1))
+#set($rightWorkItem = $workItems.get(0))
+#set($rightWorkItem = $workItems.get(1))
 
- #set($diffResult = $diffTool.diffWorkItems($projectId, $wiA, $wiB, "Default", ""))
+ #set($diffResult = $diffTool.diffWorkItems($projectId, $rightWorkItem, $rightWorkItem, "Default", ""))
 
 
 <h3>Work Item Differences</h3>
@@ -226,8 +226,8 @@ Also, `isDifferent` can be used if you need to show something specific for cases
 <table border="1" cellspacing="0" cellpadding="5">
   <tr>
     <th>Field</th>
-    <th>$wiA.id</th>
-    <th>$wiB.id</th>
+    <th>$rightWorkItem.id</th>
+    <th>$rightWorkItem.id</th>
   </tr>
 
 ## Loop through all field differences

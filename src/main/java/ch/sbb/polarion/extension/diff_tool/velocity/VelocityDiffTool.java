@@ -32,14 +32,14 @@ public class VelocityDiffTool {
     @NotNull
     @SuppressWarnings("java:S3252") // false positive
     public WorkItemsPairDiff diffWorkItems(@NotNull String leftProjectId,
-                                           @Nullable IWorkItem workItemA,
-                                           @Nullable IWorkItem workItemB,
+                                           @Nullable IWorkItem leftWorkItem,
+                                           @Nullable IWorkItem rightWorkItem,
                                            @NotNull String configName,
                                            @Nullable String linkRole) {
         DetachedWorkItemsPairDiffParams params = DetachedWorkItemsPairDiffParams.builder()
                 .leftProjectId(leftProjectId)
-                .leftWorkItem(workItemA != null ? toProjectWorkItem(workItemA) : null)
-                .rightWorkItem(workItemB != null ? toProjectWorkItem(workItemB) : null)
+                .leftWorkItem(leftWorkItem != null ? toProjectWorkItem(leftWorkItem) : null)
+                .rightWorkItem(rightWorkItem != null ? toProjectWorkItem(rightWorkItem) : null)
                 .configName(configName)
                 .pairedWorkItemsLinkRole(linkRole)
                 .build();
