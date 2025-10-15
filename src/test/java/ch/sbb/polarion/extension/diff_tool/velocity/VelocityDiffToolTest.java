@@ -9,8 +9,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Method;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -35,7 +33,7 @@ class VelocityDiffToolTest {
         when(workItemA.getProjectId()).thenReturn("project1");
         when(workItemA.getRevision()).thenReturn("5");
 
-        ProjectWorkItem result = invokeToProjectWorkItem(workItemA);
+        ProjectWorkItem result = velocityDiffTool.toProjectWorkItem(workItemA);
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo("WI-001");
@@ -55,7 +53,7 @@ class VelocityDiffToolTest {
         when(workItemA.getRevision()).thenReturn(null);
         when(workItemA.getLastRevision()).thenReturn("10");
 
-        ProjectWorkItem result = invokeToProjectWorkItem(workItemA);
+        ProjectWorkItem result = velocityDiffTool.toProjectWorkItem(workItemA);
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo("WI-001");
@@ -78,7 +76,7 @@ class VelocityDiffToolTest {
         when(workItemA.getProjectId()).thenReturn(expectedProjectId);
         when(workItemA.getRevision()).thenReturn(expectedRevision);
 
-        ProjectWorkItem result = invokeToProjectWorkItem(workItemA);
+        ProjectWorkItem result = velocityDiffTool.toProjectWorkItem(workItemA);
 
         assertThat(result.getId()).isEqualTo(expectedId);
         assertThat(result.getProjectId()).isEqualTo(expectedProjectId);
@@ -92,7 +90,7 @@ class VelocityDiffToolTest {
         when(workItemA.getRevision()).thenReturn(null);
         when(workItemA.getLastRevision()).thenReturn("15");
 
-        ProjectWorkItem result = invokeToProjectWorkItem(workItemA);
+        ProjectWorkItem result = velocityDiffTool.toProjectWorkItem(workItemA);
 
         assertThat(result.getRevision()).isEqualTo("15");
         verify(workItemA).getRevision();
@@ -161,14 +159,5 @@ class VelocityDiffToolTest {
 
         verify(workItemA).getRevision();
         verify(workItemA).getLastRevision();
-    }
-
-    /**
-     * Helper method to invoke the private toProjectWorkItem method using reflection
-     */
-    private ProjectWorkItem invokeToProjectWorkItem(IWorkItem workItem) throws Exception {
-        Method method = VelocityDiffTool.class.getDeclaredMethod("toProjectWorkItem", IWorkItem.class);
-        method.setAccessible(true);
-        return (ProjectWorkItem) method.invoke(velocityDiffTool, workItem);
     }
 }

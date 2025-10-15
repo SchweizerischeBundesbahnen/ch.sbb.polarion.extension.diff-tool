@@ -10,6 +10,7 @@ import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import com.polarion.alm.tracker.model.IWorkItem;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 @SuppressWarnings("unused")
 public class VelocityDiffTool {
@@ -47,7 +48,8 @@ public class VelocityDiffTool {
     }
 
     @NotNull
-    private ProjectWorkItem toProjectWorkItem(@NotNull IWorkItem workItem) {
+    @VisibleForTesting
+    ProjectWorkItem toProjectWorkItem(@NotNull IWorkItem workItem) {
         String revision = workItem.getRevision();
         if (revision == null) {
             revision = workItem.getLastRevision();
