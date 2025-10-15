@@ -17,10 +17,10 @@ class VelocityDiffToolTest {
     private VelocityDiffTool velocityDiffTool;
 
     @Mock
-    private IWorkItem workItemA;
+    private IWorkItem leftWorkItem;
 
     @Mock
-    private IWorkItem workItemB;
+    private IWorkItem rightWorkItem;
 
     @BeforeEach
     void setUp() {
@@ -29,41 +29,41 @@ class VelocityDiffToolTest {
 
     @Test
     void testToProjectWorkItemShouldUseRevisionWhenAvailable() {
-        when(workItemA.getId()).thenReturn("WI-001");
-        when(workItemA.getProjectId()).thenReturn("project1");
-        when(workItemA.getRevision()).thenReturn("5");
+        when(leftWorkItem.getId()).thenReturn("WI-001");
+        when(leftWorkItem.getProjectId()).thenReturn("project1");
+        when(leftWorkItem.getRevision()).thenReturn("5");
 
-        ProjectWorkItem result = velocityDiffTool.toProjectWorkItem(workItemA);
+        ProjectWorkItem result = velocityDiffTool.toProjectWorkItem(leftWorkItem);
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo("WI-001");
         assertThat(result.getProjectId()).isEqualTo("project1");
         assertThat(result.getRevision()).isEqualTo("5");
 
-        verify(workItemA).getId();
-        verify(workItemA).getProjectId();
-        verify(workItemA).getRevision();
-        verify(workItemA, never()).getLastRevision();
+        verify(leftWorkItem).getId();
+        verify(leftWorkItem).getProjectId();
+        verify(leftWorkItem).getRevision();
+        verify(leftWorkItem, never()).getLastRevision();
     }
 
     @Test
     void testToProjectWorkItemShouldUseLastRevisionWhenRevisionIsNull() {
-        when(workItemA.getId()).thenReturn("WI-001");
-        when(workItemA.getProjectId()).thenReturn("project1");
-        when(workItemA.getRevision()).thenReturn(null);
-        when(workItemA.getLastRevision()).thenReturn("10");
+        when(leftWorkItem.getId()).thenReturn("WI-001");
+        when(leftWorkItem.getProjectId()).thenReturn("project1");
+        when(leftWorkItem.getRevision()).thenReturn(null);
+        when(leftWorkItem.getLastRevision()).thenReturn("10");
 
-        ProjectWorkItem result = velocityDiffTool.toProjectWorkItem(workItemA);
+        ProjectWorkItem result = velocityDiffTool.toProjectWorkItem(leftWorkItem);
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo("WI-001");
         assertThat(result.getProjectId()).isEqualTo("project1");
         assertThat(result.getRevision()).isEqualTo("10");
 
-        verify(workItemA).getId();
-        verify(workItemA).getProjectId();
-        verify(workItemA).getRevision();
-        verify(workItemA).getLastRevision();
+        verify(leftWorkItem).getId();
+        verify(leftWorkItem).getProjectId();
+        verify(leftWorkItem).getRevision();
+        verify(leftWorkItem).getLastRevision();
     }
 
     @Test
@@ -72,11 +72,11 @@ class VelocityDiffToolTest {
         String expectedProjectId = "myProject";
         String expectedRevision = "42";
 
-        when(workItemA.getId()).thenReturn(expectedId);
-        when(workItemA.getProjectId()).thenReturn(expectedProjectId);
-        when(workItemA.getRevision()).thenReturn(expectedRevision);
+        when(leftWorkItem.getId()).thenReturn(expectedId);
+        when(leftWorkItem.getProjectId()).thenReturn(expectedProjectId);
+        when(leftWorkItem.getRevision()).thenReturn(expectedRevision);
 
-        ProjectWorkItem result = velocityDiffTool.toProjectWorkItem(workItemA);
+        ProjectWorkItem result = velocityDiffTool.toProjectWorkItem(leftWorkItem);
 
         assertThat(result.getId()).isEqualTo(expectedId);
         assertThat(result.getProjectId()).isEqualTo(expectedProjectId);
@@ -85,51 +85,51 @@ class VelocityDiffToolTest {
 
     @Test
     void testToProjectWorkItemShouldCallGetLastRevisionOnlyWhenRevisionIsNull() {
-        when(workItemA.getId()).thenReturn("WI-001");
-        when(workItemA.getProjectId()).thenReturn("project1");
-        when(workItemA.getRevision()).thenReturn(null);
-        when(workItemA.getLastRevision()).thenReturn("15");
+        when(leftWorkItem.getId()).thenReturn("WI-001");
+        when(leftWorkItem.getProjectId()).thenReturn("project1");
+        when(leftWorkItem.getRevision()).thenReturn(null);
+        when(leftWorkItem.getLastRevision()).thenReturn("15");
 
-        ProjectWorkItem result = velocityDiffTool.toProjectWorkItem(workItemA);
+        ProjectWorkItem result = velocityDiffTool.toProjectWorkItem(leftWorkItem);
 
         assertThat(result.getRevision()).isEqualTo("15");
-        verify(workItemA).getRevision();
-        verify(workItemA, times(1)).getLastRevision();
+        verify(leftWorkItem).getRevision();
+        verify(leftWorkItem, times(1)).getLastRevision();
     }
 
     @Test
     void testDiffWorkItemsShouldCallToProjectWorkItemForNonNullWorkItems() {
-        when(workItemA.getId()).thenReturn("WI-001");
-        when(workItemA.getProjectId()).thenReturn("project1");
-        when(workItemA.getRevision()).thenReturn("5");
+        when(leftWorkItem.getId()).thenReturn("WI-001");
+        when(leftWorkItem.getProjectId()).thenReturn("project1");
+        when(leftWorkItem.getRevision()).thenReturn("5");
 
-        when(workItemB.getId()).thenReturn("WI-002");
-        when(workItemB.getProjectId()).thenReturn("project2");
-        when(workItemB.getRevision()).thenReturn("3");
+        when(rightWorkItem.getId()).thenReturn("WI-002");
+        when(rightWorkItem.getProjectId()).thenReturn("project2");
+        when(rightWorkItem.getRevision()).thenReturn("3");
 
         try {
-            velocityDiffTool.diffWorkItems("project1", workItemA, workItemB, "config", "parent");
+            velocityDiffTool.diffWorkItems("project1", leftWorkItem, rightWorkItem, "config", "parent");
         } catch (Exception e) {
             // Expected to fail due to real DiffService call, but we can verify the mock interactions
         }
 
-        verify(workItemA).getId();
-        verify(workItemA).getProjectId();
-        verify(workItemA).getRevision();
-        verify(workItemB).getId();
-        verify(workItemB).getProjectId();
-        verify(workItemB).getRevision();
+        verify(leftWorkItem).getId();
+        verify(leftWorkItem).getProjectId();
+        verify(leftWorkItem).getRevision();
+        verify(rightWorkItem).getId();
+        verify(rightWorkItem).getProjectId();
+        verify(rightWorkItem).getRevision();
     }
 
     @Test
     void testDiffWorkItemsShouldNotCallWorkItemMethodsWhenWorkItemIsNull() {
         try {
-            velocityDiffTool.diffWorkItems("project1", null, workItemB, "config", "parent");
+            velocityDiffTool.diffWorkItems("project1", null, rightWorkItem, "config", "parent");
         } catch (Exception e) {
             // Expected to fail due to real DiffService call
         }
 
-        verifyNoInteractions(workItemA);
+        verifyNoInteractions(leftWorkItem);
     }
 
     @Test
@@ -140,24 +140,24 @@ class VelocityDiffToolTest {
             // Expected to fail due to real DiffService call
         }
 
-        verifyNoInteractions(workItemA);
-        verifyNoInteractions(workItemB);
+        verifyNoInteractions(leftWorkItem);
+        verifyNoInteractions(rightWorkItem);
     }
 
     @Test
     void testDiffWorkItemsShouldUseLastRevisionForWorkItemWithNullRevision() {
-        when(workItemA.getId()).thenReturn("WI-001");
-        when(workItemA.getProjectId()).thenReturn("project1");
-        when(workItemA.getRevision()).thenReturn(null);
-        when(workItemA.getLastRevision()).thenReturn("10");
+        when(leftWorkItem.getId()).thenReturn("WI-001");
+        when(leftWorkItem.getProjectId()).thenReturn("project1");
+        when(leftWorkItem.getRevision()).thenReturn(null);
+        when(leftWorkItem.getLastRevision()).thenReturn("10");
 
         try {
-            velocityDiffTool.diffWorkItems("project1", workItemA, null, "config", "parent");
+            velocityDiffTool.diffWorkItems("project1", leftWorkItem, null, "config", "parent");
         } catch (Exception e) {
             // Expected to fail due to real DiffService call
         }
 
-        verify(workItemA).getRevision();
-        verify(workItemA).getLastRevision();
+        verify(leftWorkItem).getRevision();
+        verify(leftWorkItem).getLastRevision();
     }
 }
