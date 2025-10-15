@@ -28,7 +28,7 @@ class VelocityDiffToolTest {
     }
 
     @Test
-    void testToProjectWorkItemShouldUseRevisionWhenAvailable() throws Exception {
+    void testToProjectWorkItemShouldUseRevisionWhenAvailable() {
         when(workItemA.getId()).thenReturn("WI-001");
         when(workItemA.getProjectId()).thenReturn("project1");
         when(workItemA.getRevision()).thenReturn("5");
@@ -47,7 +47,7 @@ class VelocityDiffToolTest {
     }
 
     @Test
-    void testToProjectWorkItemShouldUseLastRevisionWhenRevisionIsNull() throws Exception {
+    void testToProjectWorkItemShouldUseLastRevisionWhenRevisionIsNull() {
         when(workItemA.getId()).thenReturn("WI-001");
         when(workItemA.getProjectId()).thenReturn("project1");
         when(workItemA.getRevision()).thenReturn(null);
@@ -67,7 +67,7 @@ class VelocityDiffToolTest {
     }
 
     @Test
-    void testToProjectWorkItemShouldHandleWorkItemWithId() throws Exception {
+    void testToProjectWorkItemShouldHandleWorkItemWithId() {
         String expectedId = "TEST-123";
         String expectedProjectId = "myProject";
         String expectedRevision = "42";
@@ -84,7 +84,7 @@ class VelocityDiffToolTest {
     }
 
     @Test
-    void testToProjectWorkItemShouldCallGetLastRevisionOnlyWhenRevisionIsNull() throws Exception {
+    void testToProjectWorkItemShouldCallGetLastRevisionOnlyWhenRevisionIsNull() {
         when(workItemA.getId()).thenReturn("WI-001");
         when(workItemA.getProjectId()).thenReturn("project1");
         when(workItemA.getRevision()).thenReturn(null);
