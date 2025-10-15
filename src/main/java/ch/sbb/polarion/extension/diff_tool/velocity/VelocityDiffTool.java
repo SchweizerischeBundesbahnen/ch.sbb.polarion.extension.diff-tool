@@ -29,6 +29,7 @@ public class VelocityDiffTool {
     }
 
     @NotNull
+    @SuppressWarnings("java:S3252") // false positive
     public WorkItemsPairDiff diffWorkItems(@NotNull String leftProjectId,
                                            @Nullable IWorkItem workItemA,
                                            @Nullable IWorkItem workItemB,
