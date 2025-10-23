@@ -16,6 +16,7 @@ export function useAppContext(){
   const [selectedItemsCount, setSelectedItemsCount] = useState(0);
 
   return { headerPinned,
+    setHeaderPinned,
     controlPaneAccessible,
     setControlPaneAccessible,
     controlPaneExpanded,

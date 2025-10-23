@@ -566,7 +566,7 @@ a:hover {
 }
 
 @media print {
-  .control-pane, .merge-pane, .merge-ticker {
+  .control-pane, .merge-pane, .merge-ticker, .floating-button {
     display: none !important;
   }
 
