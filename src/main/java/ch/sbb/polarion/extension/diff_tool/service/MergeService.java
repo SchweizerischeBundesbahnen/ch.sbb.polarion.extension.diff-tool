@@ -18,6 +18,7 @@ import ch.sbb.polarion.extension.diff_tool.service.cleaners.FieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
+import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import com.polarion.alm.shared.api.model.document.internal.InternalDocument;
 import com.polarion.alm.shared.api.model.document.internal.InternalUpdatableDocument;
 import com.polarion.alm.shared.api.model.wi.WorkItemReference;
@@ -714,7 +715,7 @@ public class MergeService {
                 if (fieldValue instanceof TestSteps testSteps) {
                     fieldValue = polarionService.getTrackerService().getDataService().createStructureForTypeId(target, ITestSteps.STRUCTURE_ID, getTestStepsData(testSteps));
                 } else if (fieldValue instanceof Text text) {
-                    fieldValue = new Text(text.getType(), polarionService.replaceLinksToPairedWorkItems(source, target, context.linkRole, text.getContent()));
+                    fieldValue = new Text(text.getType(), preProcessRichText(source, target, context.getLinkRole(),text.getContent()));
                 }
                 polarionService.setFieldValue(target, field.getKey(), fieldValue);
             }
@@ -722,7 +723,16 @@ public class MergeService {
         target.save();
     }
 
-    private void validateCustomFieldTypesAccordance(IWorkItem source, IWorkItem target, DiffField field) {
+    private String preProcessRichText(IWorkItem source, IWorkItem target, String linkRole, String richTextContent) {
+        return polarionService.replaceLinksToPairedWorkItems(source, target, linkRole, removeComments(richTextContent));
+    }
+
+    private String removeComments(String richTextContent) {
+        return RegexMatcher.get("<span id=[\"']polarion-comment:\\d+[\"'][^>]*>").removeAll(richTextContent);
+    }
+
+    @VisibleForTesting
+    void validateCustomFieldTypesAccordance(IWorkItem source, IWorkItem target, DiffField field) {
         if (!source.getPrototype().isKeyDefined(field.getKey())) { // If field is a custom field in source item...
             ICustomFieldsService customFieldsService = polarionService.getTrackerService().getDataService().getCustomFieldsService();
             ICustomField sourceCustomField = customFieldsService.getCustomField(source, field.getKey());
