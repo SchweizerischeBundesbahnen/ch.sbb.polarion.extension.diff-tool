@@ -728,7 +728,7 @@ public class MergeService {
     }
 
     private String removeComments(String richTextContent) {
-        return RegexMatcher.get("<span id=[\"']polarion-comment:\\d+[\"'][^>]*>").removeAll(richTextContent);
+        return RegexMatcher.get("<span id=[\"']polarion-comment:\\d+[\"'][^>]*>(?:</span>)?").removeAll(richTextContent);
     }
 
     @VisibleForTesting

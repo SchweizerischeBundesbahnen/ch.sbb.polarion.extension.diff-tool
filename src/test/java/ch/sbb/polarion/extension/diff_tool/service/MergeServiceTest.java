@@ -1625,7 +1625,7 @@ class MergeServiceTest {
         when(context.getDiffModel().getDiffFields()).thenReturn(List.of(richField));
         when(context.getLinkRole()).thenReturn("duplicates");
 
-        Text text = Text.html("<div><h1>Header</h1><p>Some <b>bold</b> text.</p><span id=\"polarion-comment:75\"></div>");
+        Text text = Text.html("<div><h1>Header</h1><p>Some <b>bold</b> text.</p><span id=\"polarion-comment:75\"><span id=\"polarion-comment:76\"/><span id=\"polarion-comment:77\"></span></div>");
         when(polarionService.getFieldValue(source, "richTextField")).thenReturn(text);
 
         MergeService mergeServiceSpy = spy(mergeService);
