@@ -82,7 +82,8 @@ class DocumentsContentHandler {
     List<Element> getContent(@NotNull Document sourceDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentPosition contentPosition) {
         List<Element> content = new ArrayList<>();
         boolean elementPassed = false;
-        for (Element element : sourceDocument.body().children()) {
+        Element body = preProcessSourceDocument(sourceDocument.body());
+        for (Element element : body.children()) {
             String extractedWorkItemId = extractWorkItemId(element);
             if (extractedWorkItemId == null) {
                 content.add(element);
@@ -102,6 +103,23 @@ class DocumentsContentHandler {
         }
         // even if there were no more work items below the anchor, we have to return the rest content
         return elementPassed && contentPosition == DocumentContentAnchor.ContentPosition.BELOW && !content.isEmpty() ? content : Collections.emptyList();
+    }
+
+    private Element preProcessSourceDocument(Element body) {
+        return removeComments(body);
+    }
+
+    private Element removeComments(Element element) {
+        List<Element> toRemove = new ArrayList<>();
+        for (Element child : element.children()) {
+            if ("span".equals(child.tagName()) && child.id().matches("polarion-comment:\\d+")) {
+                toRemove.add(child);
+            } else {
+                removeComments(child);
+            }
+        }
+        toRemove.forEach(Element::remove);
+        return element;
     }
 
     @VisibleForTesting

@@ -1614,6 +1614,29 @@ class MergeServiceTest {
         assertEquals(Text.plain("result1"), step.get(2));
     }
 
+    @Test
+    void testPreProcessSourceRichText() {
+        IWorkItem source = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
+        IWorkItem target = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class, RETURNS_DEEP_STUBS);
+
+        DiffField richField = DiffField.builder().key("richTextField").wiTypeId("rich").build();
+        when(context.getDiffModel().getDiffFields()).thenReturn(List.of(richField));
+        when(context.getLinkRole()).thenReturn("duplicates");
+
+        Text text = Text.html("<div><h1>Header</h1><p>Some <b>bold</b> text.</p><span id=\"polarion-comment:75\"><span id=\"polarion-comment:76\"/><span id=\"polarion-comment:77\"></span></div>");
+        when(polarionService.getFieldValue(source, "richTextField")).thenReturn(text);
+
+        MergeService mergeServiceSpy = spy(mergeService);
+        doNothing().when(mergeServiceSpy).validateCustomFieldTypesAccordance(source, target, richField);
+        when(polarionService.replaceLinksToPairedWorkItems(eq(source), eq(target), eq("duplicates"), anyString()))
+                .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(3));
+
+        mergeServiceSpy.merge(source, target, context, pair);
+        verify(polarionService, times(1)).setFieldValue(target, "richTextField", Text.html("<div><h1>Header</h1><p>Some <b>bold</b> text.</p></div>"));
+    }
+
     private IModule mockTargetModule() {
         IModule module = mock(IModule.class, RETURNS_DEEP_STUBS);
         IDataService dataService = mock(IDataService.class);

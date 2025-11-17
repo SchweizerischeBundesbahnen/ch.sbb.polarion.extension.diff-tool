@@ -199,6 +199,28 @@ class DocumentsContentHandlerTest {
     }
 
     @Test
+    void testRemoveComments() {
+        Document document = Jsoup.parse("""
+            <h2 id="polarion_wiki macro name=module-workitem;params=id=AA-1"></h2>
+            <h3 id="polarion_wiki macro name=module-workitem;params=id=AA-2"></h3>
+            <p>Paragraph above</p>
+            <span id="polarion-comment:1"/>
+            <span id="some-span"/>
+            <div id="polarion_wiki macro name=module-workitem;params=id=AA-3"></div>
+            <span id="polarion-comment:42"/>
+            <div id="polarion_wiki macro name=module-workitem;params=id=AA-4"></div>
+            <p>Paragraph below the last</p>
+        """);
+
+        List<Element> elements = handler.getContent(document, "AA-3", DocumentContentAnchor.ContentPosition.ABOVE);
+        assertNotNull(elements);
+        assertEquals(2, elements.size());
+
+        elements = handler.getContent(document, "AA-3", DocumentContentAnchor.ContentPosition.BELOW);
+        assertTrue(elements.isEmpty());
+    }
+
+    @Test
     void testRemoveContentAllChildren() {
         Document document = generateTestDocument();
         boolean removed = handler.removeContent(document, null, null);
