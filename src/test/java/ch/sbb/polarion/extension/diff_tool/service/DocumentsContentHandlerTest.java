@@ -205,6 +205,7 @@ class DocumentsContentHandlerTest {
             <h3 id="polarion_wiki macro name=module-workitem;params=id=AA-2"></h3>
             <p>Paragraph above</p>
             <span id="polarion-comment:1"/>
+            <span id="some-span"/>
             <div id="polarion_wiki macro name=module-workitem;params=id=AA-3"></div>
             <span id="polarion-comment:42"/>
             <div id="polarion_wiki macro name=module-workitem;params=id=AA-4"></div>
@@ -213,7 +214,7 @@ class DocumentsContentHandlerTest {
 
         List<Element> elements = handler.getContent(document, "AA-3", DocumentContentAnchor.ContentPosition.ABOVE);
         assertNotNull(elements);
-        assertEquals(1, elements.size());
+        assertEquals(2, elements.size());
 
         elements = handler.getContent(document, "AA-3", DocumentContentAnchor.ContentPosition.BELOW);
         assertTrue(elements.isEmpty());

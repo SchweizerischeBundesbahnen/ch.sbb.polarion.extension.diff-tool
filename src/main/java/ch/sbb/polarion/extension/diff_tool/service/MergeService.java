@@ -715,7 +715,7 @@ public class MergeService {
                 if (fieldValue instanceof TestSteps testSteps) {
                     fieldValue = polarionService.getTrackerService().getDataService().createStructureForTypeId(target, ITestSteps.STRUCTURE_ID, getTestStepsData(testSteps));
                 } else if (fieldValue instanceof Text text) {
-                    fieldValue = new Text(text.getType(), preProcessRichText(source, target, context.getLinkRole(),text.getContent()));
+                    fieldValue = new Text(text.getType(), preProcessRichText(source, target, context.getLinkRole(), text.getContent()));
                 }
                 polarionService.setFieldValue(target, field.getKey(), fieldValue);
             }
