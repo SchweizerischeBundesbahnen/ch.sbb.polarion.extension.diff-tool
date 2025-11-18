@@ -11,6 +11,7 @@ export function useAppContext(){
   const [compareEnumsById, setCompareEnumsById] = useState(false);
   const [allowReferencedWorkItemMerge, setAllowReferencedWorkItemMerge] = useState(false);
   const [hideChaptersIfNoDifference, setHideChaptersIfNoDifference] = useState(true);
+  const [preserveComments, setPreserveComments] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [diffsExist, setDiffsExist] = useState(false);
   const [selectedItemsCount, setSelectedItemsCount] = useState(0);
@@ -35,6 +36,8 @@ export function useAppContext(){
     setAllowReferencedWorkItemMerge,
     hideChaptersIfNoDifference,
     setHideChaptersIfNoDifference,
+    preserveComments,
+    setPreserveComments,
     dataLoaded,
     setDataLoaded,
     diffsExist,

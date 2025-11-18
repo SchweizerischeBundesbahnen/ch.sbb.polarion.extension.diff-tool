@@ -147,7 +147,7 @@ class DiffModelTest {
 
         DiffModel model = mock(DiffModel.class);
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model, true));
+                new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model).setAllowReferencedWorkItemMerge(true));
         assertEquals("No link role could be found by ID 'someLinkRole'", exception.getMessage());
     }
 }

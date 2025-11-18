@@ -70,7 +70,7 @@ class DocumentsContentHandlerTest {
         ArgumentCaptor<Text> valueCapture = ArgumentCaptor.forClass(Text.class);
         doNothing().when(rightDocument).setHomePageContent(valueCapture.capture());
 
-        DocumentsContentMergeContext context = new DocumentsContentMergeContext(mock(DocumentIdentifier.class), mock(DocumentIdentifier.class), MergeDirection.LEFT_TO_RIGHT);
+        DocumentsContentMergeContext context = new DocumentsContentMergeContext(mock(DocumentIdentifier.class), mock(DocumentIdentifier.class), MergeDirection.LEFT_TO_RIGHT, false);
         List<DocumentsContentMergePair> pairsToMerge = new ArrayList<>();
         pairsToMerge.add(DocumentsContentMergePair.builder().leftWorkItemId("AA-3").rightWorkItemId("AA-7").contentPosition(DocumentContentAnchor.ContentPosition.ABOVE).build());
         handler.merge(leftDocument, rightDocument, context, pairsToMerge);
@@ -127,7 +127,7 @@ class DocumentsContentHandlerTest {
 
         Element element = new Element("p");
         element.text("merged");
-        boolean contentModified = handler.insertContent(document, "AA-3", DocumentContentAnchor.ContentPosition.ABOVE, Collections.singletonList(element));
+        boolean contentModified = handler.insertContent(document, "AA-3", DocumentContentAnchor.ContentPosition.ABOVE, Collections.singletonList(element), false);
         assertTrue(contentModified);
 
         assertEquals(6, document.body().children().size());
@@ -155,7 +155,7 @@ class DocumentsContentHandlerTest {
 
         Element element = new Element("p");
         element.text("merged");
-        boolean contentModified = handler.insertContent(document, "AA-3", DocumentContentAnchor.ContentPosition.BELOW, Collections.singletonList(element));
+        boolean contentModified = handler.insertContent(document, "AA-3", DocumentContentAnchor.ContentPosition.BELOW, Collections.singletonList(element), false);
         assertTrue(contentModified);
 
         assertEquals(7, document.body().children().size());
@@ -184,7 +184,7 @@ class DocumentsContentHandlerTest {
     @Test
     void testRemoveContent() {
         Document document = generateTestDocument();
-        boolean removed = handler.removeContent(document, document.body().children().get(0), document.body().children().get(3));
+        boolean removed = handler.removeContent(document, document.body().children().get(0), document.body().children().get(3), new ArrayList<>());
         assertTrue(removed);
 
         assertEquals(4, document.body().children().size());
@@ -223,7 +223,7 @@ class DocumentsContentHandlerTest {
     @Test
     void testRemoveContentAllChildren() {
         Document document = generateTestDocument();
-        boolean removed = handler.removeContent(document, null, null);
+        boolean removed = handler.removeContent(document, null, null, new ArrayList<>());
         assertTrue(removed);
 
         assertTrue(document.body().children().isEmpty());

@@ -225,7 +225,7 @@ export default function useDiffService() {
     return [];
   };
 
-  const sendDocumentsMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, allowReferencedWorkItemMerge) => {
+  const sendDocumentsMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, allowReferencedWorkItemMerge, preserveComments) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
     leftDocument.moduleXmlRevision = docsData.leftDocument.moduleXmlRevision;
@@ -243,7 +243,8 @@ export default function useDiffService() {
           configName: searchParams.get('config'),
           configCacheBucketId: configCacheId,
           pairs: filterRedundant(mergingContext.getSelectedValues()),
-          allowReferencedWorkItemMerge: allowReferencedWorkItemMerge
+          allowReferencedWorkItemMerge: allowReferencedWorkItemMerge,
+          preserveComments: preserveComments,
         }),
         contentType: "application/json"
       })
@@ -290,7 +291,7 @@ export default function useDiffService() {
     });
   };
 
-  const sendDocumentsContentMergeRequest = (searchParams, direction, loadingContext, mergingContext, docsData) => {
+  const sendDocumentsContentMergeRequest = (searchParams, direction, loadingContext, mergingContext, docsData, preserveComments) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
     leftDocument.moduleXmlRevision = docsData.leftDocument.moduleXmlRevision;
@@ -316,6 +317,7 @@ export default function useDiffService() {
           leftDocument: leftDocument,
           rightDocument: rightDocument,
           direction: direction,
+          preserveComments: preserveComments,
           pairs: pairs
         }),
         contentType: "application/json"

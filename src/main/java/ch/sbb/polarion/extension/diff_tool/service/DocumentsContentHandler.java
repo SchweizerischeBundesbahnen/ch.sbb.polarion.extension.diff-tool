@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergePair;
+import ch.sbb.polarion.extension.diff_tool.util.CommentUtils;
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.core.util.types.Text;
@@ -65,7 +66,7 @@ class DocumentsContentHandler {
         Document targetDocument = Jsoup.parse(targetModule.getHomePageContent().getContent());
         for (DocumentsContentMergePair mergePair : mergePairs) {
             List<Element> sourceContent = getContent(sourceDocument, mergeContext.getSourceWorkItemId(mergePair), mergePair.getContentPosition());
-            boolean contentModified = insertContent(targetDocument, mergeContext.getTargetWorkItemId(mergePair), mergePair.getContentPosition(), sourceContent);
+            boolean contentModified = insertContent(targetDocument, mergeContext.getTargetWorkItemId(mergePair), mergePair.getContentPosition(), sourceContent, mergeContext.isPreserveComments());
             if (contentModified) {
                 String contentPosition = mergePair.getContentPosition().toString();
                 mergeContext.reportEntry(MODIFIED, mergePair, "content %s workitem '%s' modified with content %s workitem '%s'".formatted(
@@ -106,31 +107,22 @@ class DocumentsContentHandler {
     }
 
     private Element preProcessSourceDocument(Element body) {
-        return removeComments(body);
-    }
-
-    private Element removeComments(Element element) {
-        List<Element> toRemove = new ArrayList<>();
-        for (Element child : element.children()) {
-            if ("span".equals(child.tagName()) && child.id().matches("polarion-comment:\\d+")) {
-                toRemove.add(child);
-            } else {
-                removeComments(child);
-            }
-        }
-        toRemove.forEach(Element::remove);
-        return element;
+        return CommentUtils.removeComments(body);
     }
 
     @VisibleForTesting
-    boolean insertContent(@NotNull Document targetDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentPosition contentPosition, @NotNull List<Element> contentToMerge) {
+    boolean insertContent(@NotNull Document targetDocument, @NotNull String contentAnchorId, @NotNull DocumentContentAnchor.ContentPosition contentPosition, @NotNull List<Element> contentToMerge, boolean preserveComments) {
         final Pair<Element, Element> contentBoundaries;
         if (contentPosition == DocumentContentAnchor.ContentPosition.ABOVE) {
             contentBoundaries = getContentBoundariesAbove(targetDocument, contentAnchorId);
         } else {
             contentBoundaries = getContentBoundariesBelow(targetDocument, contentAnchorId);
         }
-        boolean removedOldContent = removeContent(targetDocument, contentBoundaries.getLeft(), contentBoundaries.getRight());
+        List<String> commentIdsToPreserve = new ArrayList<>();
+        boolean removedOldContent = removeContent(targetDocument, contentBoundaries.getLeft(), contentBoundaries.getRight(), commentIdsToPreserve);
+        if (preserveComments) {
+            CommentUtils.appendComments(contentToMerge, commentIdsToPreserve);
+        }
         boolean insertedNewContent = insertContent(targetDocument, contentBoundaries.getLeft(), contentToMerge);
         return removedOldContent || insertedNewContent;
     }
@@ -172,11 +164,12 @@ class DocumentsContentHandler {
     }
 
     @VisibleForTesting
-    boolean removeContent(@NotNull Document document, @Nullable Element fromElement, @Nullable Element toElement) {
+    boolean removeContent(@NotNull Document document, @Nullable Element fromElement, @Nullable Element toElement, List<String> commentIds) {
         boolean removed = false;
         Element current = fromElement != null ? fromElement.nextElementSibling() : document.body().child(0);
         while (current != null && !current.equals(toElement)) {
             Element next = current.nextElementSibling();
+            commentIds.addAll(CommentUtils.extractCommentIds(current));
             current.remove();
             removed = true;
             current = next;

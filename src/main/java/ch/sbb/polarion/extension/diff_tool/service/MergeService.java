@@ -17,8 +17,8 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.FieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
+import ch.sbb.polarion.extension.diff_tool.util.CommentUtils;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
-import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import com.polarion.alm.shared.api.model.document.internal.InternalDocument;
 import com.polarion.alm.shared.api.model.document.internal.InternalUpdatableDocument;
 import com.polarion.alm.shared.api.model.wi.WorkItemReference;
@@ -93,7 +93,9 @@ public class MergeService {
         polarionService.evictDocumentsCache(documentIdentifier1, documentIdentifier2);
 
         DiffModel diffModel = DiffModelCachedResource.get(documentIdentifier1.getProjectId(), mergeParams.getConfigName(), mergeParams.getConfigCacheBucketId());
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, documentIdentifier1, documentIdentifier2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, mergeParams.isAllowedReferencedWorkItemMerge());
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, documentIdentifier1, documentIdentifier2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
+                .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge())
+                .setPreserveComments(mergeParams.isPreserveComments());
         if (!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision())) {
             return MergeResult.builder().success(false).targetModuleHasStructuralChanges(true).build();
         }
@@ -182,7 +184,7 @@ public class MergeService {
     }
 
     public MergeResult mergeDocumentsContent(@NotNull DocumentsContentMergeParams mergeParams) {
-        DocumentsContentMergeContext context = new DocumentsContentMergeContext(mergeParams.getLeftDocument(), mergeParams.getRightDocument(), mergeParams.getDirection());
+        DocumentsContentMergeContext context = new DocumentsContentMergeContext(mergeParams.getLeftDocument(), mergeParams.getRightDocument(), mergeParams.getDirection(), mergeParams.isPreserveComments());
 
         IModule sourceModule = polarionService.getModule(context.getSourceDocumentIdentifier());
         IModule targetModule = polarionService.getModule(context.getTargetDocumentIdentifier());
@@ -715,7 +717,7 @@ public class MergeService {
                 if (fieldValue instanceof TestSteps testSteps) {
                     fieldValue = polarionService.getTrackerService().getDataService().createStructureForTypeId(target, ITestSteps.STRUCTURE_ID, getTestStepsData(testSteps));
                 } else if (fieldValue instanceof Text text) {
-                    fieldValue = new Text(text.getType(), preProcessRichText(source, target, context.getLinkRole(), text.getContent()));
+                    fieldValue = new Text(text.getType(), preProcessRichText(source, target, context, text.getContent(), field.getKey()));
                 }
                 polarionService.setFieldValue(target, field.getKey(), fieldValue);
             }
@@ -723,12 +725,11 @@ public class MergeService {
         target.save();
     }
 
-    private String preProcessRichText(IWorkItem source, IWorkItem target, String linkRole, String richTextContent) {
-        return polarionService.replaceLinksToPairedWorkItems(source, target, linkRole, removeComments(richTextContent));
-    }
-
-    private String removeComments(String richTextContent) {
-        return RegexMatcher.get("<span id=[\"']polarion-comment:\\d+[\"'][^>]*>(?:</span>)?").removeAll(richTextContent);
+    private String preProcessRichText(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, String richTextContent, String fieldKey) {
+        List<String> commentIds = context instanceof IPreserveCommentsContext preserveCommentsContext && preserveCommentsContext.isPreserveComments() &&
+                polarionService.getFieldValue(target, fieldKey) instanceof Text targetText ? CommentUtils.extractCommentIds(targetText.convertToHTML().getContent()) : List.of();
+        String newContent = polarionService.replaceLinksToPairedWorkItems(source, target, context.getLinkRole(), CommentUtils.removeComments(richTextContent));
+        return CommentUtils.appendComments(newContent, commentIds);
     }
 
     @VisibleForTesting
