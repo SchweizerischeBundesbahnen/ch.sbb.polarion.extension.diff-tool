@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @UtilityClass
 public class CommentUtils {
@@ -35,7 +36,7 @@ public class CommentUtils {
     }
 
     public String appendComments(@NotNull String content, List<String> commentIds) {
-        return content + commentIds.stream().map("<span id=\"polarion-comment:%s\"></span>"::formatted).reduce("", String::concat);
+        return content + commentIds.stream().map("<span id=\"polarion-comment:%s\"></span>"::formatted).collect(Collectors.joining());
     }
 
     public void appendComments(@NotNull List<Element> elements, @NotNull List<String> commentIds) {

@@ -2,9 +2,13 @@ package ch.sbb.polarion.extension.diff_tool.util;
 
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -208,37 +212,31 @@ class CommentUtilsTest {
         assertTrue(elements.isEmpty());
     }
 
-    @Test
-    void testRemoveComments_fromString_withSingleComment() {
-        String content = "Before <span id=\"polarion-comment:123\"></span> After";
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("removeCommentsTestCases")
+    void testRemoveComments_fromString(String testName, String content, String expected) {
         String result = CommentUtils.removeComments(content);
-
-        assertEquals("Before  After", result);
+        assertEquals(expected, result);
     }
 
-    @Test
-    void testRemoveComments_fromString_withMultipleComments() {
-        String content = "Start <span id=\"polarion-comment:123\"></span> Middle <span id=\"polarion-comment:456\"></span> End";
-        String result = CommentUtils.removeComments(content);
-
-        assertEquals("Start  Middle  End", result);
-    }
-
-    @Test
-    void testRemoveComments_fromString_withSingleQuotes() {
-        String content = "Text <span id='polarion-comment:789'>some content</span> more text";
-        String result = CommentUtils.removeComments(content);
-
-        // The regex matches the opening tag with optional closing </span>, so with content inside, it only removes opening tag
-        assertEquals("Text some content</span> more text", result);
-    }
-
-    @Test
-    void testRemoveComments_fromString_withNoComments() {
-        String content = "Just plain text";
-        String result = CommentUtils.removeComments(content);
-
-        assertEquals("Just plain text", result);
+    private static Stream<Arguments> removeCommentsTestCases() {
+        return Stream.of(
+                Arguments.of("Single comment",
+                        "Before <span id=\"polarion-comment:123\"></span> After",
+                        "Before  After"),
+                Arguments.of("Multiple comments",
+                        "Start <span id=\"polarion-comment:123\"></span> Middle <span id=\"polarion-comment:456\"></span> End",
+                        "Start  Middle  End"),
+                Arguments.of("Single quotes",
+                        "Text <span id='polarion-comment:789'>some content</span> more text",
+                        "Text some content</span> more text"),
+                Arguments.of("No comments",
+                        "Just plain text",
+                        "Just plain text"),
+                Arguments.of("Empty content",
+                        "",
+                        "")
+        );
     }
 
     @Test
@@ -246,13 +244,6 @@ class CommentUtilsTest {
         assertThrows(Exception.class, () -> CommentUtils.removeComments((String) null));
     }
 
-    @Test
-    void testRemoveComments_fromString_withEmptyContent() {
-        String content = "";
-        String result = CommentUtils.removeComments(content);
-
-        assertEquals("", result);
-    }
 
     @Test
     void testRemoveComments_fromElement_withDirectCommentSpan() {

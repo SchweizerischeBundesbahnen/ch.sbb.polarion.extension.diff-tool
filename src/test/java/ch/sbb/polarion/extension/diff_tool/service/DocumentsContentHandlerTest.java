@@ -155,7 +155,7 @@ class DocumentsContentHandlerTest {
 
         Element element = new Element("p");
         element.text("merged");
-        boolean contentModified = handler.insertContent(document, "AA-3", DocumentContentAnchor.ContentPosition.BELOW, Collections.singletonList(element), false);
+        boolean contentModified = handler.insertContent(document, "AA-3", DocumentContentAnchor.ContentPosition.BELOW, Collections.singletonList(element), true);
         assertTrue(contentModified);
 
         assertEquals(7, document.body().children().size());
