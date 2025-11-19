@@ -11,6 +11,8 @@ import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -19,7 +21,8 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
-public final class DocumentsMergeContext extends SettingsAwareMergeContext {
+@Accessors(chain = true)
+public final class DocumentsMergeContext extends SettingsAwareMergeContext implements IPreserveCommentsContext {
     final DocumentIdentifier leftDocumentIdentifier;
     final DocumentIdentifier rightDocumentIdentifier;
     final IModule leftModule;
@@ -29,10 +32,15 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext {
     final ILinkRoleOpt linkRoleObject;
     @Getter
     final List<AffectedModule> affectedModules = new ArrayList<>();
-    final boolean allowReferencedWorkItemMerge;
+    @Getter
+    @Setter
+    boolean allowReferencedWorkItemMerge;
+    @Getter
+    @Setter
+    boolean preserveComments;
 
     public DocumentsMergeContext(@NotNull PolarionService polarionService, @NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier,
-                                 @NotNull MergeDirection direction, @NotNull String linkRole, @NotNull DiffModel diffModel, boolean allowReferencedWorkItemMerge) {
+                                 @NotNull MergeDirection direction, @NotNull String linkRole, @NotNull DiffModel diffModel) {
         super(direction, linkRole, diffModel);
         this.leftDocumentIdentifier = leftDocumentIdentifier;
         this.rightDocumentIdentifier = rightDocumentIdentifier;
@@ -49,7 +57,6 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext {
                 leftDocumentIdentifier.getRevision() == null ? leftModule.getLastRevision() : leftDocumentIdentifier.getRevision());
         rightDocumentReference = DocumentReference.fromModuleLocation(rightDocumentIdentifier.getProjectId(), rightModule.getModuleLocation().getLocationPath(),
                 rightDocumentIdentifier.getRevision() == null ? rightModule.getLastRevision() : rightDocumentIdentifier.getRevision());
-        this.allowReferencedWorkItemMerge = allowReferencedWorkItemMerge;
     }
 
     public IModule getSourceModule() {

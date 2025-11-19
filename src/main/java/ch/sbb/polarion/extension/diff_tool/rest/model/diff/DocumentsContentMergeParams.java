@@ -27,4 +27,7 @@ public class DocumentsContentMergeParams {
 
     @Schema(description = "List of merge pairs to be considered in the merge operation", implementation = DocumentsContentMergePair.class)
     private List<DocumentsContentMergePair> pairs;
+
+    @Schema(description = "Indicates whether comments must be preserved during merge operation")
+    private boolean preserveComments;
 }

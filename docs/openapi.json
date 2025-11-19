@@ -1620,6 +1620,10 @@
           "pairs": {
             "$ref": "#/components/schemas/DocumentsContentMergePair"
           },
+          "preserveComments": {
+            "description": "Indicates whether comments must be preserved during merge operation",
+            "type": "boolean"
+          },
           "rightDocument": {
             "$ref": "#/components/schemas/DocumentIdentifier"
           }
@@ -1774,6 +1778,10 @@
           },
           "pairs": {
             "$ref": "#/components/schemas/WorkItemsPair"
+          },
+          "preserveComments": {
+            "description": "Indicates whether comments must be preserved during merge operation",
+            "type": "boolean"
           },
           "rightDocument": {
             "$ref": "#/components/schemas/DocumentIdentifier"
