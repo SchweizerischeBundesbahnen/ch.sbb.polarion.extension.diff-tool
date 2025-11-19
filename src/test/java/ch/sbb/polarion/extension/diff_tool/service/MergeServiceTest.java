@@ -1621,6 +1621,31 @@ class MergeServiceTest {
     }
 
     @Test
+    void testPreProcessRichText() {
+        MergeService mergeServiceSpy = spy(mergeService);
+
+        IWorkItem source = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
+        IWorkItem target = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
+
+        DocumentsMergeContext context = mock(DocumentsMergeContext.class, RETURNS_DEEP_STUBS);
+        String initialContent = "<span id=\"polarion-comment:42\"/><div>Some content</div>";
+        String cutCommentsContent = "<div>Some content</div>";
+        String commentsAtTheEndContent = "<div>Some content</div><span id=\"polarion-comment:67\"></span>";
+        when(polarionService.replaceLinksToPairedWorkItems(eq(source), eq(target), nullable(String.class), anyString())).thenAnswer(invocation -> invocation.getArgument(3));
+
+        assertEquals(cutCommentsContent, mergeServiceSpy.preProcessRichText(source, target, context, initialContent, "fieldId"));
+
+        when(context.isPreserveComments()).thenReturn(true);
+        assertEquals(cutCommentsContent, mergeServiceSpy.preProcessRichText(source, target, context, initialContent, "fieldId"));
+
+        when(polarionService.getFieldValue(target, "fieldId")).thenReturn(Text.html("<div>Some target content</div><span id=\"polarion-comment:67\"></span>"));
+        assertEquals(commentsAtTheEndContent, mergeServiceSpy.preProcessRichText(source, target, context, initialContent, "fieldId"));
+
+        WorkItemsMergeContext wrongContext = mock(WorkItemsMergeContext.class, RETURNS_DEEP_STUBS);
+        assertEquals(cutCommentsContent, mergeServiceSpy.preProcessRichText(source, target, wrongContext, initialContent, "fieldId"));
+    }
+
+    @Test
     void testPreProcessSourceRichText() {
         IWorkItem source = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
         IWorkItem target = mock(IWorkItem.class, RETURNS_DEEP_STUBS);

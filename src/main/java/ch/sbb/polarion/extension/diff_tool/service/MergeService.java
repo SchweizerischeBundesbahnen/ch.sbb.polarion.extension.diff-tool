@@ -725,7 +725,8 @@ public class MergeService {
         target.save();
     }
 
-    private String preProcessRichText(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, String richTextContent, String fieldKey) {
+    @VisibleForTesting
+    String preProcessRichText(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, String richTextContent, String fieldKey) {
         List<String> commentIds = context instanceof IPreserveCommentsContext preserveCommentsContext && preserveCommentsContext.isPreserveComments() &&
                 polarionService.getFieldValue(target, fieldKey) instanceof Text targetText ? CommentUtils.extractCommentIds(targetText.convertToHTML().getContent()) : List.of();
         String newContent = polarionService.replaceLinksToPairedWorkItems(source, target, context.getLinkRole(), CommentUtils.removeComments(richTextContent));
