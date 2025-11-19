@@ -80,7 +80,7 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
 
   const mergeCallback = (direction) => {
     setMergeInProgress(true);
-    diffService.sendDocumentsContentMergeRequest(searchParams, direction, loadingContext, mergingContext, docsData)
+    diffService.sendDocumentsContentMergeRequest(searchParams, direction, loadingContext, mergingContext, docsData, context.state.preserveComments)
         .then((data) => {
           setMergeReport(data.mergeReport);
           setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);

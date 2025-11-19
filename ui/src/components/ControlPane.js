@@ -261,6 +261,15 @@ export default function ControlPane({diff_type}) {
                 </label>
               </div>
           }
+          {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.DOCUMENTS_CONTENT_DIFF) &&
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" value="" checked={context.state.preserveComments} id="preserve-comments"
+                       onChange={() => context.state.setPreserveComments(!context.state.preserveComments)}/>
+                <label className="form-check-label" htmlFor="preserve-comments">
+                  Preserve comments
+                </label>
+              </div>
+          }
           <div className="export-controls">
             <h1>Export to PDF</h1>
             <div className="select-set">

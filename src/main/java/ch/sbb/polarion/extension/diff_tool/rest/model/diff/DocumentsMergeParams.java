@@ -26,6 +26,9 @@ public class DocumentsMergeParams extends MergeParams {
     @Schema(description = "Indicates if merging referenced Work Item allowed")
     private Boolean allowReferencedWorkItemMerge;
 
+    @Schema(description = "Indicates whether comments must be preserved during merge operation")
+    private boolean preserveComments;
+
     public DocumentsMergeParams(DocumentIdentifier leftDocument, DocumentIdentifier rightDocument, MergeDirection direction, String linkRole,
                                 String configName, String configCacheBucketId, List<WorkItemsPair> pairs, Boolean allowReferencedWorkItemMerge) {
         super(direction, linkRole, configName, configCacheBucketId, pairs);
