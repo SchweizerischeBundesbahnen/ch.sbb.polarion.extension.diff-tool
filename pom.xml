@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>11.3.0</version>
+        <version>12.0.0</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
@@ -57,7 +57,7 @@
         <html5diff.version>1.4.5</html5diff.version>
         <ehcache.version>3.8.0</ehcache.version>
 
-        <pdf-exporter.version>10.1.0</pdf-exporter.version>
+        <pdf-exporter.version>10.1.1</pdf-exporter.version>
 
         <awaitility.version>4.3.0</awaitility.version>
 
