@@ -866,9 +866,9 @@ public class MergeService {
     }
 
     @VisibleForTesting
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     void mergeAttachments(IWorkItem source, IWorkItem target) {
-        target.getAttachments().forEach(attachment -> target.deleteAttachment((IAttachment) attachment));
+        new ArrayList<>(target.getAttachments()).forEach(attachment -> target.deleteAttachment((IAttachment) attachment));
         source.getAttachments().forEach(attach -> {
             IAttachment attachment = (IAttachment) attach;
             target.createAttachment(attachment.getFileName(), attachment.getTitle(), attachment.getDataStream());
