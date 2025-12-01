@@ -43,6 +43,7 @@ import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITestStepKeyOpt;
 import com.polarion.alm.tracker.model.ITestSteps;
 import com.polarion.alm.tracker.model.ITypeOpt;
+import com.polarion.alm.tracker.model.IWithAttachments;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.ICustomFieldsService;
@@ -712,7 +713,7 @@ public class MergeService {
                 mergeHyperlinks(target, (Collection<?>) fieldValue, context, pair);
             } else if (IWorkItem.KEY_LINKED_WORK_ITEMS.equals(field.getKey())) {
                 mergeLinkedWorkItems(source, target, context, pair);
-            } else if (IWorkItem.KEY_ATTACHMENTS.equals(field.getKey())) {
+            } else if (IWithAttachments.KEY_ATTACHMENTS.equals(field.getKey())) {
                 mergeAttachments(source, target);
             } else {
                 validateCustomFieldTypesAccordance(source, target, field);
