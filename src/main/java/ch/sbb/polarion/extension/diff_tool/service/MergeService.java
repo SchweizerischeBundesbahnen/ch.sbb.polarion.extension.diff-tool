@@ -36,6 +36,7 @@ import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
 import com.polarion.alm.tracker.internal.model.TestSteps;
 import com.polarion.alm.tracker.internal.model.module.Module;
+import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
@@ -711,6 +712,8 @@ public class MergeService {
                 mergeHyperlinks(target, (Collection<?>) fieldValue, context, pair);
             } else if (IWorkItem.KEY_LINKED_WORK_ITEMS.equals(field.getKey())) {
                 mergeLinkedWorkItems(source, target, context, pair);
+            } else if (IWorkItem.KEY_ATTACHMENTS.equals(field.getKey())) {
+                mergeAttachments(source, target);
             } else {
                 validateCustomFieldTypesAccordance(source, target, field);
 
@@ -860,6 +863,16 @@ public class MergeService {
                 target.addLinkedItem(srcLink.getLinkedItem(), srcLink.getLinkRole(), srcLink.getRevision(), srcLink.isSuspect());
             }
         }
+    }
+
+    @VisibleForTesting
+    @SuppressWarnings("unchecked")
+    void mergeAttachments(IWorkItem source, IWorkItem target) {
+        target.getAttachments().forEach(attachment -> target.deleteAttachment((IAttachment) attachment));
+        source.getAttachments().forEach(attach -> {
+            IAttachment attachment = (IAttachment) attach;
+            target.createAttachment(attachment.getFileName(), attachment.getTitle(), attachment.getDataStream());
+        });
     }
 
     /**
