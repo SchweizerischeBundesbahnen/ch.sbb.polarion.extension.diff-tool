@@ -23,6 +23,7 @@ import ch.sbb.polarion.extension.generic.context.CurrentContextConfig;
 import ch.sbb.polarion.extension.generic.context.CurrentContextExtension;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingsService;
+import ch.sbb.polarion.extension.generic.util.PObjectListStub;
 import com.polarion.alm.shared.api.model.document.DocumentReference;
 import com.polarion.alm.shared.api.model.document.internal.InternalDocument;
 import com.polarion.alm.shared.api.model.document.internal.InternalUpdatableDocument;
@@ -40,6 +41,7 @@ import com.polarion.alm.tracker.internal.model.HyperlinkStruct;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.TestStep;
 import com.polarion.alm.tracker.internal.model.TestSteps;
+import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
@@ -68,6 +70,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -1666,6 +1669,34 @@ class MergeServiceTest {
 
         mergeServiceSpy.merge(source, target, context, pair);
         verify(polarionService, times(1)).setFieldValue(target, "richTextField", Text.html("<div><h1>Header</h1><p>Some <b>bold</b> text.</p></div>"));
+    }
+
+    @Test
+    void testCopyAttachments() {
+        IWorkItem source = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
+        IWorkItem target = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class, RETURNS_DEEP_STUBS);
+
+        DiffField attachmentsField = DiffField.builder().key("attachments").wiTypeId("List").build();
+        when(context.getDiffModel().getDiffFields()).thenReturn(List.of(attachmentsField));
+
+        IAttachment sourceAttachment1 = mock(IAttachment.class);
+        when(sourceAttachment1.getFileName()).thenReturn("file1.txt");
+        when(sourceAttachment1.getTitle()).thenReturn("title1");
+        IAttachment sourceAttachment2 = mock(IAttachment.class);
+        when(sourceAttachment2.getFileName()).thenReturn("file2.txt");
+        when(sourceAttachment2.getTitle()).thenReturn("title2");
+
+        IAttachment targetAttachment = mock(IAttachment.class);
+
+        when(source.getAttachments()).thenReturn(new PObjectListStub(List.of(sourceAttachment1, sourceAttachment2)));
+        when(target.getAttachments()).thenReturn(new PObjectListStub(List.of(targetAttachment)));
+
+        mergeService.merge(source, target, context, pair);
+
+        verify(target, times(1)).deleteAttachment(any());
+        verify(target, times(2)).createAttachment(anyString(), anyString(), nullable(InputStream.class));
     }
 
     private IModule mockTargetModule() {

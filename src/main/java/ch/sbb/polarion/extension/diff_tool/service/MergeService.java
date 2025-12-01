@@ -36,6 +36,7 @@ import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.internal.model.LinkRoleOpt;
 import com.polarion.alm.tracker.internal.model.TestSteps;
 import com.polarion.alm.tracker.internal.model.module.Module;
+import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
@@ -72,6 +73,7 @@ import java.util.stream.Collectors;
 
 import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationResultType.*;
 import static ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils.*;
+import static com.polarion.alm.tracker.model.IWithAttachments.KEY_ATTACHMENTS;
 
 public class MergeService {
 
@@ -711,6 +713,8 @@ public class MergeService {
                 mergeHyperlinks(target, (Collection<?>) fieldValue, context, pair);
             } else if (IWorkItem.KEY_LINKED_WORK_ITEMS.equals(field.getKey())) {
                 mergeLinkedWorkItems(source, target, context, pair);
+            } else if (KEY_ATTACHMENTS.equals(field.getKey())) {
+                mergeAttachments(source, target);
             } else {
                 validateCustomFieldTypesAccordance(source, target, field);
 
@@ -860,6 +864,16 @@ public class MergeService {
                 target.addLinkedItem(srcLink.getLinkedItem(), srcLink.getLinkRole(), srcLink.getRevision(), srcLink.isSuspect());
             }
         }
+    }
+
+    @VisibleForTesting
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void mergeAttachments(IWorkItem source, IWorkItem target) {
+        new ArrayList<>(target.getAttachments()).forEach(attachment -> target.deleteAttachment((IAttachment) attachment));
+        source.getAttachments().forEach(attach -> {
+            IAttachment attachment = (IAttachment) attach;
+            target.createAttachment(attachment.getFileName(), attachment.getTitle(), attachment.getDataStream());
+        });
     }
 
     /**
