@@ -43,7 +43,6 @@ import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITestStepKeyOpt;
 import com.polarion.alm.tracker.model.ITestSteps;
 import com.polarion.alm.tracker.model.ITypeOpt;
-import com.polarion.alm.tracker.model.IWithAttachments;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.ICustomFieldsService;
@@ -74,6 +73,7 @@ import java.util.stream.Collectors;
 
 import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationResultType.*;
 import static ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils.*;
+import static com.polarion.alm.tracker.model.IWithAttachments.KEY_ATTACHMENTS;
 
 public class MergeService {
 
@@ -713,7 +713,7 @@ public class MergeService {
                 mergeHyperlinks(target, (Collection<?>) fieldValue, context, pair);
             } else if (IWorkItem.KEY_LINKED_WORK_ITEMS.equals(field.getKey())) {
                 mergeLinkedWorkItems(source, target, context, pair);
-            } else if (IWithAttachments.KEY_ATTACHMENTS.equals(field.getKey())) {
+            } else if (KEY_ATTACHMENTS.equals(field.getKey())) {
                 mergeAttachments(source, target);
             } else {
                 validateCustomFieldTypesAccordance(source, target, field);
