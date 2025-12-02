@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.4.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.4.0...v6.4.1) (2025-12-01)
+
+
+### Bug Fixes
+
+* attachments aren't copied using option 'Always overwrite with ne… ([#335](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/335)) ([113186a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/113186a3d6bc7a843f0e5521a78bff1638d004f3))
+* attachments aren't copied using option 'Always overwrite with newly created' ([113186a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/113186a3d6bc7a843f0e5521a78bff1638d004f3)), closes [#334](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/334)
+
 ## [6.4.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.3.0...v6.4.0) (2025-11-21)
 
 
