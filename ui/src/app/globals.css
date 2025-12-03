@@ -499,12 +499,16 @@ a:hover {
   background-color: #c61010;
 }
 
-.tooltip-container.diff-issues {
-  color: #c61010;
+.tooltip-container {
+    background-color: #c61010;
+    color: #eee;
+    padding: 5px 10px;
+    border-radius: 4px;
 }
 
-.tooltip-container.diff-issues ul {
-  margin-bottom: 0;
+.tooltip-container ul {
+    padding-left: 1rem;
+    margin-bottom: 0;
 }
 
 .diff-viewer {
