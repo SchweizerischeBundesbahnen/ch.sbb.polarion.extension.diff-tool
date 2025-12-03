@@ -21,7 +21,6 @@ test.describe("page of diffing Collections", () => {
   test('page header', async ({ page }) => {
     await expect(page.locator('.app-header .app-title')).toHaveText("Diff/merge of Polarion Collections");
     await expect(page.locator('.app-header .extension-info')).toHaveText("v5.1.2 | 2025-03-17 14:48");
-    await page.screenshot({ path: 'page-header.png', fullPage: true });
 
     await expect(page.getByTestId('LEFT-collection').locator(".path-label:has-text('project')")).toHaveText("project:");
     await expect(page.getByTestId('LEFT-collection').locator(".path-label:has-text('collection:')")).toHaveText("collection:");
@@ -155,8 +154,6 @@ test.describe("page of diffing Collections", () => {
       expect(postData.pairs[0].rightWorkItem.moveDirection).toBe(null);
       expect(postData.pairs[0].rightWorkItem.movedOutlineNumber).toBe(null);
       expect(postData.pairs[0].rightWorkItem.title).toBe("User can be assigned into multiple user roles");
-
-      await page.screenshot({ path: 'page-header.png', fullPage: true });
 
       const mergeResultModal = page.getByTestId("merge-result-modal");
       await expect(mergeResultModal).toBeVisible();
