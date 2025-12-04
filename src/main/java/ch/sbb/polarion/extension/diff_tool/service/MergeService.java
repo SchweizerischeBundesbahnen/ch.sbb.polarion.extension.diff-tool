@@ -871,8 +871,9 @@ public class MergeService {
     void mergeAttachments(IWorkItem source, IWorkItem target) {
         new ArrayList<>(target.getAttachments()).forEach(attachment -> target.deleteAttachment((IAttachment) attachment));
         source.getAttachments().forEach(attach -> {
-            IAttachment attachment = (IAttachment) attach;
-            target.createAttachment(attachment.getFileName(), attachment.getTitle(), attachment.getDataStream());
+            IAttachment sourceAttachment = (IAttachment) attach;
+            IAttachment createdAttachment = target.createAttachment(sourceAttachment.getFileName(), sourceAttachment.getTitle(), sourceAttachment.getDataStream());
+            createdAttachment.save(); // without save() attachments are not persisted when work item is created from referenced one
         });
     }
 
