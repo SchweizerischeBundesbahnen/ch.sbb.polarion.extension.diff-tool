@@ -873,7 +873,7 @@ public class MergeService {
         source.getAttachments().forEach(attach -> {
             IAttachment sourceAttachment = (IAttachment) attach;
             IAttachment createdAttachment = target.createAttachment(sourceAttachment.getFileName(), sourceAttachment.getTitle(), sourceAttachment.getDataStream());
-            createdAttachment.save(); // without save() attachments are not persisted when work item is created from referenced one
+            createdAttachment.save(); // without save() attachments aren't persisted when a work item is created from a referenced one
         });
     }
 
