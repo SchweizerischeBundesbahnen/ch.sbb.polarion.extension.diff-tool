@@ -47,10 +47,10 @@ public class ExecutionQueueManagementInternalController {
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "List of revisions for the specified document",
+                            description = "List of statistics items for each worker",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(implementation = DocumentRevision.class)
+                                    schema = @Schema(implementation = TimeframeStatisticsEntry.class)
                             )
                     )
             }
@@ -65,11 +65,7 @@ public class ExecutionQueueManagementInternalController {
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "List of revisions for the specified document",
-                            content = @Content(
-                                    mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(implementation = DocumentRevision.class)
-                            )
+                            description = "Statistics cleared successfully"
                     )
             }
     )

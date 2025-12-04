@@ -244,7 +244,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DocumentsDiff"
+                  "$ref": "#/components/schemas/DocumentsContentDiff"
                 }
               }
             },
@@ -850,14 +850,7 @@
         "operationId": "clearStatistics",
         "responses": {
           "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DocumentRevision"
-                }
-              }
-            },
-            "description": "List of revisions for the specified document"
+            "description": "Statistics cleared successfully"
           }
         },
         "summary": "Clear gathered statistics",
@@ -881,11 +874,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DocumentRevision"
+                  "$ref": "#/components/schemas/TimeframeStatisticsEntry"
                 }
               }
             },
-            "description": "List of revisions for the specified document"
+            "description": "List of statistics items for each worker"
           }
         },
         "summary": "Gets list of statistics items for each worker",

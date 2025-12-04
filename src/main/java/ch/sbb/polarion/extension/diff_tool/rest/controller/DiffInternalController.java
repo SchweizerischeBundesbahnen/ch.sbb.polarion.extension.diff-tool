@@ -256,7 +256,7 @@ public class DiffInternalController {
                             description = "Successfully retrieved the differences between page content of the provided documents",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(implementation = DocumentsDiff.class)
+                                    schema = @Schema(implementation = DocumentsContentDiff.class)
                             )
                     )
             }
