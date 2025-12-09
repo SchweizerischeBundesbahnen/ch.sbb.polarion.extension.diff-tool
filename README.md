@@ -27,7 +27,7 @@ Additionally, the extension provides functionality to make a copy of selected do
 
 > [!IMPORTANT]
 > Starting from version 5.0.0 only latest version of Polarion is supported.
-> Right now it is Polarion 2506.
+> Right now it is Polarion 2512.
 
 ## Quick start
 
@@ -39,8 +39,8 @@ The extension should be copied to `<polarion_home>/polarion/extensions/ch.sbb.po
 ## Compatibility
 
 This extension is compatible with:
-* Polarion 2506
-* Java 17
+* Polarion 2512
+* Java 21
 * [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) v9
 
 ## Build
