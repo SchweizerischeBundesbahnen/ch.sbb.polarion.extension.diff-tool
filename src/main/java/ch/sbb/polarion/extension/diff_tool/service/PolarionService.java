@@ -244,7 +244,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                         WorkItemStatus statusDuplicateByName = findStatusByName(statuses, statusOpt);
                         if (statusDuplicateByName != null) {
                             // ...add status as WorkItem specific status if it's not exact match with already added, but its name clashes with any of already added
-                            if (!statusDuplicateByName.getId().equals(statusOpt.getId())) {
+                            if (!Objects.equals(statusDuplicateByName.getId(), statusOpt.getId())) {
                                 statuses.add(getWorkItemStatus(statusOpt, wiType));
                             }
                         } else {

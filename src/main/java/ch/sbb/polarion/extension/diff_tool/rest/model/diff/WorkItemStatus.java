@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "WorkItem status data")
-public class WorkItemStatus implements Comparable<WorkItemStatus> {
+public class WorkItemStatus {
     @Schema(description = "Status ID")
     private String id;
 
@@ -24,9 +24,4 @@ public class WorkItemStatus implements Comparable<WorkItemStatus> {
 
     @Schema(description = "WorkItem type name")
     private String wiTypeName;
-
-    @Override
-    public int compareTo(@NotNull WorkItemStatus o) {
-        return id.compareTo(o.id);
-    }
 }
