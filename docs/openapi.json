@@ -2380,6 +2380,28 @@
         },
         "type": "object"
       },
+      "WorkItemStatus": {
+        "description": "WorkItem status data",
+        "properties": {
+          "id": {
+            "description": "Status ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "Status name",
+            "type": "string"
+          },
+          "wiTypeId": {
+            "description": "WorkItem type ID",
+            "type": "string"
+          },
+          "wiTypeName": {
+            "description": "WorkItem type name",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "WorkItemsMergeParams": {
         "description": "Work items merge input data",
         "properties": {

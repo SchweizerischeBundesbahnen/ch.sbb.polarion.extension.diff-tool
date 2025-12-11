@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Document;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemStatus;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
 import ch.sbb.polarion.extension.diff_tool.service.DocumentCopyService;
 import ch.sbb.polarion.extension.diff_tool.service.MergeService;
@@ -178,7 +179,7 @@ public class UtilityInternalController {
                     )
             }
     )
-    public Collection<IStatusOpt> getAllWorkItemStatuses(@PathParam("projectId") String projectId) {
+    public Collection<WorkItemStatus> getAllWorkItemStatuses(@PathParam("projectId") String projectId) {
         if (StringUtils.isBlank(projectId)) {
             throw new BadRequestException(MISSING_PROJECT_ID_MESSAGE);
         }
