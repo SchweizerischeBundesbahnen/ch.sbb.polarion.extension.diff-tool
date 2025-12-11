@@ -222,7 +222,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     @NotNull
     @SuppressWarnings("unchecked")
     public Collection<WorkItemStatus> getWorkItemStatuses(@NotNull String projectId) {
-        Set<WorkItemStatus> statuses = new TreeSet<>();
+        Set<WorkItemStatus> statuses = new LinkedHashSet<>();
 
         ITrackerProject trackerProject = getTrackerProject(projectId);
 
