@@ -832,7 +832,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IStatusOpt"
+                  "$ref": "#/components/schemas/WorkItemStatus"
                 }
               }
             },
@@ -1914,42 +1914,6 @@
           "name": {
             "description": "Field name",
             "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "IStatusOpt": {
-        "properties": {
-          "default": {
-            "type": "boolean"
-          },
-          "enumId": {
-            "type": "string"
-          },
-          "hidden": {
-            "type": "boolean"
-          },
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "phantom": {
-            "type": "boolean"
-          },
-          "properties": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object"
-          },
-          "sequenceNumber": {
-            "format": "int32",
-            "type": "integer"
-          },
-          "terminal": {
-            "type": "boolean"
           }
         },
         "type": "object"

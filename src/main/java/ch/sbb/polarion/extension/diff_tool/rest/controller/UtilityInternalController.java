@@ -174,7 +174,7 @@ public class UtilityInternalController {
                             description = "List of all work item statuses for the specified project",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(implementation = IStatusOpt.class)
+                                    schema = @Schema(implementation = WorkItemStatus.class)
                             )
                     )
             }
