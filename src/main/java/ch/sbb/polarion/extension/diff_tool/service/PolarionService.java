@@ -79,7 +79,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -237,26 +236,29 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             // All complex logic of adding statuses below are only needed for better usability on UI - to distinguish statuses with the same name but different IDs,
             // under the hood only status IDs are used later in diffing logic
             trackerProject.getStatusEnum().getAvailableOptions(wiType.getId()).forEach(status -> {
-                if (status instanceof IStatusOpt statusOpt) {
-                    WorkItemStatus statusFullDuplicate = findStatusByNameAndId(statuses, statusOpt);
-                    if (statusFullDuplicate == null) { // If there's already status with the same ID and name - skip it
-                        // ...otherwise...
-                        WorkItemStatus statusDuplicateByName = findStatusByName(statuses, statusOpt);
-                        if (statusDuplicateByName != null) {
-                            // ...add status as WorkItem specific status if it's not exact match with already added, but its name clashes with any of already added
-                            if (!Objects.equals(statusDuplicateByName.getId(), statusOpt.getId())) {
-                                statuses.add(getWorkItemStatus(statusOpt, wiType));
-                            }
-                        } else {
-                            // ...otherwise add status as general one (not WorkItem specific)
-                            statuses.add(getWorkItemStatus(statusOpt, null));
-                        }
+                if (!(status instanceof IStatusOpt statusOpt)) {
+                    return;
+                }
+
+                WorkItemStatus statusFullDuplicate = findStatusByNameAndId(statuses, statusOpt);
+                if (statusFullDuplicate != null) { // If there's already status with the same ID and name - skip it
+                    return;
+                }
+
+                WorkItemStatus statusDuplicateByName = findStatusByName(statuses, statusOpt);
+                if (statusDuplicateByName != null) {
+                    // Add status as WorkItem specific status if it's not exact match with already added, but its name clashes with any of already added
+                    if (!Objects.equals(statusDuplicateByName.getId(), statusOpt.getId())) {
+                        statuses.add(getWorkItemStatus(statusOpt, wiType));
                     }
+                } else {
+                    // ...otherwise add status as general one (not WorkItem specific)
+                    statuses.add(getWorkItemStatus(statusOpt, null));
                 }
             });
         }
 
-        return statuses;
+        return statuses.stream().sorted(Comparator.comparing(WorkItemStatus::getName)).collect(Collectors.toList());
     }
 
     private WorkItemStatus findStatusByName(@NotNull Set<WorkItemStatus> statuses, @NotNull IStatusOpt statusOpt) {
