@@ -222,7 +222,7 @@ const Statuses = {
           for (let status of JSON.parse(responseText)) {
             const opt = document.createElement('option');
             opt.value = status.id;
-            opt.innerHTML = status.name;
+            opt.innerHTML = status.wiTypeName ? `${status.name} [${status.id} - ${status.wiTypeName}]` : `${status.name} [${status.id}]`;
             this.statusesToIgnore.appendChild(opt);
           }
           resolve();
