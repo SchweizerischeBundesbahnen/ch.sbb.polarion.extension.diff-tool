@@ -225,6 +225,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
 
         ITrackerProject trackerProject = getTrackerProject(projectId);
 
+        // Take first general statuses, i.e. not associated with any WorkItem type
         trackerProject.getStatusEnum().getAvailableOptions(null).forEach(status -> {
             if (status instanceof IStatusOpt statusOpt) {
                 statuses.add(getWorkItemStatus(statusOpt, null));
@@ -236,29 +237,31 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             // All complex logic of adding statuses below are only needed for better usability on UI - to distinguish statuses with the same name but different IDs,
             // under the hood only status IDs are used later in diffing logic
             trackerProject.getStatusEnum().getAvailableOptions(wiType.getId()).forEach(status -> {
-                if (!(status instanceof IStatusOpt statusOpt)) {
-                    return;
-                }
-
-                WorkItemStatus statusFullDuplicate = findStatusByNameAndId(statuses, statusOpt);
-                if (statusFullDuplicate != null) { // If there's already status with the same ID and name - skip it
-                    return;
-                }
-
-                WorkItemStatus statusDuplicateByName = findStatusByName(statuses, statusOpt);
-                if (statusDuplicateByName != null) {
-                    // Add status as WorkItem specific status if it's not exact match with already added, but its name clashes with any of already added
-                    if (!Objects.equals(statusDuplicateByName.getId(), statusOpt.getId())) {
-                        statuses.add(getWorkItemStatus(statusOpt, wiType));
-                    }
-                } else {
-                    // ...otherwise add status as general one (not WorkItem specific)
-                    statuses.add(getWorkItemStatus(statusOpt, null));
+                if (status instanceof IStatusOpt statusOpt) {
+                    addWorkItemStatus(statusOpt, wiType, statuses);
                 }
             });
         }
 
         return statuses.stream().sorted(Comparator.comparing(WorkItemStatus::getName)).collect(Collectors.toList());
+    }
+
+    private void addWorkItemStatus(@NotNull IStatusOpt statusToAdd, @NotNull ITypeOpt wiType, @NotNull Set<WorkItemStatus> allStatuses) {
+        WorkItemStatus statusFullDuplicate = findStatusByNameAndId(allStatuses, statusToAdd);
+        if (statusFullDuplicate != null) { // If there's already status with the same ID and name - skip it
+            return;
+        }
+
+        WorkItemStatus statusDuplicateByName = findStatusByName(allStatuses, statusToAdd);
+        if (statusDuplicateByName != null) {
+            // Add status as WorkItem specific status if it's not exact match with already added, but its name clashes with any of already added
+            if (!Objects.equals(statusDuplicateByName.getId(), statusToAdd.getId())) {
+                allStatuses.add(getWorkItemStatus(statusToAdd, wiType));
+            }
+        } else {
+            // ...otherwise add status as general one (not WorkItem specific)
+            allStatuses.add(getWorkItemStatus(statusToAdd, null));
+        }
     }
 
     private WorkItemStatus findStatusByName(@NotNull Set<WorkItemStatus> statuses, @NotNull IStatusOpt statusOpt) {
