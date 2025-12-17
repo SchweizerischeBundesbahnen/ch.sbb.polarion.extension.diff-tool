@@ -28,6 +28,6 @@ export default (phase, { defaultConfig }) => {
   return {
     output: 'export',
     basePath: '/polarion/diff-tool-app/ui/app',
-    distDir: '../src/main/resources/webapp/diff-tool-app/app'
+    distDir: './dist/app'
   }
 }
