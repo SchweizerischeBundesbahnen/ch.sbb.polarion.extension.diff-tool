@@ -12,12 +12,21 @@ import org.mockito.MockedStatic;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ExecutionQueueMonitorTest {
 
@@ -80,6 +89,90 @@ class ExecutionQueueMonitorTest {
                 await().pollDelay(1, TimeUnit.SECONDS).until(() -> true);
                 return true;
             }));
+        }
+    }
+
+    @Test
+    void testCloseNormalShutdown() throws InterruptedException {
+        ExecutionQueueModel model = new ExecutionQueueModel();
+        Feature.workerFeatures().forEach(feature -> model.getWorkers().put(feature, 1));
+        for (int i = 1; i <= ExecutionQueueService.WORKERS_COUNT; i++) {
+            model.getThreads().put(i, 1);
+        }
+
+        try (MockedStatic<ExecutionQueueSettings> mockStaticSettings = mockStatic(ExecutionQueueSettings.class)) {
+            mockStaticSettings.when(ExecutionQueueSettings::readAsSystemUser).thenReturn(model);
+
+            ScheduledExecutorService mockScheduler = mock(ScheduledExecutorService.class);
+            when(mockScheduler.awaitTermination(anyLong(), eq(TimeUnit.SECONDS))).thenReturn(true);
+
+            ExecutionQueueService executionService = new ExecutionQueueService();
+            ExecutionQueueMonitor monitor = new ExecutionQueueMonitor(executionService, mockScheduler);
+
+            assertDoesNotThrow(monitor::close);
+
+            verify(mockScheduler).shutdown();
+            verify(mockScheduler).awaitTermination(5, TimeUnit.SECONDS);
+        }
+    }
+
+    @Test
+    void testCloseWithTimeout() throws InterruptedException {
+        ExecutionQueueModel model = new ExecutionQueueModel();
+        Feature.workerFeatures().forEach(feature -> model.getWorkers().put(feature, 1));
+        for (int i = 1; i <= ExecutionQueueService.WORKERS_COUNT; i++) {
+            model.getThreads().put(i, 1);
+        }
+
+        try (MockedStatic<ExecutionQueueSettings> mockStaticSettings = mockStatic(ExecutionQueueSettings.class)) {
+            mockStaticSettings.when(ExecutionQueueSettings::readAsSystemUser).thenReturn(model);
+
+            ScheduledExecutorService mockScheduler = mock(ScheduledExecutorService.class);
+            when(mockScheduler.awaitTermination(anyLong(), eq(TimeUnit.SECONDS))).thenReturn(false);
+
+            ExecutionQueueService executionService = new ExecutionQueueService();
+            ExecutionQueueMonitor monitor = new ExecutionQueueMonitor(executionService, mockScheduler);
+
+            assertDoesNotThrow(monitor::close);
+
+            verify(mockScheduler).shutdown();
+            verify(mockScheduler).awaitTermination(5, TimeUnit.SECONDS);
+            verify(mockScheduler).shutdownNow();
+        }
+    }
+
+    @Test
+    void testCloseWithInterruption() throws InterruptedException {
+        ExecutionQueueModel model = new ExecutionQueueModel();
+        Feature.workerFeatures().forEach(feature -> model.getWorkers().put(feature, 1));
+        for (int i = 1; i <= ExecutionQueueService.WORKERS_COUNT; i++) {
+            model.getThreads().put(i, 1);
+        }
+
+        try (MockedStatic<ExecutionQueueSettings> mockStaticSettings = mockStatic(ExecutionQueueSettings.class)) {
+            mockStaticSettings.when(ExecutionQueueSettings::readAsSystemUser).thenReturn(model);
+
+            ScheduledExecutorService mockScheduler = mock(ScheduledExecutorService.class);
+            when(mockScheduler.awaitTermination(anyLong(), eq(TimeUnit.SECONDS))).thenThrow(new InterruptedException("Test interruption"));
+
+            ExecutionQueueService executionService = new ExecutionQueueService();
+            ExecutionQueueMonitor monitor = new ExecutionQueueMonitor(executionService, mockScheduler);
+
+            CountDownLatch closeLatch = new CountDownLatch(1);
+            AtomicBoolean wasInterrupted = new AtomicBoolean(false);
+
+            Thread closeThread = new Thread(() -> {
+                monitor.close();
+                wasInterrupted.set(Thread.currentThread().isInterrupted());
+                closeLatch.countDown();
+            });
+
+            closeThread.start();
+            closeLatch.await(2, TimeUnit.SECONDS);
+
+            verify(mockScheduler).shutdown();
+            verify(mockScheduler).shutdownNow();
+            assertTrue(wasInterrupted.get(), "Thread interrupt flag should be restored after InterruptedException");
         }
     }
 

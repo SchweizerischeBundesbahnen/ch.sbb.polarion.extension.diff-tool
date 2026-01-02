@@ -15,7 +15,6 @@ import ch.sbb.polarion.extension.diff_tool.service.MergeService;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.generic.util.ExtensionInfo;
 import com.polarion.alm.projects.model.IProject;
-import com.polarion.alm.tracker.model.IStatusOpt;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
