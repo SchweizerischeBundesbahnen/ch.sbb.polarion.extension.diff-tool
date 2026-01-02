@@ -24,12 +24,16 @@ public class ExecutionQueueMonitor implements AutoCloseable {
     private final ScheduledExecutorService scheduler;
 
     public ExecutionQueueMonitor(ExecutionQueueService executionService) {
+        this(executionService, Executors.newSingleThreadScheduledExecutor(new NamedDaemonThreadFactory("ExecutionQueueMonitor-Scheduler")));
+        scheduler.scheduleAtFixedRate(this::collectStatistics, 0, 1, TimeUnit.SECONDS);
+    }
+
+    // Package-private constructor for testing
+    ExecutionQueueMonitor(ExecutionQueueService executionService, ScheduledExecutorService scheduler) {
         this.executionService = executionService;
+        this.scheduler = scheduler;
         GuicePlatform.tryInjectMembers(this);
         clearHistory();
-
-        scheduler = Executors.newSingleThreadScheduledExecutor(new NamedDaemonThreadFactory("ExecutionQueueMonitor-Scheduler"));
-        scheduler.scheduleAtFixedRate(this::collectStatistics, 0, 1, TimeUnit.SECONDS);
     }
 
     @Override
