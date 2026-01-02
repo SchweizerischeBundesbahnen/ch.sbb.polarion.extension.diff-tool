@@ -243,7 +243,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             });
         }
 
-        return statuses.stream().sorted(Comparator.comparing(WorkItemStatus::getName)).collect(Collectors.toList());
+        return statuses.stream().sorted(Comparator.comparing(WorkItemStatus::getName)).toList();
     }
 
     private void addWorkItemStatus(@NotNull IStatusOpt statusToAdd, @NotNull ITypeOpt wiType, @NotNull Set<WorkItemStatus> allStatuses) {
