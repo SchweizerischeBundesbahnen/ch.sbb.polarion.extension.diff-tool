@@ -12,10 +12,13 @@ import org.mockito.MockedStatic;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mockStatic;
 
@@ -80,6 +83,63 @@ class ExecutionQueueMonitorTest {
                 await().pollDelay(1, TimeUnit.SECONDS).until(() -> true);
                 return true;
             }));
+        }
+    }
+
+    @Test
+    void testCloseNormalShutdown() {
+        ExecutionQueueModel model = new ExecutionQueueModel();
+        Feature.workerFeatures().forEach(feature -> model.getWorkers().put(feature, 1));
+        for (int i = 1; i <= ExecutionQueueService.WORKERS_COUNT; i++) {
+            model.getThreads().put(i, 1);
+        }
+
+        try (MockedStatic<ExecutionQueueSettings> mockStaticSettings = mockStatic(ExecutionQueueSettings.class)) {
+            mockStaticSettings.when(ExecutionQueueSettings::readAsSystemUser).thenReturn(model);
+
+            ExecutionQueueService executionService = new ExecutionQueueService();
+            ExecutionQueueMonitor monitor = new ExecutionQueueMonitor(executionService);
+
+            // Let it run for a bit
+            await().pollDelay(100, TimeUnit.MILLISECONDS).until(() -> true);
+
+            // Close should complete without throwing
+            assertDoesNotThrow(monitor::close);
+        }
+    }
+
+    @Test
+    void testCloseWithInterruption() throws InterruptedException {
+        ExecutionQueueModel model = new ExecutionQueueModel();
+        Feature.workerFeatures().forEach(feature -> model.getWorkers().put(feature, 1));
+        for (int i = 1; i <= ExecutionQueueService.WORKERS_COUNT; i++) {
+            model.getThreads().put(i, 1);
+        }
+
+        try (MockedStatic<ExecutionQueueSettings> mockStaticSettings = mockStatic(ExecutionQueueSettings.class)) {
+            mockStaticSettings.when(ExecutionQueueSettings::readAsSystemUser).thenReturn(model);
+
+            ExecutionQueueService executionService = new ExecutionQueueService();
+            ExecutionQueueMonitor monitor = new ExecutionQueueMonitor(executionService);
+
+            CountDownLatch closeLatch = new CountDownLatch(1);
+            AtomicBoolean wasInterrupted = new AtomicBoolean(false);
+
+            Thread closeThread = new Thread(() -> {
+                closeLatch.countDown();
+                monitor.close();
+                wasInterrupted.set(Thread.currentThread().isInterrupted());
+            });
+
+            closeThread.start();
+            closeLatch.await();
+
+            // Interrupt the thread while it's in awaitTermination
+            closeThread.interrupt();
+            closeThread.join(1000);
+
+            // Thread should have handled the interruption and restored the interrupt flag
+            assertTrue(wasInterrupted.get(), "Thread interrupt flag should be restored after InterruptedException");
         }
     }
 
