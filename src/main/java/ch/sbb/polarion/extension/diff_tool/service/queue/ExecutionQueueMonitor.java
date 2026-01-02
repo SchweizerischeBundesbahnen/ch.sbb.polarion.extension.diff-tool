@@ -11,23 +11,30 @@ import org.apache.commons.collections4.queue.CircularFifoQueue;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry.MAX_HISTORY_ENTRIES;
 
-public class ExecutionQueueMonitor {
+public class ExecutionQueueMonitor implements AutoCloseable {
     private static final Logger logger = Logger.getLogger(ExecutionQueueMonitor.class);
     private static final String EXECUTOR_COMMON = "COMMON"; // extra executor used for secondary activities (e.g., CPU Load)
     private final ExecutionQueueService executionService;
     private final CircularFifoQueue<CpuLoadEntry> cpuHistory = new CircularFifoQueue<>(MAX_HISTORY_ENTRIES);
+    private final ScheduledExecutorService scheduler;
 
     public ExecutionQueueMonitor(ExecutionQueueService executionService) {
         this.executionService = executionService;
         GuicePlatform.tryInjectMembers(this);
         clearHistory();
 
-        Executors.newSingleThreadScheduledExecutor(new NamedDaemonThreadFactory("ExecutionQueueMonitor-Scheduler"))
-                .scheduleAtFixedRate(this::collectStatistics, 0, 1, TimeUnit.SECONDS);
+        scheduler = Executors.newSingleThreadScheduledExecutor(new NamedDaemonThreadFactory("ExecutionQueueMonitor-Scheduler"));
+        scheduler.scheduleAtFixedRate(this::collectStatistics, 0, 1, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public void close() {
+        scheduler.shutdown();
     }
 
     private void collectStatistics() {
