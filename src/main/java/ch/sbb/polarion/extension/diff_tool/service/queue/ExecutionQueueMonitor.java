@@ -35,6 +35,16 @@ public class ExecutionQueueMonitor implements AutoCloseable {
     @Override
     public void close() {
         scheduler.shutdown();
+        try {
+            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                logger.warn("Forcing shutdown of ExecutionQueueMonitor scheduler after timeout");
+                scheduler.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            logger.warn("Interrupted while shutting down ExecutionQueueMonitor scheduler", e);
+            scheduler.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void collectStatistics() {
