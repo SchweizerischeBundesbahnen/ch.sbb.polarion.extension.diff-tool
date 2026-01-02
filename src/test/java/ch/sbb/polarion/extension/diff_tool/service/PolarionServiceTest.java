@@ -3,6 +3,7 @@ package ch.sbb.polarion.extension.diff_tool.service;
 import ch.sbb.polarion.extension.diff_tool.rest.model.WorkItemAttachmentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemStatus;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
@@ -433,6 +434,79 @@ class PolarionServiceTest {
         assertTrue(polarionService.isFieldToCleanUp(allowedFields, WorkItemField.builder().key(IWorkItem.KEY_TITLE).build(), null));
         assertTrue(polarionService.isFieldToCleanUp(allowedFields, WorkItemField.builder().key(IWorkItem.KEY_TITLE).build(), requirement));
         assertFalse(polarionService.isFieldToCleanUp(allowedFields, WorkItemField.builder().key(IWorkItem.KEY_TITLE).build(), testCase));
+    }
+
+    @Test
+    void testGetWorkItemStatuses() {
+        IProject project = mock(IProject.class);
+        when(projectService.getProject(anyString())).thenReturn(project);
+
+        ITrackerProject trackerProject = mock(ITrackerProject.class, RETURNS_DEEP_STUBS);
+        when(trackerService.getTrackerProject((IProject) any())).thenReturn(trackerProject);
+
+        ITypeOpt issueMock = mock(ITypeOpt.class);
+        when(issueMock.getId()).thenReturn("issue");
+        when(issueMock.getName()).thenReturn("Issue");
+
+        when(trackerProject.getWorkItemTypeEnum().getAllOptions()).thenReturn(List.of(issueMock));
+
+        IStatusOpt draftGeneralStatusMock = mock(IStatusOpt.class);
+        when(draftGeneralStatusMock.getId()).thenReturn("draft");
+        when(draftGeneralStatusMock.getName()).thenReturn("Draft");
+
+        IStatusOpt releaseStatusMock = mock(IStatusOpt.class);
+        when(releaseStatusMock.getId()).thenReturn("release");
+        when(releaseStatusMock.getName()).thenReturn("Release");
+
+        IEnumeration statusEnumerationMock = mock(IEnumeration.class);
+        when(trackerProject.getStatusEnum()).thenReturn(statusEnumerationMock);
+
+        lenient().when(statusEnumerationMock.getAvailableOptions(null)).thenReturn(List.of(draftGeneralStatusMock, releaseStatusMock));
+
+        IStatusOpt draftIssueStatusMock = mock(IStatusOpt.class);
+        when(draftIssueStatusMock.getId()).thenReturn("draftIssue");
+        when(draftIssueStatusMock.getName()).thenReturn("Draft");
+
+        IStatusOpt openStatusMock = mock(IStatusOpt.class);
+        when(openStatusMock.getId()).thenReturn("open");
+        when(openStatusMock.getName()).thenReturn("Open");
+
+        IStatusOpt inProgressStatusMock = mock(IStatusOpt.class);
+        when(inProgressStatusMock.getId()).thenReturn("release");
+        when(inProgressStatusMock.getName()).thenReturn("Release");
+
+        lenient().when(statusEnumerationMock.getAvailableOptions("issue")).thenReturn(List.of(draftIssueStatusMock, openStatusMock, inProgressStatusMock));
+
+        Collection<WorkItemStatus> statuses = polarionService.getWorkItemStatuses("projectId");
+        assertEquals(4, statuses.size());
+
+        WorkItemStatus draftStatus = statuses.stream().filter(status -> status.getId().equals("draft")).findFirst().orElse(null);
+        assertNotNull(draftStatus);
+        assertEquals("draft", draftStatus.getId());
+        assertEquals("Draft", draftStatus.getName());
+        assertNull(draftStatus.getWiTypeId());
+        assertNull(draftStatus.getWiTypeName());
+
+        WorkItemStatus draftIssueStatus = statuses.stream().filter(status -> status.getId().equals("draftIssue")).findFirst().orElse(null);
+        assertNotNull(draftIssueStatus);
+        assertEquals("draftIssue", draftIssueStatus.getId());
+        assertEquals("Draft", draftIssueStatus.getName());
+        assertEquals("issue", draftIssueStatus.getWiTypeId());
+        assertEquals("Issue", draftIssueStatus.getWiTypeName());
+
+        WorkItemStatus releaseStatus = statuses.stream().filter(status -> status.getId().equals("release")).findFirst().orElse(null);
+        assertNotNull(releaseStatus);
+        assertEquals("release", releaseStatus.getId());
+        assertEquals("Release", releaseStatus.getName());
+        assertNull(releaseStatus.getWiTypeId());
+        assertNull(releaseStatus.getWiTypeName());
+
+        WorkItemStatus openStatus = statuses.stream().filter(status -> status.getId().equals("open")).findFirst().orElse(null);
+        assertNotNull(openStatus);
+        assertEquals("open", openStatus.getId());
+        assertEquals("Open", openStatus.getName());
+        assertNull(openStatus.getWiTypeId());
+        assertNull(openStatus.getWiTypeName());
     }
 
     @Test

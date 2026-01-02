@@ -57,7 +57,7 @@
         <html5diff.version>1.4.5</html5diff.version>
         <ehcache.version>3.8.0</ehcache.version>
 
-        <pdf-exporter.version>10.1.1</pdf-exporter.version>
+        <pdf-exporter.version>11.1.0</pdf-exporter.version>
 
         <awaitility.version>4.3.0</awaitility.version>
 
@@ -65,6 +65,9 @@
 
         <!--suppress UnresolvedMavenProperty -->
         <markdown2html-maven-plugin.failOnError>${env.MARKDOWN2HTML_MAVEN_PLUGIN_FAIL_ON_ERROR}</markdown2html-maven-plugin.failOnError>
+
+        <nextjs.sources.root>${project.basedir}/ui</nextjs.sources.root>
+        <nextjs.destination.root>${project.basedir}/src/main/resources/webapp/diff-tool-app</nextjs.destination.root>
 
         <skipJsTests>false</skipJsTests>
     </properties>
@@ -157,6 +160,21 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${markdown2html-maven-plugin.extensionContextAdminHtml}</directory>
+                            <includes>
+                                <include>${markdown2html-maven-plugin.outputFileName}</include>
+                            </includes>
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                        <fileset>
+                            <directory>${nextjs.destination.root}/app</directory>
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                    </filesets>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -207,6 +225,10 @@
                         <package>ch.sbb.polarion.extension.diff_tool.rest.model</package>
                     </resourcePackages>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.github.grigoriev</groupId>
+                <artifactId>pre-commit-run-maven-plugin</artifactId>
             </plugin>
 
             <plugin>
@@ -264,6 +286,34 @@
                     <nodeVersion>${node.version}</nodeVersion>
                     <workingDirectory>ui</workingDirectory>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-nextjs-build</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${nextjs.destination.root}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${nextjs.sources.root}/dist</directory>
+                                    <filtering>false</filtering>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                            <overwrite>true</overwrite>
+                            <includeEmptyDirs>true</includeEmptyDirs>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

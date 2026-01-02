@@ -15,7 +15,8 @@
 /out/
 
 # production
-/build
+/build/
+/dist/
 
 # misc
 .DS_Store
@@ -43,3 +44,4 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/.nyc_output/

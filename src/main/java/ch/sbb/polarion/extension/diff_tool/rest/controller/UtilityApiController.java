@@ -7,10 +7,10 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Document;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemStatus;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 import ch.sbb.polarion.extension.generic.util.ExtensionInfo;
-import com.polarion.alm.tracker.model.IStatusOpt;
 
 import javax.ws.rs.Path;
 import java.util.Collection;
@@ -50,7 +50,7 @@ public class UtilityApiController extends UtilityInternalController {
     }
 
     @Override
-    public Collection<IStatusOpt> getAllWorkItemStatuses(String projectId) {
+    public Collection<WorkItemStatus> getAllWorkItemStatuses(String projectId) {
         return polarionService.callPrivileged(() -> super.getAllWorkItemStatuses(projectId));
     }
 

@@ -5,6 +5,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.WorkItemAttachmentIdentifi
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemStatus;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.AuthorizationModel;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
@@ -219,20 +220,71 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
 
     @NotNull
     @SuppressWarnings("unchecked")
-    public Collection<IStatusOpt> getWorkItemStatuses(@NotNull String projectId) {
-        Set<IStatusOpt> statuses = new LinkedHashSet<>();
+    public Collection<WorkItemStatus> getWorkItemStatuses(@NotNull String projectId) {
+        Set<WorkItemStatus> statuses = new LinkedHashSet<>();
 
         ITrackerProject trackerProject = getTrackerProject(projectId);
+
+        // Take first general statuses, i.e. not associated with any WorkItem type
+        trackerProject.getStatusEnum().getAvailableOptions(null).forEach(status -> {
+            if (status instanceof IStatusOpt statusOpt) {
+                statuses.add(getWorkItemStatus(statusOpt, null));
+            }
+        });
+
         List<ITypeOpt> wiTypes = trackerProject.getWorkItemTypeEnum().getAllOptions();
         for (ITypeOpt wiType : wiTypes) {
+            // All complex logic of adding statuses below are only needed for better usability on UI - to distinguish statuses with the same name but different IDs,
+            // under the hood only status IDs are used later in diffing logic
             trackerProject.getStatusEnum().getAvailableOptions(wiType.getId()).forEach(status -> {
                 if (status instanceof IStatusOpt statusOpt) {
-                    statuses.add(statusOpt);
+                    addWorkItemStatus(statusOpt, wiType, statuses);
                 }
             });
         }
 
-        return statuses;
+        return statuses.stream().sorted(Comparator.comparing(WorkItemStatus::getName)).collect(Collectors.toList());
+    }
+
+    private void addWorkItemStatus(@NotNull IStatusOpt statusToAdd, @NotNull ITypeOpt wiType, @NotNull Set<WorkItemStatus> allStatuses) {
+        WorkItemStatus statusFullDuplicate = findStatusByNameAndId(allStatuses, statusToAdd);
+        if (statusFullDuplicate != null) { // If there's already status with the same ID and name - skip it
+            return;
+        }
+
+        WorkItemStatus statusDuplicateByName = findStatusByName(allStatuses, statusToAdd);
+        if (statusDuplicateByName != null) {
+            // Add status as WorkItem specific status if it's not exact match with already added, but its name clashes with any of already added
+            if (!Objects.equals(statusDuplicateByName.getId(), statusToAdd.getId())) {
+                allStatuses.add(getWorkItemStatus(statusToAdd, wiType));
+            }
+        } else {
+            // ...otherwise add status as general one (not WorkItem specific)
+            allStatuses.add(getWorkItemStatus(statusToAdd, null));
+        }
+    }
+
+    private WorkItemStatus findStatusByName(@NotNull Set<WorkItemStatus> statuses, @NotNull IStatusOpt statusOpt) {
+        return statuses.stream()
+                .filter(status -> status.getName().equals(statusOpt.getName()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private WorkItemStatus findStatusByNameAndId(@NotNull Set<WorkItemStatus> statuses, @NotNull IStatusOpt statusOpt) {
+        return statuses.stream()
+                .filter(status -> status.getName().equals(statusOpt.getName()) && status.getId().equals(statusOpt.getId()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private WorkItemStatus getWorkItemStatus(@NotNull IStatusOpt statusOpt, @Nullable ITypeOpt wiTypeOpt) {
+        return WorkItemStatus.builder()
+                .id(statusOpt.getId())
+                .name(statusOpt.getName())
+                .wiTypeId(wiTypeOpt != null ? wiTypeOpt.getId() : null)
+                .wiTypeName(wiTypeOpt != null ? wiTypeOpt.getName() : null)
+                .build();
     }
 
     @NotNull
