@@ -44,7 +44,7 @@ public class DataSetWidgetParams {
         items = dataSet.items();
 
         lastPage = (Math.max(0, items.size() - 1) / recordsPerPage) + 1;
-        currentPage = Math.min(Math.max(1, currentPage), lastPage); // First check that page number can't be less than 1, then check it doesn't exceed last page
+        currentPage = Math.clamp(currentPage, 1, lastPage);
     }
 
     public static DataSetWidgetParams fromRequest(@NotNull HttpServletRequest request, @NotNull Side side) {
