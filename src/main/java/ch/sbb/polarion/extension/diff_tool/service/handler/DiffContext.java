@@ -17,15 +17,20 @@ import java.util.Optional;
 
 @Getter
 public class DiffContext {
-    public WorkItem workItemA;
-    public WorkItem.Field fieldA;
-    public WorkItem workItemB;
-    public WorkItem.Field fieldB;
-    public final PolarionService polarionService;
-    public String pairedWorkItemsLinkRole;
-    public boolean pairedWorkItemsDiffer;
-    public final String leftProjectId;
-    public DiffModel diffModel;
+    @Setter
+    private WorkItem workItemA;
+    @Setter
+    private WorkItem.Field fieldA;
+    @Setter
+    private WorkItem workItemB;
+    @Setter
+    private WorkItem.Field fieldB;
+    private final PolarionService polarionService;
+    private String pairedWorkItemsLinkRole;
+    private boolean pairedWorkItemsDiffer;
+    private final String leftProjectId;
+    @Setter
+    private DiffModel diffModel;
 
     @Accessors(fluent = true)
     @Getter

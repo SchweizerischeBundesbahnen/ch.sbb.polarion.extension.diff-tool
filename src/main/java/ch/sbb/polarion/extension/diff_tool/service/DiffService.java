@@ -84,7 +84,7 @@ public class DiffService {
     // IMPORTANT: as a required non-obvious step for this approach - we have to swap
     // styles in the reversed diff to display it properly (this swap implemented using ReverseStylesHandler).
     private final Consumer<DiffContext> defaultDiffer = context -> {
-        if (Objects.equals(context.fieldA.getValue(), context.fieldB.getValue())) {
+        if (Objects.equals(context.getFieldA().getValue(), context.getFieldB().getValue())) {
             // Skip fields with identical content in both WorkItems
             return;
         }
@@ -94,7 +94,7 @@ public class DiffService {
         String diff = DiffToolUtils.computeDiff(pairToDiff);
         diff = postProcessDiff(diff, context, handlers);
         // Note that the resulted diff is placed to the second/B field only (coz opposite field will be filled by the reversed operation)
-        context.fieldB.setHtmlDiff(diff);
+        context.getFieldB().setHtmlDiff(diff);
     };
 
     public DiffService(PolarionService polarionService) {
@@ -657,8 +657,8 @@ public class DiffService {
         defaultDiffer.accept(contextA);
         defaultDiffer.accept(contextB);
         cleanDiff(contextA, contextB);
-        contentAnchorsPair.setLeftDiff(contextB.fieldB.getHtmlDiff(), contentPosition);
-        contentAnchorsPair.setRightDiff(contextA.fieldB.getHtmlDiff(), contentPosition);
+        contentAnchorsPair.setLeftDiff(contextB.getFieldB().getHtmlDiff(), contentPosition);
+        contentAnchorsPair.setRightDiff(contextA.getFieldB().getHtmlDiff(), contentPosition);
     }
 
     @VisibleForTesting
@@ -701,18 +701,18 @@ public class DiffService {
         //Sometimes values aren't the same by calling equals() method but the resulting diff doesn't contain any changes.
         //Workaround below is pretty simple - we just check whether diff contains specific piece of html which DaisyDiff
         //adds for changed parts and if there is no such things - we treat situation as "no diff".
-        if (Stream.of(contextA.fieldA.getHtmlDiff(), contextA.fieldB.getHtmlDiff(), contextB.fieldA.getHtmlDiff(), contextB.fieldB.getHtmlDiff())
+        if (Stream.of(contextA.getFieldA().getHtmlDiff(), contextA.getFieldB().getHtmlDiff(), contextB.getFieldA().getHtmlDiff(), contextB.getFieldB().getHtmlDiff())
                 .filter(Objects::nonNull).noneMatch(diff -> diff.contains(DAISY_DIFF_CHANGED_FRAGMENT))) {
-            contextA.fieldA.setHtmlDiff(null);
-            contextA.fieldB.setHtmlDiff(null);
-            contextB.fieldA.setHtmlDiff(null);
-            contextB.fieldB.setHtmlDiff(null);
+            contextA.getFieldA().setHtmlDiff(null);
+            contextA.getFieldB().setHtmlDiff(null);
+            contextB.getFieldA().setHtmlDiff(null);
+            contextB.getFieldB().setHtmlDiff(null);
         }
 
     }
 
     private Pair<String, String> preparePairToDiff(DiffContext context, List<DiffLifecycleHandler> handlers) {
-        Pair<String, String> pair = Pair.of(context.fieldA.getHtml(), context.fieldB.getHtml());
+        Pair<String, String> pair = Pair.of(context.getFieldA().getHtml(), context.getFieldB().getHtml());
         for (DiffLifecycleHandler handler : handlers) {
             pair = handler.preProcess(pair, context);
         }

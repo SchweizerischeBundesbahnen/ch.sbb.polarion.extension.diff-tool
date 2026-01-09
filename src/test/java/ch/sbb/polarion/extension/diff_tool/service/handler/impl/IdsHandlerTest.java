@@ -31,13 +31,13 @@ class IdsHandlerTest {
     private WorkItem workItemB;
 
     @BeforeEach
-    public void init() {
+    void init() {
         TestUtils.mockDiffSettings();
         handler = new IdsHandler();
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         TestUtils.clearSettings();
     }
 

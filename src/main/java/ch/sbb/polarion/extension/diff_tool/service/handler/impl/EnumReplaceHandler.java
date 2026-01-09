@@ -4,7 +4,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
-import com.polarion.subterra.base.data.model.IEnumType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,13 +18,13 @@ public class EnumReplaceHandler implements DiffLifecycleHandler {
 
     @Override
     public @NotNull Pair<String, String> preProcess(@NotNull Pair<String, String> initialPair, @NotNull DiffContext context) {
-        return isEnumDiff(context.fieldA, context.fieldB) ? Pair.of(REPLACE_TOKEN_LEFT, REPLACE_TOKEN_RIGHT) : initialPair;
+        return isEnumDiff(context.getFieldA(), context.getFieldB()) ? Pair.of(REPLACE_TOKEN_LEFT, REPLACE_TOKEN_RIGHT) : initialPair;
     }
 
     @Override
     public @NotNull String postProcess(@NotNull String diff, @NotNull DiffContext context) {
-        return isEnumDiff(context.fieldA, context.fieldB) ?
-                diff.replace(REPLACE_TOKEN_LEFT, context.fieldA.getHtml()).replace(REPLACE_TOKEN_RIGHT, context.fieldB.getHtml()) : diff;
+        return isEnumDiff(context.getFieldA(), context.getFieldB()) ?
+                diff.replace(REPLACE_TOKEN_LEFT, context.getFieldA().getHtml()).replace(REPLACE_TOKEN_RIGHT, context.getFieldB().getHtml()) : diff;
     }
 
     private boolean isEnumDiff(WorkItem.Field fieldA, WorkItem.Field fieldB) {

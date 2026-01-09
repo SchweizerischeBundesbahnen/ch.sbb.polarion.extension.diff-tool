@@ -53,11 +53,11 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
 
         List<String> resultRows = new ArrayList<>();
 
-        IWorkItem workItemA = context.workItemA == null ? null : context.workItemA.getUnderlyingObject();
+        IWorkItem workItemA = context.getWorkItemA() == null ? null : context.getWorkItemA().getUnderlyingObject();
         List<ILinkedWorkItemStruct> linksA = getLinks(workItemA, false);
         List<ILinkedWorkItemStruct> linksABack = getLinks(workItemA, true);
 
-        IWorkItem workItemB = context.workItemB == null ? null : context.workItemB.getUnderlyingObject();
+        IWorkItem workItemB = context.getWorkItemB() == null ? null : context.getWorkItemB().getUnderlyingObject();
         List<ILinkedWorkItemStruct> linksB = getLinks(workItemB, false);
         List<ILinkedWorkItemStruct> linksBBack = getLinks(workItemB, true);
 
@@ -67,7 +67,7 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                     if (role.getName() == null) {
                         logger.warn("Link role '%s' with null name encountered: looks like the link role has been removed from configuration".formatted(role.getId()));
                     }
-                    return context.diffModel.getLinkedWorkItemRoles().isEmpty() || context.diffModel.getLinkedWorkItemRoles().contains(role.getId());
+                    return context.getDiffModel().getLinkedWorkItemRoles().isEmpty() || context.getDiffModel().getLinkedWorkItemRoles().contains(role.getId());
                 })
                 .distinct()
                 .sorted(Comparator.comparing(IEnumOption::getName, Comparator.nullsLast(String::compareTo)))
@@ -114,7 +114,7 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                         .filter(l -> notFromModule(l.getLinkedItem(), workItemB.getModule())) // filter out direct links to work item B
                         .map(l -> l.getLinkedItem().getId()).collect(Collectors.toSet());
                 if (sameProjectItems(workItemB, link.getLinkedItem())) {
-                    List<IWorkItem> pairedWorkItems = context.polarionService.getPairedWorkItems(link.getLinkedItem(), workItemA.getProjectId(), context.pairedWorkItemsLinkRole);
+                    List<IWorkItem> pairedWorkItems = context.getPolarionService().getPairedWorkItems(link.getLinkedItem(), workItemA.getProjectId(), context.getPairedWorkItemsLinkRole());
                     if (pairedWorkItems.stream().anyMatch(w -> oppositeWorkItems.contains(w.getId()))) {
                         resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), NONE));
                         toRemove.add(link);
@@ -150,6 +150,6 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
 
     @VisibleForTesting
     boolean isInappropriateCaseForHandler(DiffContext context) {
-        return context.pairedWorkItemsDiffer || !Stream.of(context.fieldA.getId(), context.fieldB.getId()).filter(Objects::nonNull).distinct().toList().equals(List.of(KEY_LINKED_WORK_ITEMS));
+        return context.isPairedWorkItemsDiffer() || !Stream.of(context.getFieldA().getId(), context.getFieldB().getId()).filter(Objects::nonNull).distinct().toList().equals(List.of(KEY_LINKED_WORK_ITEMS));
     }
 }

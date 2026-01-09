@@ -40,6 +40,7 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
         }
     }
 
+    @Override
     protected void render(@NotNull HtmlFragmentBuilder builder) {
         HtmlTagBuilder wrap = builder.tag().div();
         wrap.attributes().className("main-pane");

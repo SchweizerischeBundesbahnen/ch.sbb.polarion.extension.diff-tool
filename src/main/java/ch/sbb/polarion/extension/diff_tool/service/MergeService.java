@@ -81,6 +81,8 @@ public class MergeService {
     private static final String TEST_STEP_KEYS = "keys";
     private static final String TEST_STEP_VALUES = "values";
 
+    private static final String NEW_WORKITEM_CREATED_MESSAGE = "new workitem '%s' based on source workitem '%s' created";
+
     private static final CompareOptions MERGE_OPTION = CompareOptions.create().forMerge(true).build();
     private final PolarionService polarionService;
 
@@ -270,7 +272,7 @@ public class MergeService {
             if (context.getSourceModule().getExternalWorkItems().contains(source)) {
                 IWorkItem createdWorkItem = insertWorkItem(source, context, true);
                 if (createdWorkItem != null) {
-                    context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(createdWorkItem.getId(), source.getId()));
+                    context.reportEntry(CREATED, pair, NEW_WORKITEM_CREATED_MESSAGE.formatted(createdWorkItem.getId(), source.getId()));
                     reloadModule(context.getTargetModule());
                 } else {
                     context.reportEntry(CREATION_FAILED, pair, "new workitem based on source workitem '%s' NOT created".formatted(source.getId()));
@@ -288,7 +290,7 @@ public class MergeService {
                 } else {
                     newWorkItem = copyWorkItemToDocument(source, (InternalWriteTransaction) transaction, context, pair);
                     merge(source, newWorkItem, context, pair);
-                    context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId()));
+                    context.reportEntry(CREATED, pair, NEW_WORKITEM_CREATED_MESSAGE.formatted(newWorkItem.getId(), source.getId()));
                 }
                 context.bindCounterpartItem(pair,
                         WorkItem.of(newWorkItem,
@@ -316,7 +318,7 @@ public class MergeService {
             IWorkItem newWorkItem = polarionService.getTrackerProject(context.getTargetProject().getId()).createWorkItem(Objects.requireNonNull(source.getType()).getId());
             newWorkItem.addLinkedItem(source, linkRoleObj, null, false);
             newWorkItem.save();
-            context.reportEntry(CREATED, pair, "new workitem '%s' based on source workitem '%s' created".formatted(newWorkItem.getId(), source.getId()));
+            context.reportEntry(CREATED, pair, NEW_WORKITEM_CREATED_MESSAGE.formatted(newWorkItem.getId(), source.getId()));
             return newWorkItem;
         }
         return null;
@@ -792,6 +794,7 @@ public class MergeService {
     }
 
     @VisibleForTesting
+    @SuppressWarnings("java:S135") // Trying to reduce number of "continue" will make implementation much more complex
     void mergeLinkedWorkItems(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, WorkItemsPair pair) {
 
         Collection<ILinkedWorkItemStruct> srcLinks = getLinks(source, false);
@@ -814,17 +817,17 @@ public class MergeService {
 
             // next, attempt to find links to the same work item from source
             ILinkedWorkItemStruct sameLink = srcLinks.stream()
-                    .filter(link -> Objects.equals(targetLink.getLinkRole().getId(), link.getLinkRole().getId()) && sameWorkItem(targetLink, link.getLinkedItem())).findFirst().orElse(null);
-            if (sameLink != null) {
-                if (sameProjectItems(source, target) || (!sameProjectItems(target, targetLink.getLinkedItem()) && !sameProjectItems(source, targetLink.getLinkedItem()))) {
-                    // either both work items are from one project or both links lead to 3rd project work item
-                    sameLinks.add(sameLink);
-                    if (!Objects.equals(targetLink.getRevision(), sameLink.getRevision())) { // if they differ only by revision - fix it
-                        target.getLinkedWorkItemsStructsDirect().remove(targetLink);
-                        target.addLinkedItem(sameLink.getLinkedItem(), sameLink.getLinkRole(), sameLink.getRevision(), sameLink.isSuspect());
-                    }
-                    continue;
+                    .filter(link -> Objects.equals(targetLink.getLinkRole().getId(), link.getLinkRole().getId()) && sameWorkItem(targetLink, link.getLinkedItem()))
+                    .findFirst()
+                    .orElse(null);
+            if (sameLink != null && (sameProjectItems(source, target) || (!sameProjectItems(target, targetLink.getLinkedItem()) && !sameProjectItems(source, targetLink.getLinkedItem())))) {
+                // either both work items are from one project or both links lead to 3rd project work item
+                sameLinks.add(sameLink);
+                if (!Objects.equals(targetLink.getRevision(), sameLink.getRevision())) { // if they differ only by revision - fix it
+                    target.getLinkedWorkItemsStructsDirect().remove(targetLink);
+                    target.addLinkedItem(sameLink.getLinkedItem(), sameLink.getLinkRole(), sameLink.getRevision(), sameLink.isSuspect());
                 }
+                continue;
             }
 
             // if there are some links left to 3rd projects - remove them

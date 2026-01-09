@@ -41,10 +41,10 @@ public class LinksHandler implements DiffLifecycleHandler {
     public @NotNull Pair<String, String> preProcess(@NotNull Pair<String, String> initialPair, @NotNull DiffContext context) {
         String left = initialPair.getLeft();
         String right = initialPair.getRight();
-        if (!context.pairedWorkItemsDiffer && context.workItemA != null && context.workItemB != null
-                && !context.workItemA.sameDocument(context.workItemB)) { // Pairs of WIs from same document should be compared as is
-            left = appendPairedWorkItemId(left, context.workItemA.getProjectId(), context.workItemB.getProjectId(), context);
-            right = appendPairedWorkItemId(right, context.workItemB.getProjectId(), context.workItemA.getProjectId(), context);
+        if (!context.isPairedWorkItemsDiffer() && context.getWorkItemA() != null && context.getWorkItemB() != null
+                && !context.getWorkItemA().sameDocument(context.getWorkItemB())) { // Pairs of WIs from same document should be compared as is
+            left = appendPairedWorkItemId(left, context.getWorkItemA().getProjectId(), context.getWorkItemB().getProjectId(), context);
+            right = appendPairedWorkItemId(right, context.getWorkItemB().getProjectId(), context.getWorkItemA().getProjectId(), context);
 
             left = replaceItemsContentByPlaceholders(left);
             right = replaceItemsContentByPlaceholders(right);
@@ -65,11 +65,11 @@ public class LinksHandler implements DiffLifecycleHandler {
             String workItemId = matcher.group("workItemId");
             IWorkItem workItem = null;
             try {
-                workItem = context.polarionService.getWorkItem(workItemProjectId, workItemId, revision);
+                workItem = context.getPolarionService().getWorkItem(workItemProjectId, workItemId, revision);
             } catch (Exception e) {
                 context.addIssue(e.getMessage());
             }
-            IWorkItem pairedWorkItem = workItem != null ? context.polarionService.getPairedWorkItems(workItem, targetProjectId, context.pairedWorkItemsLinkRole).stream().findFirst().orElse(null) : null;
+            IWorkItem pairedWorkItem = workItem != null ? context.getPolarionService().getPairedWorkItems(workItem, targetProjectId, context.getPairedWorkItemsLinkRole()).stream().findFirst().orElse(null) : null;
             if (pairedWorkItem != null) {
                 matcher.appendReplacement(buf, match.replace(">", " %s=\"%s\">".formatted(DATA_PAIRED_ITEM_ID, pairedWorkItem.getId())));
             }

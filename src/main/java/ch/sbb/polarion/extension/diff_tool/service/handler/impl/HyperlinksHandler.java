@@ -42,21 +42,21 @@ public class HyperlinksHandler implements DiffLifecycleHandler {
             return diff;
         }
 
-        String wiTypeId = Optional.ofNullable(ObjectUtils.firstNonNull(context.workItemA, context.workItemB)
+        String wiTypeId = Optional.ofNullable(ObjectUtils.firstNonNull(context.getWorkItemA(), context.getWorkItemB())
                 .getUnderlyingObject().getType()).map(IEnumOption::getId).orElse(null);
         if (wiTypeId == null) {
             return diff;
         }
 
         List<String> resultRows = new ArrayList<>();
-        List<String> rolesToMerge = Optional.of(context.diffModel.getHyperlinkRoles())
+        List<String> rolesToMerge = Optional.of(context.getDiffModel().getHyperlinkRoles())
                 .filter(settingsRoles -> !settingsRoles.isEmpty())
-                .orElseGet(() -> context.polarionService.getHyperlinkRoles(context.leftProjectId).stream().map(LinkRole::getCombinedId).toList())
+                .orElseGet(() -> context.getPolarionService().getHyperlinkRoles(context.getLeftProjectId()).stream().map(LinkRole::getCombinedId).toList())
                 .stream().filter(combinedId -> combinedId.startsWith(wiTypeId + "#"))
                 .map(combinedId -> combinedId.substring(combinedId.indexOf("#") + 1)).toList();
 
-        List<HyperlinkStruct> allLinksA = getHyperlinks(context.workItemA);
-        List<HyperlinkStruct> allLinksB = getHyperlinks(context.workItemB);
+        List<HyperlinkStruct> allLinksA = getHyperlinks(context.getWorkItemA());
+        List<HyperlinkStruct> allLinksB = getHyperlinks(context.getWorkItemB());
 
         // first we find same links & display them on top of the diff
         for (String roleId : rolesToMerge) {
@@ -111,6 +111,6 @@ public class HyperlinksHandler implements DiffLifecycleHandler {
     }
 
     private boolean isInappropriateCaseForHandler(DiffContext context) {
-        return !Stream.of(context.fieldA.getId(), context.fieldB.getId()).filter(Objects::nonNull).distinct().toList().equals(List.of(KEY_HYPERLINKS));
+        return !Stream.of(context.getFieldA().getId(), context.getFieldB().getId()).filter(Objects::nonNull).distinct().toList().equals(List.of(KEY_HYPERLINKS));
     }
 }

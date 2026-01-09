@@ -1,7 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
@@ -28,12 +27,12 @@ import static org.mockito.Mockito.when;
 class LinksHandlerTest {
 
     @BeforeEach
-    public void init() {
+    void init() {
         TestUtils.mockDiffSettings();
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         TestUtils.clearSettings();
     }
 

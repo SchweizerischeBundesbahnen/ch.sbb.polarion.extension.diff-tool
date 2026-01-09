@@ -20,20 +20,20 @@ class HyperlinksHandlerTest {
         String input = "test";
         DiffContext context = mock(DiffContext.class, RETURNS_DEEP_STUBS);
 
-        context.fieldA = mock(WorkItem.Field.class, RETURNS_DEEP_STUBS);
-        when(context.fieldA.getId()).thenReturn("hyperlinks");
+        context.setFieldA(mock(WorkItem.Field.class, RETURNS_DEEP_STUBS));
+        when(context.getFieldA().getId()).thenReturn("hyperlinks");
 
-        context.fieldB = mock(WorkItem.Field.class, RETURNS_DEEP_STUBS);
-        when(context.fieldB.getId()).thenReturn("hyperlinks");
+        context.setFieldB(mock(WorkItem.Field.class, RETURNS_DEEP_STUBS));
+        when(context.getFieldB().getId()).thenReturn("hyperlinks");
 
-        context.workItemA = mock(WorkItem.class, RETURNS_DEEP_STUBS);
-        context.workItemB = mock(WorkItem.class, RETURNS_DEEP_STUBS);
+        context.setWorkItemA(mock(WorkItem.class, RETURNS_DEEP_STUBS));
+        context.setWorkItemB(mock(WorkItem.class, RETURNS_DEEP_STUBS));
 
-        context.diffModel = mock(DiffModel.class, RETURNS_DEEP_STUBS);
+        context.setDiffModel(mock(DiffModel.class, RETURNS_DEEP_STUBS));
 
         ITypeOpt typeA = mock(ITypeOpt.class);
         when(typeA.getId()).thenReturn("someType");
-        when(context.workItemA.getUnderlyingObject().getType()).thenReturn(typeA);
+        when(context.getWorkItemA().getUnderlyingObject().getType()).thenReturn(typeA);
 
         List<HyperlinkStruct> hyperlinksA = List.of(
                 mockHyperlinkStruct("urlA1", "role1"),
@@ -48,10 +48,10 @@ class HyperlinksHandlerTest {
                 mockHyperlinkStruct("urlB3", "role3"),
                 mockHyperlinkStruct("urlB4", null)
         );
-        when(context.workItemA.getUnderlyingObject().getHyperlinks()).thenReturn(hyperlinksA);
-        when(context.workItemB.getUnderlyingObject().getHyperlinks()).thenReturn(hyperlinksB);
+        when(context.getWorkItemA().getUnderlyingObject().getHyperlinks()).thenReturn(hyperlinksA);
+        when(context.getWorkItemB().getUnderlyingObject().getHyperlinks()).thenReturn(hyperlinksB);
 
-        when(context.diffModel.getHyperlinkRoles()).thenReturn(List.of("someType#role1", "someType#role2"));
+        when(context.getDiffModel().getHyperlinkRoles()).thenReturn(List.of("someType#role1", "someType#role2"));
 
         String result = new HyperlinksHandler().postProcess(input, context);
 

@@ -182,10 +182,9 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             return false; // Certain fields should never be cleaned up, eg. project, module, outline number etc.
         }
         for (DiffField allowedField : allowedFields) {
-            if (allowedField.getWiTypeId() == null || (workItemType != null && workItemType.getId().equals(allowedField.getWiTypeId()))) {
-                if (fieldToCheck.getKey().equals(allowedField.getKey())) {
-                    return false; // If field is configured to be copied then it shouldn't be cleaned up
-                }
+            if ((allowedField.getWiTypeId() == null || (workItemType != null && workItemType.getId().equals(allowedField.getWiTypeId())))
+                    && (fieldToCheck.getKey().equals(allowedField.getKey()))) {
+                return false; // If field is configured to be copied then it shouldn't be cleaned up
             }
         }
         return true;

@@ -31,13 +31,13 @@ class OuterWrapperHandlerTest {
     private WorkItem workItemB;
 
     @BeforeEach
-    public void init() {
+    void init() {
         TestUtils.mockDiffSettings();
         handler = new OuterWrapperHandler();
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         TestUtils.clearSettings();
     }
 
