@@ -23,11 +23,11 @@ class DocumentWorkItemsCacheTest {
     @Mock
     private IModule document;
     @Mock
-    private IWorkItem workItem1;
+    private IWorkItem workItem1Mock;
     @Mock
-    private IWorkItem workItem2;
+    private IWorkItem workItem2Mock;
     @Mock
-    private IWorkItem workItem3;
+    private IWorkItem workItem3Mock;
     private Subject subject;
     private final List<UserPrincipal> principles = List.of(new UserPrincipal("testUser1"), new UserPrincipal("testUser2"));
     private final List<UserCredentials> credentials = List.of(new UserCredentials("testKey1", "testLogin1", "testPassword1"),
@@ -177,9 +177,9 @@ class DocumentWorkItemsCacheTest {
         when(document.getProjectId()).thenReturn("test-project-id");
         when(document.getModuleLocation()).thenReturn(Location.getLocation(null, "testPath", "testRevision"));
         when(document.getRevision()).thenReturn("testRevision");
-        when(workItem1.getId()).thenReturn("test-workitem-id-1");
-        when(workItem2.getId()).thenReturn("test-workitem-id-2");
-        when(workItem3.getId()).thenReturn("test-workitem-id-3");
-        when(document.getAllWorkItems()).thenReturn(List.of(workItem1, workItem2, workItem3));
+        when(workItem1Mock.getId()).thenReturn("test-workitem-id-1");
+        when(workItem2Mock.getId()).thenReturn("test-workitem-id-2");
+        when(workItem3Mock.getId()).thenReturn("test-workitem-id-3");
+        when(document.getAllWorkItems()).thenReturn(List.of(workItem1Mock, workItem2Mock, workItem3Mock));
     }
 }

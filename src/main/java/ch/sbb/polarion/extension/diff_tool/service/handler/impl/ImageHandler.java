@@ -21,9 +21,9 @@ public class ImageHandler implements DiffLifecycleHandler {
     public @NotNull Pair<String, String> preProcess(@NotNull Pair<String, String> initialPair, @NotNull DiffContext context) {
         String left = initialPair.getLeft();
         String right = initialPair.getRight();
-        if (context.workItemA != null && context.workItemB != null) {
-            left = calculateHash(left, context.workItemA);
-            right = calculateHash(right, context.workItemB);
+        if (context.getWorkItemA() != null && context.getWorkItemB() != null) {
+            left = calculateHash(left, context.getWorkItemA());
+            right = calculateHash(right, context.getWorkItemB());
         }
 
         return Pair.of(left, right);

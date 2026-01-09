@@ -37,7 +37,7 @@ public final class ListCleanerProvider {
         @SuppressWarnings("unchecked")
         public void clean(@NotNull IWorkItem workItem) {
             List<IUser> users = workItem.getApprovals().stream()
-                    .filter(approval -> approval instanceof IApprovalStruct)
+                    .filter(IApprovalStruct.class::isInstance)
                     .map(approvalStruct -> ((IApprovalStruct) approvalStruct).getUser())
                     .toList();
             users.forEach(workItem::removeApprovee);

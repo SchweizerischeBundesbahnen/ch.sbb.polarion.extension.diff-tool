@@ -31,6 +31,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -158,8 +159,14 @@ public class DiffToolUtils {
      * Get mutable list of linked work items sorted by ID
      */
     public List<ILinkedWorkItemStruct> getLinks(@Nullable IWorkItem workItem, boolean back) {
-        return workItem == null ? new ArrayList<>() : (back ? workItem.getLinkedWorkItemsStructsBack() : workItem.getLinkedWorkItemsStructsDirect()).stream()
-                .sorted(Comparator.comparing(o -> o.getLinkedItem().getId())).collect(Collectors.toCollection(ArrayList::new));
+        if (workItem == null) {
+            return new ArrayList<>();
+        } else {
+            Collection<ILinkedWorkItemStruct> linkedWorkItemsStructs = back ? workItem.getLinkedWorkItemsStructsBack() : workItem.getLinkedWorkItemsStructsDirect();
+            return linkedWorkItemsStructs.stream()
+                    .sorted(Comparator.comparing(o -> o.getLinkedItem().getId()))
+                    .collect(Collectors.toCollection(ArrayList::new));
+        }
     }
 
     public boolean notFromModule(IWorkItem workItem, IModule module) {

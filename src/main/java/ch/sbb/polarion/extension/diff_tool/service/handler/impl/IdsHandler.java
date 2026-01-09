@@ -17,7 +17,7 @@ public class IdsHandler implements DiffLifecycleHandler {
 
     @Override
     public @NotNull Pair<String, String> preProcess(@NotNull Pair<String, String> initialPair, @NotNull DiffContext context) {
-        if (applicable(context) && context.workItemA != null && context.workItemB != null) {
+        if (applicable(context) && context.getWorkItemA() != null && context.getWorkItemB() != null) {
             placeholdersMapping.put(initialPair.getLeft(), initialPair.getRight());
             return Pair.of(initialPair.getLeft(), initialPair.getLeft());
         }
@@ -35,7 +35,7 @@ public class IdsHandler implements DiffLifecycleHandler {
     }
 
     private boolean applicable(@NotNull DiffContext context) {
-        String fieldId = Optional.ofNullable(context.fieldA.getId()).orElse(context.fieldB.getId());
-        return ID.equals(fieldId) && !context.pairedWorkItemsDiffer;
+        String fieldId = Optional.ofNullable(context.getFieldA().getId()).orElse(context.getFieldB().getId());
+        return ID.equals(fieldId) && !context.isPairedWorkItemsDiffer();
     }
 }
