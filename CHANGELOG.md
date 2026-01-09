@@ -1,5 +1,30 @@
 # Changelog
 
+## [7.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.4.2...v7.0.0) (2026-01-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* polarion 2512 support ([#348](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/348))
+
+### Features
+
+* generic v12.1.0 ([#353](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/353)) ([b412f3f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/b412f3f91c33d74d96e4b5a3ad80028cec4ec247))
+* polarion 2512 support ([#348](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/348)) ([c87c863](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/c87c8631fc806e2b25b549912b60c28a48060b27))
+
+
+### Bug Fixes
+
+* better display duplicated work item statuses ([#350](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/350)) ([d797369](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d797369d71f29fd0adfa3270f0a0532819500314)), closes [#349](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/349)
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v10.1.2 ([53d290a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/53d290aad104285a907d4855211968715dfb7457))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v11 ([#352](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/352)) ([4bd7bf5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/4bd7bf53bf2dcb800a3eb3e1dc268acd8d7f6018))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v11.1.0 ([22468ac](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/22468aca4706b6e9a1be08ad928678b333d93709))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v11.1.1 ([284b086](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/284b086cd8ce4b0f1afc688d24879748158ae420))
+* **deps:** update dependency next to v15.5.8 [security] ([474bcd1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/474bcd1620b9c63577c90ea774291af3290efce7))
+* **deps:** update dependency next to v15.5.9 [security] ([632c9d1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/632c9d1a90e827d871c8d337c3a84e786993f22d))
+* **deps:** update nextjs monorepo to v16.1.0 ([a65e007](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/a65e00794bee5e1ec679fa2eaa47dc796a43aeb2))
+* **deps:** update nextjs monorepo to v16.1.1 ([c91a405](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/c91a40586c24fe7e43d2e45ec8f72dc77ad82c34))
+
 ## [6.4.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.4.1...v6.4.2) (2025-12-04)
 
 
