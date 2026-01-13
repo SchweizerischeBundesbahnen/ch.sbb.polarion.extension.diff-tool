@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.util;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.StringsDiff;
+import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IType;
@@ -11,6 +12,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -100,6 +102,13 @@ class DiffToolUtilsTest {
         IType someOtherTypeMock = mock(IType.class);
         boolean result = DiffToolUtils.isEnumContainingType(someOtherTypeMock);
         assertFalse(result);
+    }
+
+    @Test
+    void testGetLinksForNullWorkItem() {
+        List<ILinkedWorkItemStruct> links = DiffToolUtils.getLinks(null, false);
+        assertNotNull(links);
+        assertEquals(0, links.size());
     }
 
     static Stream<Arguments> testDiffTextValues() {

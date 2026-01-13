@@ -73,4 +73,28 @@ class LinksHandlerTest {
         }
     }
 
+    @Test
+    @SneakyThrows
+    void testAppendNotExistingPairedWorkItemId() {
+
+        try (InputStream isUnprocessedHtml = this.getClass().getResourceAsStream("/pairedWorkItem.html");
+             InputStream isExpectedResultHtml = this.getClass().getResourceAsStream("/pairedWorkItemResult.html")) {
+
+            String unprocessedHtml = new String(Objects.requireNonNull(isUnprocessedHtml).readAllBytes(), StandardCharsets.UTF_8);
+            String expectedHtml = new String(Objects.requireNonNull(isExpectedResultHtml).readAllBytes(), StandardCharsets.UTF_8);
+
+            String projectId = "elibrary";
+
+            PolarionService polarionService = mock(PolarionService.class);
+
+            IWorkItem workItemLastRevision = mock(IWorkItem.class);
+            when(polarionService.getWorkItem(eq(projectId), eq("EL-615"), isNull())).thenReturn(workItemLastRevision);
+
+            String result = new LinksHandler().appendPairedWorkItemId(unprocessedHtml,
+                    projectId, projectId, new DiffContext(WorkItem.of(mock(IWorkItem.class), "wi_outline_number", false, false), WorkItem.of(mock(IWorkItem.class), "wi_outline_number", false, false),
+                            "testFieldId", WorkItemsPairDiffParams.builder().pairedWorkItemsLinkRole("roleId").build(), polarionService));
+
+            assertEquals(unprocessedHtml, result);
+        }
+    }
 }

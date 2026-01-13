@@ -48,10 +48,14 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
     private final DiffWidgetParams diffWidgetParams;
 
     protected DiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull FieldsParameter columnsParameter, @NotNull DiffWidgetParams diffWidgetParams) {
+        this(context, columnsParameter, diffWidgetParams, new PolarionService());
+    }
+
+    protected DiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull FieldsParameter columnsParameter, @NotNull DiffWidgetParams diffWidgetParams, @NotNull PolarionService polarionService) {
         super(context);
-        this.polarionService = new PolarionService();
         this.columnsParameter = columnsParameter;
         this.diffWidgetParams = diffWidgetParams;
+        this.polarionService = polarionService;
     }
 
     protected String getProjectId() {
@@ -157,13 +161,17 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         HtmlTagBuilder queryLabel = queryPane.append().tag().byName(LABEL_TAG);
         queryLabel.append().text("Query (Lucene):");
         HtmlTagBuilder queryInput = queryPane.append().tag().byName(INPUT_TAG);
-        queryInput.attributes().id(dataSetParams.side() + "-query-input").byName(VALUE_ATTRIBUTE, dataSetParams.query()).className("query-input");
+        queryInput.attributes().id(dataSetParams.side() + "-query-input");
+        queryInput.attributes().byName(VALUE_ATTRIBUTE, dataSetParams.query());
+        queryInput.attributes().className("query-input");
 
         HtmlTagBuilder recordsPerPageLabel = queryPane.append().tag().byName(LABEL_TAG);
         recordsPerPageLabel.append().text("Records per page:");
 
         HtmlTagBuilder recordsPerPageInput = queryPane.append().tag().byName(INPUT_TAG);
-        recordsPerPageInput.attributes().id(dataSetParams.side() + "-records-per-page-input").className("records-per-page").byName(VALUE_ATTRIBUTE, String.valueOf(dataSetParams.recordsPerPage()));
+        recordsPerPageInput.attributes().id(dataSetParams.side() + "-records-per-page-input");
+        recordsPerPageInput.attributes().className("records-per-page");
+        recordsPerPageInput.attributes().byName(VALUE_ATTRIBUTE, String.valueOf(dataSetParams.recordsPerPage()));
 
         HtmlTagBuilder applyButton = queryPane.append().tag().byName("button");
         applyButton.append().text("Apply");
