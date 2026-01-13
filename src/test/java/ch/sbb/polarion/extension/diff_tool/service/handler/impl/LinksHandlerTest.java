@@ -77,12 +77,8 @@ class LinksHandlerTest {
     @SneakyThrows
     void testAppendNotExistingPairedWorkItemId() {
 
-        try (InputStream isUnprocessedHtml = this.getClass().getResourceAsStream("/pairedWorkItem.html");
-             InputStream isExpectedResultHtml = this.getClass().getResourceAsStream("/pairedWorkItemResult.html")) {
-
+        try (InputStream isUnprocessedHtml = this.getClass().getResourceAsStream("/pairedWorkItem.html")) {
             String unprocessedHtml = new String(Objects.requireNonNull(isUnprocessedHtml).readAllBytes(), StandardCharsets.UTF_8);
-            String expectedHtml = new String(Objects.requireNonNull(isExpectedResultHtml).readAllBytes(), StandardCharsets.UTF_8);
-
             String projectId = "elibrary";
 
             PolarionService polarionService = mock(PolarionService.class);
