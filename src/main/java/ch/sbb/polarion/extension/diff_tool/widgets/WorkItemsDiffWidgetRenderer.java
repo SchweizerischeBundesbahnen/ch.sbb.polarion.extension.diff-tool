@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.widgets;
 
+import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.PrototypeEnum;
@@ -31,7 +32,11 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
     private final DiffWidgetParams params;
 
     public WorkItemsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params) {
-        super(context, COLUMNS_PARAMETER, params);
+        this(context, params, new PolarionService());
+    }
+
+    public WorkItemsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params, @NotNull PolarionService polarionService) {
+        super(context, COLUMNS_PARAMETER, params, polarionService);
 
         this.params = params;
         if (!context.getDisplayedScope().isGlobal()) {
@@ -40,6 +45,7 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
         }
     }
 
+    @Override
     protected void render(@NotNull HtmlFragmentBuilder builder) {
         HtmlTagBuilder wrap = builder.tag().div();
         wrap.attributes().className("main-pane");

@@ -35,15 +35,27 @@ import java.util.List;
 
 abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
 
+    private static final String INPUT_TAG = "input";
+    private static final String LABEL_TAG = "label";
+    private static final String OPTION_TAG = "option";
+    private static final String SELECT_TAG = "select";
+    private static final String VALUE_ATTRIBUTE = "value";
+    private static final String SELECTED_ATTRIBUTE = "selected";
+    private static final String SIDE_PLACEHOLDER = "<SIDE>";
+
     private final PolarionService polarionService;
     private final FieldsParameter columnsParameter;
     private final DiffWidgetParams diffWidgetParams;
 
     protected DiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull FieldsParameter columnsParameter, @NotNull DiffWidgetParams diffWidgetParams) {
+        this(context, columnsParameter, diffWidgetParams, new PolarionService());
+    }
+
+    protected DiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull FieldsParameter columnsParameter, @NotNull DiffWidgetParams diffWidgetParams, @NotNull PolarionService polarionService) {
         super(context);
-        this.polarionService = new PolarionService();
         this.columnsParameter = columnsParameter;
         this.diffWidgetParams = diffWidgetParams;
+        this.polarionService = polarionService;
     }
 
     protected String getProjectId() {
@@ -101,18 +113,18 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         HtmlTagBuilder linkRolePane = parent.append().tag().div();
         linkRolePane.attributes().className("link-role");
 
-        linkRolePane.append().tag().byName("label").append().text("Link role:");
-        HtmlTagBuilder linkRoleSelect = linkRolePane.append().tag().byName("select");
+        linkRolePane.append().tag().byName(LABEL_TAG).append().text("Link role:");
+        HtmlTagBuilder linkRoleSelect = linkRolePane.append().tag().byName(SELECT_TAG);
         linkRoleSelect.attributes().id("link-role-selector");
 
         if (StringUtils.isNotBlank(getProjectId())) {
             Collection<ILinkRoleOpt> linkRoles = polarionService.getLinkRoles(getProjectId());
             for (ILinkRoleOpt linkRole : linkRoles) {
-                HtmlTagBuilder option = linkRoleSelect.append().tag().byName("option");
-                option.attributes().byName("value", linkRole.getId());
+                HtmlTagBuilder option = linkRoleSelect.append().tag().byName(OPTION_TAG);
+                option.attributes().byName(VALUE_ATTRIBUTE, linkRole.getId());
                 option.append().text(String.format("%s / %s", linkRole.getName(), linkRole.getOppositeName()));
                 if (linkRole.getId().equals(this.getLinkRole())) {
-                    option.attributes().booleanAttribute("selected");
+                    option.attributes().booleanAttribute(SELECTED_ATTRIBUTE);
                 }
             }
         }
@@ -123,17 +135,17 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         HtmlTagBuilder configurationPane = parent.append().tag().div();
         configurationPane.attributes().className("configuration");
 
-        configurationPane.append().tag().byName("label").append().text("Configuration:");
-        HtmlTagBuilder configurationSelect = configurationPane.append().tag().byName("select");
+        configurationPane.append().tag().byName(LABEL_TAG).append().text("Configuration:");
+        HtmlTagBuilder configurationSelect = configurationPane.append().tag().byName(SELECT_TAG);
         configurationSelect.attributes().id("config-selector");
 
         Collection<SettingName> configurations = NamedSettingsRegistry.INSTANCE.getByFeatureName(DiffSettings.FEATURE_NAME).readNames(ScopeUtils.getScopeFromProject(getProjectId()));
         for (SettingName configuration : configurations) {
-            HtmlTagBuilder option = configurationSelect.append().tag().byName("option");
-            option.attributes().byName("value", configuration.getName());
+            HtmlTagBuilder option = configurationSelect.append().tag().byName(OPTION_TAG);
+            option.attributes().byName(VALUE_ATTRIBUTE, configuration.getName());
             option.append().text(configuration.getName());
             if (configuration.getName().equals(this.getConfiguration())) {
-                option.attributes().booleanAttribute("selected");
+                option.attributes().booleanAttribute(SELECTED_ATTRIBUTE);
             }
         }
     }
@@ -146,16 +158,20 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
             renderTargetProject(queryPane, dataSetParams); // This method has a side effect on params parameter, initializing projectId attribute if it's empty
         }
 
-        HtmlTagBuilder queryLabel = queryPane.append().tag().byName("label");
+        HtmlTagBuilder queryLabel = queryPane.append().tag().byName(LABEL_TAG);
         queryLabel.append().text("Query (Lucene):");
-        HtmlTagBuilder queryInput = queryPane.append().tag().byName("input");
-        queryInput.attributes().id(dataSetParams.side() + "-query-input").byName("value", dataSetParams.query()).className("query-input");
+        HtmlTagBuilder queryInput = queryPane.append().tag().byName(INPUT_TAG);
+        queryInput.attributes().id(dataSetParams.side() + "-query-input");
+        queryInput.attributes().byName(VALUE_ATTRIBUTE, dataSetParams.query());
+        queryInput.attributes().className("query-input");
 
-        HtmlTagBuilder recordsPerPageLabel = queryPane.append().tag().byName("label");
+        HtmlTagBuilder recordsPerPageLabel = queryPane.append().tag().byName(LABEL_TAG);
         recordsPerPageLabel.append().text("Records per page:");
 
-        HtmlTagBuilder recordsPerPageInput = queryPane.append().tag().byName("input");
-        recordsPerPageInput.attributes().id(dataSetParams.side() + "-records-per-page-input").className("records-per-page").byName("value", String.valueOf(dataSetParams.recordsPerPage()));
+        HtmlTagBuilder recordsPerPageInput = queryPane.append().tag().byName(INPUT_TAG);
+        recordsPerPageInput.attributes().id(dataSetParams.side() + "-records-per-page-input");
+        recordsPerPageInput.attributes().className("records-per-page");
+        recordsPerPageInput.attributes().byName(VALUE_ATTRIBUTE, String.valueOf(dataSetParams.recordsPerPage()));
 
         HtmlTagBuilder applyButton = queryPane.append().tag().byName("button");
         applyButton.append().text("Apply");
@@ -167,7 +183,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
                 top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>Query', document.getElementById('<SIDE>-query-input').value);
                 top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>RecordsPerPage', document.getElementById('<SIDE>-records-per-page-input').value);
                 top.location.reload()"""
-                .replace("<SIDE>", dataSetParams.side().toString());
+                .replace(SIDE_PLACEHOLDER, dataSetParams.side().toString());
         applyButton.attributes().onClick(applyButtonScript);
 
         HtmlTagBuilder resetButton = queryPane.append().tag().byName("button");
@@ -180,7 +196,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
                 top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>Query', '');
                 top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>RecordsPerPage', '20');
                 top.location.reload()"""
-                .replace("<SIDE>", dataSetParams.side().toString());
+                .replace(SIDE_PLACEHOLDER, dataSetParams.side().toString());
         resetButton.attributes().onClick(resetButtonScript);
     }
 
@@ -188,8 +204,8 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         HtmlTagBuilder targetProjectPane = parent.append().tag().div();
         targetProjectPane.attributes().className("target-project");
 
-        targetProjectPane.append().tag().byName("label").append().text("Target project:");
-        HtmlTagBuilder targetProjectSelect = targetProjectPane.append().tag().byName("select");
+        targetProjectPane.append().tag().byName(LABEL_TAG).append().text("Target project:");
+        HtmlTagBuilder targetProjectSelect = targetProjectPane.append().tag().byName(SELECT_TAG);
         targetProjectSelect.attributes().id("target-project-selector");
 
         IProject firstProjectInList = null;
@@ -200,12 +216,12 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
             if (firstProjectInList == null) {
                 firstProjectInList = project;
             }
-            HtmlTagBuilder option = targetProjectSelect.append().tag().byName("option");
-            option.attributes().byName("value", project.getId());
+            HtmlTagBuilder option = targetProjectSelect.append().tag().byName(OPTION_TAG);
+            option.attributes().byName(VALUE_ATTRIBUTE, project.getId());
             option.append().text(project.getName());
             if (dataSetParams != null && project.getId().equals(dataSetParams.projectId())) {
                 preDefined = true;
-                option.attributes().booleanAttribute("selected");
+                option.attributes().booleanAttribute(SELECTED_ATTRIBUTE);
             }
         }
         if (dataSetParams != null && !preDefined && firstProjectInList != null) {
@@ -222,7 +238,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         row.attributes().className("polarion-rpw-table-header-row");
         HtmlTagBuilder th = row.append().tag().th();
         if (includeSelectAll) {
-            HtmlTagBuilder checkbox = th.append().tag().byName("input");
+            HtmlTagBuilder checkbox = th.append().tag().byName(INPUT_TAG);
             checkbox.attributes().byName("type", "checkbox").className("export-all");
             //language=JS
             checkbox.attributes().onClick("DiffTool.selectAllItems(this);");
@@ -319,7 +335,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
                 top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>RecordsPerPage', document.getElementById('<SIDE>-records-per-page-input').value);
                 top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>Page', '<PAGE_NUMBER>');
                 top.location.reload()"""
-                .replace("<SIDE>", side.toString())
+                .replace(SIDE_PLACEHOLDER, side.toString())
                 .replace("<PAGE_NUMBER>", String.valueOf(page));
 
         HtmlTagBuilder link = paginator.append().tag().a();

@@ -6,6 +6,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.settings.DiffSettings;
+import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingName;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
@@ -19,6 +20,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
+import org.mockito.MockedStatic;
 
 import java.util.Date;
 import java.util.List;
@@ -114,11 +116,19 @@ class LinkedWorkItemsHandlerTest {
 
     @Test
     void testPostProcessInappropriateCase() {
+        // Case #1 - not relevant field ID
         WorkItem.Field fieldA = WorkItem.Field.builder().build();
         WorkItem.Field fieldB = WorkItem.Field.builder().id("test").build();
         DiffContext context = new DiffContext(fieldA, fieldB, PROJECT_ID, mock(PolarionService.class));
 
         assertEquals("to_be_untouched", new LinkedWorkItemsHandler().postProcess("to_be_untouched", context));
+
+        // Case #2 - paired WorkItems differ flag in context
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockStatic(DiffModelCachedResource.class)) {
+            mockDiffModelCachedResource.when(() -> DiffModelCachedResource.get(any(), any(), any())).thenReturn(DiffModel.builder().build());
+            context = new DiffContext(null, null, "test", WorkItemsPairDiffParams.builder().pairedWorkItemsDiffer(true).build(), mock(PolarionService.class));
+            assertEquals("to_be_untouched", new LinkedWorkItemsHandler().postProcess("to_be_untouched", context));
+        }
     }
 
     private IModule mockDocument(String name, Date created) {

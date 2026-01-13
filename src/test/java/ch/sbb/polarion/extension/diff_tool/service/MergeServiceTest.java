@@ -1345,19 +1345,19 @@ class MergeServiceTest {
 
     @Test
     void testRoleNotFound() {
-        PolarionService polarionService = mock(PolarionService.class);
+        PolarionService polarionServiceMock = mock(PolarionService.class);
 
         DocumentIdentifier leftIdentifier = mock(DocumentIdentifier.class);
         DocumentIdentifier rightIdentifier = mock(DocumentIdentifier.class);
 
         IModule leftModule = mock(IModule.class);
         IModule rightModule = mock(IModule.class);
-        when(polarionService.getModule(leftIdentifier)).thenReturn(leftModule);
-        when(polarionService.getModule(rightIdentifier)).thenReturn(rightModule);
+        when(polarionServiceMock.getModule(leftIdentifier)).thenReturn(leftModule);
+        when(polarionServiceMock.getModule(rightIdentifier)).thenReturn(rightModule);
 
         DiffModel model = mock(DiffModel.class);
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model));
+                new DocumentsMergeContext(polarionServiceMock, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model));
         assertEquals("No link role could be found by ID 'someLinkRole'", exception.getMessage());
     }
 

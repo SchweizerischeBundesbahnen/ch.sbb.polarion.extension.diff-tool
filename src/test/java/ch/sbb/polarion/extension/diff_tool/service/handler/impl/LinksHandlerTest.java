@@ -1,7 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffParams;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
@@ -28,12 +27,12 @@ import static org.mockito.Mockito.when;
 class LinksHandlerTest {
 
     @BeforeEach
-    public void init() {
+    void init() {
         TestUtils.mockDiffSettings();
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         TestUtils.clearSettings();
     }
 
@@ -74,4 +73,24 @@ class LinksHandlerTest {
         }
     }
 
+    @Test
+    @SneakyThrows
+    void testAppendNotExistingPairedWorkItemId() {
+
+        try (InputStream isUnprocessedHtml = this.getClass().getResourceAsStream("/pairedWorkItem.html")) {
+            String unprocessedHtml = new String(Objects.requireNonNull(isUnprocessedHtml).readAllBytes(), StandardCharsets.UTF_8);
+            String projectId = "elibrary";
+
+            PolarionService polarionService = mock(PolarionService.class);
+
+            IWorkItem workItemLastRevision = mock(IWorkItem.class);
+            when(polarionService.getWorkItem(eq(projectId), eq("EL-615"), isNull())).thenReturn(workItemLastRevision);
+
+            String result = new LinksHandler().appendPairedWorkItemId(unprocessedHtml,
+                    projectId, projectId, new DiffContext(WorkItem.of(mock(IWorkItem.class), "wi_outline_number", false, false), WorkItem.of(mock(IWorkItem.class), "wi_outline_number", false, false),
+                            "testFieldId", WorkItemsPairDiffParams.builder().pairedWorkItemsLinkRole("roleId").build(), polarionService));
+
+            assertEquals(unprocessedHtml, result);
+        }
+    }
 }

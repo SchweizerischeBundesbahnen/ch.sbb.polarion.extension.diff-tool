@@ -2,8 +2,14 @@ package ch.sbb.polarion.extension.diff_tool.rest.model.settings;
 
 import ch.sbb.polarion.extension.generic.settings.SettingsModel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.polarion.core.util.StringUtils;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,7 +17,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Getter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode(callSuper = false)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthorizationModel extends SettingsModel {
     public static final String GLOBAL_ROLES = "globalRoles";
     public static final String PROJECT_ROLES = "projectRoles";
