@@ -1,8 +1,8 @@
 package ch.sbb.polarion.extension.diff_tool.service.handler.impl;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
-import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import ch.sbb.polarion.extension.diff_tool.util.ModificationType;
 import com.polarion.alm.server.api.model.wi.linked.LinkedWorkItemRendererImpl;
 import com.polarion.alm.server.api.model.wi.linked.ProxyLinkedWorkItem;
@@ -53,11 +53,11 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
 
         List<String> resultRows = new ArrayList<>();
 
-        IWorkItem workItemA = context.getWorkItemA() == null ? null : context.getWorkItemA().getUnderlyingObject();
+        IWorkItem workItemA = getUnderlyingObject(context.getWorkItemA());
         List<ILinkedWorkItemStruct> linksA = getLinks(workItemA, false);
         List<ILinkedWorkItemStruct> linksABack = getLinks(workItemA, true);
 
-        IWorkItem workItemB = context.getWorkItemB() == null ? null : context.getWorkItemB().getUnderlyingObject();
+        IWorkItem workItemB = getUnderlyingObject(context.getWorkItemB());
         List<ILinkedWorkItemStruct> linksB = getLinks(workItemB, false);
         List<ILinkedWorkItemStruct> linksBBack = getLinks(workItemB, true);
 
@@ -67,7 +67,7 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                     if (role.getName() == null) {
                         logger.warn("Link role '%s' with null name encountered: looks like the link role has been removed from configuration".formatted(role.getId()));
                     }
-                    return context.getDiffModel().getLinkedWorkItemRoles().isEmpty() || context.getDiffModel().getLinkedWorkItemRoles().contains(role.getId());
+                    return isRoleAllowed(role, context);
                 })
                 .distinct()
                 .sorted(Comparator.comparing(IEnumOption::getName, Comparator.nullsLast(String::compareTo)))
@@ -78,31 +78,29 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
 
             // first, we attempt to find all items that interlinked or have links to the same work item
             allRoles.forEach(linkRole -> {
-                linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
-                    if (sameWorkItem(link, workItemA)) {
-                        resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), NONE));
-                        toRemove.add(link);
-                    }
-                });
-                linksBBack.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
-                    if (sameWorkItem(link, workItemA)) {
-                        resultRows.add(markChanged(renderLinkedItem(link, workItemB, true), NONE));
-                        toRemove.add(link);
-                    }
-                });
+                linksB.stream()
+                        .filter(l -> l.getLinkRole().equals(linkRole))
+                        .forEach(link -> performIf(sameWorkItem(link, workItemA), () -> {
+                            resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), NONE));
+                            toRemove.add(link);
+                }));
+                linksBBack.stream()
+                        .filter(l -> l.getLinkRole().equals(linkRole))
+                        .forEach(link -> performIf(sameWorkItem(link, workItemA), () -> {
+                            resultRows.add(markChanged(renderLinkedItem(link, workItemB, true), NONE));
+                            toRemove.add(link);
+                }));
 
                 linksA.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(linkA ->
-                        linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(linkB -> {
-                            if (sameWorkItem(linkA, linkB.getLinkedItem())) {
-                                resultRows.add(markChanged(renderLinkedItem(linkB, workItemB, false),
-                                        // show links as same when it's a link to some 3rd project
-                                        !sameProjectItems(workItemA, workItemB) && !sameProjectItems(workItemA, linkB.getLinkedItem()) && !sameProjectItems(workItemB, linkB.getLinkedItem()) ||
-                                                // or we compare work items from same project and link leads to the same revision
-                                                Objects.equals(linkA.getRevision(), linkB.getRevision()) && sameProjectItems(workItemA, workItemB) ? NONE : MODIFIED));
-                                toRemove.add(linkA);
-                                toRemove.add(linkB);
-                            }
-                        }));
+                        linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(linkB -> performIf(sameWorkItem(linkA, linkB.getLinkedItem()), () -> {
+                            resultRows.add(markChanged(renderLinkedItem(linkB, workItemB, false),
+                                    // show links as same when it's a link to some 3rd project
+                                    isNotSameProjectItems(workItemA, workItemB, linkB) ||
+                                            // or we compare work items from same project and link leads to the same revision
+                                            Objects.equals(linkA.getRevision(), linkB.getRevision()) && sameProjectItems(workItemA, workItemB) ? NONE : MODIFIED));
+                            toRemove.add(linkA);
+                            toRemove.add(linkB);
+                        })));
             });
             linksA.removeAll(toRemove);
             linksB.removeAll(toRemove);
@@ -113,13 +111,13 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                 Set<String> oppositeWorkItems = linksA.stream()
                         .filter(l -> notFromModule(l.getLinkedItem(), workItemB.getModule())) // filter out direct links to work item B
                         .map(l -> l.getLinkedItem().getId()).collect(Collectors.toSet());
-                if (sameProjectItems(workItemB, link.getLinkedItem())) {
+                performIf(sameProjectItems(workItemB, link.getLinkedItem()), () -> {
                     List<IWorkItem> pairedWorkItems = context.getPolarionService().getPairedWorkItems(link.getLinkedItem(), workItemA.getProjectId(), context.getPairedWorkItemsLinkRole());
                     if (pairedWorkItems.stream().anyMatch(w -> oppositeWorkItems.contains(w.getId()))) {
                         resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), NONE));
                         toRemove.add(link);
                     }
-                }
+                });
             }));
             linksB.removeAll(toRemove);
         }
@@ -151,5 +149,23 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
     @VisibleForTesting
     boolean isInappropriateCaseForHandler(DiffContext context) {
         return context.isPairedWorkItemsDiffer() || !Stream.of(context.getFieldA().getId(), context.getFieldB().getId()).filter(Objects::nonNull).distinct().toList().equals(List.of(KEY_LINKED_WORK_ITEMS));
+    }
+
+    private IWorkItem getUnderlyingObject(WorkItem workItem) {
+        return workItem != null ? workItem.getUnderlyingObject() : null;
+    }
+
+    private boolean isRoleAllowed(ILinkRoleOpt role, @NotNull DiffContext context) {
+        return context.getDiffModel().getLinkedWorkItemRoles().isEmpty() || context.getDiffModel().getLinkedWorkItemRoles().contains(role.getId());
+    }
+
+    private boolean isNotSameProjectItems(IWorkItem workItemA, IWorkItem workItemB, ILinkedWorkItemStruct linkB) {
+        return !sameProjectItems(workItemA, workItemB) && !sameProjectItems(workItemA, linkB.getLinkedItem()) && !sameProjectItems(workItemB, linkB.getLinkedItem());
+    }
+
+    private void performIf(boolean condition, Runnable action) {
+        if (condition) {
+            action.run();
+        }
     }
 }
