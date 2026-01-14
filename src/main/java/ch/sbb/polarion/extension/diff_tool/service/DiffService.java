@@ -273,20 +273,21 @@ public class DiffService {
         return null;
     }
 
-    private MergeMoveDirection getMoveDirection(@NotNull WorkItemsPair pairedWorkItem, @NotNull List<WorkItemsPair> allPairedWorkItems,
-                                                @Nullable String parentOutlineNumberLeft, @Nullable String parentOutlineNumberRight, @NotNull OutlineNumberComparator outlineNumberComparator) {
+    @VisibleForTesting
+    protected MergeMoveDirection getMoveDirection(@NotNull WorkItemsPair pairedWorkItem, @NotNull List<WorkItemsPair> allPairedWorkItems,
+                                                  @Nullable String parentOutlineNumberLeft, @Nullable String parentOutlineNumberRight, @NotNull OutlineNumberComparator outlineNumberComparator) {
         MergeMoveDirection moveDirection = null;
 
         if (parentOutlineNumberLeft != null && parentOutlineNumberRight != null) {
             if (getParentPair(allPairedWorkItems, parentOutlineNumberLeft, parentOutlineNumberRight) == null) {
                 // Items considered as moved if their parent nodes are not paired...
-                moveDirection = outlineNumberComparator.compare(parentOutlineNumberLeft, parentOutlineNumberRight) < 0 ? MergeMoveDirection.DOWN : MergeMoveDirection.UP;
+                moveDirection = getMergeMoveDirection(parentOutlineNumberLeft, parentOutlineNumberRight, outlineNumberComparator);
             } else {
                 // ...or if they have different position within their parent hierarchy
                 String leftPosition = positionWithinParent(parentOutlineNumberLeft, pairedWorkItem.getLeftWorkItem());
                 String rightPosition = positionWithinParent(parentOutlineNumberRight, pairedWorkItem.getRightWorkItem());
                 if (!leftPosition.equals(rightPosition)) {
-                    moveDirection = outlineNumberComparator.compare(leftPosition, rightPosition) < 0 ? MergeMoveDirection.DOWN : MergeMoveDirection.UP;
+                    moveDirection = getMergeMoveDirection(leftPosition, rightPosition, outlineNumberComparator);
                 }
             }
         } else if (parentOutlineNumberLeft != null || parentOutlineNumberRight != null) {
@@ -294,11 +295,10 @@ public class DiffService {
             String outlineNumberLeft = parentOutlineNumberLeft != null ? parentOutlineNumberLeft : pairedWorkItem.getLeftWorkItem().getOutlineNumber();
             String outlineNumberRight = parentOutlineNumberRight != null ? parentOutlineNumberRight : pairedWorkItem.getRightWorkItem().getOutlineNumber();
 
-            moveDirection = outlineNumberComparator.compare(outlineNumberLeft, outlineNumberRight) < 0 ? MergeMoveDirection.DOWN : MergeMoveDirection.UP;
+            moveDirection = getMergeMoveDirection(outlineNumberLeft, outlineNumberRight, outlineNumberComparator);
         } else if (!pairedWorkItem.getLeftWorkItem().getOutlineNumber().equals(pairedWorkItem.getRightWorkItem().getOutlineNumber())) {
             // ...or if comparing items are root nodes and their outline numbers differ
-            moveDirection = outlineNumberComparator.compare(pairedWorkItem.getLeftWorkItem().getOutlineNumber(), pairedWorkItem.getRightWorkItem().getOutlineNumber()) < 0
-                    ? MergeMoveDirection.DOWN : MergeMoveDirection.UP;
+            moveDirection = getMergeMoveDirection(pairedWorkItem.getLeftWorkItem().getOutlineNumber(), pairedWorkItem.getRightWorkItem().getOutlineNumber(), outlineNumberComparator);
         }
         return moveDirection;
     }
@@ -306,6 +306,10 @@ public class DiffService {
     private String positionWithinParent(@NotNull String parentOutlineNumber, @NotNull WorkItem childWorkItem) {
         String position = childWorkItem.getOutlineNumber().substring(parentOutlineNumber.length());
         return position.startsWith("-") || position.startsWith(".") ? position.substring(1) : position;
+    }
+
+    private MergeMoveDirection getMergeMoveDirection(@NotNull String outlineNumberLeft, @NotNull String outlineNumberRight, @NotNull OutlineNumberComparator outlineNumberComparator) {
+        return outlineNumberComparator.compare(outlineNumberLeft, outlineNumberRight) < 0 ? MergeMoveDirection.DOWN : MergeMoveDirection.UP;
     }
 
     private int getIndex(@NotNull WorkItemsPair movedItemSurrogate, @NotNull List<WorkItemsPair> pairedWorkItems, @NotNull OutlineNumberComparator outlineNumberComparator) {

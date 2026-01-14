@@ -15,6 +15,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairsParams;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.impl.ImageHandler;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
+import ch.sbb.polarion.extension.diff_tool.util.OutlineNumberComparator;
 import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
 import ch.sbb.polarion.extension.generic.fields.model.FieldMetadata;
 import com.polarion.alm.projects.model.IProject;
@@ -123,6 +124,88 @@ class DiffServiceTest {
 
         assertNull(fieldA.getHtmlDiff());
         assertNull(fieldB.getHtmlDiff());
+    }
+
+    @Test
+    void testGetMoveDirection() {
+        OutlineNumberComparator outlineNumberComparator = new OutlineNumberComparator();
+
+        IWorkItem leftWorkItemMock = mock(IWorkItem.class);
+        IWorkItem rightWorkItemMock = mock(IWorkItem.class);
+
+        WorkItem leftWorkItem = WorkItem.of(leftWorkItemMock, "1", false, false);
+        WorkItem rightWorkItem = WorkItem.of(rightWorkItemMock, "1", false, false);
+        WorkItemsPair workItemsPair = WorkItemsPair.builder().leftWorkItem(leftWorkItem).rightWorkItem(rightWorkItem).build();
+        MergeMoveDirection mergeMoveDirection = diffService.getMoveDirection(workItemsPair, List.of(), null, null, outlineNumberComparator);
+
+        assertNull(mergeMoveDirection);
+
+        leftWorkItem = WorkItem.of(leftWorkItemMock, "1", false, false);
+        rightWorkItem = WorkItem.of(rightWorkItemMock, "2", false, false);
+        workItemsPair = WorkItemsPair.builder().leftWorkItem(leftWorkItem).rightWorkItem(rightWorkItem).build();
+        mergeMoveDirection = diffService.getMoveDirection(workItemsPair, List.of(), null, null, outlineNumberComparator);
+
+        assertEquals(MergeMoveDirection.DOWN, mergeMoveDirection);
+
+        leftWorkItem = WorkItem.of(leftWorkItemMock, "2", false, false);
+        rightWorkItem = WorkItem.of(rightWorkItemMock, "1", false, false);
+        workItemsPair = WorkItemsPair.builder().leftWorkItem(leftWorkItem).rightWorkItem(rightWorkItem).build();
+        mergeMoveDirection = diffService.getMoveDirection(workItemsPair, List.of(), null, null, outlineNumberComparator);
+
+        assertEquals(MergeMoveDirection.UP, mergeMoveDirection);
+
+        leftWorkItem = WorkItem.of(leftWorkItemMock, "1.1", false, false);
+        rightWorkItem = WorkItem.of(rightWorkItemMock, "2", false, false);
+        workItemsPair = WorkItemsPair.builder().leftWorkItem(leftWorkItem).rightWorkItem(rightWorkItem).build();
+        mergeMoveDirection = diffService.getMoveDirection(workItemsPair, List.of(), "1", null, outlineNumberComparator);
+
+        assertEquals(MergeMoveDirection.DOWN, mergeMoveDirection);
+
+        leftWorkItem = WorkItem.of(leftWorkItemMock, "2", false, false);
+        rightWorkItem = WorkItem.of(rightWorkItemMock, "1.1", false, false);
+        workItemsPair = WorkItemsPair.builder().leftWorkItem(leftWorkItem).rightWorkItem(rightWorkItem).build();
+        mergeMoveDirection = diffService.getMoveDirection(workItemsPair, List.of(), null, "1", outlineNumberComparator);
+
+        assertEquals(MergeMoveDirection.UP, mergeMoveDirection);
+
+        leftWorkItem = WorkItem.of(leftWorkItemMock, "1.1", false, false);
+        rightWorkItem = WorkItem.of(rightWorkItemMock, "2.1", false, false);
+        workItemsPair = WorkItemsPair.builder().leftWorkItem(leftWorkItem).rightWorkItem(rightWorkItem).build();
+        mergeMoveDirection = diffService.getMoveDirection(workItemsPair, List.of(), "1", "2", outlineNumberComparator);
+
+        assertEquals(MergeMoveDirection.DOWN, mergeMoveDirection);
+
+        leftWorkItem = WorkItem.of(leftWorkItemMock, "2.1", false, false);
+        rightWorkItem = WorkItem.of(rightWorkItemMock, "1.1", false, false);
+        workItemsPair = WorkItemsPair.builder().leftWorkItem(leftWorkItem).rightWorkItem(rightWorkItem).build();
+        mergeMoveDirection = diffService.getMoveDirection(workItemsPair, List.of(), "2", "1", outlineNumberComparator);
+
+        assertEquals(MergeMoveDirection.UP, mergeMoveDirection);
+
+        leftWorkItem = WorkItem.of(leftWorkItemMock, "1.1-1", false, false);
+        rightWorkItem = WorkItem.of(rightWorkItemMock, "2.1-1", false, false);
+        workItemsPair = WorkItemsPair.builder().leftWorkItem(leftWorkItem).rightWorkItem(rightWorkItem).build();
+
+        WorkItem pairedLeftWorkItem = WorkItem.of(leftWorkItemMock, "1.1", false, false);
+        WorkItem pairedRightWorkItem = WorkItem.of(rightWorkItemMock, "2.1", false, false);
+        WorkItemsPair pairedWorkItemsPair = WorkItemsPair.builder().leftWorkItem(pairedLeftWorkItem).rightWorkItem(pairedRightWorkItem).build();
+
+        mergeMoveDirection = diffService.getMoveDirection(workItemsPair, List.of(pairedWorkItemsPair), "1.1", "2.1", outlineNumberComparator);
+        assertNull(mergeMoveDirection);
+
+        leftWorkItem = WorkItem.of(leftWorkItemMock, "1.1-1", false, false);
+        rightWorkItem = WorkItem.of(rightWorkItemMock, "2.1-2", false, false);
+        workItemsPair = WorkItemsPair.builder().leftWorkItem(leftWorkItem).rightWorkItem(rightWorkItem).build();
+
+        mergeMoveDirection = diffService.getMoveDirection(workItemsPair, List.of(pairedWorkItemsPair), "1.1", "2.1", outlineNumberComparator);
+        assertEquals(MergeMoveDirection.DOWN, mergeMoveDirection);
+
+        leftWorkItem = WorkItem.of(leftWorkItemMock, "1.1-2", false, false);
+        rightWorkItem = WorkItem.of(rightWorkItemMock, "2.1-1", false, false);
+        workItemsPair = WorkItemsPair.builder().leftWorkItem(leftWorkItem).rightWorkItem(rightWorkItem).build();
+
+        mergeMoveDirection = diffService.getMoveDirection(workItemsPair, List.of(pairedWorkItemsPair), "1.1", "2.1", outlineNumberComparator);
+        assertEquals(MergeMoveDirection.UP, mergeMoveDirection);
     }
 
     @Test
