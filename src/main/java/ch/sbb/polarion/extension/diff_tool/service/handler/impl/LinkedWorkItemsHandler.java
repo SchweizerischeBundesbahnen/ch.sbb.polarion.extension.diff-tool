@@ -60,125 +60,75 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
         List<ILinkedWorkItemStruct> linksB = getLinks(workItemB, false);
         List<ILinkedWorkItemStruct> linksBBack = getLinks(workItemB, true);
 
-        List<ILinkRoleOpt> allRoles = collectAllRoles(context, linksA, linksABack, linksB, linksBBack);
-
-        if (workItemA != null && workItemB != null) {
-            // first, we attempt to find all items that interlinked or have links to the same work item
-            processInterlinkedItems(resultRows, allRoles, linksA, linksB, linksBBack, workItemA, workItemB);
-
-            // next we mark as the same counterparts (items which are linked to the interlinked work items)
-            processCounterparts(resultRows, allRoles, linksA, linksB, workItemA, workItemB, context);
-        }
-
-        // rest items we mark as added/removed
-        for (ILinkRoleOpt linkRole : allRoles) {
-            for (ILinkedWorkItemStruct link : linksB) {
-                if (link.getLinkRole().equals(linkRole)) {
-                    resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), ADDED));
-                    resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), REMOVED));
-                }
-            }
-        }
-
-        return String.join("", resultRows);
-    }
-
-    private List<ILinkRoleOpt> collectAllRoles(DiffContext context, List<ILinkedWorkItemStruct> linksA,
-                                               List<ILinkedWorkItemStruct> linksABack, List<ILinkedWorkItemStruct> linksB,
-                                               List<ILinkedWorkItemStruct> linksBBack) {
-        return Stream.concat(Stream.concat(linksA.stream(), linksABack.stream()), Stream.concat(linksB.stream(), linksBBack.stream()))
+        List<ILinkRoleOpt> allRoles = Stream.concat(Stream.concat(linksA.stream(), linksABack.stream()), Stream.concat(linksB.stream(), linksBBack.stream()))
                 .map(ILinkedWorkItemStruct::getLinkRole)
-                .filter(role -> filterRole(role, context))
+                .filter(role -> {
+                    if (role.getName() == null) {
+                        logger.warn("Link role '%s' with null name encountered: looks like the link role has been removed from configuration".formatted(role.getId()));
+                    }
+                    return context.getDiffModel().getLinkedWorkItemRoles().isEmpty() || context.getDiffModel().getLinkedWorkItemRoles().contains(role.getId());
+                })
                 .distinct()
                 .sorted(Comparator.comparing(IEnumOption::getName, Comparator.nullsLast(String::compareTo)))
                 .toList();
-    }
 
-    private boolean filterRole(ILinkRoleOpt role, DiffContext context) {
-        if (role.getName() == null) {
-            logger.warn("Link role '%s' with null name encountered: looks like the link role has been removed from configuration".formatted(role.getId()));
-        }
-        return context.getDiffModel().getLinkedWorkItemRoles().isEmpty() || context.getDiffModel().getLinkedWorkItemRoles().contains(role.getId());
-    }
+        if (workItemA != null && workItemB != null) {
+            List<ILinkedWorkItemStruct> toRemove = new ArrayList<>();
 
-    private void processInterlinkedItems(List<String> resultRows, List<ILinkRoleOpt> allRoles,
-                                         List<ILinkedWorkItemStruct> linksA, List<ILinkedWorkItemStruct> linksB,
-                                         List<ILinkedWorkItemStruct> linksBBack, IWorkItem workItemA, IWorkItem workItemB) {
-        List<ILinkedWorkItemStruct> toRemove = new ArrayList<>();
+            // first, we attempt to find all items that interlinked or have links to the same work item
+            allRoles.forEach(linkRole -> {
+                linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
+                    if (sameWorkItem(link, workItemA)) {
+                        resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), NONE));
+                        toRemove.add(link);
+                    }
+                });
+                linksBBack.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
+                    if (sameWorkItem(link, workItemA)) {
+                        resultRows.add(markChanged(renderLinkedItem(link, workItemB, true), NONE));
+                        toRemove.add(link);
+                    }
+                });
 
-        for (ILinkRoleOpt linkRole : allRoles) {
-            processDirectLinks(resultRows, toRemove, linksB, linkRole, workItemA, workItemB, false);
-            processDirectLinks(resultRows, toRemove, linksBBack, linkRole, workItemA, workItemB, true);
-            processMatchingLinks(resultRows, toRemove, linksA, linksB, linkRole, workItemA, workItemB);
-        }
+                linksA.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(linkA ->
+                        linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(linkB -> {
+                            if (sameWorkItem(linkA, linkB.getLinkedItem())) {
+                                resultRows.add(markChanged(renderLinkedItem(linkB, workItemB, false),
+                                        // show links as same when it's a link to some 3rd project
+                                        !sameProjectItems(workItemA, workItemB) && !sameProjectItems(workItemA, linkB.getLinkedItem()) && !sameProjectItems(workItemB, linkB.getLinkedItem()) ||
+                                                // or we compare work items from same project and link leads to the same revision
+                                                Objects.equals(linkA.getRevision(), linkB.getRevision()) && sameProjectItems(workItemA, workItemB) ? NONE : MODIFIED));
+                                toRemove.add(linkA);
+                                toRemove.add(linkB);
+                            }
+                        }));
+            });
+            linksA.removeAll(toRemove);
+            linksB.removeAll(toRemove);
+            toRemove.clear();
 
-        linksA.removeAll(toRemove);
-        linksB.removeAll(toRemove);
-    }
-
-    private void processDirectLinks(List<String> resultRows, List<ILinkedWorkItemStruct> toRemove,
-                                    List<ILinkedWorkItemStruct> links, ILinkRoleOpt linkRole,
-                                    IWorkItem workItemA, IWorkItem workItemB, boolean backLink) {
-        for (ILinkedWorkItemStruct link : links) {
-            if (link.getLinkRole().equals(linkRole) && sameWorkItem(link, workItemA)) {
-                resultRows.add(markChanged(renderLinkedItem(link, workItemB, backLink), NONE));
-                toRemove.add(link);
-            }
-        }
-    }
-
-    private void processMatchingLinks(List<String> resultRows, List<ILinkedWorkItemStruct> toRemove,
-                                      List<ILinkedWorkItemStruct> linksA, List<ILinkedWorkItemStruct> linksB,
-                                      ILinkRoleOpt linkRole, IWorkItem workItemA, IWorkItem workItemB) {
-        for (ILinkedWorkItemStruct linkA : linksA) {
-            if (!linkA.getLinkRole().equals(linkRole)) {
-                continue;
-            }
-            for (ILinkedWorkItemStruct linkB : linksB) {
-                if (linkB.getLinkRole().equals(linkRole) && sameWorkItem(linkA, linkB.getLinkedItem())) {
-                    ModificationType modType = determineModificationType(linkA, linkB, workItemA, workItemB);
-                    resultRows.add(markChanged(renderLinkedItem(linkB, workItemB, false), modType));
-                    toRemove.add(linkA);
-                    toRemove.add(linkB);
+            // next we mark as the same counterparts (items which are linked to the interlinked work items)
+            allRoles.forEach(linkRole -> linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
+                Set<String> oppositeWorkItems = linksA.stream()
+                        .filter(l -> notFromModule(l.getLinkedItem(), workItemB.getModule())) // filter out direct links to work item B
+                        .map(l -> l.getLinkedItem().getId()).collect(Collectors.toSet());
+                if (sameProjectItems(workItemB, link.getLinkedItem())) {
+                    List<IWorkItem> pairedWorkItems = context.getPolarionService().getPairedWorkItems(link.getLinkedItem(), workItemA.getProjectId(), context.getPairedWorkItemsLinkRole());
+                    if (pairedWorkItems.stream().anyMatch(w -> oppositeWorkItems.contains(w.getId()))) {
+                        resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), NONE));
+                        toRemove.add(link);
+                    }
                 }
-            }
+            }));
+            linksB.removeAll(toRemove);
         }
-    }
 
-    private ModificationType determineModificationType(ILinkedWorkItemStruct linkA, ILinkedWorkItemStruct linkB,
-                                                       IWorkItem workItemA, IWorkItem workItemB) {
-        // show links as same when it's a link to some 3rd project
-        boolean isThirdProjectLink = !sameProjectItems(workItemA, workItemB)
-                && !sameProjectItems(workItemA, linkB.getLinkedItem())
-                && !sameProjectItems(workItemB, linkB.getLinkedItem());
-        // or we compare work items from same project and link leads to the same revision
-        boolean isSameRevision = Objects.equals(linkA.getRevision(), linkB.getRevision()) && sameProjectItems(workItemA, workItemB);
-        return isThirdProjectLink || isSameRevision ? NONE : MODIFIED;
-    }
-
-    private void processCounterparts(List<String> resultRows, List<ILinkRoleOpt> allRoles,
-                                     List<ILinkedWorkItemStruct> linksA, List<ILinkedWorkItemStruct> linksB,
-                                     IWorkItem workItemA, IWorkItem workItemB, DiffContext context) {
-        List<ILinkedWorkItemStruct> toRemove = new ArrayList<>();
-        Set<String> oppositeWorkItems = linksA.stream()
-                .filter(l -> notFromModule(l.getLinkedItem(), workItemB.getModule()))
-                .map(l -> l.getLinkedItem().getId())
-                .collect(Collectors.toSet());
-
-        for (ILinkRoleOpt linkRole : allRoles) {
-            for (ILinkedWorkItemStruct link : linksB) {
-                if (!link.getLinkRole().equals(linkRole) || !sameProjectItems(workItemB, link.getLinkedItem())) {
-                    continue;
-                }
-                List<IWorkItem> pairedWorkItems = context.getPolarionService().getPairedWorkItems(
-                        link.getLinkedItem(), workItemA.getProjectId(), context.getPairedWorkItemsLinkRole());
-                if (pairedWorkItems.stream().anyMatch(w -> oppositeWorkItems.contains(w.getId()))) {
-                    resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), NONE));
-                    toRemove.add(link);
-                }
-            }
-        }
-        linksB.removeAll(toRemove);
+        // rest items we mark as added/removed
+        allRoles.forEach(linkRole -> linksB.stream().filter(l -> l.getLinkRole().equals(linkRole)).forEach(link -> {
+            resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), ADDED));
+            resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), REMOVED));
+        }));
+        return String.join("", resultRows);
     }
 
     @VisibleForTesting
