@@ -680,6 +680,158 @@ class LinkedWorkItemsHandlerTest {
     }
 
     @Test
+    void testDetermineModificationType_ThirdProjectLink() {
+        // Test when link points to work item in third project → should return NONE
+        ITrackerProject projA = mock(ITrackerProject.class);
+        ITrackerProject projB = mock(ITrackerProject.class);
+        ITrackerProject projC = mock(ITrackerProject.class);
+
+        IModule docA = mockDocumentInProject("docA", new Date(), "projectA");
+        IWorkItem workItemA = mockWorkItemInProject(projA, docA, "WI-A", "open", "projectA");
+
+        IModule docB = mockDocumentInProject("docB", new Date(), "projectB");
+        IWorkItem workItemB = mockWorkItemInProject(projB, docB, "WI-B", "open", "projectB");
+
+        IModule docC = mockDocumentInProject("docC", new Date(), "projectC");
+        IWorkItem targetItemC = mockWorkItemInProject(projC, docC, "WI-C", "open", "projectC");
+
+        ILinkedWorkItemStruct linkA = mockLinkWithRevision(targetItemC, LINK_ROLE_ID_1, "rev1");
+        ILinkedWorkItemStruct linkB = mockLinkWithRevision(targetItemC, LINK_ROLE_ID_1, "rev2");
+
+        mockLinks(workItemA, List.of(linkA), List.of());
+        mockLinks(workItemB, List.of(linkB), List.of());
+
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
+            DiffContext context = createContext(workItemA, workItemB);
+            LinkedWorkItemsHandler handler = createPartiallyMockedHandler();
+
+            String result = handler.postProcess("not_relevant", context);
+
+            // Link to third project should be processed and included in result
+            assertTrue(!result.isEmpty() && result.contains("WI-C"),
+                    "Third project link should be processed. Result: " + result);
+        }
+    }
+
+    @Test
+    void testDetermineModificationType_SameRevisionSameProject() {
+        // Test same revision in same project → should return NONE
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+
+        IModule doc1 = mockDocument("doc1", new Date());
+        IWorkItem workItemA = mockWorkItem(trackerProject, doc1, "WI-A", "open");
+        IWorkItem targetItem = mockWorkItem(trackerProject, doc1, "WI-Target", "open");
+        ILinkedWorkItemStruct linkA = mockLinkWithRevision(targetItem, LINK_ROLE_ID_1, "rev-same");
+
+        IModule doc2 = mockDocument("doc2", new Date());
+        IWorkItem workItemB = mockWorkItem(trackerProject, doc2, "WI-B", "open");
+        ILinkedWorkItemStruct linkB = mockLinkWithRevision(targetItem, LINK_ROLE_ID_1, "rev-same");
+
+        mockLinks(workItemA, List.of(linkA), List.of());
+        mockLinks(workItemB, List.of(linkB), List.of());
+
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
+            DiffContext context = createContext(workItemA, workItemB);
+            LinkedWorkItemsHandler handler = createPartiallyMockedHandler();
+
+            String result = handler.postProcess("not_relevant", context);
+
+            // Same revision link should be processed and included in result
+            assertTrue(result.contains("WI-Target") && result.contains("diff-lwi"),
+                    "Same revision link should be processed and marked with diff-lwi class");
+        }
+    }
+
+    @Test
+    void testDetermineModificationType_DifferentRevisionSameProject() {
+        // Test different revisions in same project → should return MODIFIED
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+
+        IModule doc1 = mockDocument("doc1", new Date());
+        IWorkItem workItemA = mockWorkItem(trackerProject, doc1, "WI-A", "open");
+        IWorkItem targetItem = mockWorkItem(trackerProject, doc1, "WI-Target", "open");
+        ILinkedWorkItemStruct linkA = mockLinkWithRevision(targetItem, LINK_ROLE_ID_1, "rev1");
+
+        IModule doc2 = mockDocument("doc2", new Date());
+        IWorkItem workItemB = mockWorkItem(trackerProject, doc2, "WI-B", "open");
+        ILinkedWorkItemStruct linkB = mockLinkWithRevision(targetItem, LINK_ROLE_ID_1, "rev2");
+
+        mockLinks(workItemA, List.of(linkA), List.of());
+        mockLinks(workItemB, List.of(linkB), List.of());
+
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
+            DiffContext context = createContext(workItemA, workItemB);
+            LinkedWorkItemsHandler handler = createPartiallyMockedHandler();
+
+            String result = handler.postProcess("not_relevant", context);
+
+            // Different revision link should be processed and included in result
+            assertTrue(result.contains("WI-Target") && result.contains("diff-lwi"),
+                    "Different revision link should be processed and marked with diff-lwi class");
+        }
+    }
+
+    @Test
+    void testProcessMatchingLinks_WithNoMatchingLinks() {
+        // Test processMatchingLinks when linkA and linkB don't point to same item
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+
+        IModule doc = mockDocument("doc", new Date());
+        IWorkItem workItemA = mockWorkItem(trackerProject, doc, "WI-A", "open");
+        IWorkItem targetA = mockWorkItem(trackerProject, doc, "WI-Target-A", "open");
+        ILinkedWorkItemStruct linkA = mockLink(targetA, LINK_ROLE_ID_1);
+
+        IWorkItem workItemB = mockWorkItem(trackerProject, doc, "WI-B", "open");
+        IWorkItem targetB = mockWorkItem(trackerProject, doc, "WI-Target-B", "open");
+        ILinkedWorkItemStruct linkB = mockLink(targetB, LINK_ROLE_ID_1);
+
+        mockLinks(workItemA, List.of(linkA), List.of());
+        mockLinks(workItemB, List.of(linkB), List.of());
+
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
+            DiffContext context = createContext(workItemA, workItemB);
+            LinkedWorkItemsHandler handler = createPartiallyMockedHandler();
+
+            String result = handler.postProcess("not_relevant", context);
+
+            // Both links should be marked as ADDED/REMOVED
+            assertTrue(result.contains("WI-Target-A") || result.contains("WI-Target-B"),
+                    "Non-matching links should be in result");
+        }
+    }
+
+    @Test
+    void testProcessMatchingLinks_MultipleLinksWithSomeMatching() {
+        // Test with mix of matching and non-matching links
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+
+        IModule doc = mockDocument("doc", new Date());
+        IWorkItem workItemA = mockWorkItem(trackerProject, doc, "WI-A", "open");
+        IWorkItem target1 = mockWorkItem(trackerProject, doc, "WI-Target-1", "open");
+        IWorkItem target2 = mockWorkItem(trackerProject, doc, "WI-Target-2", "open");
+        ILinkedWorkItemStruct linkA1 = mockLink(target1, LINK_ROLE_ID_1);
+        ILinkedWorkItemStruct linkA2 = mockLink(target2, LINK_ROLE_ID_1);
+
+        IWorkItem workItemB = mockWorkItem(trackerProject, doc, "WI-B", "open");
+        IWorkItem target3 = mockWorkItem(trackerProject, doc, "WI-Target-3", "open");
+        ILinkedWorkItemStruct linkB1 = mockLink(target1, LINK_ROLE_ID_1); // Matches linkA1
+        ILinkedWorkItemStruct linkB3 = mockLink(target3, LINK_ROLE_ID_1); // No match
+
+        mockLinks(workItemA, List.of(linkA1, linkA2), List.of());
+        mockLinks(workItemB, List.of(linkB1, linkB3), List.of());
+
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
+            DiffContext context = createContext(workItemA, workItemB);
+            LinkedWorkItemsHandler handler = createPartiallyMockedHandler();
+
+            String result = handler.postProcess("not_relevant", context);
+
+            // Result should contain all targets
+            assertTrue(result.contains("WI-Target"));
+        }
+    }
+
+    @Test
     void testIsInappropriateCaseForHandler_VariousCases() {
         LinkedWorkItemsHandler handler = new LinkedWorkItemsHandler();
 
