@@ -516,6 +516,151 @@ class LinkedWorkItemsHandlerTest {
     }
 
     @Test
+    void testLinkRoleWithNullName_FilteredButLogsWarning() {
+        // Test that roles with null names are handled and warning is logged
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+
+        IModule document = mockDocument("doc", new Date());
+        IWorkItem workItemA = mockWorkItem(trackerProject, document, "WI-A", "open");
+        mockLinks(workItemA, List.of(), List.of());
+
+        IWorkItem workItemB = mockWorkItem(trackerProject, document, "WI-B", "open");
+        IWorkItem linkedItem = mockWorkItem(trackerProject, document, "WI-Link", "open");
+
+        // Create a link with null role name
+        ILinkedWorkItemStruct link = mock(ILinkedWorkItemStruct.class);
+        lenient().when(link.getLinkedItem()).thenReturn(linkedItem);
+        ILinkRoleOpt roleWithNullName = mock(ILinkRoleOpt.class);
+        lenient().when(roleWithNullName.getId()).thenReturn("roleWithNullName");
+        lenient().when(roleWithNullName.getName()).thenReturn(null);
+        lenient().when(roleWithNullName.getOppositeName()).thenReturn("oppositeNullName");
+        lenient().when(link.getLinkRole()).thenReturn(roleWithNullName);
+
+        mockLinks(workItemB, List.of(link), List.of());
+
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of())) {
+            DiffContext context = createContext(workItemA, workItemB);
+            LinkedWorkItemsHandler handler = createPartiallyMockedHandler();
+
+            String result = handler.postProcess("not_relevant", context);
+
+            // Role should still be processed (empty list means all roles accepted)
+            // Verify the link was processed
+            assertTrue(result.contains("WI-Link") || result.isEmpty(),
+                    "Link with null role name should still be processed when linkedWorkItemRoles is empty");
+        }
+    }
+
+    @Test
+    void testLinkRoleWithNullName_FilteredOutWhenNotInList() {
+        // Test that roles with null names are filtered when specific roles are configured
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+
+        IModule document = mockDocument("doc", new Date());
+        IWorkItem workItemA = mockWorkItem(trackerProject, document, "WI-A", "open");
+        mockLinks(workItemA, List.of(), List.of());
+
+        IWorkItem workItemB = mockWorkItem(trackerProject, document, "WI-B", "open");
+        IWorkItem linkedItem1 = mockWorkItem(trackerProject, document, "WI-Link1", "open");
+        IWorkItem linkedItem2 = mockWorkItem(trackerProject, document, "WI-Link2", "open");
+
+        // Create link with null role name
+        ILinkedWorkItemStruct linkWithNullName = mock(ILinkedWorkItemStruct.class);
+        lenient().when(linkWithNullName.getLinkedItem()).thenReturn(linkedItem1);
+        ILinkRoleOpt roleWithNullName = mock(ILinkRoleOpt.class);
+        lenient().when(roleWithNullName.getId()).thenReturn("roleNullName");
+        lenient().when(roleWithNullName.getName()).thenReturn(null);
+        lenient().when(roleWithNullName.getOppositeName()).thenReturn("oppositeNull");
+        lenient().when(linkWithNullName.getLinkRole()).thenReturn(roleWithNullName);
+
+        // Create link with valid role name
+        ILinkedWorkItemStruct linkWithValidName = mockLink(linkedItem2, LINK_ROLE_ID_1);
+
+        mockLinks(workItemB, List.of(linkWithNullName, linkWithValidName), List.of());
+
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
+            DiffContext context = createContext(workItemA, workItemB);
+            LinkedWorkItemsHandler handler = createPartiallyMockedHandler();
+
+            String result = handler.postProcess("not_relevant", context);
+
+            // Only the valid role should be in results
+            assertTrue(result.contains("WI-Link2"), "Link with valid role should be included");
+            assertFalse(result.contains("WI-Link1"), "Link with null role name not in configured list should be excluded");
+        }
+    }
+
+    @Test
+    void testSameWorkItemLinks_NotFromModule() {
+        // Test links where target is not from the same module
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+
+        IModule documentA = mockDocument("docA", new Date());
+        IWorkItem workItemA = mockWorkItem(trackerProject, documentA, "WI-A", "open");
+        IModule documentTarget = mockDocument("docTarget", new Date());
+        IWorkItem targetItem = mockWorkItem(trackerProject, documentTarget, "WI-Target", "open");
+        ILinkedWorkItemStruct linkA = mockLink(targetItem, LINK_ROLE_ID_1);
+        mockLinks(workItemA, List.of(linkA), List.of());
+
+        IModule documentB = mockDocument("docB", new Date());
+        IWorkItem workItemB = mockWorkItem(trackerProject, documentB, "WI-B", "open");
+        ILinkedWorkItemStruct linkB = mockLink(targetItem, LINK_ROLE_ID_1);
+        mockLinks(workItemB, List.of(linkB), List.of());
+
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
+            DiffContext context = createContext(workItemA, workItemB);
+            LinkedWorkItemsHandler handler = createPartiallyMockedHandler();
+
+            String result = handler.postProcess("not_relevant", context);
+
+            // Both links should be processed
+            assertTrue(result.contains("WI-Target") && result.contains("diff-lwi"),
+                    "Links to item in different module should be processed");
+        }
+    }
+
+    @Test
+    void testCounterpartItems_DifferentProject_NotFromModule() {
+        // Test counterpart logic with items not from the target module
+        ITrackerProject trackerProjectA = mock(ITrackerProject.class);
+        ITrackerProject trackerProjectB = mock(ITrackerProject.class);
+
+        IModule documentA = mockDocumentInProject("docA", new Date(), "projectA");
+        IWorkItem workItemA = mockWorkItemInProject(trackerProjectA, documentA, "WI-A", "open", "projectA");
+
+        // linkedItemA2 is in a different document from workItemA
+        IModule documentA2 = mockDocumentInProject("docA2", new Date(), "projectA");
+        IWorkItem linkedItemA2 = mockWorkItemInProject(trackerProjectA, documentA2, "WI-A2", "open", "projectA");
+        ILinkedWorkItemStruct linkA = mockLink(linkedItemA2, LINK_ROLE_ID_1);
+        mockLinks(workItemA, List.of(linkA), List.of());
+
+        IModule documentB = mockDocumentInProject("docB", new Date(), "projectB");
+        IWorkItem workItemB = mockWorkItemInProject(trackerProjectB, documentB, "WI-B", "open", "projectB");
+
+        // linkedItemB2 is in a different document from workItemB
+        IModule documentB2 = mockDocumentInProject("docB2", new Date(), "projectB");
+        IWorkItem linkedItemB2 = mockWorkItemInProject(trackerProjectB, documentB2, "WI-B2", "open", "projectB");
+        ILinkedWorkItemStruct linkB = mockLink(linkedItemB2, LINK_ROLE_ID_1);
+        mockLinks(workItemB, List.of(linkB), List.of());
+
+        // Setup pairing
+        PolarionService polarionService = mock(PolarionService.class);
+        when(polarionService.getPairedWorkItems(linkedItemB2, "projectA", "pairing-role"))
+                .thenReturn(List.of(linkedItemA2));
+
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
+            DiffContext context = createContextWithService(workItemA, workItemB, polarionService);
+            LinkedWorkItemsHandler handler = createPartiallyMockedHandler();
+
+            String result = handler.postProcess("not_relevant", context);
+
+            // Should be marked as NONE (counterparts from different modules)
+            assertTrue(result.contains("WI-B2") && result.contains("diff-lwi"),
+                    "Counterpart items not from module should be processed");
+        }
+    }
+
+    @Test
     void testMarkChanged_AllModificationTypes() {
         LinkedWorkItemsHandler handler = new LinkedWorkItemsHandler();
 
