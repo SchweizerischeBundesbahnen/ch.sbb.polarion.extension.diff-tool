@@ -192,16 +192,17 @@ class LinkedWorkItemsHandlerTest {
     void testSameTargetLinks_SameRevisionSameProject_MarkedAsNone() {
         // linkA and linkB both point to same work item (same revision, same project) → NONE
         ITrackerProject trackerProject = mock(ITrackerProject.class);
+        ILinkRoleOpt sharedRole = mockRole(LINK_ROLE_ID_1); // Create ONE role mock for both links
 
         IModule document1 = mockDocument("doc1", new Date());
         IWorkItem workItemA = mockWorkItem(trackerProject, document1, "WI-A", "open");
         IWorkItem targetItem = mockWorkItem(trackerProject, document1, "WI-Target", "open");
-        ILinkedWorkItemStruct linkA = mockLinkWithRevision(targetItem, LINK_ROLE_ID_1, "rev1");
+        ILinkedWorkItemStruct linkA = mockLinkWithRoleAndRevision(targetItem, sharedRole, "rev1");
         mockLinks(workItemA, List.of(linkA), List.of());
 
         IModule document2 = mockDocument("doc2", new Date());
         IWorkItem workItemB = mockWorkItem(trackerProject, document2, "WI-B", "open");
-        ILinkedWorkItemStruct linkB = mockLinkWithRevision(targetItem, LINK_ROLE_ID_1, "rev1");
+        ILinkedWorkItemStruct linkB = mockLinkWithRoleAndRevision(targetItem, sharedRole, "rev1");
         mockLinks(workItemB, List.of(linkB), List.of());
 
         try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
@@ -220,16 +221,17 @@ class LinkedWorkItemsHandlerTest {
     void testSameTargetLinks_DifferentRevisionSameProject_MarkedAsModified() {
         // linkA and linkB point to same work item but different revisions
         ITrackerProject trackerProject = mock(ITrackerProject.class);
+        ILinkRoleOpt sharedRole = mockRole(LINK_ROLE_ID_1); // Create ONE role mock for both links
 
         IModule document1 = mockDocument("doc1", new Date());
         IWorkItem workItemA = mockWorkItem(trackerProject, document1, "WI-A", "open");
         IWorkItem targetItem = mockWorkItem(trackerProject, document1, "WI-Target", "open");
-        ILinkedWorkItemStruct linkA = mockLinkWithRevision(targetItem, LINK_ROLE_ID_1, "rev1");
+        ILinkedWorkItemStruct linkA = mockLinkWithRoleAndRevision(targetItem, sharedRole, "rev1");
         mockLinks(workItemA, List.of(linkA), List.of());
 
         IModule document2 = mockDocument("doc2", new Date());
         IWorkItem workItemB = mockWorkItem(trackerProject, document2, "WI-B", "open");
-        ILinkedWorkItemStruct linkB = mockLinkWithRevision(targetItem, LINK_ROLE_ID_1, "rev2");
+        ILinkedWorkItemStruct linkB = mockLinkWithRoleAndRevision(targetItem, sharedRole, "rev2");
         mockLinks(workItemB, List.of(linkB), List.of());
 
         try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
@@ -250,17 +252,18 @@ class LinkedWorkItemsHandlerTest {
         ITrackerProject trackerProjectA = mock(ITrackerProject.class);
         ITrackerProject trackerProjectB = mock(ITrackerProject.class);
         ITrackerProject trackerProjectC = mock(ITrackerProject.class);
+        ILinkRoleOpt sharedRole = mockRole(LINK_ROLE_ID_1); // Create ONE role mock for both links
 
         IModule documentA = mockDocumentInProject("docA", new Date(), "projectA");
         IWorkItem workItemA = mockWorkItemInProject(trackerProjectA, documentA, "WI-A", "open", "projectA");
         IModule documentC = mockDocumentInProject("docC", new Date(), "projectC");
         IWorkItem targetItemC = mockWorkItemInProject(trackerProjectC, documentC, "WI-Target-C", "open", "projectC");
-        ILinkedWorkItemStruct linkA = mockLink(targetItemC, LINK_ROLE_ID_1);
+        ILinkedWorkItemStruct linkA = mockLinkWithRole(targetItemC, sharedRole);
         mockLinks(workItemA, List.of(linkA), List.of());
 
         IModule documentB = mockDocumentInProject("docB", new Date(), "projectB");
         IWorkItem workItemB = mockWorkItemInProject(trackerProjectB, documentB, "WI-B", "open", "projectB");
-        ILinkedWorkItemStruct linkB = mockLink(targetItemC, LINK_ROLE_ID_1);
+        ILinkedWorkItemStruct linkB = mockLinkWithRole(targetItemC, sharedRole);
         mockLinks(workItemB, List.of(linkB), List.of());
 
         try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
@@ -685,6 +688,7 @@ class LinkedWorkItemsHandlerTest {
         ITrackerProject projA = mock(ITrackerProject.class);
         ITrackerProject projB = mock(ITrackerProject.class);
         ITrackerProject projC = mock(ITrackerProject.class);
+        ILinkRoleOpt sharedRole = mockRole(LINK_ROLE_ID_1); // Create ONE role mock for both links
 
         IModule docA = mockDocumentInProject("docA", new Date(), "projectA");
         IWorkItem workItemA = mockWorkItemInProject(projA, docA, "WI-A", "open", "projectA");
@@ -695,8 +699,8 @@ class LinkedWorkItemsHandlerTest {
         IModule docC = mockDocumentInProject("docC", new Date(), "projectC");
         IWorkItem targetItemC = mockWorkItemInProject(projC, docC, "WI-C", "open", "projectC");
 
-        ILinkedWorkItemStruct linkA = mockLinkWithRevision(targetItemC, LINK_ROLE_ID_1, "rev1");
-        ILinkedWorkItemStruct linkB = mockLinkWithRevision(targetItemC, LINK_ROLE_ID_1, "rev2");
+        ILinkedWorkItemStruct linkA = mockLinkWithRoleAndRevision(targetItemC, sharedRole, "rev1");
+        ILinkedWorkItemStruct linkB = mockLinkWithRoleAndRevision(targetItemC, sharedRole, "rev2");
 
         mockLinks(workItemA, List.of(linkA), List.of());
         mockLinks(workItemB, List.of(linkB), List.of());
@@ -717,15 +721,16 @@ class LinkedWorkItemsHandlerTest {
     void testDetermineModificationType_SameRevisionSameProject() {
         // Test same revision in same project → should return NONE
         ITrackerProject trackerProject = mock(ITrackerProject.class);
+        ILinkRoleOpt sharedRole = mockRole(LINK_ROLE_ID_1); // Create ONE role mock for both links
 
         IModule doc1 = mockDocument("doc1", new Date());
         IWorkItem workItemA = mockWorkItem(trackerProject, doc1, "WI-A", "open");
         IWorkItem targetItem = mockWorkItem(trackerProject, doc1, "WI-Target", "open");
-        ILinkedWorkItemStruct linkA = mockLinkWithRevision(targetItem, LINK_ROLE_ID_1, "rev-same");
+        ILinkedWorkItemStruct linkA = mockLinkWithRoleAndRevision(targetItem, sharedRole, "rev-same");
 
         IModule doc2 = mockDocument("doc2", new Date());
         IWorkItem workItemB = mockWorkItem(trackerProject, doc2, "WI-B", "open");
-        ILinkedWorkItemStruct linkB = mockLinkWithRevision(targetItem, LINK_ROLE_ID_1, "rev-same");
+        ILinkedWorkItemStruct linkB = mockLinkWithRoleAndRevision(targetItem, sharedRole, "rev-same");
 
         mockLinks(workItemA, List.of(linkA), List.of());
         mockLinks(workItemB, List.of(linkB), List.of());
@@ -746,15 +751,16 @@ class LinkedWorkItemsHandlerTest {
     void testDetermineModificationType_DifferentRevisionSameProject() {
         // Test different revisions in same project → should return MODIFIED
         ITrackerProject trackerProject = mock(ITrackerProject.class);
+        ILinkRoleOpt sharedRole = mockRole(LINK_ROLE_ID_1); // Create ONE role mock for both links
 
         IModule doc1 = mockDocument("doc1", new Date());
         IWorkItem workItemA = mockWorkItem(trackerProject, doc1, "WI-A", "open");
         IWorkItem targetItem = mockWorkItem(trackerProject, doc1, "WI-Target", "open");
-        ILinkedWorkItemStruct linkA = mockLinkWithRevision(targetItem, LINK_ROLE_ID_1, "rev1");
+        ILinkedWorkItemStruct linkA = mockLinkWithRoleAndRevision(targetItem, sharedRole, "rev1");
 
         IModule doc2 = mockDocument("doc2", new Date());
         IWorkItem workItemB = mockWorkItem(trackerProject, doc2, "WI-B", "open");
-        ILinkedWorkItemStruct linkB = mockLinkWithRevision(targetItem, LINK_ROLE_ID_1, "rev2");
+        ILinkedWorkItemStruct linkB = mockLinkWithRoleAndRevision(targetItem, sharedRole, "rev2");
 
         mockLinks(workItemA, List.of(linkA), List.of());
         mockLinks(workItemB, List.of(linkB), List.of());
@@ -887,18 +893,15 @@ class LinkedWorkItemsHandlerTest {
     }
 
     private LinkedWorkItemsHandler createPartiallyMockedHandler() {
-        LinkedWorkItemsHandler handler = mock(LinkedWorkItemsHandler.class);
-        when(handler.postProcess(any(), any())).thenCallRealMethod();
-        when(handler.isInappropriateCaseForHandler(any())).thenCallRealMethod();
-        when(handler.markChanged(anyString(), any())).thenCallRealMethod();
-        when(handler.renderLinkedItem(any(), any(), anyBoolean())).thenAnswer(invocation -> {
+        LinkedWorkItemsHandler handler = spy(new LinkedWorkItemsHandler());
+        doAnswer(invocation -> {
             ILinkedWorkItemStruct link = invocation.getArgument(0);
             boolean isBackLink = invocation.getArgument(2);
             IWorkItem linkedItem = link.getLinkedItem();
             return String.format("<span>%s</span>: <span><span>%s</span> - <span>%s</span></span>",
                     isBackLink ? link.getLinkRole().getOppositeName() : link.getLinkRole().getName(),
                     linkedItem.getId(), linkedItem.getTitle());
-        });
+        }).when(handler).renderLinkedItem(any(), any(), anyBoolean());
         return handler;
     }
 
@@ -927,8 +930,8 @@ class LinkedWorkItemsHandlerTest {
         return workItem;
     }
 
-    private ILinkedWorkItemStruct mockLinkWithRevision(IWorkItem linkedItem, String linkedRoleId, String revision) {
-        ILinkedWorkItemStruct link = mockLink(linkedItem, linkedRoleId);
+    private ILinkedWorkItemStruct mockLinkWithRoleAndRevision(IWorkItem linkedItem, ILinkRoleOpt role, String revision) {
+        ILinkedWorkItemStruct link = mockLinkWithRole(linkedItem, role);
         lenient().when(link.getRevision()).thenReturn(revision);
         return link;
     }
@@ -975,13 +978,21 @@ class LinkedWorkItemsHandlerTest {
     }
 
     private ILinkedWorkItemStruct mockLink(IWorkItem linkedItem, String linkedRoleId) {
-        ILinkedWorkItemStruct link = mock(ILinkedWorkItemStruct.class);
-        lenient().when(link.getLinkedItem()).thenReturn(linkedItem);
+        ILinkRoleOpt role = mockRole(linkedRoleId);
+        return mockLinkWithRole(linkedItem, role);
+    }
 
+    private ILinkRoleOpt mockRole(String linkedRoleId) {
         ILinkRoleOpt role = mock(ILinkRoleOpt.class);
         lenient().when(role.getId()).thenReturn(linkedRoleId);
         lenient().when(role.getName()).thenReturn(linkedRoleId + "_name");
         lenient().when(role.getOppositeName()).thenReturn(linkedRoleId + "_opposite_name");
+        return role;
+    }
+
+    private ILinkedWorkItemStruct mockLinkWithRole(IWorkItem linkedItem, ILinkRoleOpt role) {
+        ILinkedWorkItemStruct link = mock(ILinkedWorkItemStruct.class);
+        lenient().when(link.getLinkedItem()).thenReturn(linkedItem);
         lenient().when(link.getLinkRole()).thenReturn(role);
         return link;
     }
