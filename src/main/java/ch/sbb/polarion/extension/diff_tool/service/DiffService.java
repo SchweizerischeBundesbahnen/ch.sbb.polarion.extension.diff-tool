@@ -71,7 +71,7 @@ import java.util.stream.Stream;
 
 public class DiffService {
 
-    private enum DiffSide {
+    protected enum DiffSide {
         LEFT, RIGHT
     }
 
@@ -321,8 +321,7 @@ public class DiffService {
         return pairedWorkItems.size();
     }
 
-    // 'side' parameter can be removed in future if right-hand side check will be enough
-    private int getIndex(@NotNull WorkItemsPair movedItemSurrogate, @NotNull List<WorkItemsPair> pairedWorkItems,
+    protected int getIndex(@NotNull WorkItemsPair movedItemSurrogate, @NotNull List<WorkItemsPair> pairedWorkItems,
                          @NotNull OutlineNumberComparator outlineNumberComparator, @NotNull DiffSide side) {
         int index = 0;
         WorkItem leftItemByIndex = null;
