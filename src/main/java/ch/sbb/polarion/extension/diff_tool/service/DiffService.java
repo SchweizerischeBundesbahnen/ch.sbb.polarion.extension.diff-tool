@@ -75,6 +75,12 @@ public class DiffService {
         LEFT, RIGHT
     }
 
+    private static class IndexSearchState {
+        int index = 0;
+        WorkItem leftItemByIndex = null;
+        WorkItem rightItemByIndex = null;
+    }
+
     private static final CharSequence DAISY_DIFF_CHANGED_FRAGMENT = "class=\"diff-html-";
     private static final String INVALID_ROLE_ID_MESSAGE = "No link role could be found by ID '%s'";
     private final PolarionService polarionService;
@@ -322,53 +328,81 @@ public class DiffService {
     }
 
     protected int getIndex(@NotNull WorkItemsPair movedItemSurrogate, @NotNull List<WorkItemsPair> pairedWorkItems,
-                         @NotNull OutlineNumberComparator outlineNumberComparator, @NotNull DiffSide side) {
-        int index = 0;
-        WorkItem leftItemByIndex = null;
-        WorkItem rightItemByIndex = null;
+                           @NotNull OutlineNumberComparator outlineNumberComparator, @NotNull DiffSide side) {
+        IndexSearchState state = new IndexSearchState();
+        String surrogateOutlineNumber = movedItemSurrogate.getRightWorkItem().getOutlineNumber();
+
         for (int i = 0; i < pairedWorkItems.size(); i++) {
-            WorkItem leftItem = pairedWorkItems.get(i).getLeftWorkItem();
-            WorkItem rightItem = pairedWorkItems.get(i).getRightWorkItem();
+            WorkItemsPair currentPair = pairedWorkItems.get(i);
+            int result = processIndexSearchIteration(state, currentPair, surrogateOutlineNumber, outlineNumberComparator, side, i);
+            if (result >= 0) {
+                return result;
+            }
+        }
+        return -1;
+    }
+
+    private int processIndexSearchIteration(IndexSearchState state, WorkItemsPair currentPair, String surrogateOutlineNumber,
+                                            OutlineNumberComparator comparator, DiffSide side, int currentIndex) {
+        WorkItem leftItem = currentPair.getLeftWorkItem();
+        WorkItem rightItem = currentPair.getRightWorkItem();
+
+        if (isInlined(state.leftItemByIndex, leftItem) || isInlined(state.rightItemByIndex, rightItem)) {
+            if (isSurrogateInlinedAndSmallerThanCurrent(state.rightItemByIndex, rightItem, surrogateOutlineNumber, comparator)) {
+                // If both current right item and surrogate right item are inline items of indexed pair
+                // and at the same time surrogate right item is less than current right item, then return current index
+                return currentIndex;
+            } else {
+                // Either left or right items are children of last indexed pair, redefine index variable to index of current pair,
+                // considering it as a whole with its parent
+                state.index = currentIndex;
+            }
+            return -1;
+        } else {
+            // If surrogate is an inline item of last indexed one and current item is not, then place surrogate by current index
+            if (isInlined(state.rightItemByIndex, surrogateOutlineNumber)) {
+                return currentIndex;
+            }
 
             WorkItem baseItem = side == DiffSide.LEFT ? leftItem : rightItem;
             WorkItem pairedItem = side == DiffSide.LEFT ? rightItem : leftItem;
 
-            if (isInlined(leftItemByIndex, leftItem) || isInlined(rightItemByIndex, rightItem)) {
-                if (isInlined(rightItemByIndex, movedItemSurrogate.getRightWorkItem()) && rightItem != null
-                        && outlineNumberComparator.compare(rightItem.getOutlineNumber(), movedItemSurrogate.getRightWorkItem().getOutlineNumber()) > 0) {
-                    // If both current right item and surrogate right item are inline items of indexed pair
-                    // and at the same time surrogate right item is less than current right item, then return current index
-                    return i;
-                } else {
-                    // Either left or right items are children of last indexed pair, redefine index variable to index of current pair,
-                    // considering it as a whole with its parent
-                    index = i;
-                }
-            } else {
-                // If surrogate is an inline item of last indexed one and current item is not, then place surrogate by current index
-                if (isInlined(rightItemByIndex, movedItemSurrogate.getRightWorkItem())) {
-                    return i;
-                }
-
-                // Continue checks only if there's a base item (usually it's a right item in pair) and it's structural,
-                // inline items should always be treated as a whole with their parent structural items
-                if (baseItem != null && isStructuralItem(baseItem)) {
-                    // Only take into account real items, not placeholders for movement indication
-                    if (pairedItem == null || pairedItem.getMovedOutlineNumber() == null) {
-                        if (outlineNumberComparator.compare(baseItem.getOutlineNumber(), movedItemSurrogate.getRightWorkItem().getOutlineNumber()) > 0) {
-                            // MATCH! Surrogate is less than base item, found appropriate location
-                            return index + 1;
-                        } else {
-                            // Surrogate is bigger than base item, remember it and its index as next indexed pair
-                            index = i;
-                            leftItemByIndex = leftItem;
-                            rightItemByIndex = rightItem;
-                        }
-                    } else if (outlineNumberComparator.compare(pairedItem.getOutlineNumber(), movedItemSurrogate.getRightWorkItem().getOutlineNumber()) > 0) {
-                        return i;
-                    }
-                }
+            // Continue checks only if there's a base item (usually it's a right item in pair) and it's structural,
+            // inline items should always be treated as a whole with their parent structural items
+            if (baseItem == null || !isStructuralItem(baseItem)) {
+                return -1;
             }
+
+            return handleStructuralItem(state, leftItem, rightItem, baseItem, pairedItem, surrogateOutlineNumber, comparator, currentIndex);
+        }
+    }
+
+    private boolean isSurrogateInlinedAndSmallerThanCurrent(WorkItem rightItemByIndex, WorkItem rightItem,
+                                                            String surrogateOutlineNumber, OutlineNumberComparator comparator) {
+        return isInlined(rightItemByIndex, surrogateOutlineNumber)
+                && rightItem != null
+                && comparator.compare(rightItem.getOutlineNumber(), surrogateOutlineNumber) > 0;
+    }
+
+    private int handleStructuralItem(IndexSearchState state, WorkItem leftItem, WorkItem rightItem,
+                                     WorkItem baseItem, WorkItem pairedItem, String surrogateOutlineNumber,
+                                     OutlineNumberComparator comparator, int currentIndex) {
+        boolean isRealItem = pairedItem == null || pairedItem.getMovedOutlineNumber() == null;
+
+        // Only take into account real items, not placeholders for movement indication
+        if (isRealItem) {
+            if (comparator.compare(baseItem.getOutlineNumber(), surrogateOutlineNumber) > 0) {
+                // MATCH! Surrogate is less than base item, found appropriate location
+                return state.index + 1;
+            } else {
+                // Surrogate is bigger than base item, remember it and its index as next indexed pair
+                state.index = currentIndex;
+                state.leftItemByIndex = leftItem;
+                state.rightItemByIndex = rightItem;
+                return -1;
+            }
+        } else if (comparator.compare(pairedItem.getOutlineNumber(), surrogateOutlineNumber) > 0) {
+            return currentIndex;
         }
         return -1;
     }
@@ -377,6 +411,14 @@ public class DiffService {
         return (potentialParent == null && potentialInlined == null)
                 || (potentialParent != null && potentialInlined != null && potentialInlined.getOutlineNumber().contains("-")
                 && potentialParent.getOutlineNumber().equals(potentialInlined.getOutlineNumber().substring(0, potentialInlined.getOutlineNumber().indexOf("-"))));
+    }
+
+    private boolean isInlined(WorkItem potentialParent, String outlineNumber) {
+        if (potentialParent == null || outlineNumber == null) {
+            return false;
+        }
+        return outlineNumber.contains("-")
+                && potentialParent.getOutlineNumber().equals(outlineNumber.substring(0, outlineNumber.indexOf("-")));
     }
 
     public WorkItemsPairs findWorkItemsPairs(@NotNull WorkItemsPairsParams workItemsPairsParams) {
@@ -580,7 +622,7 @@ public class DiffService {
 
     @VisibleForTesting
     WorkItem buildWorkItem(@NotNull IWorkItem iWorkItem, @NotNull Set<String> fieldIds, @Nullable String outlineNumber,
-                                   boolean referenced, @Nullable DocumentReference documentReference, boolean compareEnumsById) {
+                           boolean referenced, @Nullable DocumentReference documentReference, boolean compareEnumsById) {
         WorkItem workItem = WorkItem.of(iWorkItem, outlineNumber, referenced, (documentReference != null && !iWorkItem.getProjectId().equals(documentReference.projectId())));
         Set<FieldMetadata> fields = new HashSet<>(polarionService.getGeneralFields(IWorkItem.PROTO, iWorkItem.getContextId()));
         fields.addAll(polarionService.getCustomFields(IWorkItem.PROTO, iWorkItem.getContextId(), Optional.ofNullable(iWorkItem.getType()).map(IEnumOption::getId).orElse(null)));
