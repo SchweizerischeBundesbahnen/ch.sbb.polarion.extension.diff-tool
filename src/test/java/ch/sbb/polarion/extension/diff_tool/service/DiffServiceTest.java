@@ -572,6 +572,273 @@ class DiffServiceTest {
         assertEquals(List.of("enumId", "enumId"), result);
     }
 
+    // ==================== getIndex() method tests ====================
+
+    @Test
+    void testGetIndex_emptyList_returnsMinusOne() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        WorkItemsPair surrogate = createPair("1", "2");
+
+        int result = diffService.getIndex(surrogate, new ArrayList<>(), comparator, DiffService.DiffSide.RIGHT);
+
+        assertEquals(-1, result);
+    }
+
+    @Test
+    void testGetIndex_surrogateGreaterThanAllItems_returnsMinusOne() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+        pairs.add(createPair("2", "2"));
+
+        WorkItemsPair surrogate = createPair("3", "3");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        assertEquals(-1, result);
+    }
+
+    @Test
+    void testGetIndex_surrogateLessThanFirstItem_returnsOne() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("2", "2"));
+        pairs.add(createPair("3", "3"));
+
+        WorkItemsPair surrogate = createPair("1", "1");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        assertEquals(1, result);
+    }
+
+    @Test
+    void testGetIndex_surrogateInMiddle_returnsCorrectIndex() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+        pairs.add(createPair("3", "3"));
+        pairs.add(createPair("5", "5"));
+
+        WorkItemsPair surrogate = createPair("2", "2");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        assertEquals(1, result);
+    }
+
+    @Test
+    void testGetIndex_withLeftSide_usesLeftItemAsBase() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "5"));
+        pairs.add(createPair("3", "2"));
+
+        // Surrogate with right outline "2.5" - when using LEFT side, base is leftItem
+        WorkItemsPair surrogate = createPair("2", "2.5");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.LEFT);
+
+        // With LEFT side, baseItem is leftItem: "1" then "3"
+        // Surrogate right is "2.5", comparing with baseItem (left): "1" < "2.5", "3" > "2.5"
+        assertEquals(1, result);
+    }
+
+    @Test
+    void testGetIndex_inlinedItemsUpdateIndex() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+        pairs.add(createPair("1-1", "1-1")); // Inlined under "1"
+        pairs.add(createPair("1-2", "1-2")); // Inlined under "1"
+        pairs.add(createPair("3", "3"));
+
+        WorkItemsPair surrogate = createPair("2", "2");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        // Surrogate "2" should be placed after the inlined items but before "3"
+        assertEquals(3, result);
+    }
+
+    @Test
+    void testGetIndex_surrogateIsInlinedAndCurrentIsNot_returnsCurrentIndex() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+        pairs.add(createPair("2", "2"));
+
+        // Surrogate is an inline item of "1"
+        WorkItemsPair surrogate = createPair("1-1", "1-1");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        // Surrogate "1-1" is inlined under indexed "1", current "2" is not inlined
+        // Should return index of "2" which is 1
+        assertEquals(1, result);
+    }
+
+    @Test
+    void testGetIndex_bothCurrentAndSurrogateAreInlined_surrogateSmaller_returnsCurrentIndex() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+        pairs.add(createPair("1-2", "1-2")); // Inlined under "1"
+        pairs.add(createPair("1-3", "1-3")); // Inlined under "1"
+
+        // Surrogate is also inlined under "1" but smaller than "1-2"
+        WorkItemsPair surrogate = createPair("1-1", "1-1");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        // Both current "1-2" and surrogate "1-1" are inlined under "1"
+        // Since "1-2" > "1-1", should return index 1
+        assertEquals(1, result);
+    }
+
+    @Test
+    void testGetIndex_bothCurrentAndSurrogateAreInlined_surrogateLarger_continuesLoop() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+        pairs.add(createPair("1-1", "1-1")); // Inlined under "1"
+        pairs.add(createPair("1-2", "1-2")); // Inlined under "1"
+        pairs.add(createPair("2", "2"));
+
+        // Surrogate is also inlined under "1" but larger than existing inlines
+        WorkItemsPair surrogate = createPair("1-3", "1-3");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        // Surrogate "1-3" > all inlined items, should be placed before "2"
+        assertEquals(3, result);
+    }
+
+    @Test
+    void testGetIndex_pairedItemHasMovedOutlineNumber_andGreaterThanSurrogate_returnsIndex() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+
+        // Create pair where pairedItem (left when side=RIGHT) has movedOutlineNumber
+        WorkItem leftItem = createWorkItem("3", "1.5", MergeMoveDirection.UP);
+        WorkItem rightItem = createWorkItem("2");
+        pairs.add(createPair(leftItem, rightItem));
+
+        WorkItemsPair surrogate = createPair("1.5", "1.5");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        // pairedItem (leftItem) has movedOutlineNumber and outline "3" > "1.5"
+        assertEquals(1, result);
+    }
+
+    @Test
+    void testGetIndex_pairedItemHasMovedOutlineNumber_andSmallerThanSurrogate_continuesLoop() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+
+        // Create pair where pairedItem has movedOutlineNumber but is smaller than surrogate
+        WorkItem leftItem = createWorkItem("1.5", "1", MergeMoveDirection.DOWN);
+        WorkItem rightItem = createWorkItem("2");
+        pairs.add(createPair(leftItem, rightItem));
+
+        pairs.add(createPair("4", "4"));
+
+        WorkItemsPair surrogate = createPair("3", "3");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        // pairedItem outline "1.5" < "3", else-if doesn't match so loop continues without updating index
+        // At i=2, "4" > "3" triggers return index+1 = 0+1 = 1
+        assertEquals(1, result);
+    }
+
+    @Test
+    void testGetIndex_baseItemIsNull_skipsComparison() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+        pairs.add(createPair("2", null)); // Right item (baseItem for RIGHT side) is null
+        pairs.add(createPair("4", "4"));
+
+        WorkItemsPair surrogate = createPair("3", "3");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        // Index 1 has null baseItem (right), skips comparison without updating index
+        // At i=2, "4" > "3" triggers return index+1 = 0+1 = 1
+        assertEquals(1, result);
+    }
+
+    @Test
+    void testGetIndex_baseItemIsInlineNotStructural_skipsComparison() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+        pairs.add(createPair("2", "1-1")); // Right item contains "-", so not structural
+        pairs.add(createPair("4", "4"));
+
+        WorkItemsPair surrogate = createPair("3", "3");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        // Index 1 has non-structural baseItem "1-1", should skip and continue to index 2
+        assertEquals(2, result);
+    }
+
+    @Test
+    void testGetIndex_pairedItemIsNull_comparesWithBaseItem() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+        pairs.add(createPair(null, "3")); // Left item (pairedItem for RIGHT side) is null
+
+        WorkItemsPair surrogate = createPair("2", "2");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        // pairedItem is null, so condition (pairedItem == null || ...) is true
+        // baseItem "3" > surrogate "2", returns index + 1 = 1
+        assertEquals(1, result);
+    }
+
+    @Test
+    void testGetIndex_complexScenarioWithMultipleInlinedItems() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+        pairs.add(createPair("1-1", "1-1"));
+        pairs.add(createPair("1-2", "1-2"));
+        pairs.add(createPair("2", "2"));
+        pairs.add(createPair("2-1", "2-1"));
+        pairs.add(createPair("3", "3"));
+
+        // Surrogate should be placed between "2-1" and "3"
+        WorkItemsPair surrogate = createPair("2.5", "2.5");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.RIGHT);
+
+        assertEquals(5, result);
+    }
+
+    @Test
+    void testGetIndex_leftSideWithNullPairedItem() {
+        OutlineNumberComparator comparator = new OutlineNumberComparator();
+        List<WorkItemsPair> pairs = new ArrayList<>();
+        pairs.add(createPair("1", "1"));
+        pairs.add(createPair("3", null)); // Right item is null, which is pairedItem for LEFT side
+
+        WorkItemsPair surrogate = createPair("2", "2");
+
+        int result = diffService.getIndex(surrogate, pairs, comparator, DiffService.DiffSide.LEFT);
+
+        // Using LEFT side: baseItem is leftItem "3", pairedItem is rightItem (null)
+        // Since pairedItem is null, compares baseItem "3" > surrogate right "2"
+        assertEquals(1, result);
+    }
+
     private void assertItemsEqual(int index, String side, WorkItem expected, WorkItem actual) {
         if (expected == null && actual == null) {
             return;
