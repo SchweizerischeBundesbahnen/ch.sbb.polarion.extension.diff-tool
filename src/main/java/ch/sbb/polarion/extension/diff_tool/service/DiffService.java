@@ -384,6 +384,7 @@ public class DiffService {
                 && comparator.compare(rightItem.getOutlineNumber(), surrogateOutlineNumber) > 0;
     }
 
+    @SuppressWarnings("java:S107")
     private int handleStructuralItem(IndexSearchState state, WorkItem leftItem, WorkItem rightItem,
                                      WorkItem baseItem, WorkItem pairedItem, String surrogateOutlineNumber,
                                      OutlineNumberComparator comparator, int currentIndex) {
