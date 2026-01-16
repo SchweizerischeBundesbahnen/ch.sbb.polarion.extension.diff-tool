@@ -794,76 +794,154 @@ public class MergeService {
     }
 
     @VisibleForTesting
-    @SuppressWarnings("java:S135") // Trying to reduce number of "continue" will make implementation much more complex
     void mergeLinkedWorkItems(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, WorkItemsPair pair) {
+        Collection<ILinkedWorkItemStruct> srcLinks = filterLinksByRoles(getLinks(source, false), context);
+        Collection<ILinkedWorkItemStruct> targetLinks = filterLinksByRoles(getLinks(target, false), context);
 
-        Collection<ILinkedWorkItemStruct> srcLinks = getLinks(source, false);
-        Collection<ILinkedWorkItemStruct> targetLinks = getLinks(target, false);
-        if (!context.getDiffModel().getLinkedWorkItemRoles().isEmpty()) {
-            srcLinks = srcLinks.stream().filter(link -> context.getDiffModel().getLinkedWorkItemRoles().contains(link.getLinkRole().getId())).toList();
-            targetLinks = targetLinks.stream().filter(link -> context.getDiffModel().getLinkedWorkItemRoles().contains(link.getLinkRole().getId())).toList();
+        LinkedWorkItemsMergeState state = processTargetLinks(source, target, srcLinks, targetLinks, context);
+        processSourceLinks(source, target, srcLinks, state, context, pair);
+    }
+
+    private Collection<ILinkedWorkItemStruct> filterLinksByRoles(Collection<ILinkedWorkItemStruct> links, SettingsAwareMergeContext context) {
+        List<String> allowedRoles = context.getDiffModel().getLinkedWorkItemRoles();
+        if (allowedRoles.isEmpty()) {
+            return links;
         }
+        return links.stream()
+                .filter(link -> allowedRoles.contains(link.getLinkRole().getId()))
+                .toList();
+    }
 
+    private LinkedWorkItemsMergeState processTargetLinks(IWorkItem source, IWorkItem target,
+                                                         Collection<ILinkedWorkItemStruct> srcLinks,
+                                                         Collection<ILinkedWorkItemStruct> targetLinks,
+                                                         SettingsAwareMergeContext context) {
         List<ILinkedWorkItemStruct> sameLinks = new ArrayList<>();
         List<String> interlinkedSrcIds = new ArrayList<>();
+
         for (ILinkedWorkItemStruct targetLink : targetLinks) {
-
-            // first, skip links to source work item
-            if (sameWorkItem(targetLink, source)) {
-                continue;
+            TargetLinkProcessingResult result = processTargetLink(source, target, srcLinks, targetLink, context);
+            if (result.sameLink != null) {
+                sameLinks.add(result.sameLink);
             }
-
-            // next, attempt to find links to the same work item from source
-            ILinkedWorkItemStruct sameLink = srcLinks.stream()
-                    .filter(link -> Objects.equals(targetLink.getLinkRole().getId(), link.getLinkRole().getId()) && sameWorkItem(targetLink, link.getLinkedItem()))
-                    .findFirst()
-                    .orElse(null);
-            if (sameLink != null && (sameProjectItems(source, target) || (!sameProjectItems(target, targetLink.getLinkedItem()) && !sameProjectItems(source, targetLink.getLinkedItem())))) {
-                // either both work items are from one project or both links lead to 3rd project work item
-                sameLinks.add(sameLink);
-                if (!Objects.equals(targetLink.getRevision(), sameLink.getRevision())) { // if they differ only by revision - fix it
-                    target.getLinkedWorkItemsStructsDirect().remove(targetLink);
-                    target.addLinkedItem(sameLink.getLinkedItem(), sameLink.getLinkRole(), sameLink.getRevision(), sameLink.isSuspect());
-                }
-                continue;
-            }
-
-            // if there are some links left to 3rd projects - remove them
-            if (!sameProjectItems(target, targetLink.getLinkedItem())) {
-                target.getLinkedWorkItemsStructsDirect().remove(targetLink);
-                continue;
-            }
-
-            // now we attempt to find counterparts (items which are linked to the interlinked work items)
-            Set<String> oppositeWorkItems = srcLinks.stream()
-                    .filter(l -> notFromModule(l.getLinkedItem(), target.getModule())) // filter out direct links to the target work item
-                    .map(l -> l.getLinkedItem().getId()).collect(Collectors.toSet());
-            List<IWorkItem> pairedWorkItems = polarionService.getPairedWorkItems(targetLink.getLinkedItem(), source.getProjectId(), context.getLinkRole());
-            interlinkedSrcIds = pairedWorkItems.stream().map(IWorkItem::getId).filter(oppositeWorkItems::contains).toList();
-            if (interlinkedSrcIds.isEmpty()) {
-                target.getLinkedWorkItemsStructsDirect().remove(targetLink); // remove non-interlinked
+            if (!result.interlinkedSrcIds.isEmpty()) {
+                interlinkedSrcIds = result.interlinkedSrcIds;
             }
         }
 
+        return new LinkedWorkItemsMergeState(sameLinks, interlinkedSrcIds);
+    }
+
+    private TargetLinkProcessingResult processTargetLink(IWorkItem source, IWorkItem target,
+                                                         Collection<ILinkedWorkItemStruct> srcLinks,
+                                                         ILinkedWorkItemStruct targetLink,
+                                                         SettingsAwareMergeContext context) {
+        // Skip links to source work item
+        if (sameWorkItem(targetLink, source)) {
+            return TargetLinkProcessingResult.empty();
+        }
+
+        // Attempt to find links to the same work item from source
+        ILinkedWorkItemStruct sameLink = findMatchingSourceLink(srcLinks, targetLink);
+        if (sameLink != null && isValidSameLink(source, target, targetLink)) {
+            // Either both work items are from one project or both links lead to 3rd project work item
+
+            // If they differ only by revision - fix it
+            updateTargetLinkRevisionIfNeeded(target, targetLink, sameLink);
+
+            return TargetLinkProcessingResult.withSameLink(sameLink);
+        }
+
+        // If there are some links left to 3rd projects - remove them
+        if (!sameProjectItems(target, targetLink.getLinkedItem())) {
+            target.getLinkedWorkItemsStructsDirect().remove(targetLink);
+            return TargetLinkProcessingResult.empty();
+        }
+
+        return processInterlinkedTargetLink(source, target, srcLinks, targetLink, context);
+    }
+
+    private ILinkedWorkItemStruct findMatchingSourceLink(Collection<ILinkedWorkItemStruct> srcLinks, ILinkedWorkItemStruct targetLink) {
+        return srcLinks.stream()
+                .filter(link -> Objects.equals(targetLink.getLinkRole().getId(), link.getLinkRole().getId())
+                        && sameWorkItem(targetLink, link.getLinkedItem()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private boolean isValidSameLink(IWorkItem source, IWorkItem target, ILinkedWorkItemStruct targetLink) {
+        return sameProjectItems(source, target)
+                || (!sameProjectItems(target, targetLink.getLinkedItem()) && !sameProjectItems(source, targetLink.getLinkedItem()));
+    }
+
+    private void updateTargetLinkRevisionIfNeeded(IWorkItem target, ILinkedWorkItemStruct targetLink, ILinkedWorkItemStruct sameLink) {
+        if (!Objects.equals(targetLink.getRevision(), sameLink.getRevision())) {
+            target.getLinkedWorkItemsStructsDirect().remove(targetLink);
+            target.addLinkedItem(sameLink.getLinkedItem(), sameLink.getLinkRole(), sameLink.getRevision(), sameLink.isSuspect());
+        }
+    }
+
+    private TargetLinkProcessingResult processInterlinkedTargetLink(IWorkItem source, IWorkItem target,
+                                                                    Collection<ILinkedWorkItemStruct> srcLinks,
+                                                                    ILinkedWorkItemStruct targetLink,
+                                                                    SettingsAwareMergeContext context) {
+        // Now we attempt to find counterparts (items which are linked to the interlinked work items)
+        Set<String> oppositeWorkItemIds = srcLinks.stream()
+                .filter(l -> notFromModule(l.getLinkedItem(), target.getModule()))
+                .map(l -> l.getLinkedItem().getId())
+                .collect(Collectors.toSet());
+
+        List<IWorkItem> pairedWorkItems = polarionService.getPairedWorkItems(targetLink.getLinkedItem(), source.getProjectId(), context.getLinkRole());
+        List<String> interlinkedSrcIds = pairedWorkItems.stream()
+                .map(IWorkItem::getId)
+                .filter(oppositeWorkItemIds::contains)
+                .toList();
+
+        if (interlinkedSrcIds.isEmpty()) {
+            target.getLinkedWorkItemsStructsDirect().remove(targetLink); // Remove non-interlinked
+        }
+
+        return TargetLinkProcessingResult.withInterlinkedIds(interlinkedSrcIds);
+    }
+
+    private void processSourceLinks(IWorkItem source, IWorkItem target,
+                                    Collection<ILinkedWorkItemStruct> srcLinks,
+                                    LinkedWorkItemsMergeState state,
+                                    SettingsAwareMergeContext context, WorkItemsPair pair) {
         for (ILinkedWorkItemStruct srcLink : srcLinks) {
-            if (sameWorkItem(srcLink, target) || sameLinks.contains(srcLink)) {
+            if (sameWorkItem(srcLink, target) || state.sameLinks.contains(srcLink)) {
                 continue;
             }
+            processSourceLink(source, target, srcLink, state.interlinkedSrcIds, context, pair);
+        }
+    }
 
-            if (sameProjectItems(source, srcLink.getLinkedItem())) {
-                if (!interlinkedSrcIds.contains(srcLink.getLinkedItem().getId())) {
-                    // attempt to find interlinked work item
-                    IWorkItem found = polarionService.getPairedWorkItems(srcLink.getLinkedItem(), target.getProjectId(), context.getLinkRole()).stream().findFirst().orElse(null);
-                    if (found != null) {
-                        target.addLinkedItem(found, srcLink.getLinkRole(), found.getRevision(), srcLink.isSuspect());
-                    } else {
-                        context.reportEntry(WARNING, pair, "linkedWorkItems merge: cannot find opposite pair for the workitem '%s' in the project '%s'"
-                                .formatted(srcLink.getLinkedItem().getId(), target.getProjectId()));
-                    }
-                }
-            } else {
-                target.addLinkedItem(srcLink.getLinkedItem(), srcLink.getLinkRole(), srcLink.getRevision(), srcLink.isSuspect());
-            }
+    private void processSourceLink(IWorkItem source, IWorkItem target, ILinkedWorkItemStruct srcLink,
+                                   List<String> interlinkedSrcIds, SettingsAwareMergeContext context, WorkItemsPair pair) {
+        if (sameProjectItems(source, srcLink.getLinkedItem())) {
+            addPairedLinkIfNotInterlinked(target, srcLink, interlinkedSrcIds, context, pair);
+        } else {
+            target.addLinkedItem(srcLink.getLinkedItem(), srcLink.getLinkRole(), srcLink.getRevision(), srcLink.isSuspect());
+        }
+    }
+
+    private void addPairedLinkIfNotInterlinked(IWorkItem target, ILinkedWorkItemStruct srcLink,
+                                               List<String> interlinkedSrcIds,
+                                               SettingsAwareMergeContext context, WorkItemsPair pair) {
+        if (interlinkedSrcIds.contains(srcLink.getLinkedItem().getId())) {
+            return;
+        }
+
+        IWorkItem pairedWorkItem = polarionService.getPairedWorkItems(srcLink.getLinkedItem(), target.getProjectId(), context.getLinkRole())
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        if (pairedWorkItem != null) {
+            target.addLinkedItem(pairedWorkItem, srcLink.getLinkRole(), pairedWorkItem.getRevision(), srcLink.isSuspect());
+        } else {
+            context.reportEntry(WARNING, pair, "linkedWorkItems merge: cannot find opposite pair for the workitem '%s' in the project '%s'"
+                    .formatted(srcLink.getLinkedItem().getId(), target.getProjectId()));
         }
     }
 
@@ -942,6 +1020,23 @@ public class MergeService {
     @VisibleForTesting
     IWorkItem getWorkItem(@Nullable WorkItem workItem) {
         return workItem != null ? polarionService.getWorkItem(workItem.getProjectId(), workItem.getId(), workItem.getRevision()) : null;
+    }
+
+    private record LinkedWorkItemsMergeState(List<ILinkedWorkItemStruct> sameLinks, List<String> interlinkedSrcIds) {
+    }
+
+    private record TargetLinkProcessingResult(ILinkedWorkItemStruct sameLink, List<String> interlinkedSrcIds) {
+        static TargetLinkProcessingResult empty() {
+            return new TargetLinkProcessingResult(null, Collections.emptyList());
+        }
+
+        static TargetLinkProcessingResult withSameLink(ILinkedWorkItemStruct sameLink) {
+            return new TargetLinkProcessingResult(sameLink, Collections.emptyList());
+        }
+
+        static TargetLinkProcessingResult withInterlinkedIds(List<String> interlinkedSrcIds) {
+            return new TargetLinkProcessingResult(null, interlinkedSrcIds);
+        }
     }
 
 }
