@@ -44,6 +44,7 @@ import com.polarion.alm.tracker.internal.model.TestSteps;
 import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
+import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITestStepKeyOpt;
 import com.polarion.alm.tracker.model.ITrackerProject;
@@ -1717,5 +1718,324 @@ class MergeServiceTest {
         ITrackerService trackerServiceMock = mock(ITrackerService.class);
         when(trackerServiceMock.getDataService()).thenReturn(dataServiceMock);
         when(polarionService.getTrackerService()).thenReturn(trackerServiceMock);
+    }
+
+    // ==================== mergeLinkedWorkItems() tests ====================
+
+    @Test
+    void testMergeLinkedWorkItems_emptyLinks() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>());
+        when(target.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>());
+        when(context.getDiffModel().getLinkedWorkItemRoles()).thenReturn(Collections.emptyList());
+
+        mergeService.mergeLinkedWorkItems(source, target, context, pair);
+
+        verify(target, never()).addLinkedItem(any(), any(), any(), anyBoolean());
+    }
+
+    @Test
+    void testMergeLinkedWorkItems_filterByLinkedWorkItemRoles() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        when(source.getProjectId()).thenReturn("projectA");
+        when(target.getProjectId()).thenReturn("projectB");
+
+        ILinkedWorkItemStruct srcLink = createLinkedWorkItemStruct("roleA", "linkedItem1", "projectA");
+        ILinkedWorkItemStruct srcLinkFiltered = createLinkedWorkItemStruct("roleB", "linkedItem2", "projectA");
+
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>(List.of(srcLink, srcLinkFiltered)));
+        when(target.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>());
+        when(context.getDiffModel().getLinkedWorkItemRoles()).thenReturn(List.of("roleA"));
+        when(context.getLinkRole()).thenReturn("pairRole");
+
+        when(polarionService.getPairedWorkItems(any(IWorkItem.class), eq("projectB"), eq("pairRole"))).thenReturn(Collections.emptyList());
+
+        mergeService.mergeLinkedWorkItems(source, target, context, pair);
+
+        // Only roleA link should be processed, roleB should be filtered out
+        verify(context, times(1)).reportEntry(eq(WARNING), eq(pair), anyString());
+    }
+
+    @Test
+    void testMergeLinkedWorkItems_skipTargetLinkToSource() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        lenient().when(source.getProjectId()).thenReturn("projectA");
+        when(source.getId()).thenReturn("WI-1");
+        lenient().when(target.getProjectId()).thenReturn("projectA");
+
+        // Target has a link pointing to source - should be skipped
+        ILinkedWorkItemStruct targetLinkToSource = createLinkedWorkItemStruct("roleA", "WI-1", "projectA");
+        when(target.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>(List.of(targetLinkToSource)));
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>());
+        when(context.getDiffModel().getLinkedWorkItemRoles()).thenReturn(Collections.emptyList());
+
+        mergeService.mergeLinkedWorkItems(source, target, context, pair);
+
+        verify(target, never()).addLinkedItem(any(), any(), any(), anyBoolean());
+    }
+
+    @Test
+    void testMergeLinkedWorkItems_sameLinkFoundSameProject_noRevisionChange() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        when(source.getProjectId()).thenReturn("projectA");
+        when(target.getProjectId()).thenReturn("projectA");
+
+        ILinkedWorkItemStruct srcLink = createLinkedWorkItemStructWithRevision("roleA", "linkedItem1", "projectA", "rev1");
+        ILinkedWorkItemStruct targetLink = createLinkedWorkItemStructWithRevision("roleA", "linkedItem1", "projectA", "rev1");
+
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>(List.of(srcLink)));
+        List<ILinkedWorkItemStruct> targetLinks = new ArrayList<>(List.of(targetLink));
+        when(target.getLinkedWorkItemsStructsDirect()).thenReturn(targetLinks);
+        when(context.getDiffModel().getLinkedWorkItemRoles()).thenReturn(Collections.emptyList());
+
+        mergeService.mergeLinkedWorkItems(source, target, context, pair);
+
+        // Same link with same revision - no changes needed
+        verify(target, never()).addLinkedItem(any(), any(), any(), anyBoolean());
+    }
+
+    @Test
+    void testMergeLinkedWorkItems_sameLinkFoundSameProject_revisionDiffers() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        when(source.getProjectId()).thenReturn("projectA");
+        when(target.getProjectId()).thenReturn("projectA");
+
+        ILinkedWorkItemStruct srcLink = createLinkedWorkItemStructWithRevision("roleA", "linkedItem1", "projectA", "rev2");
+        ILinkedWorkItemStruct targetLink = createLinkedWorkItemStructWithRevision("roleA", "linkedItem1", "projectA", "rev1");
+
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>(List.of(srcLink)));
+        List<ILinkedWorkItemStruct> targetLinks = new ArrayList<>(List.of(targetLink));
+        when(target.getLinkedWorkItemsStructsDirect()).thenReturn(targetLinks);
+        when(context.getDiffModel().getLinkedWorkItemRoles()).thenReturn(Collections.emptyList());
+
+        mergeService.mergeLinkedWorkItems(source, target, context, pair);
+
+        // Same link but different revision - should update
+        verify(target, times(1)).addLinkedItem(any(IWorkItem.class), any(ILinkRoleOpt.class), eq("rev2"), eq(false));
+    }
+
+    @Test
+    void testMergeLinkedWorkItems_targetLinkTo3rdProject_removed() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        when(source.getProjectId()).thenReturn("projectA");
+        when(target.getProjectId()).thenReturn("projectB");
+
+        // Target has a link to a 3rd project (not projectA or projectB)
+        ILinkedWorkItemStruct targetLinkTo3rd = createLinkedWorkItemStruct("roleA", "linkedItem1", "projectC");
+
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>());
+        List<ILinkedWorkItemStruct> targetLinks = new ArrayList<>(List.of(targetLinkTo3rd));
+        when(target.getLinkedWorkItemsStructsDirect()).thenReturn(targetLinks);
+        when(context.getDiffModel().getLinkedWorkItemRoles()).thenReturn(Collections.emptyList());
+
+        mergeService.mergeLinkedWorkItems(source, target, context, pair);
+
+        // Link to 3rd project should be removed
+        assertTrue(targetLinks.isEmpty());
+    }
+
+    @Test
+    void testMergeLinkedWorkItems_noInterlinkedItems_removed() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        when(source.getProjectId()).thenReturn("projectA");
+        when(target.getProjectId()).thenReturn("projectB");
+        lenient().when(target.getModule()).thenReturn(mock(IModule.class));
+
+        // Target has a link to its own project item
+        ILinkedWorkItemStruct targetLink = createLinkedWorkItemStruct("roleA", "linkedItem1", "projectB");
+        IWorkItem linkedItem = targetLink.getLinkedItem();
+        lenient().when(linkedItem.getModule()).thenReturn(null);
+
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>());
+        List<ILinkedWorkItemStruct> targetLinks = new ArrayList<>(List.of(targetLink));
+        when(target.getLinkedWorkItemsStructsDirect()).thenReturn(targetLinks);
+        when(context.getDiffModel().getLinkedWorkItemRoles()).thenReturn(Collections.emptyList());
+        when(context.getLinkRole()).thenReturn("pairRole");
+
+        // No paired work items found
+        when(polarionService.getPairedWorkItems(linkedItem, "projectA", "pairRole")).thenReturn(Collections.emptyList());
+
+        mergeService.mergeLinkedWorkItems(source, target, context, pair);
+
+        // Non-interlinked target link should be removed
+        assertTrue(targetLinks.isEmpty());
+    }
+
+    @Test
+    void testMergeLinkedWorkItems_srcLinkSkippedWhenPointsToTarget() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        lenient().when(source.getProjectId()).thenReturn("projectA");
+        when(target.getProjectId()).thenReturn("projectA");
+        when(target.getId()).thenReturn("WI-2");
+
+        // Source has a link pointing to target - should be skipped
+        ILinkedWorkItemStruct srcLinkToTarget = createLinkedWorkItemStruct("roleA", "WI-2", "projectA");
+
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>(List.of(srcLinkToTarget)));
+        when(target.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>());
+        when(context.getDiffModel().getLinkedWorkItemRoles()).thenReturn(Collections.emptyList());
+
+        mergeService.mergeLinkedWorkItems(source, target, context, pair);
+
+        verify(target, never()).addLinkedItem(any(), any(), any(), anyBoolean());
+    }
+
+    @Test
+    void testMergeLinkedWorkItems_srcLinkSameProject_pairedWorkItemFound() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        when(source.getProjectId()).thenReturn("projectA");
+        when(target.getProjectId()).thenReturn("projectB");
+        lenient().when(target.getId()).thenReturn("WI-target");
+
+        ILinkedWorkItemStruct srcLink = createLinkedWorkItemStruct("roleA", "linkedItem1", "projectA");
+        IWorkItem pairedWorkItem = mock(IWorkItem.class);
+        when(pairedWorkItem.getRevision()).thenReturn("rev1");
+
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>(List.of(srcLink)));
+        when(target.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>());
+        when(context.getDiffModel().getLinkedWorkItemRoles()).thenReturn(Collections.emptyList());
+        when(context.getLinkRole()).thenReturn("pairRole");
+
+        when(polarionService.getPairedWorkItems(srcLink.getLinkedItem(), "projectB", "pairRole"))
+                .thenReturn(List.of(pairedWorkItem));
+
+        mergeService.mergeLinkedWorkItems(source, target, context, pair);
+
+        verify(target, times(1)).addLinkedItem(eq(pairedWorkItem), any(ILinkRoleOpt.class), eq("rev1"), eq(false));
+    }
+
+    @Test
+    void testMergeLinkedWorkItems_srcLinkSameProject_noPairedWorkItemFound() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        when(source.getProjectId()).thenReturn("projectA");
+        when(target.getProjectId()).thenReturn("projectB");
+        lenient().when(target.getId()).thenReturn("WI-target");
+
+        ILinkedWorkItemStruct srcLink = createLinkedWorkItemStruct("roleA", "linkedItem1", "projectA");
+
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>(List.of(srcLink)));
+        when(target.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>());
+        when(context.getDiffModel().getLinkedWorkItemRoles()).thenReturn(Collections.emptyList());
+        when(context.getLinkRole()).thenReturn("pairRole");
+
+        when(polarionService.getPairedWorkItems(srcLink.getLinkedItem(), "projectB", "pairRole"))
+                .thenReturn(Collections.emptyList());
+
+        mergeService.mergeLinkedWorkItems(source, target, context, pair);
+
+        // No paired work item found - should report warning
+        verify(context, times(1)).reportEntry(eq(WARNING), eq(pair), contains("cannot find opposite pair"));
+        verify(target, never()).addLinkedItem(any(), any(), any(), anyBoolean());
+    }
+
+    @Test
+    void testMergeLinkedWorkItems_srcLinkDifferentProject_addedDirectly() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        when(source.getProjectId()).thenReturn("projectA");
+        when(target.getProjectId()).thenReturn("projectB");
+        lenient().when(target.getId()).thenReturn("WI-target");
+
+        // Source link to a 3rd project (not same as source)
+        ILinkedWorkItemStruct srcLinkTo3rd = createLinkedWorkItemStructWithRevision("roleA", "linkedItem1", "projectC", "rev1");
+
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>(List.of(srcLinkTo3rd)));
+        when(target.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>());
+        when(context.getDiffModel().getLinkedWorkItemRoles()).thenReturn(Collections.emptyList());
+
+        mergeService.mergeLinkedWorkItems(source, target, context, pair);
+
+        // Link to 3rd project should be added directly
+        verify(target, times(1)).addLinkedItem(any(IWorkItem.class), any(ILinkRoleOpt.class), eq("rev1"), eq(false));
+    }
+
+    @Test
+    void testMergeLinkedWorkItems_sameLinkTo3rdProjectBothSides() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
+        WorkItemsPair pair = mock(WorkItemsPair.class);
+
+        when(source.getProjectId()).thenReturn("projectA");
+        when(target.getProjectId()).thenReturn("projectB");
+
+        // Both source and target have same link to 3rd project
+        ILinkedWorkItemStruct srcLink = createLinkedWorkItemStructWithRevision("roleA", "linkedItem1", "projectC", "rev1");
+        ILinkedWorkItemStruct targetLink = createLinkedWorkItemStructWithRevision("roleA", "linkedItem1", "projectC", "rev1");
+
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new ArrayList<>(List.of(srcLink)));
+        List<ILinkedWorkItemStruct> targetLinks = new ArrayList<>(List.of(targetLink));
+        when(target.getLinkedWorkItemsStructsDirect()).thenReturn(targetLinks);
+        when(context.getDiffModel().getLinkedWorkItemRoles()).thenReturn(Collections.emptyList());
+
+        mergeService.mergeLinkedWorkItems(source, target, context, pair);
+
+        // Same link to 3rd project exists on both sides - should be kept, not duplicated
+        verify(target, never()).addLinkedItem(any(), any(), any(), anyBoolean());
+        assertEquals(1, targetLinks.size());
+    }
+
+    private ILinkedWorkItemStruct createLinkedWorkItemStruct(String roleId, String linkedItemId, String linkedItemProjectId) {
+        return createLinkedWorkItemStructWithRevision(roleId, linkedItemId, linkedItemProjectId, null);
+    }
+
+    private ILinkedWorkItemStruct createLinkedWorkItemStructWithRevision(String roleId, String linkedItemId, String linkedItemProjectId, String revision) {
+        ILinkedWorkItemStruct link = mock(ILinkedWorkItemStruct.class);
+        ILinkRoleOpt linkRole = mock(ILinkRoleOpt.class);
+        lenient().when(linkRole.getId()).thenReturn(roleId);
+        lenient().when(link.getLinkRole()).thenReturn(linkRole);
+
+        IWorkItem linkedItem = mock(IWorkItem.class);
+        lenient().when(linkedItem.getId()).thenReturn(linkedItemId);
+        lenient().when(linkedItem.getProjectId()).thenReturn(linkedItemProjectId);
+        lenient().when(link.getLinkedItem()).thenReturn(linkedItem);
+
+        lenient().when(link.getRevision()).thenReturn(revision);
+        lenient().when(link.isSuspect()).thenReturn(false);
+
+        return link;
     }
 }
