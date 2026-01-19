@@ -11,6 +11,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.InputStream;
@@ -115,47 +117,20 @@ class LinksHandlerTest {
         assertTrue(result.contains("data-paired-item-id=\"PAIRED-456\""));
     }
 
-    @Test
-    void testAppendPairedWorkItemId_attributesInDifferentOrder_classFirst() {
-        String html = "<span class=\"polarion-rte-link\" data-item-id=\"WI-123\" data-type=\"workItem\">content</span>";
-        String projectId = "testProject";
-
-        PolarionService polarionService = mock(PolarionService.class);
-        IWorkItem workItem = mock(IWorkItem.class);
-        when(polarionService.getWorkItem(eq(projectId), eq("WI-123"), isNull())).thenReturn(workItem);
-
-        IWorkItem pairedWorkItem = mock(IWorkItem.class);
-        when(pairedWorkItem.getId()).thenReturn("PAIRED-456");
-        when(polarionService.getPairedWorkItems(eq(workItem), eq(projectId), anyString())).thenReturn(Collections.singletonList(pairedWorkItem));
-
-        String result = new LinksHandler().appendPairedWorkItemId(html, projectId, projectId,
-                createContext(polarionService));
-
-        assertTrue(result.contains("data-paired-item-id=\"PAIRED-456\""));
-    }
-
-    @Test
-    void testAppendPairedWorkItemId_attributesInDifferentOrder_dataTypeFirst() {
-        String html = "<span data-type=\"workItem\" class=\"polarion-rte-link\" data-item-id=\"WI-123\">content</span>";
-        String projectId = "testProject";
-
-        PolarionService polarionService = mock(PolarionService.class);
-        IWorkItem workItem = mock(IWorkItem.class);
-        when(polarionService.getWorkItem(eq(projectId), eq("WI-123"), isNull())).thenReturn(workItem);
-
-        IWorkItem pairedWorkItem = mock(IWorkItem.class);
-        when(pairedWorkItem.getId()).thenReturn("PAIRED-456");
-        when(polarionService.getPairedWorkItems(eq(workItem), eq(projectId), anyString())).thenReturn(Collections.singletonList(pairedWorkItem));
-
-        String result = new LinksHandler().appendPairedWorkItemId(html, projectId, projectId,
-                createContext(polarionService));
-
-        assertTrue(result.contains("data-paired-item-id=\"PAIRED-456\""));
-    }
-
-    @Test
-    void testAppendPairedWorkItemId_attributesInDifferentOrder_dataItemIdFirst() {
-        String html = "<span data-item-id=\"WI-123\" data-type=\"workItem\" class=\"polarion-rte-link\">content</span>";
+    @ParameterizedTest
+    @ValueSource(strings = {
+            // class first
+            "<span class=\"polarion-rte-link\" data-item-id=\"WI-123\" data-type=\"workItem\">content</span>",
+            // data-type first
+            "<span data-type=\"workItem\" class=\"polarion-rte-link\" data-item-id=\"WI-123\">content</span>",
+            // data-item-id first
+            "<span data-item-id=\"WI-123\" data-type=\"workItem\" class=\"polarion-rte-link\">content</span>",
+            // with additional attributes mixed
+            "<span title=\"Some title\" data-type=\"workItem\" data-option-id=\"long\" class=\"polarion-rte-link\" data-item-id=\"WI-123\">content</span>",
+            // with extra whitespace
+            "<span  class=\"polarion-rte-link\"   data-type=\"workItem\"  data-item-id=\"WI-123\" >content</span>"
+    })
+    void testAppendPairedWorkItemId_attributesInDifferentOrder(String html) {
         String projectId = "testProject";
 
         PolarionService polarionService = mock(PolarionService.class);
@@ -219,7 +194,7 @@ class LinksHandlerTest {
 
         PolarionService polarionService = mock(PolarionService.class);
         IWorkItem workItem = mock(IWorkItem.class);
-        when(polarionService.getWorkItem(eq(projectId), eq("WI-123"), eq("100"))).thenReturn(workItem);
+        when(polarionService.getWorkItem(projectId, "WI-123", "100")).thenReturn(workItem);
 
         IWorkItem pairedWorkItem = mock(IWorkItem.class);
         when(pairedWorkItem.getId()).thenReturn("PAIRED-REV");
@@ -238,7 +213,7 @@ class LinksHandlerTest {
 
         PolarionService polarionService = mock(PolarionService.class);
         IWorkItem workItem = mock(IWorkItem.class);
-        when(polarionService.getWorkItem(eq(projectId), eq("WI-123"), eq("100"))).thenReturn(workItem);
+        when(polarionService.getWorkItem(projectId, "WI-123", "100")).thenReturn(workItem);
 
         IWorkItem pairedWorkItem = mock(IWorkItem.class);
         when(pairedWorkItem.getId()).thenReturn("PAIRED-REV");
@@ -258,7 +233,7 @@ class LinksHandlerTest {
 
         PolarionService polarionService = mock(PolarionService.class);
         IWorkItem workItem = mock(IWorkItem.class);
-        when(polarionService.getWorkItem(eq("externalProject"), eq("WI-123"), eq("200"))).thenReturn(workItem);
+        when(polarionService.getWorkItem("externalProject", "WI-123", "200")).thenReturn(workItem);
 
         IWorkItem pairedWorkItem = mock(IWorkItem.class);
         when(pairedWorkItem.getId()).thenReturn("PAIRED-BOTH");
@@ -278,7 +253,7 @@ class LinksHandlerTest {
 
         PolarionService polarionService = mock(PolarionService.class);
         IWorkItem workItem = mock(IWorkItem.class);
-        when(polarionService.getWorkItem(eq("externalProject"), eq("WI-123"), eq("200"))).thenReturn(workItem);
+        when(polarionService.getWorkItem("externalProject", "WI-123", "200")).thenReturn(workItem);
 
         IWorkItem pairedWorkItem = mock(IWorkItem.class);
         when(pairedWorkItem.getId()).thenReturn("PAIRED-BOTH");
@@ -312,25 +287,6 @@ class LinksHandlerTest {
     }
 
     @Test
-    void testAppendPairedWorkItemId_withAdditionalAttributesMixed() {
-        String html = "<span title=\"Some title\" data-type=\"workItem\" data-option-id=\"long\" class=\"polarion-rte-link\" data-item-id=\"WI-123\">content</span>";
-        String projectId = "testProject";
-
-        PolarionService polarionService = mock(PolarionService.class);
-        IWorkItem workItem = mock(IWorkItem.class);
-        when(polarionService.getWorkItem(eq(projectId), eq("WI-123"), isNull())).thenReturn(workItem);
-
-        IWorkItem pairedWorkItem = mock(IWorkItem.class);
-        when(pairedWorkItem.getId()).thenReturn("PAIRED-MIXED");
-        when(polarionService.getPairedWorkItems(eq(workItem), eq(projectId), anyString())).thenReturn(Collections.singletonList(pairedWorkItem));
-
-        String result = new LinksHandler().appendPairedWorkItemId(html, projectId, projectId,
-                createContext(polarionService));
-
-        assertTrue(result.contains("data-paired-item-id=\"PAIRED-MIXED\""));
-    }
-
-    @Test
     void testAppendPairedWorkItemId_multipleLinks() {
         String html = "Text <span class=\"polarion-rte-link\" data-type=\"workItem\" data-item-id=\"WI-1\">link1</span> middle " +
                 "<span data-item-id=\"WI-2\" class=\"polarion-rte-link\" data-type=\"workItem\">link2</span> end";
@@ -357,48 +313,20 @@ class LinksHandlerTest {
         assertTrue(result.contains("data-paired-item-id=\"PAIRED-2\""));
     }
 
-    @Test
-    void testAppendPairedWorkItemId_noMatchingLinks() {
-        String html = "<span class=\"other-class\" data-type=\"workItem\" data-item-id=\"WI-123\">content</span>";
-        String projectId = "testProject";
-
-        PolarionService polarionService = mock(PolarionService.class);
-
-        String result = new LinksHandler().appendPairedWorkItemId(html, projectId, projectId,
-                createContext(polarionService));
-
-        assertEquals(html, result);
-    }
-
-    @Test
-    void testAppendPairedWorkItemId_missingDataType() {
-        String html = "<span class=\"polarion-rte-link\" data-item-id=\"WI-123\">content</span>";
-        String projectId = "testProject";
-
-        PolarionService polarionService = mock(PolarionService.class);
-
-        String result = new LinksHandler().appendPairedWorkItemId(html, projectId, projectId,
-                createContext(polarionService));
-
-        assertEquals(html, result);
-    }
-
-    @Test
-    void testAppendPairedWorkItemId_missingDataItemId() {
-        String html = "<span class=\"polarion-rte-link\" data-type=\"workItem\">content</span>";
-        String projectId = "testProject";
-
-        PolarionService polarionService = mock(PolarionService.class);
-
-        String result = new LinksHandler().appendPairedWorkItemId(html, projectId, projectId,
-                createContext(polarionService));
-
-        assertEquals(html, result);
-    }
-
-    @Test
-    void testAppendPairedWorkItemId_wrongDataType() {
-        String html = "<span class=\"polarion-rte-link\" data-type=\"hyperlink\" data-item-id=\"WI-123\">content</span>";
+    @ParameterizedTest
+    @ValueSource(strings = {
+            // wrong class
+            "<span class=\"other-class\" data-type=\"workItem\" data-item-id=\"WI-123\">content</span>",
+            // missing data-type
+            "<span class=\"polarion-rte-link\" data-item-id=\"WI-123\">content</span>",
+            // missing data-item-id
+            "<span class=\"polarion-rte-link\" data-type=\"workItem\">content</span>",
+            // wrong data-type value
+            "<span class=\"polarion-rte-link\" data-type=\"hyperlink\" data-item-id=\"WI-123\">content</span>",
+            // no links at all
+            "<p>Some text without any links</p>"
+    })
+    void testAppendPairedWorkItemId_noMatchingLinks(String html) {
         String projectId = "testProject";
 
         PolarionService polarionService = mock(PolarionService.class);
@@ -411,28 +339,14 @@ class LinksHandlerTest {
 
     @Test
     void testAppendPairedWorkItemId_emptyHtml() {
-        String html = "";
         String projectId = "testProject";
 
         PolarionService polarionService = mock(PolarionService.class);
 
-        String result = new LinksHandler().appendPairedWorkItemId(html, projectId, projectId,
+        String result = new LinksHandler().appendPairedWorkItemId("", projectId, projectId,
                 createContext(polarionService));
 
-        assertEquals(html, result);
-    }
-
-    @Test
-    void testAppendPairedWorkItemId_noLinks() {
-        String html = "<p>Some text without any links</p>";
-        String projectId = "testProject";
-
-        PolarionService polarionService = mock(PolarionService.class);
-
-        String result = new LinksHandler().appendPairedWorkItemId(html, projectId, projectId,
-                createContext(polarionService));
-
-        assertEquals(html, result);
+        assertEquals("", result);
     }
 
     @Test
@@ -524,25 +438,6 @@ class LinksHandlerTest {
 
         assertTrue(result.contains("data-paired-item-id=\"PAIRED-2\""));
         assertTrue(result.contains("<span class=\"other-class\" data-type=\"workItem\" data-item-id=\"WI-1\">not matched</span>"));
-    }
-
-    @Test
-    void testAppendPairedWorkItemId_withWhitespaceInAttributes() {
-        String html = "<span  class=\"polarion-rte-link\"   data-type=\"workItem\"  data-item-id=\"WI-123\" >content</span>";
-        String projectId = "testProject";
-
-        PolarionService polarionService = mock(PolarionService.class);
-        IWorkItem workItem = mock(IWorkItem.class);
-        when(polarionService.getWorkItem(eq(projectId), eq("WI-123"), isNull())).thenReturn(workItem);
-
-        IWorkItem pairedWorkItem = mock(IWorkItem.class);
-        when(pairedWorkItem.getId()).thenReturn("PAIRED-WS");
-        when(polarionService.getPairedWorkItems(eq(workItem), eq(projectId), anyString())).thenReturn(Collections.singletonList(pairedWorkItem));
-
-        String result = new LinksHandler().appendPairedWorkItemId(html, projectId, projectId,
-                createContext(polarionService));
-
-        assertTrue(result.contains("data-paired-item-id=\"PAIRED-WS\""));
     }
 
     @Test
