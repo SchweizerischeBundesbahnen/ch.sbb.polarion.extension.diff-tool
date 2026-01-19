@@ -66,7 +66,8 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
 
         renderQueryPanel(sourceColumn, params.sourceParams());
         if (!context.getDisplayedScope().isGlobal()) {
-            params.sourceParams().dataSet(initDataSet(context.getDisplayedScope(), params.sourceParams().query()));
+            DataSet dataSet = initDataSet(context.getDisplayedScope(), params.sourceParams().query());
+            params.sourceParams().dataSet(dataSet);
         }
         renderTable(sourceColumn, params.sourceParams());
 
@@ -75,7 +76,9 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
 
         renderQueryPanel(targetColumn, params.targetParams()); // This method has a side effect on targetParams parameter, initializing projectId attribute if it's empty
         if (!StringUtils.isBlank(params.targetParams().projectId())) {
-            params.targetParams().dataSet(initDataSet(new ScopeImpl(new ProjectScope(params.targetParams().projectId())), params.targetParams().query()));
+            ProjectScope projectScope = new ProjectScope(params.targetParams().projectId());
+            DataSet dataSet = initDataSet(new ScopeImpl(projectScope), params.targetParams().query());
+            params.targetParams().dataSet(dataSet);
         }
         renderTable(targetColumn, params.targetParams());
     }
