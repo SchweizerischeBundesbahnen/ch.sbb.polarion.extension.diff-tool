@@ -387,7 +387,7 @@ class LinksHandlerTest {
 
         PolarionService polarionService = mock(PolarionService.class);
         IWorkItem workItem = mock(IWorkItem.class);
-        when(polarionService.getWorkItem(eq("proj"), eq("WI-ALL"), eq("50"))).thenReturn(workItem);
+        when(polarionService.getWorkItem("proj", "WI-ALL", "50")).thenReturn(workItem);
 
         IWorkItem pairedWorkItem = mock(IWorkItem.class);
         when(pairedWorkItem.getId()).thenReturn("PAIRED-ALL");
@@ -407,7 +407,7 @@ class LinksHandlerTest {
 
         PolarionService polarionService = mock(PolarionService.class);
         IWorkItem workItem = mock(IWorkItem.class);
-        when(polarionService.getWorkItem(eq("proj"), eq("WI-ALL"), eq("50"))).thenReturn(workItem);
+        when(polarionService.getWorkItem("proj", "WI-ALL", "50")).thenReturn(workItem);
 
         IWorkItem pairedWorkItem = mock(IWorkItem.class);
         when(pairedWorkItem.getId()).thenReturn("PAIRED-ALL2");
