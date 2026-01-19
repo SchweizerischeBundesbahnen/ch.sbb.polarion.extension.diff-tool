@@ -71,13 +71,6 @@ class DocumentWorkItemTest {
     }
 
     @Test
-    void testInheritanceFromProjectWorkItem() {
-        DocumentWorkItem workItem = new DocumentWorkItem();
-
-        assertTrue(workItem instanceof ProjectWorkItem);
-    }
-
-    @Test
     void testEqualsAndHashCode() {
         DocumentWorkItem workItem1 = new DocumentWorkItem(
                 "wiId", "wiProjectId", "wiRevision",

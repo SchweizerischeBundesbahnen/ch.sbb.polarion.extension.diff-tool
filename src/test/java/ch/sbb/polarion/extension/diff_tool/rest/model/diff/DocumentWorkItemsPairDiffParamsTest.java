@@ -14,13 +14,6 @@ class DocumentWorkItemsPairDiffParamsTest {
     }
 
     @Test
-    void testInheritanceFromWorkItemsPairDiffParams() {
-        DocumentWorkItemsPairDiffParams params = new DocumentWorkItemsPairDiffParams();
-
-        assertTrue(params instanceof WorkItemsPairDiffParams);
-    }
-
-    @Test
     void testSetAndGetLeftWorkItem() {
         DocumentWorkItemsPairDiffParams params = new DocumentWorkItemsPairDiffParams();
 
