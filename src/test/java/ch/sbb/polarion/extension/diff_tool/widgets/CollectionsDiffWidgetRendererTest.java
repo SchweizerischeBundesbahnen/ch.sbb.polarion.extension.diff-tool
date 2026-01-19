@@ -236,7 +236,6 @@ class CollectionsDiffWidgetRendererTest {
         renderer.renderHeaderRow(parentContentBuilder);
 
         verify(rowAttributesBuilder, times(1)).className("polarion-rpw-table-header-row");
-        // 1 empty header for radio button column + 4 field columns = 5 th elements
         verify(rowTagSelector, times(5)).th();
     }
 
