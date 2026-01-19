@@ -26,7 +26,7 @@ public class LinksHandler implements DiffLifecycleHandler {
             "(?=[^>]*class=\"polarion-rte-link\")" +
             "(?=[^>]*data-type=\"workItem\")" +
             "(?=[^>]*data-item-id=\"(?<workItemId>[^\"]+)\")" +
-            "[^>]+>";
+            "[^>]*?>";
 
     // Optional attributes extracted separately to reduce main regex complexity
     private static final Pattern DATA_SCOPE_PATTERN = Pattern.compile("data-scope=\"([^\"]+)\"");
