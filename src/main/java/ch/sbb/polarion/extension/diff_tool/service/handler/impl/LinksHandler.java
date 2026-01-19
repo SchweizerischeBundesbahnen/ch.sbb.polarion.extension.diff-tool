@@ -29,8 +29,8 @@ public class LinksHandler implements DiffLifecycleHandler {
             "[^>]*?>";
 
     // Optional attributes extracted separately to reduce main regex complexity
-    private static final Pattern DATA_SCOPE_PATTERN = Pattern.compile("data-scope=\"([^\"]+)\"");
-    private static final Pattern DATA_REVISION_PATTERN = Pattern.compile("data-revision=\"([^\"]+)\"");
+    public static final Pattern DATA_SCOPE_PATTERN = Pattern.compile("data-scope=\"([^\"]+)\"");
+    public static final Pattern DATA_REVISION_PATTERN = Pattern.compile("data-revision=\"([^\"]+)\"");
 
     private static final String DATA_PAIRED_ITEM_ID = "data-paired-item-id";
     private static final String SPAN_START = "<span";
@@ -128,7 +128,7 @@ public class LinksHandler implements DiffLifecycleHandler {
         return result;
     }
 
-    private String extractAttribute(Pattern pattern, String text, String defaultValue) {
+    public static String extractAttribute(Pattern pattern, String text, String defaultValue) {
         Matcher attrMatcher = pattern.matcher(text);
         return attrMatcher.find() ? attrMatcher.group(1) : defaultValue;
     }
