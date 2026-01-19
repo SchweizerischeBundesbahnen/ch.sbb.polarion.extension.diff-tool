@@ -4,6 +4,7 @@ import com.polarion.alm.shared.api.Scope;
 import com.polarion.alm.shared.api.impl.ScopeImpl;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.PrototypeEnum;
+import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import com.polarion.alm.shared.api.model.rp.parameter.DataSet;
 import com.polarion.alm.shared.api.model.rp.parameter.Field;
 import com.polarion.alm.shared.api.model.rp.parameter.FieldsParameter;
@@ -33,7 +34,11 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
     private final DiffWidgetParams params;
 
     public CollectionsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params) {
-        super(context, COLUMNS_PARAMETER, params);
+        this(context, params, new PolarionService());
+    }
+
+    public CollectionsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params, @NotNull PolarionService polarionService) {
+        super(context, COLUMNS_PARAMETER, params, polarionService);
 
         this.params = params;
     }
