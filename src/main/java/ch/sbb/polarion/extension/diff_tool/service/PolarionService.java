@@ -89,6 +89,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static ch.sbb.polarion.extension.diff_tool.service.handler.impl.LinksHandler.DATA_REVISION_PATTERN;
+import static ch.sbb.polarion.extension.diff_tool.service.handler.impl.LinksHandler.DATA_SCOPE_PATTERN;
+
 @SuppressWarnings("squid:S2176") // class named same as parent intentionally
 public class PolarionService extends ch.sbb.polarion.extension.generic.service.PolarionService {
 
@@ -473,19 +476,19 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         StringBuilder buf = new StringBuilder();
         while (matcher.find()) {
             String match = matcher.group();
-            String workItemProjectId = ObjectUtils.firstNonNull(matcher.group("workItemProjectId"), from.getProjectId());
+            String projectId = LinksHandler.extractAttribute(DATA_SCOPE_PATTERN, match, from.getProjectId());
             String workItemId = matcher.group("workItemId");
-            String revision = matcher.group("workItemRevision");
+            String revision = LinksHandler.extractAttribute(DATA_REVISION_PATTERN, match, null);
             IWorkItem workItem;
             try {
-                workItem = getWorkItem(workItemProjectId, workItemId, revision);
+                workItem = getWorkItem(projectId, workItemId, revision);
             } catch (Exception e) {
-                logger.error("Cannot get work item %s/%s/%s".formatted(workItemProjectId, workItemId, revision), e);
+                logger.error("Cannot get work item %s/%s/%s".formatted(projectId, workItemId, revision), e);
                 continue;
             }
             IWorkItem pairedWorkItem = getPairedWorkItems(workItem, to.getProjectId(), linkRole).stream().findFirst().orElse(null);
             if (pairedWorkItem != null) {
-                workItemProjectId = ""; // when we place link to the wi from target project there's no need to set 'data-scope' explicitly
+                projectId = ""; // when we place link to the wi from target project there's no need to set 'data-scope' explicitly
                 workItemId = pairedWorkItem.getId();
                 revision = pairedWorkItem.getRevision();
             }
@@ -493,8 +496,8 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             // Even if we don't find paired item we must proceed at least for inserting
             // proper 'data-scope' - otherwise link will be completely broken
             String idEntry = "data-item-id=\"%s\"".formatted(workItemId);
-            if (!StringUtils.isEmpty(workItemProjectId)) {
-                idEntry = idEntry + " data-scope=\"%s\"".formatted(workItemProjectId);
+            if (!StringUtils.isEmpty(projectId)) {
+                idEntry = idEntry + " data-scope=\"%s\"".formatted(projectId);
             }
             if (!StringUtils.isEmpty(revision)) {
                 idEntry = idEntry + " data-revision=\"%s\"".formatted(revision);

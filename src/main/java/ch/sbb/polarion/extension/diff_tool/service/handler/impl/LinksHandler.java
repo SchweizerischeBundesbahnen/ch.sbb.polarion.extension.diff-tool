@@ -5,7 +5,6 @@ import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
 import ch.sbb.polarion.extension.generic.util.HtmlUtils;
 import com.polarion.alm.tracker.model.IWorkItem;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,16 +19,17 @@ public class LinksHandler implements DiffLifecycleHandler {
 
     /*
      * Link must have specific class attribute, data-type="workItem" and data-item-id which contains work item ID.
-     * Also link may have data-scope & data-revision attributes in some cases so in this regex they are optional.
      * Note that all those attributes may come in random order.
      */
     public static final String LINK_REGEX = "<span\\s+" +
             "(?=[^>]*class=\"polarion-rte-link\")" +
             "(?=[^>]*data-type=\"workItem\")" +
-            "(?=[^>]*data-item-id=\"(?<workItemId>[^\"]+?)\")" +
-            "(?=[^>]*data-scope=\"(?<workItemProjectId>[^\"]+)\")?" +
-            "(?=[^>]*data-revision=\"(?<workItemRevision>[^\"]+)\")?" +
+            "(?=[^>]*data-item-id=\"(?<workItemId>[^\"]+)\")" +
             "[^>]*?>";
+
+    // Optional attributes extracted separately to reduce main regex complexity
+    public static final Pattern DATA_SCOPE_PATTERN = Pattern.compile("data-scope=\"([^\"]+)\"");
+    public static final Pattern DATA_REVISION_PATTERN = Pattern.compile("data-revision=\"([^\"]+)\"");
 
     private static final String DATA_PAIRED_ITEM_ID = "data-paired-item-id";
     private static final String SPAN_START = "<span";
@@ -60,12 +60,14 @@ public class LinksHandler implements DiffLifecycleHandler {
         StringBuilder buf = new StringBuilder();
         while (matcher.find()) {
             String match = matcher.group();
-            String workItemProjectId = StringUtils.defaultString(matcher.group("workItemProjectId"), sourceProjectId); //data-scope is rendered in case of another project reference
-            String revision = matcher.group("workItemRevision");
             String workItemId = matcher.group("workItemId");
+
+            // Extract optional attributes from the matched span tag
+            String projectId = extractAttribute(DATA_SCOPE_PATTERN, match, sourceProjectId);
+            String revision = extractAttribute(DATA_REVISION_PATTERN, match, null);
             IWorkItem workItem = null;
             try {
-                workItem = context.getPolarionService().getWorkItem(workItemProjectId, workItemId, revision);
+                workItem = context.getPolarionService().getWorkItem(projectId, workItemId, revision);
             } catch (Exception e) {
                 context.addIssue(e.getMessage());
             }
@@ -123,5 +125,10 @@ public class LinksHandler implements DiffLifecycleHandler {
             }
         }
         return result;
+    }
+
+    public static String extractAttribute(Pattern pattern, String text, String defaultValue) {
+        Matcher attrMatcher = pattern.matcher(text);
+        return attrMatcher.find() ? attrMatcher.group(1) : defaultValue;
     }
 }
