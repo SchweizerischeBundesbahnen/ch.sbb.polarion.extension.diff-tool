@@ -49,7 +49,8 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
         wrap.attributes().className("main-pane");
 
         HtmlTagBuilder topPane = wrap.append().tag().div();
-        renderCompareButton(topPane, "Please, select one item in left table and one item in right table to be compared");
+        renderCompareButton(topPane,
+                "Please, select one item in left table and one item in right table to be compared");
 
         HtmlTagBuilder description = topPane.append().tag().div();
         description.append().tag().p().append().text(
