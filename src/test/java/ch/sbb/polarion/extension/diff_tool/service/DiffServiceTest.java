@@ -1,9 +1,13 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchorsPair;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsCollection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeMoveDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Project;
@@ -23,6 +27,8 @@ import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.IWorkItem;
+import com.polarion.alm.tracker.model.baselinecollection.IBaselineCollection;
+import com.polarion.alm.tracker.model.baselinecollection.IBaselineCollectionElement;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.IDataService;
 import com.polarion.platform.persistence.IEnumOption;
@@ -920,5 +926,296 @@ class DiffServiceTest {
         }
     }
 
+    // ==================== getDocumentsDiff() method tests ====================
+
+    @Test
+    void testGetDocumentsDiffThrowsExceptionForInvalidLinkRole() {
+        IModule leftDocument = mock(IModule.class);
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        when(leftDocument.getProject()).thenReturn(trackerProject);
+
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "left", "rev1")).thenReturn(leftDocument);
+        when(polarionService.getLinkRoleById("invalid-role", trackerProject)).thenReturn(null);
+
+        DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").revision("rev1").build();
+        DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").revision("rev1").build();
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                diffService.getDocumentsDiff(leftDocumentIdentifier, rightDocumentIdentifier, "invalid-role", null, null));
+
+        assertTrue(exception.getMessage().contains("invalid-role"));
+    }
+
+    // ==================== getCollectionsDiff() method tests ====================
+
+    @Test
+    void testGetCollectionsDiff() {
+        String leftProjectId = "leftProject";
+        String rightProjectId = "rightProject";
+        String leftCollectionId = "leftCollection";
+        String rightCollectionId = "rightCollection";
+
+        IBaselineCollection leftCollection = mock(IBaselineCollection.class);
+        IBaselineCollection rightCollection = mock(IBaselineCollection.class);
+
+        IProject leftProject = mock(IProject.class);
+        IProject rightProject = mock(IProject.class);
+
+        when(leftCollection.getProjectId()).thenReturn(leftProjectId);
+        when(leftCollection.getId()).thenReturn(leftCollectionId);
+        when(leftCollection.getName()).thenReturn("Left Collection");
+        when(leftCollection.getProject()).thenReturn(leftProject);
+        when(leftProject.getName()).thenReturn("Left Project Name");
+
+        when(rightCollection.getProjectId()).thenReturn(rightProjectId);
+        when(rightCollection.getId()).thenReturn(rightCollectionId);
+        when(rightCollection.getName()).thenReturn("Right Collection");
+        when(rightCollection.getProject()).thenReturn(rightProject);
+        when(rightProject.getName()).thenReturn("Right Project Name");
+
+        // Mock collection elements (documents) - need to fully mock IModule for Document.from()
+        IDataService dataService = mock(IDataService.class);
+        IRevision revision = mock(IRevision.class);
+        when(revision.getName()).thenReturn("1234");
+        when(dataService.getLastStorageRevision()).thenReturn(revision);
+        ILocation location = mock(ILocation.class);
+        when(location.getLocationPath()).thenReturn("/space/doc1");
+
+        // Mock ITrackerProject for documents
+        ITrackerProject leftTrackerProject = mock(ITrackerProject.class);
+        when(leftTrackerProject.getId()).thenReturn(leftProjectId);
+        when(leftTrackerProject.getName()).thenReturn("Left Project Name");
+
+        ITrackerProject rightTrackerProject = mock(ITrackerProject.class);
+        when(rightTrackerProject.getId()).thenReturn(rightProjectId);
+        when(rightTrackerProject.getName()).thenReturn("Right Project Name");
+
+        IModule leftDoc = mock(IModule.class);
+        when(leftDoc.getId()).thenReturn("doc1");
+        when(leftDoc.getModuleFolder()).thenReturn("folder1");
+        when(leftDoc.getProject()).thenReturn(leftTrackerProject);
+        when(leftDoc.getModuleLocation()).thenReturn(location);
+        when(leftDoc.getTitleOrName()).thenReturn("Doc 1");
+        when(leftDoc.getRevision()).thenReturn("123");
+        when(leftDoc.getLastRevision()).thenReturn("123");
+        when(leftDoc.getDataSvc()).thenReturn(dataService);
+
+        IModule rightDoc = mock(IModule.class);
+        when(rightDoc.getId()).thenReturn("doc1");
+        when(rightDoc.getModuleFolder()).thenReturn("folder1");
+        when(rightDoc.getProject()).thenReturn(rightTrackerProject);
+        when(rightDoc.getModuleLocation()).thenReturn(location);
+        when(rightDoc.getTitleOrName()).thenReturn("Doc 1");
+        when(rightDoc.getRevision()).thenReturn("123");
+        when(rightDoc.getLastRevision()).thenReturn("123");
+        when(rightDoc.getDataSvc()).thenReturn(dataService);
+
+        IBaselineCollectionElement leftElement = mock(IBaselineCollectionElement.class);
+        when(leftElement.getObjectWithRevision()).thenReturn(leftDoc);
+
+        IBaselineCollectionElement rightElement = mock(IBaselineCollectionElement.class);
+        when(rightElement.getObjectWithRevision()).thenReturn(rightDoc);
+
+        when(leftCollection.getElements()).thenReturn(List.of(leftElement));
+        when(rightCollection.getElements()).thenReturn(List.of(rightElement));
+
+        when(polarionService.getCollection(leftProjectId, leftCollectionId)).thenReturn(leftCollection);
+        when(polarionService.getCollection(rightProjectId, rightCollectionId)).thenReturn(rightCollection);
+
+        CollectionsDiffParams params = new CollectionsDiffParams(
+                DocumentsCollection.builder().projectId(leftProjectId).id(leftCollectionId).build(),
+                DocumentsCollection.builder().projectId(rightProjectId).id(rightCollectionId).build()
+        );
+
+        CollectionsDiff result = diffService.getCollectionsDiff(params);
+
+        assertNotNull(result);
+        assertEquals(leftProjectId, result.getLeftCollection().getProjectId());
+        assertEquals(rightProjectId, result.getRightCollection().getProjectId());
+        assertEquals("Left Collection", result.getLeftCollection().getName());
+        assertEquals("Right Collection", result.getRightCollection().getName());
+        assertNotNull(result.getPairedDocuments());
+        assertEquals(1, result.getPairedDocuments().size());
+    }
+
+    @Test
+    void testGetCollectionsDiffWithUnmatchedDocuments() {
+        String projectId = "project";
+
+        IBaselineCollection leftCollection = mock(IBaselineCollection.class);
+        IBaselineCollection rightCollection = mock(IBaselineCollection.class);
+        IProject project = mock(IProject.class);
+
+        when(leftCollection.getProjectId()).thenReturn(projectId);
+        when(leftCollection.getId()).thenReturn("left");
+        when(leftCollection.getName()).thenReturn("Left");
+        when(leftCollection.getProject()).thenReturn(project);
+        lenient().when(project.getName()).thenReturn("Project");
+        lenient().when(project.getId()).thenReturn(projectId);
+
+        when(rightCollection.getProjectId()).thenReturn(projectId);
+        when(rightCollection.getId()).thenReturn("right");
+        when(rightCollection.getName()).thenReturn("Right");
+        when(rightCollection.getProject()).thenReturn(project);
+
+        // Mock required for Document.from()
+        IDataService dataService = mock(IDataService.class);
+        IRevision revision = mock(IRevision.class);
+        lenient().when(revision.getName()).thenReturn("1234");
+        lenient().when(dataService.getLastStorageRevision()).thenReturn(revision);
+        ILocation location = mock(ILocation.class);
+        lenient().when(location.getLocationPath()).thenReturn("/space/doc1");
+
+        // Mock ITrackerProject for documents
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        lenient().when(trackerProject.getId()).thenReturn(projectId);
+        lenient().when(trackerProject.getName()).thenReturn("Project");
+
+        // Left has doc1, right has doc2 - no match
+        IModule leftDoc = mock(IModule.class);
+        when(leftDoc.getId()).thenReturn("doc1");
+        when(leftDoc.getModuleFolder()).thenReturn("folder1");
+        when(leftDoc.getProject()).thenReturn(trackerProject);
+        when(leftDoc.getModuleLocation()).thenReturn(location);
+        when(leftDoc.getTitleOrName()).thenReturn("Doc 1");
+        when(leftDoc.getRevision()).thenReturn("123");
+        when(leftDoc.getLastRevision()).thenReturn("123");
+        when(leftDoc.getDataSvc()).thenReturn(dataService);
+
+        IModule rightDoc = mock(IModule.class);
+        when(rightDoc.getId()).thenReturn("doc2");
+        lenient().when(rightDoc.getModuleFolder()).thenReturn("folder2");
+
+        IBaselineCollectionElement leftElement = mock(IBaselineCollectionElement.class);
+        when(leftElement.getObjectWithRevision()).thenReturn(leftDoc);
+
+        IBaselineCollectionElement rightElement = mock(IBaselineCollectionElement.class);
+        when(rightElement.getObjectWithRevision()).thenReturn(rightDoc);
+
+        when(leftCollection.getElements()).thenReturn(List.of(leftElement));
+        when(rightCollection.getElements()).thenReturn(List.of(rightElement));
+
+        when(polarionService.getCollection(projectId, "left")).thenReturn(leftCollection);
+        when(polarionService.getCollection(projectId, "right")).thenReturn(rightCollection);
+
+        CollectionsDiffParams params = new CollectionsDiffParams(
+                DocumentsCollection.builder().projectId(projectId).id("left").build(),
+                DocumentsCollection.builder().projectId(projectId).id("right").build()
+        );
+
+        CollectionsDiff result = diffService.getCollectionsDiff(params);
+
+        assertNotNull(result);
+        assertEquals(1, result.getPairedDocuments().size());
+        // Left doc has no counterpart
+        assertNotNull(result.getPairedDocuments().iterator().next().getLeftDocument());
+        assertNull(result.getPairedDocuments().iterator().next().getRightDocument());
+    }
+
+    @Test
+    void testGetDocumentsFieldsDiff() {
+        ITrackerProject project = mock(ITrackerProject.class);
+        when(project.getId()).thenReturn("project1");
+        when(project.getName()).thenReturn("Project 1");
+
+        IModule leftDocument = createMockedModule("project1", project);
+        IModule rightDocument = createMockedModule("project1", project);
+
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "left", "rev1")).thenReturn(leftDocument);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "right", "rev1")).thenReturn(rightDocument);
+
+        when(leftDocument.getCustomFieldsList()).thenReturn(List.of("field1", "field2"));
+        when(rightDocument.getCustomFieldsList()).thenReturn(List.of("field1", "field2"));
+
+        when(leftDocument.getFieldLabel(anyString())).thenAnswer(i -> i.getArguments()[0]);
+        when(rightDocument.getFieldLabel(anyString())).thenAnswer(i -> i.getArguments()[0]);
+
+        ICustomField customFieldPrototype = mock(ICustomField.class);
+        when(customFieldPrototype.getType()).thenReturn(mock(IEnumType.class));
+        when(leftDocument.getCustomFieldPrototype(anyString())).thenReturn(customFieldPrototype);
+        when(rightDocument.getCustomFieldPrototype(anyString())).thenReturn(customFieldPrototype);
+
+        when(polarionService.getFieldValue(any(), anyString(), any())).thenReturn("value");
+        when(polarionService.renderField(any(IModule.class), anyString())).thenReturn("<div>value</div>");
+        when(polarionService.userAuthorizedForMerge("project1")).thenReturn(true);
+
+        DocumentIdentifier leftDocIdentifier = DocumentIdentifier.builder()
+                .projectId("project1").spaceId("space1").name("left").revision("rev1").build();
+        DocumentIdentifier rightDocIdentifier = DocumentIdentifier.builder()
+                .projectId("project1").spaceId("space1").name("right").revision("rev1").build();
+
+        DocumentsFieldsDiff result = diffService.getDocumentsFieldsDiff(leftDocIdentifier, rightDocIdentifier, false, true);
+
+        assertNotNull(result);
+        assertNotNull(result.getLeftDocument());
+        assertNotNull(result.getRightDocument());
+        assertNotNull(result.getPairedFields());
+        assertEquals(2, result.getPairedFields().size());
+    }
+
+    @Test
+    void testGetDocumentsFieldsDiffWithDifferentFields() {
+        ITrackerProject project = mock(ITrackerProject.class);
+        when(project.getId()).thenReturn("project1");
+        when(project.getName()).thenReturn("Project 1");
+
+        IModule leftDocument = createMockedModule("project1", project);
+        IModule rightDocument = createMockedModule("project1", project);
+
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "left", null)).thenReturn(leftDocument);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "right", null)).thenReturn(rightDocument);
+
+        // Left has field1, field2; right has field2, field3
+        when(leftDocument.getCustomFieldsList()).thenReturn(List.of("field1", "field2"));
+        when(rightDocument.getCustomFieldsList()).thenReturn(List.of("field2", "field3"));
+
+        when(leftDocument.getFieldLabel(anyString())).thenAnswer(i -> i.getArguments()[0]);
+        when(rightDocument.getFieldLabel(anyString())).thenAnswer(i -> i.getArguments()[0]);
+
+        ICustomField customFieldPrototype = mock(ICustomField.class);
+        when(customFieldPrototype.getType()).thenReturn(mock(IEnumType.class));
+        when(leftDocument.getCustomFieldPrototype(anyString())).thenReturn(customFieldPrototype);
+        when(rightDocument.getCustomFieldPrototype(anyString())).thenReturn(customFieldPrototype);
+
+        when(polarionService.getFieldValue(any(), anyString(), any())).thenReturn("value");
+        when(polarionService.renderField(any(IModule.class), anyString())).thenReturn("<div>value</div>");
+        when(polarionService.userAuthorizedForMerge("project1")).thenReturn(true);
+
+        DocumentIdentifier leftDocIdentifier = DocumentIdentifier.builder()
+                .projectId("project1").spaceId("space1").name("left").build();
+        DocumentIdentifier rightDocIdentifier = DocumentIdentifier.builder()
+                .projectId("project1").spaceId("space1").name("right").build();
+
+        // Test with compareOnlyMutualFields = true (should only return field2)
+        DocumentsFieldsDiff result = diffService.getDocumentsFieldsDiff(leftDocIdentifier, rightDocIdentifier, false, true);
+        assertEquals(1, result.getPairedFields().size());
+
+        // Test with compareOnlyMutualFields = false (should return all 3 fields)
+        result = diffService.getDocumentsFieldsDiff(leftDocIdentifier, rightDocIdentifier, false, false);
+        assertEquals(3, result.getPairedFields().size());
+    }
+
+    private IModule createMockedModule(String projectId, ITrackerProject project) {
+        IModule document = mock(IModule.class);
+        IDataService dataService = mock(IDataService.class);
+        IRevision revision = mock(IRevision.class);
+        ILocation location = mock(ILocation.class);
+
+        lenient().when(revision.getName()).thenReturn("1234");
+        lenient().when(dataService.getLastStorageRevision()).thenReturn(revision);
+        lenient().when(location.getLocationPath()).thenReturn("/space/doc");
+
+        lenient().when(document.getProject()).thenReturn(project);
+        lenient().when(document.getProjectId()).thenReturn(projectId);
+        lenient().when(document.getModuleLocation()).thenReturn(location);
+        lenient().when(document.getModuleFolder()).thenReturn("space");
+        lenient().when(document.getId()).thenReturn("doc");
+        lenient().when(document.getTitleOrName()).thenReturn("Document");
+        lenient().when(document.getRevision()).thenReturn("123");
+        lenient().when(document.getLastRevision()).thenReturn("123");
+        lenient().when(document.getDataSvc()).thenReturn(dataService);
+
+        return document;
+    }
 
 }
