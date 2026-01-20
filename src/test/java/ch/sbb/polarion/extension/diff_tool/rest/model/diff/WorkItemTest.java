@@ -82,6 +82,5 @@ class WorkItemTest {
         workItem2 = WorkItem.of(wiMock2, "2", false, false);
 
         assertTrue(workItem1.sameDocument(workItem2));
-
     }
 }

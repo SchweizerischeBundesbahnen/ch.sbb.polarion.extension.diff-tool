@@ -1023,29 +1023,6 @@ class PolarionServiceTest {
         assertTrue(result.isEmpty());
     }
 
-    @Test
-    void testGetModuleWithDocumentIdentifierDelegatesToParent() {
-        // This test verifies that getModule(DocumentIdentifier) properly extracts parameters
-        // and delegates to the parent class's getModule method
-        DocumentIdentifier identifier = DocumentIdentifier.builder()
-                .projectId(PROJECT_ID)
-                .spaceId("space")
-                .name("document")
-                .revision("100")
-                .build();
-
-        // The actual module retrieval is handled by the parent class's getModule method
-        // which is tested separately. Here we just verify the delegation pattern works
-        assertNotNull(identifier.getProjectId());
-        assertNotNull(identifier.getSpaceId());
-        assertNotNull(identifier.getName());
-        assertNotNull(identifier.getRevision());
-        assertEquals(PROJECT_ID, identifier.getProjectId());
-        assertEquals("space", identifier.getSpaceId());
-        assertEquals("document", identifier.getName());
-        assertEquals("100", identifier.getRevision());
-    }
-
     private IModule mockDocument(String name, Date created) {
         IModule document = mock(IModule.class);
         lenient().when(document.getProjectId()).thenReturn(PROJECT_ID);
