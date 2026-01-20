@@ -17,10 +17,12 @@ import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
 import com.polarion.alm.projects.IProjectService;
+import com.polarion.alm.projects.model.IFolder;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.transaction.RunnableInWriteTransaction;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.internal.InternalWriteTransaction;
+import com.polarion.alm.tracker.IModuleManager;
 import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
@@ -35,6 +37,7 @@ import com.polarion.platform.persistence.IDataService;
 import com.polarion.platform.persistence.IEnumOption;
 import com.polarion.platform.persistence.IEnumeration;
 import com.polarion.platform.persistence.model.IPObject;
+import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.platform.persistence.model.IPrototype;
 import com.polarion.platform.persistence.spi.PObjectList;
 import com.polarion.platform.security.ISecurityService;
@@ -42,6 +45,7 @@ import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.ICustomField;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IType;
+import com.polarion.subterra.base.location.ILocation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -754,6 +758,268 @@ class PolarionServiceTest {
         assertEquals("Role 2", role2.getName());
         assertNull(role2.getWorkItemTypeId());
         assertNull(role2.getWorkItemTypeName());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testGetProjects() {
+        IProject project1 = mock(IProject.class, RETURNS_DEEP_STUBS);
+        IProject project2 = mock(IProject.class, RETURNS_DEEP_STUBS);
+        IProject project3 = mock(IProject.class, RETURNS_DEEP_STUBS);
+
+        when(project1.can().read()).thenReturn(true);
+        when(project2.can().read()).thenReturn(false);
+        when(project3.can().read()).thenReturn(true);
+
+        IPObjectList<IProject> projectList = mock(IPObjectList.class);
+        when(projectList.stream()).thenReturn(java.util.stream.Stream.of(project1, project2, project3));
+        when(projectService.searchProjects("", "name")).thenReturn(projectList);
+
+        List<IProject> result = polarionService.getProjects();
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(project1));
+        assertTrue(result.contains(project3));
+        assertFalse(result.contains(project2));
+    }
+
+    @Test
+    void testGetSpaces() {
+        IFolder folder1 = mock(IFolder.class, RETURNS_DEEP_STUBS);
+        IFolder folder2 = mock(IFolder.class, RETURNS_DEEP_STUBS);
+        IFolder folder3 = mock(IFolder.class, RETURNS_DEEP_STUBS);
+
+        when(folder1.can().read()).thenReturn(true);
+        when(folder2.can().read()).thenReturn(false);
+        when(folder3.can().read()).thenReturn(true);
+
+        when(trackerService.getFolderManager().getFolders(PROJECT_ID)).thenReturn(List.of(folder1, folder2, folder3));
+
+        List<IFolder> result = polarionService.getSpaces(PROJECT_ID);
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(folder1));
+        assertTrue(result.contains(folder3));
+        assertFalse(result.contains(folder2));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testGetDocuments() {
+        IProject project = mock(IProject.class);
+        when(projectService.getProject(PROJECT_ID)).thenReturn(project);
+
+        IModuleManager moduleManager = mock(IModuleManager.class);
+        when(trackerService.getModuleManager()).thenReturn(moduleManager);
+
+        IModule module1 = mock(IModule.class, RETURNS_DEEP_STUBS);
+        IModule module2 = mock(IModule.class, RETURNS_DEEP_STUBS);
+        IModule module3 = mock(IModule.class, RETURNS_DEEP_STUBS);
+
+        when(module1.can().read()).thenReturn(true);
+        when(module2.can().read()).thenReturn(false);
+        when(module3.can().read()).thenReturn(true);
+
+        IPObjectList<IModule> moduleList = mock(IPObjectList.class);
+        when(moduleList.stream()).thenReturn(java.util.stream.Stream.of(module1, module2, module3));
+        when(moduleManager.getModules(eq(project), any(ILocation.class))).thenReturn(moduleList);
+
+        List<IModule> result = polarionService.getDocuments(PROJECT_ID, "spaceId");
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(module1));
+        assertTrue(result.contains(module3));
+        assertFalse(result.contains(module2));
+    }
+
+    @Test
+    void testGetLinkRoles() {
+        IProject project = mock(IProject.class);
+        when(projectService.getProject(PROJECT_ID)).thenReturn(project);
+
+        ITrackerProject trackerProject = mock(ITrackerProject.class, RETURNS_DEEP_STUBS);
+        when(trackerService.getTrackerProject(project)).thenReturn(trackerProject);
+
+        ITypeOpt wiType1 = mock(ITypeOpt.class);
+        when(wiType1.getId()).thenReturn("requirement");
+
+        ITypeOpt wiType2 = mock(ITypeOpt.class);
+        when(wiType2.getId()).thenReturn("testcase");
+
+        when(trackerProject.getWorkItemTypeEnum().getAllOptions()).thenReturn(List.of(wiType1, wiType2));
+
+        ILinkRoleOpt role1 = mock(ILinkRoleOpt.class);
+        when(role1.getId()).thenReturn("parent");
+
+        ILinkRoleOpt role2 = mock(ILinkRoleOpt.class);
+        when(role2.getId()).thenReturn("verifies");
+
+        when(trackerProject.getWorkItemLinkRoleEnum().getAvailableOptions("requirement")).thenReturn(List.of(role1));
+        when(trackerProject.getWorkItemLinkRoleEnum().getAvailableOptions("testcase")).thenReturn(List.of(role1, role2));
+
+        Collection<ILinkRoleOpt> result = polarionService.getLinkRoles(PROJECT_ID);
+
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(r -> "parent".equals(r.getId())));
+        assertTrue(result.stream().anyMatch(r -> "verifies".equals(r.getId())));
+    }
+
+    @Test
+    void testGetLinkRoleByIdFound() {
+        ITrackerProject trackerProject = mock(ITrackerProject.class, RETURNS_DEEP_STUBS);
+
+        ITypeOpt wiType = mock(ITypeOpt.class);
+        when(wiType.getId()).thenReturn("requirement");
+        when(trackerProject.getWorkItemTypeEnum().getAllOptions()).thenReturn(List.of(wiType));
+
+        ILinkRoleOpt role = mock(ILinkRoleOpt.class);
+        when(role.getId()).thenReturn("parent");
+        when(trackerProject.getWorkItemLinkRoleEnum().getAvailableOptions("requirement")).thenReturn(List.of(role));
+
+        ILinkRoleOpt result = polarionService.getLinkRoleById("parent", trackerProject);
+
+        assertNotNull(result);
+        assertEquals("parent", result.getId());
+    }
+
+    @Test
+    void testGetLinkRoleByIdNotFound() {
+        ITrackerProject trackerProject = mock(ITrackerProject.class, RETURNS_DEEP_STUBS);
+
+        ITypeOpt wiType = mock(ITypeOpt.class);
+        when(wiType.getId()).thenReturn("requirement");
+        when(trackerProject.getWorkItemTypeEnum().getAllOptions()).thenReturn(List.of(wiType));
+
+        ILinkRoleOpt role = mock(ILinkRoleOpt.class);
+        when(role.getId()).thenReturn("parent");
+        when(trackerProject.getWorkItemLinkRoleEnum().getAvailableOptions("requirement")).thenReturn(List.of(role));
+
+        ILinkRoleOpt result = polarionService.getLinkRoleById("nonexistent", trackerProject);
+
+        assertNull(result);
+    }
+
+    @Test
+    void testGetWorkItems() {
+        IProject project = mock(IProject.class);
+        when(projectService.getProject(PROJECT_ID)).thenReturn(project);
+
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        when(trackerService.getTrackerProject(project)).thenReturn(trackerProject);
+
+        IWorkItem workItem1 = mock(IWorkItem.class);
+        when(workItem1.isUnresolvable()).thenReturn(false);
+
+        IWorkItem workItem2 = mock(IWorkItem.class);
+        when(workItem2.isUnresolvable()).thenReturn(true);
+
+        IWorkItem workItem3 = mock(IWorkItem.class);
+        when(workItem3.isUnresolvable()).thenReturn(false);
+
+        when(trackerProject.getWorkItem("WI-1")).thenReturn(workItem1);
+        when(trackerProject.getWorkItem("WI-2")).thenReturn(workItem2);
+        when(trackerProject.getWorkItem("WI-3")).thenReturn(workItem3);
+
+        List<IWorkItem> result = polarionService.getWorkItems(PROJECT_ID, List.of("WI-1", "WI-2", "WI-3"));
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(workItem1));
+        assertTrue(result.contains(workItem3));
+        assertFalse(result.contains(workItem2));
+    }
+
+    @Test
+    void testGetWorkItemsWithEmptyIds() {
+        IProject project = mock(IProject.class);
+        when(projectService.getProject(PROJECT_ID)).thenReturn(project);
+
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        when(trackerService.getTrackerProject(project)).thenReturn(trackerProject);
+
+        IWorkItem workItem1 = mock(IWorkItem.class);
+        when(workItem1.isUnresolvable()).thenReturn(false);
+        when(trackerProject.getWorkItem("WI-1")).thenReturn(workItem1);
+
+        List<String> idsWithEmpty = new ArrayList<>();
+        idsWithEmpty.add("WI-1");
+        idsWithEmpty.add("");
+        idsWithEmpty.add("  ");
+        idsWithEmpty.add(null);
+
+        List<IWorkItem> result = polarionService.getWorkItems(PROJECT_ID, idsWithEmpty);
+
+        assertEquals(1, result.size());
+        assertTrue(result.contains(workItem1));
+    }
+
+    @Test
+    void testGetPairedWorkItemsWithLinkRole() {
+        IWorkItem sourceWorkItem = mock(IWorkItem.class);
+
+        ILinkedWorkItemStruct linkStruct1 = mock(ILinkedWorkItemStruct.class);
+        ILinkRoleOpt linkRole1 = mock(ILinkRoleOpt.class);
+        when(linkRole1.getId()).thenReturn("pairedWith");
+        when(linkStruct1.getLinkRole()).thenReturn(linkRole1);
+
+        IWorkItem linkedWorkItem1 = mock(IWorkItem.class);
+        when(linkedWorkItem1.isUnresolvable()).thenReturn(false);
+        when(linkedWorkItem1.getProjectId()).thenReturn("targetProject");
+        when(linkStruct1.getLinkedItem()).thenReturn(linkedWorkItem1);
+
+        ILinkedWorkItemStruct linkStruct2 = mock(ILinkedWorkItemStruct.class);
+        ILinkRoleOpt linkRole2 = mock(ILinkRoleOpt.class);
+        lenient().when(linkRole2.getId()).thenReturn("otherRole");
+        when(linkStruct2.getLinkRole()).thenReturn(linkRole2);
+
+        IWorkItem linkedWorkItem2 = mock(IWorkItem.class);
+        lenient().when(linkedWorkItem2.isUnresolvable()).thenReturn(false);
+        lenient().when(linkedWorkItem2.getProjectId()).thenReturn("targetProject");
+        lenient().when(linkStruct2.getLinkedItem()).thenReturn(linkedWorkItem2);
+
+        when(sourceWorkItem.getLinkedWorkItemsStructsDirect()).thenReturn(List.of(linkStruct1));
+        when(sourceWorkItem.getLinkedWorkItemsStructsBack()).thenReturn(List.of(linkStruct2));
+
+        List<IWorkItem> result = polarionService.getPairedWorkItems(sourceWorkItem, "targetProject", "pairedWith");
+
+        assertEquals(1, result.size());
+        assertEquals(linkedWorkItem1, result.get(0));
+    }
+
+    @Test
+    void testGetPairedWorkItemsWithDifferentProject() {
+        IWorkItem sourceWorkItem = mock(IWorkItem.class);
+
+        ILinkedWorkItemStruct linkStruct = mock(ILinkedWorkItemStruct.class);
+        ILinkRoleOpt linkRole = mock(ILinkRoleOpt.class);
+        when(linkRole.getId()).thenReturn("pairedWith");
+        when(linkStruct.getLinkRole()).thenReturn(linkRole);
+
+        IWorkItem linkedWorkItem = mock(IWorkItem.class);
+        when(linkedWorkItem.isUnresolvable()).thenReturn(false);
+        when(linkedWorkItem.getProjectId()).thenReturn("otherProject");
+        when(linkStruct.getLinkedItem()).thenReturn(linkedWorkItem);
+
+        when(sourceWorkItem.getLinkedWorkItemsStructsDirect()).thenReturn(List.of(linkStruct));
+        when(sourceWorkItem.getLinkedWorkItemsStructsBack()).thenReturn(List.of());
+
+        List<IWorkItem> result = polarionService.getPairedWorkItems(sourceWorkItem, "targetProject", "pairedWith");
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void testGetPairedWorkItemsWithNullLinkRole() {
+        IWorkItem sourceWorkItem = mock(IWorkItem.class);
+
+        ILinkedWorkItemStruct linkStruct = mock(ILinkedWorkItemStruct.class);
+        when(linkStruct.getLinkRole()).thenReturn(null);
+
+        when(sourceWorkItem.getLinkedWorkItemsStructsDirect()).thenReturn(List.of(linkStruct));
+        when(sourceWorkItem.getLinkedWorkItemsStructsBack()).thenReturn(List.of());
+
+        List<IWorkItem> result = polarionService.getPairedWorkItems(sourceWorkItem, "targetProject", "pairedWith");
+
+        assertTrue(result.isEmpty());
     }
 
     private IModule mockDocument(String name, Date created) {
