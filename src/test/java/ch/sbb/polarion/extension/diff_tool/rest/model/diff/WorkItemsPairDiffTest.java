@@ -50,4 +50,32 @@ class WorkItemsPairDiffTest {
         assertEquals("diffLeft", fieldDiff.getDiffLeft());
         assertEquals("diffRight", fieldDiff.getDiffRight());
     }
+
+    @Test
+    void testEmptyDiff() {
+        IWorkItem wiMock1 = mock(IWorkItem.class);
+        when(wiMock1.getId()).thenReturn("id1");
+        IWorkItem wiMock2 = mock(IWorkItem.class);
+        when(wiMock2.getId()).thenReturn("id2");
+
+        CalculatePairsContext calculatePairsContext = mock(CalculatePairsContext.class);
+        IModule leftDocument = mock(IModule.class);
+        when(leftDocument.getProjectId()).thenReturn("projectId");
+        IModule rightDocument = mock(IModule.class);
+        when(rightDocument.getProjectId()).thenReturn("projectId");
+        when(calculatePairsContext.getLeftDocument()).thenReturn(leftDocument);
+        when(calculatePairsContext.getRightDocument()).thenReturn(rightDocument);
+
+        WorkItemsPair workItemsPair = WorkItemsPair.of(Pair.of(wiMock1, wiMock2), calculatePairsContext);
+
+        workItemsPair.getLeftWorkItem().addField(WorkItem.Field.builder().id("id").build());
+        workItemsPair.getRightWorkItem().addField(WorkItem.Field.builder().id("id").build());
+
+        Set<String> fieldIds = new HashSet<>();
+        fieldIds.add("id");
+        fieldIds.add("title");
+        Collection<WorkItemsPairDiff.FieldDiff> fieldDiffs = WorkItemsPairDiff.of(workItemsPair, fieldIds).getFieldDiffs();
+
+        assertEquals(0, fieldDiffs.size());
+    }
 }

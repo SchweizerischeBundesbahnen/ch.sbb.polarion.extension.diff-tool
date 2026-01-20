@@ -22,4 +22,12 @@ class DocumentRevisionTest {
         assertEquals(1, revision1.compareTo(revision2));
     }
 
+    @Test
+    void testDoesNotFailOnInvalidRevision() {
+        DocumentRevision revision1 = new DocumentRevision("asd", "baselineName");
+        DocumentRevision revision2 = DocumentRevision.builder().name("234").build();
+
+        assertDoesNotThrow(() -> revision1.compareTo(revision2));
+    }
+
 }
