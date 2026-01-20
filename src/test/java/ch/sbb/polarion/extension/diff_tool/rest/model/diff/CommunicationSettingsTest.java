@@ -26,7 +26,6 @@ class CommunicationSettingsTest {
 
     @Test
     void testNoArgsConstructorWithNullChunkSize() {
-        CommunicationSettings settings = new CommunicationSettings();
         // Note: With null chunkSize, getChunkSize() would throw NPE due to unboxing
         // This is expected behavior as the class requires chunkSize to be set
         CommunicationSettings settingsWithValue = CommunicationSettings.builder().chunkSize(1).build();
