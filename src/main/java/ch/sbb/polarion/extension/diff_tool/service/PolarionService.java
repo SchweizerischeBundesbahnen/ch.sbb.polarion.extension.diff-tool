@@ -62,7 +62,6 @@ import com.polarion.subterra.base.data.model.ICustomField;
 import com.polarion.subterra.base.location.Location;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 

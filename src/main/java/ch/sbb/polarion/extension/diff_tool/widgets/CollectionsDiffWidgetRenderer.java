@@ -4,6 +4,7 @@ import com.polarion.alm.shared.api.Scope;
 import com.polarion.alm.shared.api.impl.ScopeImpl;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.PrototypeEnum;
+import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import com.polarion.alm.shared.api.model.rp.parameter.DataSet;
 import com.polarion.alm.shared.api.model.rp.parameter.Field;
 import com.polarion.alm.shared.api.model.rp.parameter.FieldsParameter;
@@ -33,7 +34,11 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
     private final DiffWidgetParams params;
 
     public CollectionsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params) {
-        super(context, COLUMNS_PARAMETER, params);
+        this(context, params, new PolarionService());
+    }
+
+    public CollectionsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params, @NotNull PolarionService polarionService) {
+        super(context, COLUMNS_PARAMETER, params, polarionService);
 
         this.params = params;
     }
@@ -44,10 +49,12 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
         wrap.attributes().className("main-pane");
 
         HtmlTagBuilder topPane = wrap.append().tag().div();
-        renderCompareButton(topPane, "Please, select one item in left table and one item in right table to be compared");
+        renderCompareButton(topPane,
+                "Please, select one item in left table and one item in right table to be compared");
 
         HtmlTagBuilder description = topPane.append().tag().div();
-        description.append().tag().p().append().text("Please select one collection in left table and then one collection in right table below which you want to compare and click button above");
+        description.append().tag().p().append().text(
+                "Please select one collection in left table and then one collection in right table below which you want to compare and click button above");
 
         renderLinkRole(wrap);
         renderConfiguration(wrap);
@@ -60,7 +67,8 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
 
         renderQueryPanel(sourceColumn, params.sourceParams());
         if (!context.getDisplayedScope().isGlobal()) {
-            params.sourceParams().dataSet(initDataSet(context.getDisplayedScope(), params.sourceParams().query()));
+            DataSet dataSet = initDataSet(context.getDisplayedScope(), params.sourceParams().query());
+            params.sourceParams().dataSet(dataSet);
         }
         renderTable(sourceColumn, params.sourceParams());
 
@@ -69,7 +77,9 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
 
         renderQueryPanel(targetColumn, params.targetParams()); // This method has a side effect on targetParams parameter, initializing projectId attribute if it's empty
         if (!StringUtils.isBlank(params.targetParams().projectId())) {
-            params.targetParams().dataSet(initDataSet(new ScopeImpl(new ProjectScope(params.targetParams().projectId())), params.targetParams().query()));
+            ProjectScope projectScope = new ProjectScope(params.targetParams().projectId());
+            DataSet dataSet = initDataSet(new ScopeImpl(projectScope), params.targetParams().query());
+            params.targetParams().dataSet(dataSet);
         }
         renderTable(targetColumn, params.targetParams());
     }
