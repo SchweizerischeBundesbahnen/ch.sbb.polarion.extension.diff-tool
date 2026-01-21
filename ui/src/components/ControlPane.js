@@ -270,6 +270,15 @@ export default function ControlPane({diff_type}) {
                 </label>
               </div>
           }
+          {diff_type === DiffTypes.DOCUMENTS_DIFF &&
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" value="" checked={context.state.copyMissingDocumentAttachments} id="copy-missing-document-attachments"
+                       onChange={() => context.state.setCopyMissingDocumentAttachments(!context.state.copyMissingDocumentAttachments)}/>
+                <label className="form-check-label" htmlFor="copy-missing-document-attachments" title="Copy document attachments which are referenced in rich text fields but missing in the target document.">
+                  Copy missing document attachments
+                </label>
+              </div>
+          }
           <div className="export-controls">
             <h1>Export to PDF</h1>
             <div className="select-set">

@@ -101,6 +101,13 @@
         </dependency>
 
         <dependency>
+            <groupId>com.polarion.subterra.persistence</groupId>
+            <artifactId>subterra-uniform-persistence</artifactId>
+            <version>${polarion.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.polarion.thirdparty</groupId>
             <artifactId>${commons-lang3.artifactId}</artifactId>
             <version>${polarion.version}</version>

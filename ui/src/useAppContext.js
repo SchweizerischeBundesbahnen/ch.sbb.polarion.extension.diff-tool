@@ -12,6 +12,7 @@ export function useAppContext(){
   const [allowReferencedWorkItemMerge, setAllowReferencedWorkItemMerge] = useState(false);
   const [hideChaptersIfNoDifference, setHideChaptersIfNoDifference] = useState(true);
   const [preserveComments, setPreserveComments] = useState(false);
+  const [copyMissingDocumentAttachments, setCopyMissingDocumentAttachments] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [diffsExist, setDiffsExist] = useState(false);
   const [selectedItemsCount, setSelectedItemsCount] = useState(0);
@@ -38,6 +39,8 @@ export function useAppContext(){
     setHideChaptersIfNoDifference,
     preserveComments,
     setPreserveComments,
+    copyMissingDocumentAttachments,
+    setCopyMissingDocumentAttachments,
     dataLoaded,
     setDataLoaded,
     diffsExist,
