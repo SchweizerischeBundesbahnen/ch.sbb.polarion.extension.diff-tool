@@ -45,12 +45,14 @@ import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.IHyperlinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.IModuleAttachment;
 import com.polarion.alm.tracker.model.ITestStepKeyOpt;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.IDataService;
+import com.polarion.platform.persistence.WrapperException;
 import com.polarion.platform.persistence.internal.CustomFieldsService;
 import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.IPObjectList;
@@ -62,6 +64,7 @@ import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IStructType;
 import com.polarion.subterra.base.data.model.IType;
 import com.polarion.subterra.base.location.ILocation;
+import com.polarion.subterra.persistence.location.ObjectAlreadyExistsException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -1646,6 +1649,260 @@ class MergeServiceTest {
 
         WorkItemsMergeContext wrongContext = mock(WorkItemsMergeContext.class, RETURNS_DEEP_STUBS);
         assertEquals(cutCommentsContent, mergeServiceSpy.preProcessRichText(source, target, wrongContext, initialContent, "fieldId"));
+
+        verify(mergeServiceSpy, times(0)).copyRequiredModuleAttachments(any(), any(), any());
+
+        doNothing().when(mergeServiceSpy).copyRequiredModuleAttachments(any(), any(), any());
+        when(context.isCopyMissingDocumentAttachments()).thenReturn(true);
+        mergeServiceSpy.preProcessRichText(source, target, context, initialContent, "fieldId");
+        verify(mergeServiceSpy, times(1)).copyRequiredModuleAttachments(any(), any(), any());
+    }
+
+    @Test
+    void testCopyRequiredModuleAttachments_noAttachmentsInContent() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        when(source.getModule()).thenReturn(sourceModule);
+        when(target.getModule()).thenReturn(targetModule);
+
+        String contentWithoutAttachments = "<div>Some text without attachments</div>";
+
+        mergeService.copyRequiredModuleAttachments(source, target, contentWithoutAttachments);
+
+        verify(targetModule, never()).getAttachment(anyString());
+        verify(sourceModule, never()).getAttachment(anyString());
+        verify(targetModule, never()).createAttachment(anyString(), anyString(), any());
+    }
+
+    @Test
+    void testCopyRequiredModuleAttachments_singleAttachment_copiedSuccessfully() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        when(source.getModule()).thenReturn(sourceModule);
+        when(target.getModule()).thenReturn(targetModule);
+
+        IModuleAttachment sourceAttachment = mock(IModuleAttachment.class);
+        when(sourceAttachment.getFileName()).thenReturn("image.png");
+        when(sourceAttachment.getTitle()).thenReturn("Image Title");
+        InputStream dataStream = mock(InputStream.class);
+        when(sourceAttachment.getDataStream()).thenReturn(dataStream);
+
+        when(sourceModule.getAttachment("image.png")).thenReturn(sourceAttachment);
+        when(targetModule.getAttachment("image.png")).thenReturn(null);
+
+        IModuleAttachment createdAttachment = mock(IModuleAttachment.class);
+        when(targetModule.createAttachment("image.png", "Image Title", dataStream)).thenReturn(createdAttachment);
+
+        String contentWithAttachment = "<div><img src=\"attachment:image.png\" alt=\"test\"/></div>";
+
+        mergeService.copyRequiredModuleAttachments(source, target, contentWithAttachment);
+
+        verify(targetModule).getAttachment("image.png");
+        verify(sourceModule).getAttachment("image.png");
+        verify(targetModule).createAttachment("image.png", "Image Title", dataStream);
+        verify(createdAttachment).save();
+    }
+
+    @Test
+    void testCopyRequiredModuleAttachments_attachmentAlreadyExistsInTarget_skipped() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        when(source.getModule()).thenReturn(sourceModule);
+        when(target.getModule()).thenReturn(targetModule);
+
+        IModuleAttachment existingTargetAttachment = mock(IModuleAttachment.class);
+        when(targetModule.getAttachment("existing.png")).thenReturn(existingTargetAttachment);
+
+        String contentWithAttachment = "<div><img src=\"attachment:existing.png\"/></div>";
+
+        mergeService.copyRequiredModuleAttachments(source, target, contentWithAttachment);
+
+        verify(targetModule).getAttachment("existing.png");
+        verify(sourceModule, never()).getAttachment(anyString());
+        verify(targetModule, never()).createAttachment(anyString(), anyString(), any());
+    }
+
+    @Test
+    void testCopyRequiredModuleAttachments_attachmentNotInSourceModule_skipped() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        when(source.getModule()).thenReturn(sourceModule);
+        when(target.getModule()).thenReturn(targetModule);
+
+        when(targetModule.getAttachment("missing.png")).thenReturn(null);
+        when(sourceModule.getAttachment("missing.png")).thenReturn(null);
+
+        String contentWithAttachment = "<img src=\"attachment:missing.png\"/>";
+
+        mergeService.copyRequiredModuleAttachments(source, target, contentWithAttachment);
+
+        verify(targetModule).getAttachment("missing.png");
+        verify(sourceModule).getAttachment("missing.png");
+        verify(targetModule, never()).createAttachment(anyString(), anyString(), any());
+    }
+
+    @Test
+    void testCopyRequiredModuleAttachments_multipleAttachments_processedCorrectly() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        when(source.getModule()).thenReturn(sourceModule);
+        when(target.getModule()).thenReturn(targetModule);
+
+        // First attachment - should be copied
+        IModuleAttachment sourceAttachment1 = mock(IModuleAttachment.class);
+        when(sourceAttachment1.getFileName()).thenReturn("new1.png");
+        when(sourceAttachment1.getTitle()).thenReturn("New Image 1");
+        InputStream dataStream1 = mock(InputStream.class);
+        when(sourceAttachment1.getDataStream()).thenReturn(dataStream1);
+        when(sourceModule.getAttachment("new1.png")).thenReturn(sourceAttachment1);
+        when(targetModule.getAttachment("new1.png")).thenReturn(null);
+        IModuleAttachment createdAttachment1 = mock(IModuleAttachment.class);
+        when(targetModule.createAttachment("new1.png", "New Image 1", dataStream1)).thenReturn(createdAttachment1);
+
+        // Second attachment - already exists in target
+        IModuleAttachment existingAttachment = mock(IModuleAttachment.class);
+        when(targetModule.getAttachment("existing.png")).thenReturn(existingAttachment);
+
+        // Third attachment - should be copied
+        IModuleAttachment sourceAttachment3 = mock(IModuleAttachment.class);
+        when(sourceAttachment3.getFileName()).thenReturn("new2.jpg");
+        when(sourceAttachment3.getTitle()).thenReturn("New Image 2");
+        InputStream dataStream3 = mock(InputStream.class);
+        when(sourceAttachment3.getDataStream()).thenReturn(dataStream3);
+        when(sourceModule.getAttachment("new2.jpg")).thenReturn(sourceAttachment3);
+        when(targetModule.getAttachment("new2.jpg")).thenReturn(null);
+        IModuleAttachment createdAttachment3 = mock(IModuleAttachment.class);
+        when(targetModule.createAttachment("new2.jpg", "New Image 2", dataStream3)).thenReturn(createdAttachment3);
+
+        String contentWithMultipleAttachments = """
+            <div>
+                <img src="attachment:new1.png" alt="first"/>
+                <img src="attachment:existing.png" alt="second"/>
+                <img src="attachment:new2.jpg" alt="third"/>
+            </div>
+            """;
+
+        mergeService.copyRequiredModuleAttachments(source, target, contentWithMultipleAttachments);
+
+        verify(targetModule).getAttachment("new1.png");
+        verify(targetModule).getAttachment("existing.png");
+        verify(targetModule).getAttachment("new2.jpg");
+        verify(targetModule).createAttachment("new1.png", "New Image 1", dataStream1);
+        verify(targetModule).createAttachment("new2.jpg", "New Image 2", dataStream3);
+        verify(createdAttachment1).save();
+        verify(createdAttachment3).save();
+        verify(sourceModule, never()).getAttachment("existing.png");
+    }
+
+    @Test
+    void testCopyRequiredModuleAttachments_objectAlreadyExistsException_ignored() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        when(source.getModule()).thenReturn(sourceModule);
+        when(target.getModule()).thenReturn(targetModule);
+
+        IModuleAttachment sourceAttachment = mock(IModuleAttachment.class);
+        when(sourceAttachment.getFileName()).thenReturn("duplicate.png");
+        when(sourceAttachment.getTitle()).thenReturn("Duplicate");
+        InputStream dataStream = mock(InputStream.class);
+        when(sourceAttachment.getDataStream()).thenReturn(dataStream);
+
+        when(sourceModule.getAttachment("duplicate.png")).thenReturn(sourceAttachment);
+        when(targetModule.getAttachment("duplicate.png")).thenReturn(null);
+
+        IModuleAttachment createdAttachment = mock(IModuleAttachment.class);
+        when(targetModule.createAttachment("duplicate.png", "Duplicate", dataStream)).thenReturn(createdAttachment);
+
+        ObjectAlreadyExistsException cause = mock(ObjectAlreadyExistsException.class);
+        WrapperException wrapperException = new WrapperException(cause);
+        doThrow(wrapperException).when(createdAttachment).save();
+
+        String contentWithAttachment = "<img src=\"attachment:duplicate.png\"/>";
+
+        // Should not throw - ObjectAlreadyExistsException should be ignored
+        assertDoesNotThrow(() -> mergeService.copyRequiredModuleAttachments(source, target, contentWithAttachment));
+
+        verify(createdAttachment).save();
+    }
+
+    @Test
+    void testCopyRequiredModuleAttachments_wrapperExceptionWithOtherCause_rethrown() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        when(source.getModule()).thenReturn(sourceModule);
+        when(target.getModule()).thenReturn(targetModule);
+
+        IModuleAttachment sourceAttachment = mock(IModuleAttachment.class);
+        when(sourceAttachment.getFileName()).thenReturn("error.png");
+        when(sourceAttachment.getTitle()).thenReturn("Error Image");
+        InputStream dataStream = mock(InputStream.class);
+        when(sourceAttachment.getDataStream()).thenReturn(dataStream);
+
+        when(sourceModule.getAttachment("error.png")).thenReturn(sourceAttachment);
+        when(targetModule.getAttachment("error.png")).thenReturn(null);
+
+        IModuleAttachment createdAttachment = mock(IModuleAttachment.class);
+        when(targetModule.createAttachment("error.png", "Error Image", dataStream)).thenReturn(createdAttachment);
+
+        RuntimeException otherCause = new RuntimeException("Some other error");
+        WrapperException wrapperException = new WrapperException(otherCause);
+        doThrow(wrapperException).when(createdAttachment).save();
+
+        String contentWithAttachment = "<img src=\"attachment:error.png\"/>";
+
+        // Should rethrow WrapperException when cause is not ObjectAlreadyExistsException
+        assertThrows(WrapperException.class, () -> mergeService.copyRequiredModuleAttachments(source, target, contentWithAttachment));
+    }
+
+    @Test
+    void testCopyRequiredModuleAttachments_imgTagVariations() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        when(source.getModule()).thenReturn(sourceModule);
+        when(target.getModule()).thenReturn(targetModule);
+
+        // Attachment with various img tag formats
+        IModuleAttachment sourceAttachment = mock(IModuleAttachment.class);
+        when(sourceAttachment.getFileName()).thenReturn("test.png");
+        when(sourceAttachment.getTitle()).thenReturn("Test");
+        InputStream dataStream = mock(InputStream.class);
+        when(sourceAttachment.getDataStream()).thenReturn(dataStream);
+        when(sourceModule.getAttachment("test.png")).thenReturn(sourceAttachment);
+        when(targetModule.getAttachment("test.png")).thenReturn(null);
+        IModuleAttachment createdAttachment = mock(IModuleAttachment.class);
+        when(targetModule.createAttachment("test.png", "Test", dataStream)).thenReturn(createdAttachment);
+
+        // Test img tag with attributes before src
+        String contentWithAttributesBefore = "<img alt=\"test\" class=\"image\" src=\"attachment:test.png\"/>";
+
+        mergeService.copyRequiredModuleAttachments(source, target, contentWithAttributesBefore);
+
+        verify(targetModule).createAttachment("test.png", "Test", dataStream);
+        verify(createdAttachment).save();
     }
 
     @Test

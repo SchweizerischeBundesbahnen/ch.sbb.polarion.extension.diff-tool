@@ -19,6 +19,7 @@ import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.util.CommentUtils;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
+import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import com.polarion.alm.shared.api.model.document.internal.InternalDocument;
 import com.polarion.alm.shared.api.model.document.internal.InternalUpdatableDocument;
 import com.polarion.alm.shared.api.model.wi.WorkItemReference;
@@ -40,18 +41,21 @@ import com.polarion.alm.tracker.model.IAttachment;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.ILinkedWorkItemStruct;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.IModuleAttachment;
 import com.polarion.alm.tracker.model.ITestStepKeyOpt;
 import com.polarion.alm.tracker.model.ITestSteps;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.ICustomFieldsService;
+import com.polarion.platform.persistence.WrapperException;
 import com.polarion.platform.persistence.spi.EnumOption;
 import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.ICustomField;
 import com.polarion.subterra.base.data.model.IEnumType;
 import com.polarion.subterra.base.data.model.IListType;
 import com.polarion.subterra.base.data.model.IStructType;
+import com.polarion.subterra.persistence.location.ObjectAlreadyExistsException;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -734,7 +738,33 @@ public class MergeService {
         List<String> commentIds = context instanceof IPreserveCommentsContext preserveCommentsContext && preserveCommentsContext.isPreserveComments() &&
                 polarionService.getFieldValue(target, fieldKey) instanceof Text targetText ? CommentUtils.extractCommentIds(targetText.convertToHTML().getContent()) : List.of();
         String newContent = polarionService.replaceLinksToPairedWorkItems(source, target, context.getLinkRole(), CommentUtils.removeComments(richTextContent));
+        if (context instanceof DocumentsMergeContext mergeContext && mergeContext.isCopyMissingDocumentAttachments()) {
+            copyRequiredModuleAttachments(source, target, newContent);
+        }
         return CommentUtils.appendComments(newContent, commentIds);
+    }
+
+    @VisibleForTesting
+    void copyRequiredModuleAttachments(IWorkItem source, IWorkItem target, String content) {
+        IModule sourceModule = source.getModule();
+        IModule targetModule = target.getModule();
+        RegexMatcher.get("<img[^>]+src=\"attachment:(?<attachmentFilename>[^\"]+)\"").processEntry(content, engine -> {
+            String attachmentFilename = engine.group("attachmentFilename");
+            if (targetModule.getAttachment(attachmentFilename) == null) {
+                IModuleAttachment sourceAttachment = sourceModule.getAttachment(attachmentFilename);
+                if (sourceAttachment != null) {
+                    IModuleAttachment attachment = targetModule.createAttachment(sourceAttachment.getFileName(), sourceAttachment.getTitle(), sourceAttachment.getDataStream());
+                    try {
+                        attachment.save();
+                    } catch (WrapperException e) {
+                        // ignore ObjectAlreadyExistsException: probably attachment was already created when processing another rich text value
+                        if (!(e.getCause() instanceof ObjectAlreadyExistsException)) {
+                            throw e;
+                        }
+                    }
+                }
+            }
+        });
     }
 
     @VisibleForTesting

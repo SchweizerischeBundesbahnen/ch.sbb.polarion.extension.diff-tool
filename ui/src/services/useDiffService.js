@@ -225,7 +225,7 @@ export default function useDiffService() {
     return [];
   };
 
-  const sendDocumentsMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, allowReferencedWorkItemMerge, preserveComments) => {
+  const sendDocumentsMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, allowReferencedWorkItemMerge, preserveComments, copyMissingDocumentAttachments) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
     leftDocument.moduleXmlRevision = docsData.leftDocument.moduleXmlRevision;
@@ -245,6 +245,7 @@ export default function useDiffService() {
           pairs: filterRedundant(mergingContext.getSelectedValues()),
           allowReferencedWorkItemMerge: allowReferencedWorkItemMerge,
           preserveComments: preserveComments,
+          copyMissingDocumentAttachments: copyMissingDocumentAttachments,
         }),
         contentType: "application/json"
       })
