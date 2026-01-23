@@ -64,8 +64,7 @@ public class BaseFormExtension implements IFormExtension {
             String form = ScopeUtils.getFileContent("webapp/diff-tool/html/%s.html".formatted(htmlFileName));
 
             List<IProject> allProjects = polarionService.getProjects();
-            form = form.replace(PROJECT_OPTIONS_PLACEHOLDER, "<option disabled selected value> --- select project --- </option>"
-                    + allProjects.stream().map(this::getProjectOption).collect(Collectors.joining()));
+            form = form.replace(PROJECT_OPTIONS_PLACEHOLDER, allProjects.stream().map(this::getProjectOption).collect(Collectors.joining()));
 
             List<ILinkRoleOpt> linkRoles = new ArrayList<>(polarionService.getLinkRoles(module.getProjectId()));
             if (allowEmptyLinkRole) {

@@ -1,18 +1,18 @@
-Common = {
+export default class GenericMixin {
 
-  loadSpaces: function (diff, postActionCallback) {
+  loadSpaces(diff, postActionCallback) {
     const selectedProject = document.getElementById(`${this.prefix(diff)}-project-selector`).value;
-    Common.actionInProgress({inProgress: true, message: "Loading spaces", diff: diff});
     const spaceSelector = document.getElementById(`${this.prefix(diff)}-space-selector`);
-    spaceSelector.innerHTML = "<option disabled selected value> --- select space --- </option>"; // Clear previously loaded content
-    if(!selectedProject) {
+    spaceSelector.innerHTML = "<option disabled selected value> --- select space --- </option>";
+    if (!selectedProject) {
       return;
     }
+    this.actionInProgress({inProgress: true, message: "Loading spaces", diff: diff});
     this.callAsync({
       url: `/polarion/diff-tool/rest/internal/projects/${selectedProject}/spaces`
     }).then((response) => {
       this.actionInProgress({inProgress: false, diff: diff});
-      for (let {id, name} of response) {
+      for (const {id, name} of response) {
         const option = document.createElement('option');
         option.value = id;
         option.text = name;
@@ -26,34 +26,33 @@ Common = {
       this.actionInProgress({inProgress: false, diff: diff});
       this.showAlert({alertType: "error", message: "Error occurred loading spaces", diff: diff});
     });
-  },
+  }
 
-  reloadSettings: function (projectId, diff) {
+  reloadSettings(projectId, diff) {
     this.actionInProgress({inProgress: true, diff: diff});
     this.callAsync({
       url: `/polarion/diff-tool/rest/internal/settings/diff/names?scope=project/${projectId}/`
     }).then((response) => {
       this.actionInProgress({inProgress: false, diff: diff});
       const configSelector = document.getElementById(`${this.prefix(diff)}-config-selector`);
-      configSelector.innerHTML = ""; // Clear previously loaded content
-      for (let {name} of response) {
+      configSelector.innerHTML = "";
+      for (const {name} of response) {
         const option = document.createElement('option');
         option.value = name;
         option.text = name;
         configSelector.appendChild(option);
       }
-      this.settingsProjectId = projectId;
     }).catch(() => {
       this.actionInProgress({inProgress: false, diff: diff});
       this.showAlert({alertType: "error", message: `Error occurred loading project [${projectId}] diff configuration`, diff: diff});
     });
-  },
+  }
 
-  callAsync: function ({method = "GET", url, body = null}) {
+  callAsync({method = "GET", url, body = null}) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open(method, url, true);
-      xhr.setRequestHeader('Content-Type', 'application/json')
+      xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.responseType = "json";
 
       xhr.send(body);
@@ -63,7 +62,7 @@ Common = {
           if (xhr.status === 200 || xhr.status === 204) {
             resolve(xhr.response);
           } else {
-            reject(xhr)
+            reject(xhr);
           }
         }
       };
@@ -71,9 +70,9 @@ Common = {
         reject(error);
       };
     });
-  },
+  }
 
-  actionInProgress: function ({inProgress, message, diff}) {
+  actionInProgress({inProgress, message, diff}) {
     if (inProgress) {
       this.hideAlerts(diff);
     }
@@ -86,23 +85,23 @@ Common = {
     } else {
       document.querySelector(`.${this.prefix(diff)}.form-wrapper .in-progress-overlay`).classList.remove("show");
     }
-  },
+  }
 
-  showAlert: function ({alertType, message, diff}) {
+  showAlert({alertType, message, diff}) {
     const alert = document.querySelector(`.${this.prefix(diff)}.form-wrapper .alert.alert-${alertType}`);
     if (alert) {
       alert.innerText = message;
       alert.style.display = "block";
     }
-  },
+  }
 
-  hideAlerts: function (diff) {
+  hideAlerts(diff) {
     document.querySelectorAll(`.${this.prefix(diff)}.form-wrapper .alert`).forEach(alert => {
       alert.style.display = "none";
     });
-  },
+  }
 
-  prefix: function (diff) {
+  prefix(diff) {
     return diff ? "comparison" : "copy";
   }
 }

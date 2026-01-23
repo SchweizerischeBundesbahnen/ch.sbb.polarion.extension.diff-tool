@@ -288,3 +288,52 @@ a, td, div, li, ul, input, button {
 .polarion-DiffTool .polarion-TestsExecutionButton-buttons-defaultCursor .polarion-TestsExecutionButton-labelTextNew {
     color: gray;
 }
+
+.searchable-dropdown {
+    position: relative;
+    width: auto;
+    font-family: "Segoe UI", "Selawik", "Open Sans", Arial, sans-serif;
+}
+
+.searchable-dropdown input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 2px 2rem 4px .4rem;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.searchable-dropdown::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 40%;
+    width: 6px;
+    height: 6px;
+    background: transparent url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAOUlEQVR4nGNgwAOKGRgY/qNhkBgDCwMDw0UkwasMDAysMF22DAwM/6ASjuhGLmVgYFiCzS5JKAYDACJtDIY1VpdwAAAAAElFTkSuQmCC") no-repeat;
+}
+
+.searchable-dropdown.open::after {
+    transform: rotate(180deg);
+}
+
+.searchable-dropdown-options {
+    background: #fff;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 9999;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+}
+
+.searchable-dropdown-options .option {
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.searchable-dropdown-options .option:hover {
+    background-color: #f2f2f2;
+}

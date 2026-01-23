@@ -1,7 +1,7 @@
-<link href='/polarion/diff-tool/ui/css/common.css' rel='stylesheet' onload='$.when(
-                $.getScript("/polarion/diff-tool/ui/js/diff-tool.js"),
-                $.getScript("/polarion/diff-tool/ui/js/common.js")
-             ).done(function() { DiffTool.init({SOURCE_DOC_PARAMS}); })'>
+<link href='/polarion/diff-tool/ui/css/common.css' rel='stylesheet'
+      onload='import("/polarion/diff-tool/ui/js/modules/DiffTool.js")
+                .then(module => new module.default({SOURCE_DOC_PARAMS}))
+                .catch(console.error);'>
 
 <div class="comparison form-wrapper">
     <div class="in-progress-overlay"><img src='/polarion/ria/images/progress.gif' alt=""/><span id="comparison-in-progress-message"></span></div>
@@ -11,33 +11,33 @@
         Additionally select which link role should be taken into account when determining counterpart work items as well as diffing configuration.
     </p>
     <div class='property-wrapper'>
-        <input type='checkbox' id='compare-with-same-checkbox' onclick='DiffTool.toggleCompareSameDocument()'/>
+        <input type='checkbox' id='compare-with-same-checkbox' />
         <label for='compare-with-same-checkbox'>Compare with another revision of the same document</label>
     </div>
 
     <div class='property-wrapper hide-when-comparing-same'>
         <label for='comparison-project-selector' class="fixed-width w-1">Project:</label>
-        <select id='comparison-project-selector' onchange='DiffTool.projectChanged()'>
+        <select id='comparison-project-selector'>
             {PROJECT_OPTIONS}
         </select>
     </div>
     <div class='property-wrapper hide-when-comparing-same'>
         <label for='comparison-space-selector' class="fixed-width w-1">Space:</label>
-        <select id='comparison-space-selector' onchange='DiffTool.spaceChanged()'>
+        <select id='comparison-space-selector'>
         </select>
     </div>
     <div class='property-wrapper hide-when-comparing-same'>
         <label for='document-selector' class="fixed-width w-1">Document:</label>
-        <select id='document-selector' onchange='DiffTool.documentChanged()'>
+        <select id='document-selector'>
         </select>
     </div>
     <div class='property-wrapper'>
         <label for="select-revision-panel" class="fixed-width w-1">Revision:</label>
         <div id="select-revision-panel">
             <div id="select-revision-radios">
-                <input type="radio" id="revision-enter-manually" name="select-revision-type" value="manually" checked="checked" onclick="DiffTool.toggleManualRevision()">
+                <input type="radio" id="revision-enter-manually" name="select-revision-type" value="manually" checked="checked">
                 <label for="revision-enter-manually">Enter manually</label><br>
-                <input type="radio" id="revision-select-from-list" name="select-revision-type" value="list" onclick="DiffTool.toggleListRevision()">
+                <input type="radio" id="revision-select-from-list" name="select-revision-type" value="list">
                 <label for="revision-select-from-list">Select from list</label><br>
             </div>
 
@@ -48,7 +48,7 @@
             <div id="select-revision-list-container" style="display: none;">
                 <select id='revision-selector'></select>
                 <div>
-                    <input type="checkbox" id="baseline-checkbox" onclick='DiffTool.baselineSelected()'/>
+                    <input type="checkbox" id="baseline-checkbox" />
                     <label for="baseline-checkbox">show only baselines</label>
                 </div>
             </div>
@@ -67,7 +67,7 @@
         </select>
     </div>
     <div class='property-wrapper'>
-        <input type='checkbox' id='use-work-items-filter' onclick='DiffTool.toggleWorkItemsFilter()'/>
+        <input type='checkbox' id='use-work-items-filter' />
         <label for='use-work-items-filter'>Use work items filter</label>
     </div>
     <div class='property-wrapper'>
@@ -86,7 +86,7 @@
     </div>
 
     <div class='buttons-wrapper'>
-        <button type='button' id="compare-documents" disabled onclick='DiffTool.showDiffResult()'>
+        <button type='button' id="compare-documents" disabled>
             <img src='/polarion/ria/images/dle/operations/compare.png' alt=""/>Compare
         </button>
     </div>
