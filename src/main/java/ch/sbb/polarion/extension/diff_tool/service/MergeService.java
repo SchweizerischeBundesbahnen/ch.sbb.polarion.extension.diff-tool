@@ -101,7 +101,8 @@ public class MergeService {
         DiffModel diffModel = DiffModelCachedResource.get(documentIdentifier1.getProjectId(), mergeParams.getConfigName(), mergeParams.getConfigCacheBucketId());
         DocumentsMergeContext context = new DocumentsMergeContext(polarionService, documentIdentifier1, documentIdentifier2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge())
-                .setPreserveComments(mergeParams.isPreserveComments());
+                .setPreserveComments(mergeParams.isPreserveComments())
+                .setCopyMissingDocumentAttachments(mergeParams.isCopyMissingDocumentAttachments());
         if (!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision())) {
             return MergeResult.builder().success(false).targetModuleHasStructuralChanges(true).build();
         }
