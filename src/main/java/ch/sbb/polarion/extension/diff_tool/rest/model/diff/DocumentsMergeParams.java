@@ -29,6 +29,9 @@ public class DocumentsMergeParams extends MergeParams {
     @Schema(description = "Indicates whether comments must be preserved during merge operation")
     private boolean preserveComments;
 
+    @Schema(description = "Indicates if missing referenced document attachments must be copied")
+    private boolean copyMissingDocumentAttachments;
+
     @SuppressWarnings("java:S107")
     public DocumentsMergeParams(DocumentIdentifier leftDocument, DocumentIdentifier rightDocument, MergeDirection direction, String linkRole,
                                 String configName, String configCacheBucketId, List<WorkItemsPair> pairs, Boolean allowReferencedWorkItemMerge) {

@@ -1802,6 +1802,10 @@
             "description": "The configuration name to use for the merge operation",
             "type": "string"
           },
+          "copyMissingDocumentAttachments": {
+            "description": "Indicates if missing referenced document attachments must be copied",
+            "type": "boolean"
+          },
           "direction": {
             "description": "Enum representing the direction of a merge operation",
             "enum": [

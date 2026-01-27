@@ -38,6 +38,9 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext imple
     @Getter
     @Setter
     boolean preserveComments;
+    @Getter
+    @Setter
+    boolean copyMissingDocumentAttachments;
 
     public DocumentsMergeContext(@NotNull PolarionService polarionService, @NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier,
                                  @NotNull MergeDirection direction, @NotNull String linkRole, @NotNull DiffModel diffModel) {
