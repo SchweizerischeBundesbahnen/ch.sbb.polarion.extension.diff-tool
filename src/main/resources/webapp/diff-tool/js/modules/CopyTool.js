@@ -1,5 +1,6 @@
-import GenericMixin from "./GenericMixin.js";
 import ExtensionContext from "/polarion/diff-tool/ui/generic/js/modules/ExtensionContext.js";
+import GenericMixin from "./GenericMixin.js";
+import SearchableDropdown from "./SearchableDropdown.js";
 
 export default class CopyTool extends GenericMixin {
 
@@ -15,15 +16,50 @@ export default class CopyTool extends GenericMixin {
     this.sourceDocumentTitle = sourceDocumentTitle;
     this.sourceRevision = sourceRevision;
 
-    this.ctx.onChange('copy-project-selector', () => this.projectChanged());
-    this.ctx.onChange('copy-space-selector', () => this.spaceChanged());
     this.ctx.onClick('create-document', () => this.createNewDocument());
+
+    this.resetParentsOverflowHidden(this.ctx.getElementById('copy-project-selector'));
+
+    // First generate dropdown with data, remove selection and only then assign event listener
+    this.projectDropdown = new SearchableDropdown({
+      element: '#copy-project-selector',
+      placeholder: 'Select Project...'
+    });
+    this.projectDropdown.selectItem(null);
+    this.ctx.onChange('copy-project-selector', () => this.projectChanged());
+
+    // First generate dropdown with data, remove selection and only then assign event listener
+    this.spaceDropdown = new SearchableDropdown({
+      element: '#copy-space-selector',
+      placeholder: 'Select Space...'
+    });
+    this.spaceDropdown.selectItem(null);
+    this.ctx.onChange('copy-space-selector', () => this.spaceChanged());
+
+    new SearchableDropdown({
+      element: '#copy-link-role-selector',
+      placeholder: 'Select Link Role...'
+    });
+
+    new SearchableDropdown({
+      element: '#copy-config-selector',
+      placeholder: 'Select Configuration...'
+    });
+
+    new SearchableDropdown({
+      element: '#handle-refs-selector',
+      placeholder: 'Select Behaviour...',
+      searchable: false
+    });
+
   }
 
   projectChanged() {
     this.ctx.disableIf("create-document", true);
-    this.loadSpaces(false, () =>
-        this.reloadSettings(this.ctx.getValue("copy-project-selector"), false));
+    this.loadSpaces(false, () => {
+      this.spaceDropdown.refresh();
+      this.reloadSettings(this.ctx.getValue("copy-project-selector"), false)
+    });
   }
 
   spaceChanged() {

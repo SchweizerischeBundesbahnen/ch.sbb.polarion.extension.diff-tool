@@ -2,7 +2,8 @@ export default class SearchableDropdown {
   constructor({
                 element,
                 items = [],
-                placeholder = 'Search...'
+                placeholder = 'Search...',
+                searchable = true
               }) {
     if (!element) {
       throw new Error('SearchableDropdown: element is required');
@@ -24,19 +25,24 @@ export default class SearchableDropdown {
         : items;
 
     this.placeholder = placeholder;
+    this.searchable = searchable;
+    this.isOpen = false;
+    this.activeIndex = -1;
 
     this._createContainer();
     this._render();
     this._bindEvents();
   }
 
-  /* ---------- Initialization ---------- */
-
   _extractItemsFromSelect(select) {
-    return Array.from(select.options).map(option => ({
-      value: option.value,
-      label: option.text
-    }));
+    return Array.from(select.options)
+        .filter((option) => {
+          const style = window.getComputedStyle(option);
+          return style.display !== 'none'; // Skip not visible items
+        }).map(option => ({
+          value: option.value,
+          label: option.text
+        }));
   }
 
   _createContainer() {
@@ -58,9 +64,13 @@ export default class SearchableDropdown {
     this.input.type = 'text';
     this.input.placeholder = this.placeholder;
 
+    if (!this.searchable) {
+      this.input.readOnly = true;
+      this.input.classList.add('non-searchable');
+    }
+
     this.optionsEl = document.createElement('div');
-    this.optionsEl.className = 'searchable-dropdown-options';
-    this.optionsEl.style.display = 'none';
+    this.optionsEl.className = 'options';
 
     this.container.appendChild(this.input);
     this.container.appendChild(this.optionsEl);
@@ -75,47 +85,104 @@ export default class SearchableDropdown {
     }
   }
 
-  /* ---------- Events ---------- */
-
   _bindEvents() {
-    this.input.addEventListener('input', () => {
-      const query = this.input.value.toLowerCase();
-      const filtered = this.items.filter(item =>
-          item.label.toLowerCase().includes(query)
-      );
-      this._renderOptions(filtered);
-      this._show();
+    if (this.searchable) {
+      // Add filtering logic, but only for dropdowns which have this logic enabled
+      this.input.addEventListener('input', () => {
+        const query = this.input.value.toLowerCase();
+        const filtered = this.items.filter(item =>
+            item.label.toLowerCase().includes(query)
+        );
+        this._renderOptions(filtered);
+        this._open();
+      });
+    }
+
+    // Sequential clicks on input field should trigger open/close logic
+    this.input.addEventListener('mousedown', e => {
+      e.preventDefault(); // critical: prevents focus-triggered reopen
+
+      if (this.isOpen) {
+        this._close();
+      } else {
+        this._open();
+        this.input.focus();
+      }
     });
 
+    // We should handle blur events to validate user input. If entered value doesn't correspond any available option,
+    // dropdown selection will be reset
+    this.input.addEventListener('blur', () => {
+      // Should be timed out, otherwise disturbs item selection via mouse
+      setTimeout(() => {
+        if (this.searchable) {
+          const text = this.input.value.trim();
+          if (!text) {
+            this.selectItem(null);
+            return;
+          }
+          const match = this.items.find(
+              item => item.label === text
+          );
+          this.selectItem(match);
+        }
+        this._close();
+      }, 100);
+    });
+
+    // Better UX - add possibility to navigate the list and select items via keyboard
+    this.input.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        this._handleArrowDown();
+      }
+
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        this._handleArrowUp();
+      }
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this._handleEnter();
+      }
+
+      if (e.key === 'Escape') {
+        this._close();
+      }
+
+      return false;
+    });
+
+    // Focusing input element should automatically open dropdown's list
     this.input.addEventListener('focus', () => {
-      this._renderOptions(this.items);
-      this._show();
+      this._open();
     });
 
-    document.addEventListener('click', e => {
+    // Clicking outside of component should automatically close dropdown's list
+    document.addEventListener('mousedown', e => {
       if (!this.container.contains(e.target)) {
-        this._hide();
+        this._close();
       }
     });
-
-    window.addEventListener('scroll', () => {
-      if (!this.container.contains(e.target)) {
-        this._hide();
-      }
-    }, true);
-    window.addEventListener('resize', () => this._hide());
-
   }
-
-  /* ---------- Rendering ---------- */
 
   _renderOptions(list) {
     this.optionsEl.innerHTML = '';
+    this._visibleItems = list;
 
-    list.forEach(item => {
+    list.forEach((item, index) => {
       const option = document.createElement('div');
       option.className = 'option';
       option.textContent = item.label;
+
+      if (item.value === this.value) {
+        option.classList.add('selected');
+      }
+
+      if (index === this.activeIndex) {
+        option.classList.add('active');
+      }
 
       option.addEventListener('click', () => {
         this.selectItem(item);
@@ -125,37 +192,114 @@ export default class SearchableDropdown {
     });
   }
 
+  _handleArrowDown() {
+    if (!this.isOpen) {
+      this._open();
+      this.activeIndex = 0;
+    } else {
+      this.activeIndex = (this.activeIndex + 1) % this._visibleItems.length;
+    }
+
+    this._refreshActive();
+  }
+
+  _handleArrowUp() {
+    if (!this.isOpen) {
+      this._open();
+      this.activeIndex = this._visibleItems.length - 1;
+    } else {
+      this.activeIndex = ((this.activeIndex > -1 ? this.activeIndex - 1 : -1) + this._visibleItems.length) % this._visibleItems.length;
+    }
+
+    this._refreshActive();
+  }
+
+  _handleEnter() {
+    if (!this.isOpen) {
+      return;
+    }
+
+    const item = this._visibleItems[this.activeIndex];
+    if (item) {
+      this.selectItem(item);
+    }
+  }
+
+  _refreshActive() {
+    this._renderOptions(this._visibleItems);
+
+    const active = this.optionsEl.querySelector('.option.active');
+    if (active) {
+      active.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  _scrollActiveIntoView() {
+    const active = this.optionsEl.querySelector('.option.active');
+    if (active) {
+      active.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  _open() {
+    if (this.isOpen) {
+      return;
+    }
+
+    this.isOpen = true;
+
+    this._renderOptions(this.items);
+    this.activeIndex = this._visibleItems.findIndex(item => item.value === this.value);
+    this._show();
+    this._scrollActiveIntoView();
+  }
+
+  _close() {
+    if (!this.isOpen) {
+      return;
+    }
+
+    this.isOpen = false;
+    this._hide();
+    this.activeIndex = -1;
+  }
+
   _show() {
-    const rect = this.input.getBoundingClientRect();
+    this.optionsEl.style.display = 'block';
 
-    Object.assign(this.optionsEl.style, {
-      position: 'absolute',
-      top: `${rect.bottom + window.scrollY + 2}px`,
-      left: `${rect.left + window.scrollX}px`,
-      width: `auto`,
-      display: 'block',
-      ...this.style,
-    });
-
-    document.body.appendChild(this.optionsEl);
-    this.container.classList.add('open');
+    let bounding = this.optionsEl.getBoundingClientRect();
+    if (bounding.bottom > (window.innerHeight || document.documentElement.clientHeight)) {
+      this.optionsEl.classList.add('dropup');
+    }
   }
 
   _hide() {
     this.optionsEl.style.display = 'none';
-    this.container.classList.remove('open');
-    this.input.blur();
+    this.optionsEl.classList.remove('dropup');
+  }
 
-    if (this.container.contains(this.optionsEl) === false) {
-      this.container.appendChild(this.optionsEl);
-    }
+  _reselectCurrentItem() {
+    const text = this.input.value.trim();
+    const match = text && this.items.find(
+        item => item.label === text
+    );
+    this.selectItem(match, true);
   }
 
   /* ---------- Public API ---------- */
 
-  selectItem(item) {
+  refresh() {
+    this.items = this.isSelect
+        ? this._extractItemsFromSelect(this.originalElement)
+        : this.items;
+    this._reselectCurrentItem();
+  }
+
+  selectItem(item, preventClosing = false) {
     this.input.value = item ? item.label : "";
-    this._hide();
+    if (!preventClosing) {
+      this._close();
+    }
 
     if (this.isSelect) {
       this.originalElement.value = item ? item.value : null;

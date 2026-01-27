@@ -17,13 +17,14 @@ export default class DiffTool extends GenericMixin {
     this.sourceRevision = sourceRevision;
 
     this.ctx.onClick('compare-with-same-checkbox', () => this.toggleCompareSameDocument());
-    this.ctx.onChange('comparison-space-selector', () => this.spaceChanged());
-    this.ctx.onChange('document-selector', () => this.documentChanged());
     this.ctx.onClick('revision-enter-manually', () => this.toggleManualRevision());
     this.ctx.onClick('revision-select-from-list', () => this.toggleListRevision());
     this.ctx.onClick('baseline-checkbox', () => this.baselineSelected());
     this.ctx.onClick('use-work-items-filter', () => this.toggleWorkItemsFilter());
     this.ctx.onClick('compare-documents', () => this.showDiffResult());
+
+    // This is to remove "overflow: hidden" from parent div (Polarion internal code) for custom dropdown popups not to be cut off by parent div box border
+    this.resetParentsOverflowHidden(this.ctx.getElementById('comparison-project-selector'));
 
     // First generate dropdown with data, remove selection and only then assign event listener
     this.projectDropdown = new SearchableDropdown({
@@ -32,6 +33,27 @@ export default class DiffTool extends GenericMixin {
     });
     this.projectDropdown.selectItem(null);
     this.ctx.onChange('comparison-project-selector', () => this.projectChanged());
+
+    // First generate dropdown with data, remove selection and only then assign event listener
+    this.spaceDropdown = new SearchableDropdown({
+      element: '#comparison-space-selector',
+      placeholder: 'Select Space...'
+    });
+    this.spaceDropdown.selectItem(null);
+    this.ctx.onChange('comparison-space-selector', () => this.spaceChanged());
+
+    // First generate dropdown with data, remove selection and only then assign event listener
+    this.documentDropdown = new SearchableDropdown({
+      element: '#document-selector',
+      placeholder: 'Select Document...'
+    });
+    this.documentDropdown.selectItem(null);
+    this.ctx.onChange('document-selector', () => this.documentChanged());
+
+    this.revisionDropdown = new SearchableDropdown({
+      element: '#revision-selector',
+      placeholder: 'Select Revision...'
+    });
 
     new SearchableDropdown({
       element: '#comparison-link-role-selector',
@@ -48,7 +70,7 @@ export default class DiffTool extends GenericMixin {
     document.getElementById("document-selector").innerHTML = "";
     document.getElementById("revision-selector").innerHTML = "";
     this.ctx.disableIf("compare-documents", true);
-    this.loadSpaces(true);
+    this.loadSpaces(true, () => this.spaceDropdown.refresh());
   }
 
   spaceChanged() {
@@ -56,7 +78,7 @@ export default class DiffTool extends GenericMixin {
     const selectedSpace = this.ctx.getValue("comparison-space-selector");
 
     const documentSelector = this.ctx.getElementById("document-selector");
-    documentSelector.innerHTML = `<option disabled selected value> --- select document --- </option>`;
+    documentSelector.innerHTML = "";
 
     document.getElementById("revision-selector").innerHTML = "";
     this.ctx.disableIf("compare-documents", true);
@@ -67,16 +89,21 @@ export default class DiffTool extends GenericMixin {
         url: `/polarion/diff-tool/rest/internal/projects/${selectedProject}/spaces/${selectedSpace}/documents`
       }).then((response) => {
         this.actionInProgress({inProgress: false, diff: true});
+        documentSelector.innerHTML = "";
         for (const {id, title} of response) {
           const option = document.createElement('option');
           option.value = id;
           option.text = title;
           documentSelector.appendChild(option);
         }
+      }).then(() => {
+        this.documentDropdown.refresh();
       }).catch(() => {
         this.actionInProgress({inProgress: false, diff: true});
         this.showAlert({alertType: "error", message: "Error occurred loading documents", diff: true});
       });
+    } else {
+      this.documentDropdown.refresh();
     }
   }
 
@@ -106,6 +133,7 @@ export default class DiffTool extends GenericMixin {
       this.callAsync({
         url: `/polarion/diff-tool/rest/internal/projects/${selectedProject}/spaces/${selectedSpace}/documents/${selectedDocument}/revisions`
       }).then((response) => {
+        revisionSelector.innerHTML = "";
         this.actionInProgress({inProgress: false, diff: true});
         const headOption = document.createElement('option');
         headOption.value = "";
@@ -124,10 +152,13 @@ export default class DiffTool extends GenericMixin {
         }
         this.ctx.disableIf("compare-documents", false);
         this.baselineSelected();
+        this.revisionDropdown.refresh();
       }).catch(() => {
         this.actionInProgress({inProgress: false, diff: true});
         this.showAlert({alertType: "error", message: "Error occurred loading revisions", diff: true});
       });
+    } else {
+      this.revisionDropdown.refresh();
     }
   }
 
@@ -151,6 +182,7 @@ export default class DiffTool extends GenericMixin {
       }
     }
     options[selectionIndex].selected = 'selected';
+    this.revisionDropdown.refresh();
   }
 
   newDocumentSelected() {

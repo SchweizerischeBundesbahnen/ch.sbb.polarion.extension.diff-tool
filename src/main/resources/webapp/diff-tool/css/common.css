@@ -292,9 +292,11 @@ a, td, div, li, ul, input, button {
 .searchable-dropdown {
     position: relative;
     width: auto;
+    min-width: 250px;
     font-family: "Segoe UI", "Selawik", "Open Sans", Arial, sans-serif;
 }
 
+/* Input styled as select */
 .searchable-dropdown input {
     width: 100%;
     box-sizing: border-box;
@@ -303,8 +305,16 @@ a, td, div, li, ul, input, button {
     border-radius: 2px;
     background-color: #fff;
     cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+.searchable-dropdown input.non-searchable {
+    cursor: pointer;
+    caret-color: transparent;
+}
+
+/* Arrow container */
 .searchable-dropdown::after {
     content: '';
     position: absolute;
@@ -319,21 +329,41 @@ a, td, div, li, ul, input, button {
     transform: rotate(180deg);
 }
 
-.searchable-dropdown-options {
+/* Dropdown list */
+.searchable-dropdown .options {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
     background: #fff;
     border: 1px solid #aaa;
     border-radius: 4px;
     max-height: 180px;
     overflow-y: auto;
-    z-index: 9999;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.searchable-dropdown-options .option {
+.searchable-dropdown .options.dropup {
+    bottom: calc(100% + 2px);
+    top: auto;
+}
+
+/* Option item */
+.searchable-dropdown .option {
     padding: 8px 10px;
     cursor: pointer;
 }
 
-.searchable-dropdown-options .option:hover {
-    background-color: #f2f2f2;
+.searchable-dropdown .option:hover {
+    background-color: #DAECF0;
+}
+
+.searchable-dropdown .option.active {
+    background-color: #DAECF0;
+}
+
+.searchable-dropdown .option.selected {
+    font-weight: 600;
 }

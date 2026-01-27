@@ -3,8 +3,11 @@ export default class GenericMixin {
   loadSpaces(diff, postActionCallback) {
     const selectedProject = document.getElementById(`${this.prefix(diff)}-project-selector`).value;
     const spaceSelector = document.getElementById(`${this.prefix(diff)}-space-selector`);
-    spaceSelector.innerHTML = "<option disabled selected value> --- select space --- </option>";
+    spaceSelector.innerHTML = "";
     if (!selectedProject) {
+      if (postActionCallback) {
+        postActionCallback();
+      }
       return;
     }
     this.actionInProgress({inProgress: true, message: "Loading spaces", diff: diff});
@@ -12,6 +15,7 @@ export default class GenericMixin {
       url: `/polarion/diff-tool/rest/internal/projects/${selectedProject}/spaces`
     }).then((response) => {
       this.actionInProgress({inProgress: false, diff: diff});
+      spaceSelector.innerHTML = "";
       for (const {id, name} of response) {
         const option = document.createElement('option');
         option.value = id;
@@ -103,5 +107,19 @@ export default class GenericMixin {
 
   prefix(diff) {
     return diff ? "comparison" : "copy";
+  }
+
+  resetParentsOverflowHidden(element) {
+    if (element) {
+      const parentCell = element.closest("td");
+      if (parentCell) {
+        for (const child of parentCell.children) {
+          if (child.tagName === "DIV" && child.style.overflow === "hidden") {
+            child.style.overflow = "visible";
+            break;
+          }
+        }
+      }
+    }
   }
 }
