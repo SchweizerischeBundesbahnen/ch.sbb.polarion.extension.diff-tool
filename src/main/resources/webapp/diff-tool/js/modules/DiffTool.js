@@ -31,15 +31,14 @@ export default class DiffTool extends GenericMixin {
       element: '#comparison-project-selector',
       placeholder: 'Select Project...'
     });
-    this.projectDropdown.selectItem(null);
     this.ctx.onChange('comparison-project-selector', () => this.projectChanged());
+    this.projectDropdown.restoreSelection();
 
     // First generate dropdown with data, remove selection and only then assign event listener
     this.spaceDropdown = new SearchableDropdown({
       element: '#comparison-space-selector',
       placeholder: 'Select Space...'
     });
-    this.spaceDropdown.selectItem(null);
     this.ctx.onChange('comparison-space-selector', () => this.spaceChanged());
 
     // First generate dropdown with data, remove selection and only then assign event listener
@@ -47,7 +46,6 @@ export default class DiffTool extends GenericMixin {
       element: '#document-selector',
       placeholder: 'Select Document...'
     });
-    this.documentDropdown.selectItem(null);
     this.ctx.onChange('document-selector', () => this.documentChanged());
 
     this.revisionDropdown = new SearchableDropdown({
@@ -55,15 +53,17 @@ export default class DiffTool extends GenericMixin {
       placeholder: 'Select Revision...'
     });
 
-    new SearchableDropdown({
+    this.linkRoleDropdown = new SearchableDropdown({
       element: '#comparison-link-role-selector',
       placeholder: 'Select Link Role...'
     });
+    this.linkRoleDropdown.restoreSelection();
 
-    new SearchableDropdown({
+    this.configDropdown = new SearchableDropdown({
       element: '#comparison-config-selector',
       placeholder: 'Select Configuration...'
     });
+    this.configDropdown.restoreSelection();
   }
 
   projectChanged() {

@@ -1,9 +1,13 @@
 export default class SearchableDropdown {
+  static COOKIE_PREFIX = 'searchable_dropdown_';
+  static COOKIE_EXPIRY_DAYS = 30;
+
   constructor({
                 element,
                 items = [],
                 placeholder = 'Search...',
-                searchable = true
+                searchable = true,
+                rememberSelection = true
               }) {
     if (!element) {
       throw new Error('SearchableDropdown: element is required');
@@ -19,6 +23,7 @@ export default class SearchableDropdown {
     }
 
     this.isSelect = this.originalElement.tagName === 'SELECT';
+    this.rememberSelection = rememberSelection && !!this.originalElement.id;
 
     this.items = this.isSelect
         ? this._extractItemsFromSelect(this.originalElement)
@@ -32,6 +37,33 @@ export default class SearchableDropdown {
     this._createContainer();
     this._render();
     this._bindEvents();
+  }
+
+  _getCookieKey() {
+    return SearchableDropdown.COOKIE_PREFIX + this.originalElement.id;
+  }
+
+  _saveSelection(value) {
+    if (!this.rememberSelection) {
+      return;
+    }
+    const key = this._getCookieKey();
+    if (value === null || value === undefined || value === '') {
+      document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+    } else {
+      const expires = new Date();
+      expires.setDate(expires.getDate() + SearchableDropdown.COOKIE_EXPIRY_DAYS);
+      document.cookie = `${key}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/`;
+    }
+  }
+
+  _loadSelection() {
+    if (!this.rememberSelection) {
+      return null;
+    }
+    const key = this._getCookieKey();
+    const match = document.cookie.match(new RegExp(`(?:^|; )${key}=([^;]*)`));
+    return match ? decodeURIComponent(match[1]) : null;
   }
 
   _extractItemsFromSelect(select) {
@@ -278,21 +310,21 @@ export default class SearchableDropdown {
     this.optionsEl.classList.remove('dropup');
   }
 
-  _reselectCurrentItem() {
-    const text = this.input.value.trim();
-    const match = text && this.items.find(
-        item => item.label === text
-    );
-    this.selectItem(match, true);
-  }
-
   /* ---------- Public API ---------- */
+
+  restoreSelection() {
+    const savedValue = this._loadSelection();
+    if (savedValue !== null) {
+      const item = this.items.find(i => i.value === savedValue);
+      this.selectItem(item);
+    }
+  }
 
   refresh() {
     this.items = this.isSelect
         ? this._extractItemsFromSelect(this.originalElement)
         : this.items;
-    this._reselectCurrentItem();
+    this.restoreSelection();
   }
 
   selectItem(item, preventClosing = false) {
@@ -307,6 +339,12 @@ export default class SearchableDropdown {
           new Event('change', { bubbles: true })
       );
     }
+
+    this._saveSelection(item ? item.value : null);
+  }
+
+  get id() {
+    return this.originalElement.id;
   }
 
   get value() {

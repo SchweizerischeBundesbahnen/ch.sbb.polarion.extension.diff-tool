@@ -25,32 +25,34 @@ export default class CopyTool extends GenericMixin {
       element: '#copy-project-selector',
       placeholder: 'Select Project...'
     });
-    this.projectDropdown.selectItem(null);
     this.ctx.onChange('copy-project-selector', () => this.projectChanged());
+    this.projectDropdown.restoreSelection();
 
     // First generate dropdown with data, remove selection and only then assign event listener
     this.spaceDropdown = new SearchableDropdown({
       element: '#copy-space-selector',
       placeholder: 'Select Space...'
     });
-    this.spaceDropdown.selectItem(null);
     this.ctx.onChange('copy-space-selector', () => this.spaceChanged());
 
-    new SearchableDropdown({
+    this.linkRoleDropdown = new SearchableDropdown({
       element: '#copy-link-role-selector',
       placeholder: 'Select Link Role...'
     });
+    this.linkRoleDropdown.restoreSelection();
 
-    new SearchableDropdown({
+    this.configDropdown = new SearchableDropdown({
       element: '#copy-config-selector',
       placeholder: 'Select Configuration...'
     });
+    this.configDropdown.restoreSelection();
 
-    new SearchableDropdown({
+    this.handleRefsDropdown = new SearchableDropdown({
       element: '#handle-refs-selector',
       placeholder: 'Select Behaviour...',
       searchable: false
     });
+    this.handleRefsDropdown.restoreSelection();
 
   }
 
