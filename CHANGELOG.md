@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.5.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.5.0...v6.5.1) (2026-01-27)
+
+
+### Bug Fixes
+
+* attachments aren't copied during the merge despite the option is selected on the side panel ([fef6ffc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/fef6ffc1f0f3aaee9eddc9090b4a4aa034c2cc1f)), closes [#370](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/370)
+* attachments aren't copied during the merge despite the option is… ([#377](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/377)) ([fef6ffc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/fef6ffc1f0f3aaee9eddc9090b4a4aa034c2cc1f))
+
 ## [6.5.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.4.2...v6.5.0) (2026-01-22)
 
 
