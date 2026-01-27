@@ -79,6 +79,7 @@ import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationRe
 import static ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils.*;
 import static com.polarion.alm.tracker.model.IWithAttachments.KEY_ATTACHMENTS;
 
+@SuppressWarnings({"java:S1192", "java:S3776", "java:S135", "java:S1066"})
 public class MergeService {
 
     private static final String TEST_STEPS = "steps";
@@ -101,7 +102,8 @@ public class MergeService {
         DiffModel diffModel = DiffModelCachedResource.get(documentIdentifier1.getProjectId(), mergeParams.getConfigName(), mergeParams.getConfigCacheBucketId());
         DocumentsMergeContext context = new DocumentsMergeContext(polarionService, documentIdentifier1, documentIdentifier2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge())
-                .setPreserveComments(mergeParams.isPreserveComments());
+                .setPreserveComments(mergeParams.isPreserveComments())
+                .setCopyMissingDocumentAttachments(mergeParams.isCopyMissingDocumentAttachments());
         if (!Objects.equals(context.getTargetDocumentIdentifier().getModuleXmlRevision(), context.getTargetModule().getLastRevision())) {
             return MergeResult.builder().success(false).targetModuleHasStructuralChanges(true).build();
         }

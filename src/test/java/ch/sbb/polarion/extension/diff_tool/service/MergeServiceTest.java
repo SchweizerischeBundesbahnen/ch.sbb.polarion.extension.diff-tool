@@ -88,7 +88,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, CurrentContextExtension.class})
 @CurrentContextConfig("diff-tool")
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({"unchecked", "rawtypes", "java:S1117"})
 class MergeServiceTest {
     @Mock
     private PolarionService polarionService;
