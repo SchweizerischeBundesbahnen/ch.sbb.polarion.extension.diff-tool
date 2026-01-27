@@ -259,11 +259,7 @@ export default class SearchableDropdown {
 
   _refreshActive() {
     this._renderOptions(this._visibleItems);
-
-    const active = this.optionsEl.querySelector('.option.active');
-    if (active) {
-      active.scrollIntoView({ block: 'nearest' });
-    }
+    this._scrollActiveIntoView();
   }
 
   _scrollActiveIntoView() {
