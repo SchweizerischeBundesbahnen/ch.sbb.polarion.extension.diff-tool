@@ -220,7 +220,6 @@ Also, `isDifferent` can be used if you need to show something specific for cases
 
  #set($diffResult = $diffTool.diffWorkItems($projectId, $rightWorkItem, $rightWorkItem, "Default", ""))
 
-
 <h3>Work Item Differences</h3>
 
 <table border="1" cellspacing="0" cellpadding="5">
