@@ -182,8 +182,6 @@ export default class SearchableDropdown {
       if (e.key === 'Escape') {
         this._close();
       }
-
-      return false;
     });
 
     // Focusing input element should automatically open dropdown's list
@@ -240,7 +238,12 @@ export default class SearchableDropdown {
       this._open();
       this.activeIndex = this._visibleItems.length - 1;
     } else {
-      this.activeIndex = ((this.activeIndex > -1 ? this.activeIndex - 1 : -1) + this._visibleItems.length) % this._visibleItems.length;
+      const visibleLength = this._visibleItems.length;
+      if (this.activeIndex === -1) {
+        this.activeIndex = visibleLength - 1;
+      } else {
+        this.activeIndex = (this.activeIndex - 1 + visibleLength) % visibleLength;
+      }
     }
 
     this._refreshActive();
