@@ -1,7 +1,7 @@
-<link href='/polarion/diff-tool/ui/css/common.css' rel='stylesheet' onload='$.when(
-                $.getScript("/polarion/diff-tool/ui/js/copy-tool.js"),
-                $.getScript("/polarion/diff-tool/ui/js/common.js")
-             ).done(function() { CopyTool.init({SOURCE_DOC_PARAMS}); })'>
+<link href='/polarion/diff-tool/ui/css/common.css' rel='stylesheet'
+      onload='import("/polarion/diff-tool/ui/js/modules/CopyTool.js")
+                .then(module => new module.default({SOURCE_DOC_PARAMS}))
+                .catch(console.error);'>
 
 <div class="copy form-wrapper">
     <div class="in-progress-overlay"><img src='/polarion/ria/images/progress.gif' alt=""/><span id="copy-in-progress-message"></span></div>
@@ -13,13 +13,13 @@
 
     <div class='property-wrapper'>
         <label for='copy-project-selector' class="fixed-width w-1">Project:</label>
-        <select id='copy-project-selector' onchange='CopyTool.projectChanged()'>
+        <select id='copy-project-selector'>
             {PROJECT_OPTIONS}
         </select>
     </div>
     <div class='property-wrapper'>
         <label for='copy-space-selector' class="fixed-width w-1">Space:</label>
-        <select id='copy-space-selector' onchange='CopyTool.spaceChanged()'>
+        <select id='copy-space-selector'>
         </select>
     </div>
 
@@ -44,7 +44,7 @@
     </div>
 
     <div class='buttons-wrapper'>
-        <button type='button' id="create-document" disabled onclick='CopyTool.createNewDocument()'>
+        <button type='button' id="create-document" disabled>
             <img src='/polarion/ria/images/control/tablePlus.png' alt=""/>Create Document
         </button>
     </div>
