@@ -16,7 +16,7 @@
     "@types/node": "25.0.10",
     "cross-spawn": "7.0.6",
     "eslint": "9.39.2",
-    "eslint-config-next": "16.1.5",
+    "eslint-config-next": "16.1.6",
     "istanbul-lib-coverage": "3.2.2",
     "nyc": "17.1.0"
   },
