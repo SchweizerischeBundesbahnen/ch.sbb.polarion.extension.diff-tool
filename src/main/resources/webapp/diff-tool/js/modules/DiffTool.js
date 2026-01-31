@@ -1,6 +1,6 @@
 import ExtensionContext from "/polarion/diff-tool/ui/generic/js/modules/ExtensionContext.js";
+import SearchableDropdown from "/polarion/diff-tool/ui/generic/js/modules/SearchableDropdown.js";
 import GenericMixin from "./GenericMixin.js";
-import SearchableDropdown from "./SearchableDropdown.js";
 
 export default class DiffTool extends GenericMixin {
 
