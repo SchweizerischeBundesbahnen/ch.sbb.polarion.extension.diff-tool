@@ -1,5 +1,24 @@
 # Changelog
 
+## [7.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v7.0.0...v7.1.0) (2026-02-01)
+
+
+### Features
+
+* Make dropdowns searchable/filterable on document sidebar (extension pane) ([#381](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/381)) ([f8829ff](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/f8829ffc186e603bc3eb70ba7a4aa4a47ed462d6))
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v13.1.0 ([9a5dbf4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9a5dbf40e68ca56995ce218611787d40acbcf82d))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v13.2.0 ([aec003b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/aec003bcb394cfd341b6fd5e8513bd1306293791))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v12.1.0 ([621b02e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/621b02e0fd70e1f2161fe2fe4745a23ea8fd2aa5))
+* **deps:** update nextjs monorepo to v16.1.2 ([4bc431d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/4bc431d271c8a92391596226d6fb13a1a2e8dfbb))
+* **deps:** update nextjs monorepo to v16.1.3 ([f8ff195](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/f8ff1954acf82df3167b9fe077b38743b5bf7ad3))
+* **deps:** update nextjs monorepo to v16.1.4 ([f78dfef](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/f78dfef4f69448a8540bbb7cf0fce80a5d1681b9))
+* LiveDoc images referenced in work item rich text fields aren't c… ([#371](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/371)) ([2db67ca](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2db67ca137341b803301b27faeb1cca3019422fb))
+* LiveDoc images referenced in work item rich text fields aren't copied during the merge ([2db67ca](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2db67ca137341b803301b27faeb1cca3019422fb)), closes [#370](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/370)
+
 ## [7.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.4.2...v7.0.0) (2026-01-09)
 
 
