@@ -400,6 +400,13 @@ a:hover {
   color: #666;
 }
 
+a.wi-badge:hover {
+    text-decoration: none;
+    cursor: pointer;
+    color: #333;
+    background-color: #ccc;
+}
+
 .wi-header span.referenced-wi {
   vertical-align: super;
   font-weight: 600;
