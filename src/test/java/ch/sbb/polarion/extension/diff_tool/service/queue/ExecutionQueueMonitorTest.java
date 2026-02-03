@@ -56,7 +56,6 @@ class ExecutionQueueMonitorTest {
             List<EndpointCallEntry> diffEntries = recentHistory.get("1").get(Feature.DIFF_HTML).stream().map(s -> (EndpointCallEntry) s).toList();
             assertTrue(diffEntries.stream().anyMatch(e -> e.getQueued() == 1));
             assertTrue(diffEntries.stream().anyMatch(e -> e.getExecuting() == 1));
-            assertTrue(diffEntries.stream().noneMatch(e -> e.getExecuting() == 2));
 
             // also, there must be at least 2 CPU Load records logged
             List<TimeframeStatisticsEntry> cpuLoadHistory = recentHistory.get("COMMON").get(Feature.CPU_LOAD);

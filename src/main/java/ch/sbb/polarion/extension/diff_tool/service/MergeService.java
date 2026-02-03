@@ -1024,18 +1024,20 @@ public class MergeService {
     void insertNode(@NotNull IWorkItem workItem, @NotNull IModule targetModule, @Nullable IModule.IStructureNode parentNode, int destinationIndex, boolean referenced) {
         if (referenced) {
             targetModule.addExternalWorkItem(workItem);
-        } else {
-            targetModule.moveIn(List.of(workItem));
+            return;
         }
 
+        targetModule.moveIn(List.of(workItem));
+
         if (parentNode == null) {
-            parentNode = targetModule.getRootNode().getChildren().get(0);
+            List<IModule.IStructureNode> children = targetModule.getRootNode().getChildren();
+            parentNode = children.isEmpty() ? targetModule.getRootNode() : children.getFirst();
         }
 
         // getStructureNodeOfWI may return null for items which are placed in recycle bin.
         // the problem basically is that a workitem is still bound to module but not a single node use it
         // so in this case we're adding a new node for it
-        IModule.IStructureNode insertedWorkItemNode = Optional.ofNullable(targetModule.getStructureNodeOfWI(workItem)).orElse(createNode(targetModule, workItem, referenced));
+        IModule.IStructureNode insertedWorkItemNode = Optional.ofNullable(targetModule.getStructureNodeOfWI(workItem)).orElse(createNode(targetModule, workItem, false));
         parentNode.addChild(insertedWorkItemNode, destinationIndex); // Placing inserted work item at required position in document
     }
 

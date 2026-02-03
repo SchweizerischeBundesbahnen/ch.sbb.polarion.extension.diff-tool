@@ -1514,12 +1514,11 @@ class MergeServiceTest {
         verify(node, times(1)).setValue("external", false);
 
         mergeService.insertNode(workItem, targetModule, null, 1, true);
-        verify(node, times(2)).setValue("workItem", workItem);
-        verify(node, times(1)).setValue("external", true);
+        verify(targetModule, times(1)).addExternalWorkItem(workItem);
 
         IModule.IStructureNode structureNode = mock(IModule.IStructureNode.class);
         when(targetModule.getStructureNodeOfWI(workItem)).thenReturn(structureNode);
-        mergeService.insertNode(workItem, targetModule, null, 5, true);
+        mergeService.insertNode(workItem, targetModule, null, 5, false);
         verify(parentRootNode, times(1)).addChild(structureNode, 5);
     }
 
@@ -1960,7 +1959,7 @@ class MergeServiceTest {
     private IModule mockTargetModule() {
         IModule module = mock(IModule.class, RETURNS_DEEP_STUBS);
         IDataService dataService = mock(IDataService.class);
-        when(dataService.createStructureForTypeId(nullable(IPObject.class), nullable(String.class), nullable(Map.class))).thenReturn(mock(IModule.IStructureNode.class));
+        lenient().when(dataService.createStructureForTypeId(nullable(IPObject.class), nullable(String.class), nullable(Map.class))).thenReturn(mock(IModule.IStructureNode.class));
         when(module.getDataSvc()).thenReturn(dataService);
         return module;
     }
