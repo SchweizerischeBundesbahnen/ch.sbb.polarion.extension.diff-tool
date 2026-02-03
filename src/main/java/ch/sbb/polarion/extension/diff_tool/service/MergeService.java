@@ -1011,12 +1011,32 @@ public class MergeService {
 
                 merge(referencedWorkItem, newWorkItem, context, null);
                 insertNode(newWorkItem, targetModule, parentNode, destinationIndex, false);
+                fixReplacedWorkItemPositionInHomePageContent(targetModule, referencedWorkItem.getId(), newWorkItem.getId());
             } else if (pairedWorkItem != null) {
                 insertNode(pairedWorkItem, targetModule, parentNode, destinationIndex, true);
+                fixReplacedWorkItemPositionInHomePageContent(targetModule, referencedWorkItem.getId(), pairedWorkItem.getId());
             } else if (HandleReferencesType.KEEP.equals(handleReferences)) {
                 return;
             }
             targetModule.unreference(referencedWorkItem);
+        }
+    }
+
+    /**
+     * Move newly created replacement right before item which it replaces in home page content
+     */
+    @VisibleForTesting
+    void fixReplacedWorkItemPositionInHomePageContent(@NotNull IModule targetModule, String itemIdToBeReplaced, String newItemId) {
+        String targetContent = targetModule.getHomePageContent().getContent();
+        String itemToBeReplaced = RegexMatcher.get("<div[^>]+params=id=%s[\\|\"][^>]*".formatted(itemIdToBeReplaced)).findFirst(targetContent).orElse(null);
+        String newItem = RegexMatcher.get("<div[^>]+params=id=%s[\\|\"]{1}[^>]*>[^<]+</div>".formatted(newItemId)).findFirst(targetContent).orElse(null);
+        if (itemToBeReplaced != null && newItem != null) {
+            int existingItemPosition = targetContent.indexOf(itemToBeReplaced);
+            int movingItemPosition = targetContent.indexOf(newItem);
+            StringBuilder sb = new StringBuilder(targetContent);
+            sb.delete(movingItemPosition, movingItemPosition + newItem.length());
+            sb.insert(existingItemPosition < movingItemPosition ? existingItemPosition : (existingItemPosition - newItem.length()), newItem);
+            targetModule.setHomePageContent(Text.html(sb.toString()));
         }
     }
 
