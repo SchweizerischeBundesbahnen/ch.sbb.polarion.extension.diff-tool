@@ -28,9 +28,13 @@ export function WorkItemHeader({workItem, asHeaderInDocument, movedOutlineNumber
 
   const badgeContent = () => {
     return (
-        <a href={`/polarion/#/project/${workItem.projectId}/workitem?id=${workItem.id}${workItem.revision ? "&revision=" + workItem.revision : ""}`} target="_blank" style={{
-          fontSize: badgeFontSize,
-        }} className="badge wi-badge" >
+        <a href={`/polarion/#/project/${workItem.projectId}/workitem?id=${workItem.id}${workItem.revision ? "&revision=" + workItem.revision : ""}`}
+           target="_blank"
+           rel="noopener noreferrer"
+           className="badge wi-badge"
+           style={{
+              fontSize: badgeFontSize,
+           }}>
           {workItem.id}{asHeaderInDocument ? "" : " - " + workItem.title}
         </a>
     );
