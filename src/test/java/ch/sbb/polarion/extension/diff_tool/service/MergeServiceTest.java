@@ -626,6 +626,7 @@ class MergeServiceTest {
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
 
         when(context.getLinkRole()).thenReturn("linkRoleId");
+        doNothing().when(service).fixReplacedWorkItemPositionInHomePageContent(any(), nullable(String.class), nullable(String.class));
         service.fixReferencedWorkItem(referencedWorkItem, targetModule, context, HandleReferencesType.DEFAULT);
         verify(targetModule, times(1)).unreference(referencedWorkItem);
         verify(service, times(1)).insertNode(any(), any(), any(), anyInt(), eq(true));
@@ -666,6 +667,112 @@ class MergeServiceTest {
         service.fixReferencedWorkItem(referencedWorkItem, targetModule, context, HandleReferencesType.ALWAYS_OVERWRITE);
         verify(targetModule, times(7)).unreference(referencedWorkItem);
         verify(service, times(3)).insertNode(any(), any(), any(), anyInt(), eq(false));
+    }
+
+    @Test
+    void testFixReplacedWorkItemPositionInHomePageContent() {
+        IModule targetModule = mock(IModule.class);
+
+        // Case 1: new item is after old item - should be moved before old item
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-1|layout=1\">OLD-1</div>" +
+                "<p id=\"polarion_2\">some text</p>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-1|layout=1\">NEW-1</div>"));
+        mergeService.fixReplacedWorkItemPositionInHomePageContent(targetModule, "OLD-1", "NEW-1");
+        verify(targetModule).setHomePageContent(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-1|layout=1\">NEW-1</div>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-1|layout=1\">OLD-1</div>" +
+                "<p id=\"polarion_2\">some text</p>"));
+
+        // Case 2: new item is before old item - should still be moved right before old item
+        reset(targetModule);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-2|layout=1\">NEW-2</div>" +
+                "<p id=\"polarion_2\">some text</p>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-2|layout=1\">OLD-2</div>"));
+        mergeService.fixReplacedWorkItemPositionInHomePageContent(targetModule, "OLD-2", "NEW-2");
+        verify(targetModule).setHomePageContent(Text.html(
+                "<p id=\"polarion_2\">some text</p>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-2|layout=1\">NEW-2</div>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-2|layout=1\">OLD-2</div>"));
+
+        // Case 3: new item ID ends with double quote (no extra params) - new item after old item
+        reset(targetModule);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-3|layout=1\">OLD-3</div>" +
+                "<p id=\"polarion_2\">some text</p>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-3\">NEW-3</div>"));
+        mergeService.fixReplacedWorkItemPositionInHomePageContent(targetModule, "OLD-3", "NEW-3");
+        verify(targetModule).setHomePageContent(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-3\">NEW-3</div>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-3|layout=1\">OLD-3</div>" +
+                "<p id=\"polarion_2\">some text</p>"));
+
+        // Case 4: new item ID ends with double quote - new item before old item
+        reset(targetModule);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-4\">NEW-4</div>" +
+                "<p id=\"polarion_2\">some text</p>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-4|layout=1\">OLD-4</div>"));
+        mergeService.fixReplacedWorkItemPositionInHomePageContent(targetModule, "OLD-4", "NEW-4");
+        verify(targetModule).setHomePageContent(Text.html(
+                "<p id=\"polarion_2\">some text</p>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-4\">NEW-4</div>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-4|layout=1\">OLD-4</div>"));
+
+        // Case 5: old item ID ends with double quote (no extra params)
+        reset(targetModule);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-5\">OLD-5</div>" +
+                "<p id=\"polarion_2\">some text</p>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-5|layout=1\">NEW-5</div>"));
+        mergeService.fixReplacedWorkItemPositionInHomePageContent(targetModule, "OLD-5", "NEW-5");
+        verify(targetModule).setHomePageContent(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-5|layout=1\">NEW-5</div>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-5\">OLD-5</div>" +
+                "<p id=\"polarion_2\">some text</p>"));
+
+        // Case 6: both items' IDs end with double quote
+        reset(targetModule);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-6\">OLD-6</div>" +
+                "<p id=\"polarion_2\">some text</p>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-6\">NEW-6</div>"));
+        mergeService.fixReplacedWorkItemPositionInHomePageContent(targetModule, "OLD-6", "NEW-6");
+        verify(targetModule).setHomePageContent(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-6\">NEW-6</div>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-6\">OLD-6</div>" +
+                "<p id=\"polarion_2\">some text</p>"));
+
+        // Case 7: old item not found - no change
+        reset(targetModule);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-7|layout=1\">NEW-7</div>"));
+        mergeService.fixReplacedWorkItemPositionInHomePageContent(targetModule, "MISSING-1", "NEW-7");
+        verify(targetModule, never()).setHomePageContent(any());
+
+        // Case 8: new item not found - no change
+        reset(targetModule);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-8|layout=1\">OLD-8</div>"));
+        mergeService.fixReplacedWorkItemPositionInHomePageContent(targetModule, "OLD-8", "MISSING-2");
+        verify(targetModule, never()).setHomePageContent(any());
+
+        // Case 9: old item ID is a prefix of another item's ID - should not match (OLD-9 vs OLD-99)
+        reset(targetModule);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-99|layout=1\">OLD-99</div>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-9|layout=1\">NEW-9</div>"));
+        mergeService.fixReplacedWorkItemPositionInHomePageContent(targetModule, "OLD-9", "NEW-9");
+        verify(targetModule, never()).setHomePageContent(any());
+
+        // Case 10: new item ID is a prefix of another item's ID - should not match (NEW-10 vs NEW-100)
+        reset(targetModule);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=OLD-10|layout=1\">OLD-10</div>" +
+                "<div id=\"polarion_wiki macro name=module-workitem;params=id=NEW-100|layout=1\">NEW-100</div>"));
+        mergeService.fixReplacedWorkItemPositionInHomePageContent(targetModule, "OLD-10", "NEW-10");
+        verify(targetModule, never()).setHomePageContent(any());
     }
 
     @Test
