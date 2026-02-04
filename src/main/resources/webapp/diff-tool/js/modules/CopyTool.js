@@ -9,6 +9,12 @@ export default class CopyTool extends GenericMixin {
 
     this.ctx = new ExtensionContext({});
 
+    const copyToolPane = this.ctx.querySelector(".copy.form-wrapper");
+    if (!copyToolPane || copyToolPane.classList.contains("initialized")) {
+      return; // Skip if copy-tool pane wasn't found or was already initialized
+    }
+    copyToolPane.classList.add("initialized");
+
     this.sourceProjectId = sourceProjectId;
     this.settingsProjectId = sourceProjectId;
     this.sourceSpace = sourceSpace;

@@ -9,6 +9,12 @@ export default class DiffTool extends GenericMixin {
 
     this.ctx = new ExtensionContext({});
 
+    const diffToolPane = this.ctx.querySelector(".comparison.form-wrapper");
+    if (!diffToolPane || diffToolPane.classList.contains("initialized")) {
+      return; // Skip if diff-tool pane wasn't found or was already initialized
+    }
+    diffToolPane.classList.add("initialized");
+
     this.sourceProjectId = sourceProjectId;
     this.settingsProjectId = sourceProjectId;
     this.sourceSpace = sourceSpace;
