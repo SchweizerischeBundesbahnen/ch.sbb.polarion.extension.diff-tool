@@ -651,7 +651,7 @@ public class MergeService {
             IModule.IStructureNode destinationParentNode = context.getTargetModule().getStructureNodeOfWI(destinationParentWorkItem);
             int destinationIndex = sourceParentNode.getChildren().indexOf(sourceNode);
 
-            if (workItemToInsert.getModule() != null && !workItemToInsert.getModule().equals(context.getTargetModule())) {
+            if (!referenced && workItemToInsert.getModule() != null && !workItemToInsert.getModule().equals(context.getTargetModule())) {
                 IModule.IStructureNode sourceExternalNode = workItemToInsert.getModule().getStructureNodeOfWI(workItemToInsert);
                 IModule.IStructureNode sourceExternalParentNode = sourceExternalNode.getParent();
 
@@ -1044,20 +1044,16 @@ public class MergeService {
     void insertNode(@NotNull IWorkItem workItem, @NotNull IModule targetModule, @Nullable IModule.IStructureNode parentNode, int destinationIndex, boolean referenced) {
         if (referenced) {
             targetModule.addExternalWorkItem(workItem);
-            return;
+        } else {
+            targetModule.moveIn(List.of(workItem));
         }
 
-        targetModule.moveIn(List.of(workItem));
-
-        if (parentNode == null) {
-            List<IModule.IStructureNode> children = targetModule.getRootNode().getChildren();
-            parentNode = children.isEmpty() ? targetModule.getRootNode() : children.getFirst();
-        }
+        parentNode = targetModule.getRootNode().getChildren().getFirst();
 
         // getStructureNodeOfWI may return null for items which are placed in recycle bin.
         // the problem basically is that a workitem is still bound to module but not a single node use it
         // so in this case we're adding a new node for it
-        IModule.IStructureNode insertedWorkItemNode = Optional.ofNullable(targetModule.getStructureNodeOfWI(workItem)).orElse(createNode(targetModule, workItem, false));
+        IModule.IStructureNode insertedWorkItemNode = Optional.ofNullable(targetModule.getStructureNodeOfWI(workItem)).orElse(createNode(targetModule, workItem, referenced));
         parentNode.addChild(insertedWorkItemNode, destinationIndex); // Placing inserted work item at required position in document
     }
 

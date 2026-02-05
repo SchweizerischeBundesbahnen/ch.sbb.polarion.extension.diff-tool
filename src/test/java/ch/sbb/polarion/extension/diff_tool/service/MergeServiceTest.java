@@ -1572,6 +1572,7 @@ class MergeServiceTest {
 
         IModule targetModule = mockTargetModule();
         IModule sourceModule = mock(IModule.class);
+        IModule externalModule = mock(IModule.class);
 
         when(targetModule.getProjectId()).thenReturn("projectId");
 
@@ -1581,21 +1582,43 @@ class MergeServiceTest {
         IModule.IStructureNode sourceNode = mock(IModule.IStructureNode.class);
         IModule.IStructureNode sourceParentNode = mock(IModule.IStructureNode.class);
         when(sourceNode.getParent()).thenReturn(sourceParentNode);
+        when(sourceParentNode.getChildren()).thenReturn(List.of(sourceNode));
         when(sourceModule.getStructureNodeOfWI(any())).thenReturn(sourceNode);
 
-        ArrayList<DocumentsMergeContext.AffectedModule> affectedModules = new ArrayList<>();
-        lenient().when(context.getAffectedModules()).thenReturn(affectedModules);
+        // Mock external module structure for the case when workItem belongs to external module
+        IModule.IStructureNode externalNode = mock(IModule.IStructureNode.class);
+        IModule.IStructureNode externalParentNode = mock(IModule.IStructureNode.class);
+        when(externalModule.getStructureNodeOfWI(workItem)).thenReturn(externalNode);
+        when(externalNode.getParent()).thenReturn(externalParentNode);
+        when(externalParentNode.getChildren()).thenReturn(List.of(externalNode));
 
+        ArrayList<DocumentsMergeContext.AffectedModule> affectedModules = new ArrayList<>();
+        when(context.getAffectedModules()).thenReturn(affectedModules);
+
+        // Case 1: referenced=false, module=null -> should NOT add to affectedModules
+        when(workItem.getModule()).thenReturn(null);
         mergeService.insertWorkItem(workItem, context, false);
         assertEquals(0, affectedModules.size());
 
+        // Case 2: referenced=false, module=targetModule -> should NOT add to affectedModules
         when(workItem.getModule()).thenReturn(targetModule);
         mergeService.insertWorkItem(workItem, context, false);
         assertEquals(0, affectedModules.size());
 
-        when(workItem.getModule()).thenReturn(sourceModule);
+        // Case 3: referenced=true, module=externalModule -> should NOT add to affectedModules
+        when(workItem.getModule()).thenReturn(externalModule);
+        mergeService.insertWorkItem(workItem, context, true);
+        assertEquals(0, affectedModules.size());
+
+        // Case 4: referenced=false, module=externalModule -> SHOULD add to affectedModules
         mergeService.insertWorkItem(workItem, context, false);
         assertEquals(1, affectedModules.size());
+
+        DocumentsMergeContext.AffectedModule affectedModule = affectedModules.getFirst();
+        assertEquals(externalModule, affectedModule.getModule());
+        assertEquals(workItem, affectedModule.getWorkItem());
+        assertEquals(externalParentNode, affectedModule.getParentNode());
+        assertEquals(0, affectedModule.getDestinationIndex());
     }
 
     @Test
@@ -1621,11 +1644,12 @@ class MergeServiceTest {
         verify(node, times(1)).setValue("external", false);
 
         mergeService.insertNode(workItem, targetModule, null, 1, true);
-        verify(targetModule, times(1)).addExternalWorkItem(workItem);
+        verify(node, times(2)).setValue("workItem", workItem);
+        verify(node, times(1)).setValue("external", true);
 
         IModule.IStructureNode structureNode = mock(IModule.IStructureNode.class);
         when(targetModule.getStructureNodeOfWI(workItem)).thenReturn(structureNode);
-        mergeService.insertNode(workItem, targetModule, null, 5, false);
+        mergeService.insertNode(workItem, targetModule, null, 5, true);
         verify(parentRootNode, times(1)).addChild(structureNode, 5);
     }
 
@@ -2066,7 +2090,7 @@ class MergeServiceTest {
     private IModule mockTargetModule() {
         IModule module = mock(IModule.class, RETURNS_DEEP_STUBS);
         IDataService dataService = mock(IDataService.class);
-        lenient().when(dataService.createStructureForTypeId(nullable(IPObject.class), nullable(String.class), nullable(Map.class))).thenReturn(mock(IModule.IStructureNode.class));
+        when(dataService.createStructureForTypeId(nullable(IPObject.class), nullable(String.class), nullable(Map.class))).thenReturn(mock(IModule.IStructureNode.class));
         when(module.getDataSvc()).thenReturn(dataService);
         return module;
     }
