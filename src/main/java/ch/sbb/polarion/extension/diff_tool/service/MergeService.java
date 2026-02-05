@@ -1048,7 +1048,9 @@ public class MergeService {
             targetModule.moveIn(List.of(workItem));
         }
 
-        parentNode = targetModule.getRootNode().getChildren().getFirst();
+        if (parentNode == null) {
+            parentNode = targetModule.getRootNode().getChildren().getFirst();
+        }
 
         // getStructureNodeOfWI may return null for items which are placed in recycle bin.
         // the problem basically is that a workitem is still bound to module but not a single node use it
