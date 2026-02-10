@@ -1015,13 +1015,15 @@ public class MergeService {
         }
     }
 
-    private String getFileNameUriPart(IAttachment attachment) {
+    @VisibleForTesting
+    String getFileNameUriPart(IAttachment attachment) {
         String uri = attachment.getUri() != null ? attachment.getUri().toString() : "";
         int fileNameSeparatorIndex = uri.lastIndexOf("#");
         return fileNameSeparatorIndex > -1 && fileNameSeparatorIndex + 1 < uri.length() ? uri.substring(fileNameSeparatorIndex + 1) : uri;
     }
 
-    private void updateAttachmentReferences(IWorkItem target, Map<String, String> fileNamesMapping) {
+    @VisibleForTesting
+    void updateAttachmentReferences(IWorkItem target, Map<String, String> fileNamesMapping) {
         List<WorkItemField> workItemFields = polarionService.getAllWorkItemFields(target.getProjectId());
         for (WorkItemField workItemField : workItemFields) {
             Object value = target.getValue(workItemField.getKey());

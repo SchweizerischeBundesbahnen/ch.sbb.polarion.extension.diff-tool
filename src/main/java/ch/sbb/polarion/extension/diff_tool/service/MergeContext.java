@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 public abstract class MergeContext {
     protected final MergeDirection direction;
     protected final MergeReport mergeReport = new MergeReport();
-    boolean updateAttachmentReferences;
+    protected final boolean updateAttachmentReferences;
 
     protected MergeContext(@NotNull MergeDirection direction, boolean updateAttachmentReferences) {
         this.direction = direction;

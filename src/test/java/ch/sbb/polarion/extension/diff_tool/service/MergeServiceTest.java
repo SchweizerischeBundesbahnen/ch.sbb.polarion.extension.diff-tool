@@ -56,7 +56,7 @@ import com.polarion.platform.persistence.IDataService;
 import com.polarion.platform.persistence.WrapperException;
 import com.polarion.platform.persistence.internal.CustomFieldsService;
 import com.polarion.platform.persistence.model.IPObject;
-import com.polarion.subterra.base.SubterraURI;
+
 import com.polarion.subterra.persistence.location.ObjectAlreadyExistsException;
 import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.platform.persistence.model.IPrototype;
@@ -2405,6 +2405,142 @@ class MergeServiceTest {
         // Same link to 3rd project exists on both sides - should be kept, not duplicated
         verify(target, never()).addLinkedItem(any(), any(), any(), anyBoolean());
         assertEquals(1, targetLinks.size());
+    }
+
+    // ==================== mergeAttachments() tests ====================
+
+    @Test
+    void testMergeAttachments_fileNamesMatch_noUpdateAttachmentReferences() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        MergeContext mergeContext = mock(MergeContext.class);
+
+        IAttachment targetAttachment = mock(IAttachment.class);
+        when(target.getAttachments()).thenReturn(new PObjectListStub(List.of(targetAttachment)));
+
+        // Both source and created attachments have null URIs -> both resolve to "" -> matching
+        IAttachment sourceAttachment = mock(IAttachment.class);
+        when(sourceAttachment.getFileName()).thenReturn("image.png");
+        when(sourceAttachment.getTitle()).thenReturn("Image");
+        when(source.getAttachments()).thenReturn(new PObjectListStub(List.of(sourceAttachment)));
+
+        IAttachment createdAttachment = mock(IAttachment.class);
+        when(target.createAttachment(anyString(), anyString(), any())).thenReturn(createdAttachment);
+
+        mergeService.mergeAttachments(source, target, mergeContext);
+
+        verify(target).deleteAttachment(targetAttachment);
+        verify(target).createAttachment("image.png", "Image", null);
+        verify(createdAttachment).save();
+        // File names match (both null URIs -> "") so updateAttachmentReferences should not be called
+        verify(polarionService, never()).getAllWorkItemFields(anyString());
+    }
+
+    @Test
+    void testMergeAttachments_deletesAllExistingTargetAttachments() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        MergeContext mergeContext = mock(MergeContext.class);
+
+        IAttachment targetAttachment1 = mock(IAttachment.class);
+        IAttachment targetAttachment2 = mock(IAttachment.class);
+        when(target.getAttachments()).thenReturn(new PObjectListStub(List.of(targetAttachment1, targetAttachment2)));
+        when(source.getAttachments()).thenReturn(new PObjectListStub(List.of()));
+
+        mergeService.mergeAttachments(source, target, mergeContext);
+
+        verify(target).deleteAttachment(targetAttachment1);
+        verify(target).deleteAttachment(targetAttachment2);
+    }
+
+    @Test
+    void testMergeAttachments_savesEachCreatedAttachment() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        MergeContext mergeContext = mock(MergeContext.class);
+        when(target.getAttachments()).thenReturn(new PObjectListStub(List.of()));
+
+        IAttachment sourceAttachment1 = mock(IAttachment.class);
+        when(sourceAttachment1.getFileName()).thenReturn("a.png");
+        when(sourceAttachment1.getTitle()).thenReturn("A");
+        IAttachment sourceAttachment2 = mock(IAttachment.class);
+        when(sourceAttachment2.getFileName()).thenReturn("b.png");
+        when(sourceAttachment2.getTitle()).thenReturn("B");
+        when(source.getAttachments()).thenReturn(new PObjectListStub(List.of(sourceAttachment1, sourceAttachment2)));
+
+        IAttachment created1 = mock(IAttachment.class);
+        IAttachment created2 = mock(IAttachment.class);
+        when(target.createAttachment(eq("a.png"), anyString(), any())).thenReturn(created1);
+        when(target.createAttachment(eq("b.png"), anyString(), any())).thenReturn(created2);
+
+        mergeService.mergeAttachments(source, target, mergeContext);
+
+        verify(created1).save();
+        verify(created2).save();
+    }
+
+    @Test
+    void testUpdateAttachmentReferences_replacesInRichTextFields() {
+        IWorkItem target = mock(IWorkItem.class);
+        when(target.getProjectId()).thenReturn("project1");
+
+        WorkItemField richField = WorkItemField.builder().key("description").build();
+        WorkItemField anotherRichField = WorkItemField.builder().key("testSteps").build();
+        when(polarionService.getAllWorkItemFields("project1")).thenReturn(List.of(richField, anotherRichField));
+
+        when(target.getValue("description")).thenReturn(Text.html("<p><img src=\"attachment:image.png\"/></p>"));
+        when(target.getValue("testSteps")).thenReturn(Text.html("<p>See image.png here</p>"));
+
+        mergeService.updateAttachmentReferences(target, Map.of("image.png", "image-1.png"));
+
+        verify(target).setValue("description", Text.html("<p><img src=\"attachment:image-1.png\"/></p>"));
+        verify(target).setValue("testSteps", Text.html("<p>See image-1.png here</p>"));
+        verify(target).save();
+    }
+
+    @Test
+    void testUpdateAttachmentReferences_skipsNonTextFields() {
+        IWorkItem target = mock(IWorkItem.class);
+        when(target.getProjectId()).thenReturn("project1");
+
+        WorkItemField textField = WorkItemField.builder().key("description").build();
+        WorkItemField nonTextField = WorkItemField.builder().key("status").build();
+        WorkItemField nullField = WorkItemField.builder().key("nullField").build();
+        when(polarionService.getAllWorkItemFields("project1")).thenReturn(List.of(textField, nonTextField, nullField));
+
+        when(target.getValue("description")).thenReturn(Text.html("<img src=\"attachment:img.png\"/>"));
+        when(target.getValue("status")).thenReturn("open");
+        when(target.getValue("nullField")).thenReturn(null);
+
+        mergeService.updateAttachmentReferences(target, Map.of("img.png", "img-1.png"));
+
+        verify(target).setValue("description", Text.html("<img src=\"attachment:img-1.png\"/>"));
+        verify(target, never()).setValue(eq("status"), any(Text.class));
+        verify(target, never()).setValue(eq("nullField"), any());
+        verify(target).save();
+    }
+
+    @Test
+    void testUpdateAttachmentReferences_multipleReplacements() {
+        IWorkItem target = mock(IWorkItem.class);
+        when(target.getProjectId()).thenReturn("project1");
+
+        WorkItemField field = WorkItemField.builder().key("description").build();
+        when(polarionService.getAllWorkItemFields("project1")).thenReturn(List.of(field));
+
+        when(target.getValue("description")).thenReturn(
+                Text.html("<div><img src=\"attachment:a.png\"/><img src=\"attachment:b.png\"/></div>"));
+
+        mergeService.updateAttachmentReferences(target, Map.of("a.png", "a-1.png", "b.png", "b-1.png"));
+
+        verify(target).setValue("description", Text.html("<div><img src=\"attachment:a-1.png\"/><img src=\"attachment:b-1.png\"/></div>"));
+        verify(target).save();
+    }
+
+    @Test
+    void testGetFileNameUriPart_nullUri() {
+        IAttachment attachment = mock(IAttachment.class);
+        assertEquals("", mergeService.getFileNameUriPart(attachment));
     }
 
     private ILinkedWorkItemStruct createLinkedWorkItemStruct(String roleId, String linkedItemId, String linkedItemProjectId) {
