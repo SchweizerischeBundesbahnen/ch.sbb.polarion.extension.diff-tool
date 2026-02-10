@@ -1830,6 +1830,10 @@
           },
           "rightDocument": {
             "$ref": "#/components/schemas/DocumentIdentifier"
+          },
+          "updateAttachmentReferences": {
+            "description": "Indicates whether attachment references should be updated in rich text fields when attachments are merged",
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -2402,6 +2406,10 @@
           },
           "rightProject": {
             "$ref": "#/components/schemas/Project"
+          },
+          "updateAttachmentReferences": {
+            "description": "Indicates whether attachment references should be updated in rich text fields when attachments are merged",
+            "type": "boolean"
           }
         },
         "type": "object"

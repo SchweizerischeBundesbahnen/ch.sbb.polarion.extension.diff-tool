@@ -43,8 +43,8 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext imple
     boolean copyMissingDocumentAttachments;
 
     public DocumentsMergeContext(@NotNull PolarionService polarionService, @NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier,
-                                 @NotNull MergeDirection direction, @NotNull String linkRole, @NotNull DiffModel diffModel) {
-        super(direction, linkRole, diffModel);
+                                 @NotNull MergeDirection direction, @NotNull String linkRole, @NotNull DiffModel diffModel, boolean updateAttachmentReferences) {
+        super(direction, linkRole, diffModel, updateAttachmentReferences);
         this.leftDocumentIdentifier = leftDocumentIdentifier;
         this.rightDocumentIdentifier = rightDocumentIdentifier;
 

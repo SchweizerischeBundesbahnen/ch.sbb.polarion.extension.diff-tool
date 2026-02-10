@@ -40,7 +40,7 @@ export default function WorkItemsDiff() {
 
   const mergeCallback = (direction) => {
     setMergeInProgress(true);
-    diffService.sendWorkItemsMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext)
+    diffService.sendWorkItemsMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, context.state.updateAttachmentReferences)
         .then((data) => {
           setMergeReport(data.mergeReport);
           setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);

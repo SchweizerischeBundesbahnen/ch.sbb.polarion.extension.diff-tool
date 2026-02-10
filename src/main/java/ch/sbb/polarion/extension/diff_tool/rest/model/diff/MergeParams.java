@@ -27,6 +27,9 @@ public class MergeParams {
     @Schema(description = "The ID of the configuration cache bucket")
     private String configCacheBucketId;
 
+    @Schema(description = "Indicates whether attachment references should be updated in rich text fields when attachments are merged")
+    private boolean updateAttachmentReferences;
+
     @Schema(description = "List of WorkItem pairs to be considered in the merge operation", implementation = WorkItemsPair.class)
     private List<WorkItemsPair> pairs;
 

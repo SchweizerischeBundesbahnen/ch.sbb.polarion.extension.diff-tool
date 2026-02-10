@@ -132,7 +132,7 @@ class MergeServiceTest {
         try (MockedStatic<DiffModelCachedResource> mockModelCache = mockStatic(DiffModelCachedResource.class)) {
             mockModelCache.when(() -> DiffModelCachedResource.get(anyString(), anyString(), anyString())).thenReturn(mock(DiffModel.class));
             DocumentsMergeParams mergeParams = new DocumentsMergeParams(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
-                    "any", null, "any", Collections.emptyList(), false);
+                    "any", null, "any", Collections.emptyList(), false, false);
             MergeResult mergeResult = mergeService.mergeDocuments(mergeParams);
             assertFalse(mergeResult.isSuccess());
             assertTrue(mergeResult.isTargetModuleHasStructuralChanges());
@@ -204,7 +204,7 @@ class MergeServiceTest {
         when(polarionService.userAuthorizedForMerge(any())).thenReturn(false);
 
         DocumentsMergeParams mergeParams = new DocumentsMergeParams(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
-                "any", null, "any", Collections.emptyList(), false);
+                "any", null, "any", Collections.emptyList(), false, false);
 
         try (MockedStatic<DiffModelCachedResource> mockModelCache = mockStatic(DiffModelCachedResource.class)) {
             mockModelCache.when(() -> DiffModelCachedResource.get(anyString(), anyString(), anyString())).thenReturn(mock(DiffModel.class));
@@ -277,7 +277,7 @@ class MergeServiceTest {
 
         WorkItemsPair workItemsPair = WorkItemsPair.builder().leftWorkItem(sourceWorkItem).rightWorkItem(targetWorkItem).build();
         workItemsPairs.add(workItemsPair);
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, true);
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, true, false);
 
         when(polarionService.userAuthorizedForMerge(anyString())).thenReturn(true);
 
@@ -446,8 +446,8 @@ class MergeServiceTest {
 
         when(diffModel.getDiffFields()).thenReturn(diffFields);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false);
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false, false);
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, false)
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge());
 
         when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
@@ -515,8 +515,8 @@ class MergeServiceTest {
         workItemsPairs.add(WorkItemsPair.of(leftWorkItem, rightWorkItem));
         DiffModel diffModel = mock(DiffModel.class);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false);
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false, false);
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, false)
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge());
 
         when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
@@ -585,8 +585,8 @@ class MergeServiceTest {
         DiffModel diffModel = mock(DiffModel.class);
         ILinkRoleOpt ilinkRoleOpt = mock(ILinkRoleOpt.class);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(ilinkRoleOpt);
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false);
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false, false);
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, false)
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge());
 
         when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
@@ -704,8 +704,8 @@ class MergeServiceTest {
         DiffModel diffModel = mock(DiffModel.class);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
 
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", List.of(pair), true);
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", List.of(pair), true, false);
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, false)
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge());
 
         when(mergeService.getWorkItem(pair.getLeftWorkItem())).thenReturn(leftWorkItem);
@@ -828,7 +828,7 @@ class MergeServiceTest {
     @Test
     void testUpdateItemWhenTargetNotChanged_ShouldMergeAndReportModification() {
         NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
-        WorkItemsMergeContext context = new WorkItemsMergeContext(mock(Project.class), mock(Project.class), MergeDirection.LEFT_TO_RIGHT, "", mock(DiffModel.class));
+        WorkItemsMergeContext context = new WorkItemsMergeContext(mock(Project.class), mock(Project.class), MergeDirection.LEFT_TO_RIGHT, "", mock(DiffModel.class), false);
 
         WorkItem sourceWorkItem = mock(WorkItem.class);
         WorkItem targetWorkItem = mock(WorkItem.class);
@@ -1166,7 +1166,7 @@ class MergeServiceTest {
         DiffModel model = mock(DiffModel.class);
         ILinkRoleOpt iLinkRoleOpt = mock(ILinkRoleOpt.class);
         when(polarionService.getLinkRoleById(eq("someLinkRole"), any())).thenReturn(iLinkRoleOpt);
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model)
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model, false)
                 .setAllowReferencedWorkItemMerge(true);
         IWorkItem workItem = mock(IWorkItem.class);
         lenient().when(mergeService.getWorkItem(target)).thenReturn(workItem);
@@ -1360,7 +1360,7 @@ class MergeServiceTest {
 
         DiffModel model = mock(DiffModel.class);
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model));
+                new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model, false));
         assertEquals("No link role could be found by ID 'someLinkRole'", exception.getMessage());
     }
 
@@ -1577,8 +1577,8 @@ class MergeServiceTest {
 
         when(diffModel.getDiffFields()).thenReturn(diffFields);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false);
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false, false);
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, false)
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge());
 
         when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
@@ -1949,11 +1949,274 @@ class MergeServiceTest {
 
         when(source.getAttachments()).thenReturn(new PObjectListStub(List.of(sourceAttachment1, sourceAttachment2)));
         when(target.getAttachments()).thenReturn(new PObjectListStub(List.of(targetAttachment)));
+        when(target.createAttachment(anyString(), anyString(), any())).thenReturn(targetAttachment);
 
         mergeService.merge(source, target, context, pair);
 
         verify(target, times(1)).deleteAttachment(any());
         verify(target, times(2)).createAttachment(anyString(), anyString(), nullable(InputStream.class));
+    }
+
+    // ==================== mergeAttachments() tests ====================
+
+    @Test
+    void testMergeAttachments_fileNamesMatch_noUpdateAttachmentReferences() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        MergeContext mergeContext = mock(MergeContext.class);
+
+        IAttachment targetAttachment = mock(IAttachment.class);
+        when(target.getAttachments()).thenReturn(new PObjectListStub(List.of(targetAttachment)));
+
+        // Both source and created attachments have null URIs -> both resolve to "" -> matching
+        IAttachment sourceAttachment = mock(IAttachment.class);
+        when(sourceAttachment.getFileName()).thenReturn("image.png");
+        when(sourceAttachment.getTitle()).thenReturn("Image");
+        when(source.getAttachments()).thenReturn(new PObjectListStub(List.of(sourceAttachment)));
+
+        IAttachment createdAttachment = mock(IAttachment.class);
+        when(target.createAttachment(anyString(), anyString(), any())).thenReturn(createdAttachment);
+
+        mergeService.mergeAttachments(source, target, mergeContext);
+
+        verify(target).deleteAttachment(targetAttachment);
+        verify(target).createAttachment("image.png", "Image", null);
+        verify(createdAttachment).save();
+        // File names match (both null URIs -> "") so updateAttachmentReferences should not be called
+        verify(polarionService, never()).getAllWorkItemFields(anyString());
+    }
+
+    @Test
+    void testMergeAttachments_deletesAllExistingTargetAttachments() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        MergeContext mergeContext = mock(MergeContext.class);
+
+        IAttachment targetAttachment1 = mock(IAttachment.class);
+        IAttachment targetAttachment2 = mock(IAttachment.class);
+        when(target.getAttachments()).thenReturn(new PObjectListStub(List.of(targetAttachment1, targetAttachment2)));
+        when(source.getAttachments()).thenReturn(new PObjectListStub(List.of()));
+
+        mergeService.mergeAttachments(source, target, mergeContext);
+
+        verify(target).deleteAttachment(targetAttachment1);
+        verify(target).deleteAttachment(targetAttachment2);
+    }
+
+    @Test
+    void testMergeAttachments_savesEachCreatedAttachment() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        MergeContext mergeContext = mock(MergeContext.class);
+        when(target.getAttachments()).thenReturn(new PObjectListStub(List.of()));
+
+        IAttachment sourceAttachment1 = mock(IAttachment.class);
+        when(sourceAttachment1.getFileName()).thenReturn("a.png");
+        when(sourceAttachment1.getTitle()).thenReturn("A");
+        IAttachment sourceAttachment2 = mock(IAttachment.class);
+        when(sourceAttachment2.getFileName()).thenReturn("b.png");
+        when(sourceAttachment2.getTitle()).thenReturn("B");
+        when(source.getAttachments()).thenReturn(new PObjectListStub(List.of(sourceAttachment1, sourceAttachment2)));
+
+        IAttachment created1 = mock(IAttachment.class);
+        IAttachment created2 = mock(IAttachment.class);
+        when(target.createAttachment(eq("a.png"), anyString(), any())).thenReturn(created1);
+        when(target.createAttachment(eq("b.png"), anyString(), any())).thenReturn(created2);
+
+        mergeService.mergeAttachments(source, target, mergeContext);
+
+        verify(created1).save();
+        verify(created2).save();
+    }
+
+    @Test
+    void testUpdateAttachmentReferences_replacesInRichTextFields() {
+        IWorkItem target = mock(IWorkItem.class);
+        when(target.getProjectId()).thenReturn("project1");
+
+        WorkItemField richField = WorkItemField.builder().key("description").build();
+        WorkItemField anotherRichField = WorkItemField.builder().key("testSteps").build();
+        when(polarionService.getAllWorkItemFields("project1")).thenReturn(List.of(richField, anotherRichField));
+
+        when(target.getValue("description")).thenReturn(Text.html("<p><img src=\"attachment:image.png\"/></p>"));
+        when(target.getValue("testSteps")).thenReturn(Text.html("<p>See image.png here</p>"));
+
+        mergeService.updateAttachmentReferences(target, Map.of("image.png", "image-1.png"));
+
+        verify(target).setValue("description", Text.html("<p><img src=\"attachment:image-1.png\"/></p>"));
+        verify(target).setValue("testSteps", Text.html("<p>See image-1.png here</p>"));
+        verify(target).save();
+    }
+
+    @Test
+    void testUpdateAttachmentReferences_skipsNonTextFields() {
+        IWorkItem target = mock(IWorkItem.class);
+        when(target.getProjectId()).thenReturn("project1");
+
+        WorkItemField textField = WorkItemField.builder().key("description").build();
+        WorkItemField nonTextField = WorkItemField.builder().key("status").build();
+        WorkItemField nullField = WorkItemField.builder().key("nullField").build();
+        when(polarionService.getAllWorkItemFields("project1")).thenReturn(List.of(textField, nonTextField, nullField));
+
+        when(target.getValue("description")).thenReturn(Text.html("<img src=\"attachment:img.png\"/>"));
+        when(target.getValue("status")).thenReturn("open");
+        when(target.getValue("nullField")).thenReturn(null);
+
+        mergeService.updateAttachmentReferences(target, Map.of("img.png", "img-1.png"));
+
+        verify(target).setValue("description", Text.html("<img src=\"attachment:img-1.png\"/>"));
+        verify(target, never()).setValue(eq("status"), any(Text.class));
+        verify(target, never()).setValue(eq("nullField"), any());
+        verify(target).save();
+    }
+
+    @Test
+    void testUpdateAttachmentReferences_multipleReplacements() {
+        IWorkItem target = mock(IWorkItem.class);
+        when(target.getProjectId()).thenReturn("project1");
+
+        WorkItemField field = WorkItemField.builder().key("description").build();
+        when(polarionService.getAllWorkItemFields("project1")).thenReturn(List.of(field));
+
+        when(target.getValue("description")).thenReturn(
+                Text.html("<div><img src=\"attachment:a.png\"/><img src=\"attachment:b.png\"/></div>"));
+
+        mergeService.updateAttachmentReferences(target, Map.of("a.png", "a-1.png", "b.png", "b-1.png"));
+
+        verify(target).setValue("description", Text.html("<div><img src=\"attachment:a-1.png\"/><img src=\"attachment:b-1.png\"/></div>"));
+        verify(target).save();
+    }
+
+    @Test
+    void testMergeAttachments_fileNamesDiffer_updatesReferences() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        when(target.getProjectId()).thenReturn("project1");
+        MergeContext mergeContext = mock(MergeContext.class);
+        when(mergeContext.isUpdateAttachmentReferences()).thenReturn(true);
+
+        when(target.getAttachments()).thenReturn(new PObjectListStub(List.of()));
+
+        IAttachment sourceAttachment = mock(IAttachment.class);
+        when(sourceAttachment.getFileName()).thenReturn("image.png");
+        when(sourceAttachment.getTitle()).thenReturn("Image");
+        when(source.getAttachments()).thenReturn(new PObjectListStub(List.of(sourceAttachment)));
+
+        IAttachment createdAttachment = mock(IAttachment.class);
+        when(target.createAttachment(anyString(), anyString(), any())).thenReturn(createdAttachment);
+
+        // Spy mergeService to control getFileNameUriPart return values
+        MergeService mergeServiceSpy = spy(mergeService);
+        doReturn("image.png").when(mergeServiceSpy).getFileNameUriPart(sourceAttachment);
+        doReturn("image-1.png").when(mergeServiceSpy).getFileNameUriPart(createdAttachment);
+
+        WorkItemField field = WorkItemField.builder().key("description").build();
+        when(polarionService.getAllWorkItemFields("project1")).thenReturn(List.of(field));
+        when(target.getValue("description")).thenReturn(Text.html("<img src=\"attachment:image.png\"/>"));
+
+        mergeServiceSpy.mergeAttachments(source, target, mergeContext);
+
+        verify(createdAttachment).save();
+        verify(target).setValue("description", Text.html("<img src=\"attachment:image-1.png\"/>"));
+        verify(target).save();
+    }
+
+    @Test
+    void testMergeAttachments_fileNamesDiffer_updateReferencesDisabled_noUpdate() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        MergeContext mergeContext = mock(MergeContext.class);
+        when(mergeContext.isUpdateAttachmentReferences()).thenReturn(false);
+
+        when(target.getAttachments()).thenReturn(new PObjectListStub(List.of()));
+
+        IAttachment sourceAttachment = mock(IAttachment.class);
+        when(sourceAttachment.getFileName()).thenReturn("image.png");
+        when(sourceAttachment.getTitle()).thenReturn("Image");
+        when(source.getAttachments()).thenReturn(new PObjectListStub(List.of(sourceAttachment)));
+
+        IAttachment createdAttachment = mock(IAttachment.class);
+        when(target.createAttachment(anyString(), anyString(), any())).thenReturn(createdAttachment);
+
+        MergeService mergeServiceSpy = spy(mergeService);
+        doReturn("image.png").when(mergeServiceSpy).getFileNameUriPart(sourceAttachment);
+        doReturn("image-1.png").when(mergeServiceSpy).getFileNameUriPart(createdAttachment);
+
+        mergeServiceSpy.mergeAttachments(source, target, mergeContext);
+
+        verify(createdAttachment).save();
+        // fileNamesMapping is non-empty but flag is false -> no update
+        verify(polarionService, never()).getAllWorkItemFields(anyString());
+        verify(target, never()).save();
+    }
+
+    @Test
+    void testGetFileNameUriPart_nullUri() {
+        IAttachment attachment = mock(IAttachment.class);
+        assertEquals("", mergeService.getFileNameUriPart(attachment));
+    }
+
+    // ==================== orderForMerge() tests ====================
+
+    @Test
+    void testOrderForMerge_attachmentsMovedToEnd() {
+        List<DiffField> fields = List.of(
+                DiffField.builder().key("attachments").build(),
+                DiffField.builder().key("description").build(),
+                DiffField.builder().key("status").build()
+        );
+
+        List<DiffField> ordered = mergeService.orderForMerge(fields);
+
+        assertEquals("description", ordered.get(0).getKey());
+        assertEquals("status", ordered.get(1).getKey());
+        assertEquals("attachments", ordered.get(2).getKey());
+    }
+
+    @Test
+    void testOrderForMerge_noAttachments_notModified() {
+        List<DiffField> fields = List.of(
+                DiffField.builder().key("status").build(),
+                DiffField.builder().key("description").build(),
+                DiffField.builder().key("author").build()
+        );
+
+        List<DiffField> ordered = mergeService.orderForMerge(fields);
+
+        assertEquals("status", ordered.get(0).getKey());
+        assertEquals("description", ordered.get(1).getKey());
+        assertEquals("author", ordered.get(2).getKey());
+    }
+
+    @Test
+    void testOrderForMerge_onlyAttachments() {
+        List<DiffField> fields = List.of(DiffField.builder().key("attachments").build());
+
+        List<DiffField> ordered = mergeService.orderForMerge(fields);
+
+        assertEquals(1, ordered.size());
+        assertEquals("attachments", ordered.get(0).getKey());
+    }
+
+    @Test
+    void testOrderForMerge_emptyList() {
+        List<DiffField> ordered = mergeService.orderForMerge(List.of());
+        assertTrue(ordered.isEmpty());
+    }
+
+    @Test
+    void testOrderForMerge_attachmentsAlreadyLast() {
+        List<DiffField> fields = List.of(
+                DiffField.builder().key("author").build(),
+                DiffField.builder().key("description").build(),
+                DiffField.builder().key("attachments").build()
+        );
+
+        List<DiffField> ordered = mergeService.orderForMerge(fields);
+
+        assertEquals("author", ordered.get(0).getKey());
+        assertEquals("description", ordered.get(1).getKey());
+        assertEquals("attachments", ordered.get(2).getKey());
     }
 
     private IModule mockTargetModule() {
