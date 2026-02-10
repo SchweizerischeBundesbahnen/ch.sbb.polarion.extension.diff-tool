@@ -52,6 +52,7 @@ class MergeParamsTest {
                 "role",
                 "config",
                 "bucketId",
+                false,
                 pairs
         );
 

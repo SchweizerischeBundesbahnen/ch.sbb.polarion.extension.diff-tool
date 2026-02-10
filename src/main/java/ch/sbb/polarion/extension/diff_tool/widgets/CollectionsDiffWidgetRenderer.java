@@ -92,7 +92,7 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
         HtmlTagBuilder outerTable = parent.append().tag().table();
         outerTable.attributes().className("polarion-rpw-table-main");
         //language=JS
-        outerTable.attributes().onClick(String.format("DiffTool.updateCollectionsDiffButton(this, '%s');", params.sourceParams().projectId()));
+        outerTable.attributes().onClick(String.format("DiffToolWidgetUtils.updateCollectionsDiffButton(this, '%s');", params.sourceParams().projectId()));
 
         HtmlTagBuilder contentTable = outerTable.append().tag().tr().append().tag().td().append().tag().table();
         contentTable.attributes().className("polarion-rpw-table-content");

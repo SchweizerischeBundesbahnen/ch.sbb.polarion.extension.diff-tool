@@ -9,12 +9,12 @@
 <head>
     <link rel="stylesheet" type="text/css" href="/polarion/gwt/gwt/polarion/polarion.css?buildId=<%= product.buildNumber() %>">
     <link rel="stylesheet" type="text/css" href="../css/common.css?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>">
-    <script type="text/javascript" src="../js/modules/DiffTool.js?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>"></script>
+    <script type="text/javascript" src="../js/diff-tool-widget-utils.js?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>"></script>
 </head>
 <body onload="document.getElementById('source-query-input').addEventListener('keydown', (event) => {
     if (event.code === 'Enter') { // Apply query by pressing Enter key being in input field
         const newValue = document.getElementById('source-query-input').value;
-        top.location.href = DiffTool.replaceUrlParam(top.location.href, 'sourceQuery', encodeURIComponent(newValue));
+        top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'sourceQuery', encodeURIComponent(newValue));
         top.location.reload()
     }
 });">

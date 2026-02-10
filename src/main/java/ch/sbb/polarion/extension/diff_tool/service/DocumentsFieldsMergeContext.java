@@ -13,7 +13,7 @@ public class DocumentsFieldsMergeContext extends MergeContext {
     protected final DocumentIdentifier targetDocumentIdentifier;
 
     protected DocumentsFieldsMergeContext(@NotNull MergeDirection direction, DocumentIdentifier leftDocument, DocumentIdentifier rightDocument) {
-        super(direction);
+        super(direction, false);
         sourceDocumentIdentifier = direction.equals(MergeDirection.LEFT_TO_RIGHT) ? leftDocument : rightDocument;
         targetDocumentIdentifier = direction.equals(MergeDirection.LEFT_TO_RIGHT) ? rightDocument : leftDocument;
     }
