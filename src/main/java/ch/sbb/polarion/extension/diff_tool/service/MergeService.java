@@ -738,7 +738,8 @@ public class MergeService {
         target.save();
     }
 
-    private List<DiffField> orderForMerge(List<DiffField> fields) {
+    @VisibleForTesting
+    List<DiffField> orderForMerge(List<DiffField> fields) {
         // Attachments should be merged last, cause their merging can affect rich text fields
         Comparator<DiffField> comparator = (field1, field2) -> {
             if (field1.getKey().equals(field2.getKey())) {
