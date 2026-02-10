@@ -2624,7 +2624,7 @@ class MergeServiceTest {
     }
 
     @Test
-    void testOrderForMerge_noAttachments_sortedAlphabetically() {
+    void testOrderForMerge_noAttachments_notModified() {
         List<DiffField> fields = List.of(
                 DiffField.builder().key("status").build(),
                 DiffField.builder().key("description").build(),
@@ -2633,9 +2633,9 @@ class MergeServiceTest {
 
         List<DiffField> ordered = mergeService.orderForMerge(fields);
 
-        assertEquals("author", ordered.get(0).getKey());
+        assertEquals("status", ordered.get(0).getKey());
         assertEquals("description", ordered.get(1).getKey());
-        assertEquals("status", ordered.get(2).getKey());
+        assertEquals("author", ordered.get(2).getKey());
     }
 
     @Test

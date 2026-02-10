@@ -740,19 +740,25 @@ public class MergeService {
 
     @VisibleForTesting
     List<DiffField> orderForMerge(List<DiffField> fields) {
-        // Attachments should be merged last, cause their merging can affect rich text fields
-        Comparator<DiffField> comparator = (field1, field2) -> {
-            if (field1.getKey().equals(field2.getKey())) {
-                return 0;
-            } else if (!KEY_ATTACHMENTS.equals(field1.getKey()) && !KEY_ATTACHMENTS.equals(field2.getKey())) {
-                return field1.getKey().compareTo(field2.getKey());
-            } else if (KEY_ATTACHMENTS.equals(field1.getKey()))  {
-                return 1;
-            } else {
-                return -1;
+        // Attachments should be merged last, cause their merging can affect rich text fields.
+        // Preserve the original relative order of all fields, only moving attachments to the end.
+        List<DiffField> ordered = new ArrayList<>(fields.size());
+
+        // First, add all non-attachment fields in their original order.
+        for (DiffField field : fields) {
+            if (!KEY_ATTACHMENTS.equals(field.getKey())) {
+                ordered.add(field);
             }
-        };
-        return fields.stream().sorted(comparator).toList();
+        }
+
+        // Then, add all attachment fields in their original order.
+        for (DiffField field : fields) {
+            if (KEY_ATTACHMENTS.equals(field.getKey())) {
+                ordered.add(field);
+            }
+        }
+
+        return ordered;
     }
 
     @VisibleForTesting
