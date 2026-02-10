@@ -102,7 +102,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         assertEquals(MergeDirection.LEFT_TO_RIGHT, context.getDirection());
         assertEquals(LINK_ROLE, context.getLinkRole());
@@ -117,7 +117,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.RIGHT_TO_LEFT, LINK_ROLE, diffModel);
+                MergeDirection.RIGHT_TO_LEFT, LINK_ROLE, diffModel, false);
 
         assertEquals(MergeDirection.RIGHT_TO_LEFT, context.getDirection());
     }
@@ -129,7 +129,7 @@ class DocumentsMergeContextTest {
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 new DocumentsMergeContext(polarionService, leftDocIdentifier, rightDocIdentifier,
-                        MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel));
+                        MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false));
 
         assertTrue(exception.getMessage().contains(LINK_ROLE));
     }
@@ -140,7 +140,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         assertEquals(leftModule, context.getSourceModule());
     }
@@ -152,7 +152,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.RIGHT_TO_LEFT, LINK_ROLE, diffModel);
+                MergeDirection.RIGHT_TO_LEFT, LINK_ROLE, diffModel, false);
 
         assertEquals(rightModule, context.getSourceModule());
     }
@@ -163,7 +163,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         assertEquals(rightModule, context.getTargetModule());
     }
@@ -175,7 +175,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.RIGHT_TO_LEFT, LINK_ROLE, diffModel);
+                MergeDirection.RIGHT_TO_LEFT, LINK_ROLE, diffModel, false);
 
         assertEquals(leftModule, context.getTargetModule());
     }
@@ -186,7 +186,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         assertEquals(rightDocIdentifier, context.getTargetDocumentIdentifier());
     }
@@ -198,7 +198,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.RIGHT_TO_LEFT, LINK_ROLE, diffModel);
+                MergeDirection.RIGHT_TO_LEFT, LINK_ROLE, diffModel, false);
 
         assertEquals(leftDocIdentifier, context.getTargetDocumentIdentifier());
     }
@@ -209,7 +209,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         WorkItemsPair pair = new WorkItemsPair();
         pair.setLeftWorkItem(null);
@@ -228,7 +228,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         WorkItemsPair pair = new WorkItemsPair();
         pair.setLeftWorkItem(WorkItem.builder().id("left1").build());
@@ -247,7 +247,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         assertNotNull(context.getAffectedModules());
         assertTrue(context.getAffectedModules().isEmpty());
@@ -259,7 +259,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         assertFalse(context.isAllowedReferencedWorkItemMerge());
 
@@ -276,7 +276,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         assertFalse(context.isPreserveComments());
 
@@ -293,7 +293,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         IModule.IStructureNode sourceNode = mock(IModule.IStructureNode.class);
         IModule.IStructureNode targetNode = mock(IModule.IStructureNode.class);
@@ -310,7 +310,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         IWorkItem sourceWorkItem = mock(IWorkItem.class);
         IModule oppositeModule = mock(IModule.class);
@@ -347,7 +347,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         assertNotNull(context.getSourceDocumentReference());
         assertNotNull(context.getTargetDocumentReference());
@@ -360,7 +360,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftDocIdentifier, rightDocIdentifier,
-                MergeDirection.RIGHT_TO_LEFT, LINK_ROLE, diffModel);
+                MergeDirection.RIGHT_TO_LEFT, LINK_ROLE, diffModel, false);
 
         assertNotNull(context.getSourceDocumentReference());
         assertNotNull(context.getTargetDocumentReference());
@@ -380,7 +380,7 @@ class DocumentsMergeContextTest {
 
         DocumentsMergeContext context = new DocumentsMergeContext(
                 polarionService, leftWithRevision, rightDocIdentifier,
-                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel);
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, diffModel, false);
 
         assertNotNull(context.getSourceDocumentReference());
     }

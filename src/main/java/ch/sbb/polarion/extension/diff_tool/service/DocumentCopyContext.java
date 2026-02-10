@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 public final class DocumentCopyContext extends SettingsAwareMergeContext {
 
     public DocumentCopyContext(@Nullable String linkRole, @NotNull DiffModel diffModel) {
-        super(MergeDirection.LEFT_TO_RIGHT, linkRole == null ? "" : linkRole, diffModel);
+        super(MergeDirection.LEFT_TO_RIGHT, linkRole == null ? "" : linkRole, diffModel, true);
     }
 
 }

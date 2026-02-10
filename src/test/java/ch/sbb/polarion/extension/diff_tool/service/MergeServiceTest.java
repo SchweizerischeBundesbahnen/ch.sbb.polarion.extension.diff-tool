@@ -56,6 +56,7 @@ import com.polarion.platform.persistence.IDataService;
 import com.polarion.platform.persistence.WrapperException;
 import com.polarion.platform.persistence.internal.CustomFieldsService;
 import com.polarion.platform.persistence.model.IPObject;
+import com.polarion.subterra.base.SubterraURI;
 import com.polarion.subterra.persistence.location.ObjectAlreadyExistsException;
 import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.platform.persistence.model.IPrototype;
@@ -133,7 +134,7 @@ class MergeServiceTest {
         try (MockedStatic<DiffModelCachedResource> mockModelCache = mockStatic(DiffModelCachedResource.class)) {
             mockModelCache.when(() -> DiffModelCachedResource.get(anyString(), anyString(), anyString())).thenReturn(mock(DiffModel.class));
             DocumentsMergeParams mergeParams = new DocumentsMergeParams(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
-                    "any", null, "any", Collections.emptyList(), false);
+                    "any", null, "any", Collections.emptyList(), false, false);
             MergeResult mergeResult = mergeService.mergeDocuments(mergeParams);
             assertFalse(mergeResult.isSuccess());
             assertTrue(mergeResult.isTargetModuleHasStructuralChanges());
@@ -205,7 +206,7 @@ class MergeServiceTest {
         when(polarionService.userAuthorizedForMerge(any())).thenReturn(false);
 
         DocumentsMergeParams mergeParams = new DocumentsMergeParams(documentIdentifier1, documentIdentifier2, MergeDirection.LEFT_TO_RIGHT,
-                "any", null, "any", Collections.emptyList(), false);
+                "any", null, "any", Collections.emptyList(), false, false);
 
         try (MockedStatic<DiffModelCachedResource> mockModelCache = mockStatic(DiffModelCachedResource.class)) {
             mockModelCache.when(() -> DiffModelCachedResource.get(anyString(), anyString(), anyString())).thenReturn(mock(DiffModel.class));
@@ -278,7 +279,7 @@ class MergeServiceTest {
 
         WorkItemsPair workItemsPair = WorkItemsPair.builder().leftWorkItem(sourceWorkItem).rightWorkItem(targetWorkItem).build();
         workItemsPairs.add(workItemsPair);
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, true);
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, true, false);
 
         when(polarionService.userAuthorizedForMerge(anyString())).thenReturn(true);
 
@@ -447,8 +448,8 @@ class MergeServiceTest {
 
         when(diffModel.getDiffFields()).thenReturn(diffFields);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false);
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false, false);
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, false)
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge());
 
         when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
@@ -516,8 +517,8 @@ class MergeServiceTest {
         workItemsPairs.add(WorkItemsPair.of(leftWorkItem, rightWorkItem));
         DiffModel diffModel = mock(DiffModel.class);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false);
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false, false);
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, false)
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge());
 
         when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
@@ -586,8 +587,8 @@ class MergeServiceTest {
         DiffModel diffModel = mock(DiffModel.class);
         ILinkRoleOpt ilinkRoleOpt = mock(ILinkRoleOpt.class);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(ilinkRoleOpt);
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false);
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false, false);
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, false)
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge());
 
         when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
@@ -812,8 +813,8 @@ class MergeServiceTest {
         DiffModel diffModel = mock(DiffModel.class);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
 
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", List.of(pair), true);
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", List.of(pair), true, false);
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, false)
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge());
 
         when(mergeService.getWorkItem(pair.getLeftWorkItem())).thenReturn(leftWorkItem);
@@ -936,7 +937,7 @@ class MergeServiceTest {
     @Test
     void testUpdateItemWhenTargetNotChanged_ShouldMergeAndReportModification() {
         NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
-        WorkItemsMergeContext context = new WorkItemsMergeContext(mock(Project.class), mock(Project.class), MergeDirection.LEFT_TO_RIGHT, "", mock(DiffModel.class));
+        WorkItemsMergeContext context = new WorkItemsMergeContext(mock(Project.class), mock(Project.class), MergeDirection.LEFT_TO_RIGHT, "", mock(DiffModel.class), false);
 
         WorkItem sourceWorkItem = mock(WorkItem.class);
         WorkItem targetWorkItem = mock(WorkItem.class);
@@ -1274,7 +1275,7 @@ class MergeServiceTest {
         DiffModel model = mock(DiffModel.class);
         ILinkRoleOpt iLinkRoleOpt = mock(ILinkRoleOpt.class);
         when(polarionService.getLinkRoleById(eq("someLinkRole"), any())).thenReturn(iLinkRoleOpt);
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model)
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model, false)
                 .setAllowReferencedWorkItemMerge(true);
         IWorkItem workItem = mock(IWorkItem.class);
         lenient().when(mergeService.getWorkItem(target)).thenReturn(workItem);
@@ -1468,7 +1469,7 @@ class MergeServiceTest {
 
         DiffModel model = mock(DiffModel.class);
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                new DocumentsMergeContext(polarionServiceMock, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model));
+                new DocumentsMergeContext(polarionServiceMock, leftIdentifier, rightIdentifier, MergeDirection.LEFT_TO_RIGHT, "someLinkRole", model, false));
         assertEquals("No link role could be found by ID 'someLinkRole'", exception.getMessage());
     }
 
@@ -1708,8 +1709,8 @@ class MergeServiceTest {
 
         when(diffModel.getDiffFields()).thenReturn(diffFields);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
-        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false);
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false, false);
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, false)
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge());
 
         when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
@@ -2080,6 +2081,7 @@ class MergeServiceTest {
 
         when(source.getAttachments()).thenReturn(new PObjectListStub(List.of(sourceAttachment1, sourceAttachment2)));
         when(target.getAttachments()).thenReturn(new PObjectListStub(List.of(targetAttachment)));
+        when(target.createAttachment(anyString(), anyString(), any())).thenReturn(targetAttachment);
 
         mergeService.merge(source, target, context, pair);
 

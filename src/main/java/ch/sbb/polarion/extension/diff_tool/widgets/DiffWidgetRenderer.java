@@ -177,11 +177,11 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         applyButton.append().text("Apply");
         //language=JS
         String applyButtonScript = """
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'targetProjectId', document.getElementById('target-project-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'configuration', document.getElementById('config-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>Query', document.getElementById('<SIDE>-query-input').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>RecordsPerPage', document.getElementById('<SIDE>-records-per-page-input').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'targetProjectId', document.getElementById('target-project-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'configuration', document.getElementById('config-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, '<SIDE>Query', document.getElementById('<SIDE>-query-input').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, '<SIDE>RecordsPerPage', document.getElementById('<SIDE>-records-per-page-input').value);
                 top.location.reload()"""
                 .replace(SIDE_PLACEHOLDER, dataSetParams.side().toString());
         applyButton.attributes().onClick(applyButtonScript);
@@ -190,11 +190,11 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         resetButton.append().text("Reset");
         //language=JS
         String resetButtonScript = """
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'targetProjectId', document.getElementById('target-project-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'configuration', document.getElementById('config-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>Query', '');
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>RecordsPerPage', '20');
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'targetProjectId', document.getElementById('target-project-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'configuration', document.getElementById('config-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, '<SIDE>Query', '');
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, '<SIDE>RecordsPerPage', '20');
                 top.location.reload()"""
                 .replace(SIDE_PLACEHOLDER, dataSetParams.side().toString());
         resetButton.attributes().onClick(resetButtonScript);
@@ -241,7 +241,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
             HtmlTagBuilder checkbox = th.append().tag().byName(INPUT_TAG);
             checkbox.attributes().byName("type", "checkbox").className("export-all");
             //language=JS
-            checkbox.attributes().onClick("DiffTool.selectAllItems(this);");
+            checkbox.attributes().onClick("DiffToolWidgetUtils.selectAllItems(this);");
         }
 
         for (Field column : getFields()) {
@@ -329,11 +329,11 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
     protected void renderPaginatorLink(@NotNull HtmlTagBuilder paginator, @NotNull String text, int page, @NotNull DataSetWidgetParams.Side side) {
         //language=JS
         String paginatorScript = """
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'targetProjectId', document.getElementById('target-project-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'configuration', document.getElementById('config-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>RecordsPerPage', document.getElementById('<SIDE>-records-per-page-input').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, '<SIDE>Page', '<PAGE_NUMBER>');
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'targetProjectId', document.getElementById('target-project-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'configuration', document.getElementById('config-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, '<SIDE>RecordsPerPage', document.getElementById('<SIDE>-records-per-page-input').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, '<SIDE>Page', '<PAGE_NUMBER>');
                 top.location.reload()"""
                 .replace(SIDE_PLACEHOLDER, side.toString())
                 .replace("<PAGE_NUMBER>", String.valueOf(page));

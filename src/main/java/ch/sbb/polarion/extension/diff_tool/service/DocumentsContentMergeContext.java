@@ -15,7 +15,7 @@ public class DocumentsContentMergeContext extends MergeContext implements IPrese
     final boolean preserveComments;
 
     protected DocumentsContentMergeContext(@NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier, @NotNull MergeDirection direction, boolean preserveComments) {
-        super(direction);
+        super(direction, false);
 
         this.leftDocumentIdentifier = leftDocumentIdentifier;
         this.rightDocumentIdentifier = rightDocumentIdentifier;

@@ -320,20 +320,20 @@ class WorkItemsDiffWidgetRendererTest {
 
         verify(applyButtonContentBuilder, times(1)).text("Apply");
         verify(applyButtonAttributesBuilder, times(1)).onClick("""
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'targetProjectId', document.getElementById('target-project-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'configuration', document.getElementById('config-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'sourceQuery', document.getElementById('source-query-input').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'sourceRecordsPerPage', document.getElementById('source-records-per-page-input').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'targetProjectId', document.getElementById('target-project-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'configuration', document.getElementById('config-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'sourceQuery', document.getElementById('source-query-input').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'sourceRecordsPerPage', document.getElementById('source-records-per-page-input').value);
                 top.location.reload()""");
 
         verify(resetButtonContentBuilder, times(1)).text("Reset");
         verify(resetButtonAttributesBuilder, times(1)).onClick("""
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'targetProjectId', document.getElementById('target-project-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'configuration', document.getElementById('config-selector').value);
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'sourceQuery', '');
-                top.location.href = DiffTool.replaceUrlParam(top.location.href, 'sourceRecordsPerPage', '20');
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'targetProjectId', document.getElementById('target-project-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'linkRole', document.getElementById('link-role-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'configuration', document.getElementById('config-selector').value);
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'sourceQuery', '');
+                top.location.href = DiffToolWidgetUtils.replaceUrlParam(top.location.href, 'sourceRecordsPerPage', '20');
                 top.location.reload()""");
 
     }

@@ -15,8 +15,8 @@ public abstract class SettingsAwareMergeContext extends MergeContext {
     protected final String linkRole;
     protected final DiffModel diffModel;
 
-    protected SettingsAwareMergeContext(@NotNull MergeDirection direction, @NotNull String linkRole, @NotNull DiffModel diffModel) {
-        super(direction);
+    protected SettingsAwareMergeContext(@NotNull MergeDirection direction, @NotNull String linkRole, @NotNull DiffModel diffModel, boolean updateAttachmentReferences) {
+        super(direction, updateAttachmentReferences);
         this.linkRole = linkRole;
         this.diffModel = diffModel;
     }

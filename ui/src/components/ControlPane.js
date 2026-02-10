@@ -279,6 +279,15 @@ export default function ControlPane({diff_type}) {
                 </label>
               </div>
           }
+          {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF && diff_type !== DiffTypes.DOCUMENTS_CONTENT_DIFF &&
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" value="" checked={context.state.updateAttachmentReferences} id="update-attachment-references"
+                       onChange={() => context.state.setUpdateAttachmentReferences(!context.state.updateAttachmentReferences)}/>
+                <label className="form-check-label" htmlFor="update-attachment-references" title="When attachments are merged, their file names can change. When this option is selected DiffTool will try to update rich text fields to reflect this change, when not selected DiffTool won't modify attachment references in rich text fields.">
+                  Update attachment references in rich text fields
+                </label>
+              </div>
+          }
           <div className="export-controls">
             <h1>Export to PDF</h1>
             <div className="select-set">
