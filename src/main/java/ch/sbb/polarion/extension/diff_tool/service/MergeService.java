@@ -1013,7 +1013,7 @@ public class MergeService {
             String sourceFileName = getFileNameUriPart(sourceAttachment);
             String targetFileName = getFileNameUriPart(createdAttachment);
             if (!sourceFileName.equals(targetFileName)) {
-                fileNamesMapping.put(getFileNameUriPart(sourceAttachment), getFileNameUriPart(createdAttachment));
+                fileNamesMapping.put(sourceFileName, targetFileName);
             }
         });
         // If file name part of URI differs for any pair of the attachments, update attachment references in target rich text fields otherwise images will be broken
@@ -1037,7 +1037,10 @@ public class MergeService {
             if (value instanceof Text text) {
                 String richTextValue = text.getContent();
                 for (Map.Entry<String, String> entry : fileNamesMapping.entrySet()) {
-                    richTextValue = richTextValue.replaceAll(entry.getKey(), entry.getValue());
+                    String sourceFileName = entry.getKey();
+                    while (richTextValue.contains(sourceFileName)) {
+                        richTextValue = richTextValue.replace(sourceFileName, entry.getValue());
+                    }
                 }
                 target.setValue(workItemField.getKey(), Text.html(richTextValue));
             }
