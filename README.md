@@ -210,7 +210,6 @@ Also, `isDifferent` can be used if you need to show something specific for cases
 
 <h2>Selected Work Items in Project: $project.name</h2>
 
-
 ## Example: Specific IDs in this project
 #set($query = "project.id:$projectId AND (id:EL-1 OR id:EL-2)")
 #set($workItems = $trackerService.queryWorkItems($query, "id"))
