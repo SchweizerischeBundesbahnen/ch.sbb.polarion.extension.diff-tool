@@ -99,7 +99,8 @@ export default function DocumentsDiff({ enclosingCollections }) {
 
   const mergeCallback = (direction) => {
     setMergeInProgress(true);
-    diffService.sendDocumentsMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, context.state.allowReferencedWorkItemMerge, context.state.preserveComments, context.state.copyMissingDocumentAttachments)
+    diffService.sendDocumentsMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, docsData, context.state.allowReferencedWorkItemMerge,
+                                          context.state.preserveComments, context.state.copyMissingDocumentAttachments, context.state.updateAttachmentReferences)
         .then((data) => {
           setMergeReport(data.mergeReport);
           setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);

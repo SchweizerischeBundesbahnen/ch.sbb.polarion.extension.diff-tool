@@ -10,8 +10,9 @@ public class WorkItemsMergeContext extends SettingsAwareMergeContext {
     final Project leftProject;
     final Project rightProject;
 
-    public WorkItemsMergeContext(@NotNull Project leftProject, @NotNull Project rightProject, @NotNull MergeDirection direction, @NotNull String linkRole, @NotNull DiffModel diffModel) {
-        super(direction, linkRole, diffModel);
+    public WorkItemsMergeContext(@NotNull Project leftProject, @NotNull Project rightProject, @NotNull MergeDirection direction,
+                                 @NotNull String linkRole, @NotNull DiffModel diffModel, boolean updateAttachmentReferences) {
+        super(direction, linkRole, diffModel, updateAttachmentReferences);
         this.leftProject = leftProject;
         this.rightProject = rightProject;
     }

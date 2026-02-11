@@ -100,7 +100,7 @@ public class MergeService {
         polarionService.evictDocumentsCache(documentIdentifier1, documentIdentifier2);
 
         DiffModel diffModel = DiffModelCachedResource.get(documentIdentifier1.getProjectId(), mergeParams.getConfigName(), mergeParams.getConfigCacheBucketId());
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, documentIdentifier1, documentIdentifier2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel)
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, documentIdentifier1, documentIdentifier2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, mergeParams.isUpdateAttachmentReferences())
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge())
                 .setPreserveComments(mergeParams.isPreserveComments())
                 .setCopyMissingDocumentAttachments(mergeParams.isCopyMissingDocumentAttachments());
@@ -222,7 +222,8 @@ public class MergeService {
     public MergeResult mergeWorkItems(@NotNull WorkItemsMergeParams mergeParams) {
         String leftProjectId = mergeParams.getLeftProject().getId();
         DiffModel diffModel = DiffModelCachedResource.get(leftProjectId, mergeParams.getConfigName(), mergeParams.getConfigCacheBucketId());
-        WorkItemsMergeContext context = new WorkItemsMergeContext(mergeParams.getLeftProject(), mergeParams.getRightProject(), mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel);
+        WorkItemsMergeContext context = new WorkItemsMergeContext(mergeParams.getLeftProject(), mergeParams.getRightProject(),
+                mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, mergeParams.isUpdateAttachmentReferences());
 
         if (!polarionService.userAuthorizedForMerge(context.getTargetProject().getId())) {
             return MergeResult.builder().success(false).mergeNotAuthorized(true).build();
@@ -713,14 +714,14 @@ public class MergeService {
 
     @VisibleForTesting
     void merge(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, WorkItemsPair pair) {
-        for (DiffField field : context.getDiffModel().getDiffFields()) {
+        for (DiffField field : orderForMerge(context.getDiffModel().getDiffFields())) {
             Object fieldValue = polarionService.getFieldValue(source, field.getKey());
             if (IWorkItem.KEY_HYPERLINKS.equals(field.getKey()) && (fieldValue == null || fieldValue instanceof Collection<?>)) {
                 mergeHyperlinks(target, (Collection<?>) fieldValue, context, pair);
             } else if (IWorkItem.KEY_LINKED_WORK_ITEMS.equals(field.getKey())) {
                 mergeLinkedWorkItems(source, target, context, pair);
             } else if (KEY_ATTACHMENTS.equals(field.getKey())) {
-                mergeAttachments(source, target);
+                mergeAttachments(source, target, context);
             } else {
                 validateCustomFieldTypesAccordance(source, target, field);
 
@@ -733,6 +734,29 @@ public class MergeService {
             }
         }
         target.save();
+    }
+
+    @VisibleForTesting
+    List<DiffField> orderForMerge(List<DiffField> fields) {
+        // Attachments should be merged last, cause their merging can affect rich text fields.
+        // Preserve the original relative order of all fields, only moving attachments to the end.
+        List<DiffField> ordered = new ArrayList<>(fields.size());
+
+        // First, add all non-attachment fields in their original order.
+        for (DiffField field : fields) {
+            if (!KEY_ATTACHMENTS.equals(field.getKey())) {
+                ordered.add(field);
+            }
+        }
+
+        // Then, add all attachment fields in their original order.
+        for (DiffField field : fields) {
+            if (KEY_ATTACHMENTS.equals(field.getKey())) {
+                ordered.add(field);
+            }
+        }
+
+        return ordered;
     }
 
     @VisibleForTesting
@@ -900,13 +924,46 @@ public class MergeService {
 
     @VisibleForTesting
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void mergeAttachments(IWorkItem source, IWorkItem target) {
+    void mergeAttachments(@NotNull IWorkItem source, @NotNull IWorkItem target, @NotNull MergeContext mergeContext) {
         new ArrayList<>(target.getAttachments()).forEach(attachment -> target.deleteAttachment((IAttachment) attachment));
+        Map<String, String> fileNamesMapping = new HashMap<>();
         source.getAttachments().forEach(attach -> {
             IAttachment sourceAttachment = (IAttachment) attach;
             IAttachment createdAttachment = target.createAttachment(sourceAttachment.getFileName(), sourceAttachment.getTitle(), sourceAttachment.getDataStream());
             createdAttachment.save(); // without save() attachments aren't persisted when a work item is created from a referenced one
+            String sourceFileName = getFileNameUriPart(sourceAttachment);
+            String targetFileName = getFileNameUriPart(createdAttachment);
+            if (!sourceFileName.equals(targetFileName)) {
+                fileNamesMapping.put(sourceFileName, targetFileName);
+            }
         });
+        // If file name part of URI differs for any pair of the attachments, update attachment references in target rich text fields otherwise images will be broken
+        if (!fileNamesMapping.isEmpty() && mergeContext.isUpdateAttachmentReferences()) {
+            updateAttachmentReferences(target, fileNamesMapping);
+        }
+    }
+
+    @VisibleForTesting
+    String getFileNameUriPart(IAttachment attachment) {
+        String uri = attachment.getUri() != null ? attachment.getUri().toString() : "";
+        int fileNameSeparatorIndex = uri.lastIndexOf("#");
+        return fileNameSeparatorIndex > -1 && fileNameSeparatorIndex + 1 < uri.length() ? uri.substring(fileNameSeparatorIndex + 1) : uri;
+    }
+
+    @VisibleForTesting
+    void updateAttachmentReferences(IWorkItem target, Map<String, String> fileNamesMapping) {
+        List<WorkItemField> workItemFields = polarionService.getAllWorkItemFields(target.getProjectId());
+        for (WorkItemField workItemField : workItemFields) {
+            Object value = target.getValue(workItemField.getKey());
+            if (value instanceof Text text) {
+                String richTextValue = text.getContent();
+                for (Map.Entry<String, String> entry : fileNamesMapping.entrySet()) {
+                    richTextValue = richTextValue.replaceAll(entry.getKey(), entry.getValue());
+                }
+                target.setValue(workItemField.getKey(), Text.html(richTextValue));
+            }
+        }
+        target.save();
     }
 
     /**

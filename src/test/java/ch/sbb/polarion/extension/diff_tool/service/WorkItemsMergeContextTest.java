@@ -31,25 +31,25 @@ class WorkItemsMergeContextTest {
 
     @Test
     void testGetSourceProjectLeftToRight() {
-        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, leftToRight, linkRole, diffModel);
+        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, leftToRight, linkRole, diffModel, false);
         assertEquals(leftProject, context.getSourceProject());
     }
 
     @Test
     void testGetSourceProjectRightToLeft() {
-        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, rightToLeft, linkRole, diffModel);
+        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, rightToLeft, linkRole, diffModel, false);
         assertEquals(rightProject, context.getSourceProject());
     }
 
     @Test
     void testGetTargetProjectLeftToRight() {
-        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, leftToRight, linkRole, diffModel);
+        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, leftToRight, linkRole, diffModel, false);
         assertEquals(rightProject, context.getTargetProject());
     }
 
     @Test
     void testGetTargetProjectRightToLeft() {
-        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, rightToLeft, linkRole, diffModel);
+        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, rightToLeft, linkRole, diffModel, false);
         assertEquals(leftProject, context.getTargetProject());
     }
 }
