@@ -934,7 +934,7 @@ public class MergeService {
             String sourceFileName = getFileNameUriPart(sourceAttachment);
             String targetFileName = getFileNameUriPart(createdAttachment);
             if (!sourceFileName.equals(targetFileName)) {
-                fileNamesMapping.put(getFileNameUriPart(sourceAttachment), getFileNameUriPart(createdAttachment));
+                fileNamesMapping.put(sourceFileName, targetFileName);
             }
         });
         // If file name part of URI differs for any pair of the attachments, update attachment references in target rich text fields otherwise images will be broken
