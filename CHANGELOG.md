@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.5.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.5.1...v6.5.2) (2026-02-11)
+
+
+### Bug Fixes
+
+* Fixes an issue with repeated merges turning images into 'polar bears' ([#396](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/396)) ([9f6c6c8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9f6c6c8e4e1544c957f63347558cc2eb7536dea5))
+
 ## [6.5.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v6.5.0...v6.5.1) (2026-01-27)
 
 
