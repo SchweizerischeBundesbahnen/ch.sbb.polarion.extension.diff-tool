@@ -958,7 +958,7 @@ public class MergeService {
             if (value instanceof Text text) {
                 String richTextValue = text.getContent();
                 for (Map.Entry<String, String> entry : fileNamesMapping.entrySet()) {
-                    richTextValue = richTextValue.replaceAll(entry.getKey(), entry.getValue());
+                    richTextValue = richTextValue.replace(entry.getKey(), entry.getValue());
                 }
                 target.setValue(workItemField.getKey(), Text.html(richTextValue));
             }
