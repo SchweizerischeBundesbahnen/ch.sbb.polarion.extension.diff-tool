@@ -12,10 +12,12 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 import ch.sbb.polarion.extension.generic.util.ExtensionInfo;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Path;
 import java.util.Collection;
 import java.util.List;
 
+@Singleton
 @Secured
 @Path("/api")
 public class UtilityApiController extends UtilityInternalController {

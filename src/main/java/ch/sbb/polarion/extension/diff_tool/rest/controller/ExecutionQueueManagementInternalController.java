@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
+import ch.sbb.polarion.extension.diff_tool.rest.DiffToolRestApplication;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.StatisticsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
@@ -21,14 +23,15 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
 
+@Singleton
 @Hidden
 @Path("/internal")
 @Tag(name = "Queued Execution Management")
 public class ExecutionQueueManagementInternalController {
     private final ExecutionQueueMonitor executionMonitor;
 
-    public ExecutionQueueManagementInternalController(ExecutionQueueMonitor executionMonitor) {
-        this.executionMonitor = executionMonitor;
+    public ExecutionQueueManagementInternalController() {
+        this.executionMonitor = DiffToolRestApplication.getExecutionMonitor();
     }
 
     @POST
