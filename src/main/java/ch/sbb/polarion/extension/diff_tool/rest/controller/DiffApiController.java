@@ -1,17 +1,15 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.*;
-import ch.sbb.polarion.extension.diff_tool.service.queue.ExecutionQueueService;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
+
+import javax.inject.Singleton;
 import javax.ws.rs.Path;
 
+@Singleton
 @Secured
 @Path("/api")
 public class DiffApiController extends DiffInternalController {
-
-    public DiffApiController(ExecutionQueueService executionService) {
-        super(executionService);
-    }
 
     @Override
     public DocumentsDiff getDocumentsDiff(DocumentsDiffParams documentsDiffParams) {

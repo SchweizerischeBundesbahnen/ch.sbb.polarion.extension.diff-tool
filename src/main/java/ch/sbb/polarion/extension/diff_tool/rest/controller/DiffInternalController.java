@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
+import ch.sbb.polarion.extension.diff_tool.rest.DiffToolRestApplication;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DetachedWorkItemsPairDiffParams;
@@ -29,6 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
+import javax.inject.Singleton;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -39,6 +41,7 @@ import java.util.concurrent.Callable;
 
 import static ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature.*;
 
+@Singleton
 @Hidden
 @Path("/internal")
 @Tag(name = "Difference")
@@ -47,8 +50,8 @@ public class DiffInternalController {
     protected final DiffService diffService = new DiffService(polarionService);
     private final ExecutionQueueService executionService;
 
-    public DiffInternalController(ExecutionQueueService executionService) {
-        this.executionService = executionService;
+    public DiffInternalController() {
+        this.executionService = DiffToolRestApplication.getExecutionService();
     }
 
     @POST

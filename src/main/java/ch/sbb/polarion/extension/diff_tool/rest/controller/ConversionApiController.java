@@ -4,9 +4,11 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.conversion.PrintOrientatio
 import ch.sbb.polarion.extension.diff_tool.rest.model.conversion.PrintPaperSize;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+@Singleton
 @Secured
 @Path("/api")
 public class ConversionApiController extends ConversionInternalController {

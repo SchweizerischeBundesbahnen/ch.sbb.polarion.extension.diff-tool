@@ -22,11 +22,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class DiffToolRestApplication extends GenericRestApplication {
 
-    private final ExecutionQueueService executionService;
-    private final ExecutionQueueMonitor executionMonitor;
+    private static final AtomicReference<ExecutionQueueService> executionService = new AtomicReference<>();
+    private static final AtomicReference<ExecutionQueueMonitor> executionMonitor = new AtomicReference<>();
 
     public DiffToolRestApplication() {
         ExecutionQueueSettings executionQueueSettings = new ExecutionQueueSettings();
@@ -37,26 +38,39 @@ public class DiffToolRestApplication extends GenericRestApplication {
                         executionQueueSettings
                 )
         );
-        this.executionService = new ExecutionQueueService();
-        this.executionMonitor = new ExecutionQueueMonitor(executionService);
-        executionQueueSettings.setSettingsChangedCallback(executionMonitor::refreshConfiguration);
+        initializeServices(executionQueueSettings);
+    }
 
+    private static void initializeServices(ExecutionQueueSettings executionQueueSettings) {
+        ExecutionQueueService service = new ExecutionQueueService();
+        ExecutionQueueMonitor monitor = new ExecutionQueueMonitor(service);
+        executionQueueSettings.setSettingsChangedCallback(monitor::refreshConfiguration);
+        executionService.set(service);
+        executionMonitor.set(monitor);
+    }
+
+    public static ExecutionQueueService getExecutionService() {
+        return executionService.get();
+    }
+
+    public static ExecutionQueueMonitor getExecutionMonitor() {
+        return executionMonitor.get();
     }
 
     @Override
     @NotNull
-    public Set<Object> getExtensionControllerSingletons() {
+    protected Set<Class<?>> getExtensionControllerClasses() {
         return Set.of(
-                new ConversionApiController(),
-                new ConversionInternalController(),
-                new DiffApiController(executionService),
-                new DiffInternalController(executionService),
-                new MergeApiController(),
-                new MergeInternalController(),
-                new UtilityInternalController(),
-                new UtilityApiController(),
-                new ExecutionQueueManagementInternalController(executionMonitor),
-                new ExecutionQueueQueueManagementApiController(executionMonitor)
+                ConversionApiController.class,
+                ConversionInternalController.class,
+                DiffApiController.class,
+                DiffInternalController.class,
+                MergeApiController.class,
+                MergeInternalController.class,
+                UtilityInternalController.class,
+                UtilityApiController.class,
+                ExecutionQueueManagementInternalController.class,
+                ExecutionQueueQueueManagementApiController.class
         );
     }
 
