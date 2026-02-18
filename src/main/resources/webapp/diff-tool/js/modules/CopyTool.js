@@ -45,12 +45,14 @@ export default class CopyTool extends GenericMixin {
       element: '#copy-link-role-selector',
       placeholder: 'Select Link Role...'
     });
+    this.ctx.onChange('copy-link-role-selector', () => this.updateCreateButtonState());
     this.linkRoleDropdown.restoreSelection();
 
     this.configDropdown = new SearchableDropdown({
       element: '#copy-config-selector',
       placeholder: 'Select Configuration...'
     });
+    this.ctx.onChange('copy-config-selector', () => this.updateCreateButtonState());
     this.configDropdown.restoreSelection();
 
     this.handleRefsDropdown = new SearchableDropdown({
@@ -58,6 +60,7 @@ export default class CopyTool extends GenericMixin {
       placeholder: 'Select Behaviour...',
       searchable: false
     });
+    this.ctx.onChange('handle-refs-selector', () => this.updateCreateButtonState());
     this.handleRefsDropdown.restoreSelection();
 
   }
@@ -71,8 +74,16 @@ export default class CopyTool extends GenericMixin {
   }
 
   spaceChanged() {
+    this.updateCreateButtonState();
+  }
+
+  updateCreateButtonState() {
+    const selectedProject = this.ctx.getValue("copy-project-selector");
     const selectedSpace = this.ctx.getValue("copy-space-selector");
-    this.ctx.disableIf("create-document", !selectedSpace);
+    const linkRole = this.ctx.getValue("copy-link-role-selector");
+    const config = this.ctx.getValue("copy-config-selector");
+    const handleRefs = this.ctx.getValue("handle-refs-selector");
+    this.ctx.disableIf("create-document", !selectedProject || !selectedSpace || !linkRole || !config || !handleRefs);
   }
 
   createNewDocument() {
