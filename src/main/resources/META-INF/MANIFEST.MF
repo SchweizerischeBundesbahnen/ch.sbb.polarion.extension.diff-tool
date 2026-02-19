@@ -1,24 +1,3 @@
 Bundle-Activator: ch.sbb.polarion.extension.diff_tool.ExtensionBundleActivator
-Bundle-ActivationPolicy: lazy
 Bundle-Name: Diff Tool extension for Polarion ALM
-Require-Bundle: com.polarion.portal.tomcat,
- com.polarion.alm.ui,
- com.polarion.platform.guice,
- com.polarion.alm.tracker,
- com.polarion.subterra.persistence,
- org.glassfish.jersey,
- com.fasterxml.jackson.core,
- com.fasterxml.jackson.databind,
- com.fasterxml.jackson.annotations,
- com.fasterxml.jackson.module.jaxb.annotations,
- org.apache.commons.logging,
- slf4j.api,
- org.apache.commons.commons-collections4,
- org.springframework.spring-core,
- org.springframework.spring-web,
- org.apache.commons.lang3,
- org.ehcache,
- org.jsoup,
- ch.sbb.polarion.extension.pdf-exporter;resolution:=optional
-Import-Package: org.osgi.framework,org.eclipse.core.runtime
 Export-Package: ch.sbb.polarion.extension.diff_tool
