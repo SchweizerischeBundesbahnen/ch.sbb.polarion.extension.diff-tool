@@ -1,5 +1,21 @@
 # Changelog
 
+## [7.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v7.1.0...v7.2.0) (2026-02-23)
+
+
+### Features
+
+* make WorkItem badge in diff view as a link to make it possible to open WorkItem in separate tab/window ([#387](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/387)) ([8f1f79c](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/8f1f79c809cc1392377ccbbd932add59fc7bfea2))
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v14.1.0 ([#404](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/404)) ([fe2fe33](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/fe2fe337f75fc0594470bf5bb50f8fe2900d42a3))
+* enable Create Document button only when all dropdowns are selected ([#403](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/403)) ([4a6694f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/4a6694ffa98c42d57267832ec12fd06e62555f99)), closes [#402](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/402)
+* Fixes an issue with repeated merges turning images into 'polar bears' ([#395](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/395)) ([ba03d23](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ba03d23451d643e7064513d363c273e36a5363f0))
+* prevent diff-tool and copy-tool panes be initialized each time document is saved ([#391](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/391)) ([88ff295](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/88ff29585c23d2f5d8baa9adeb26a4c521798db3))
+* workitems position is changed during copy ([#390](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/390)) ([eba3d66](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/eba3d6679a03d7b6dacc6fc14ec8677724ea8fc9)), closes [#389](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/389)
+
 ## [7.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v7.0.0...v7.1.0) (2026-02-03)
 
 
