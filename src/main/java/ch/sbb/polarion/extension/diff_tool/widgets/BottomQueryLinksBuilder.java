@@ -90,18 +90,16 @@ public class BottomQueryLinksBuilder {
     }
 
     private void renderShowQuery(@NotNull HtmlContentBuilder builder) {
-        if (!this.context.target().isPdf()) {
-            if (!StringUtils.isEmptyTrimmed(this.dataSet.queryToShow())) {
-                String uid = this.context.generateUniqueElementId();
-                HtmlTagBuilder tag = builder.tag().div();
-                tag.attributes().className("polarion-rpw-table-show-query");
-                tag.append().tag().img().attributes().src(HtmlLinkFactory.fromEncodedRelativeUrl("/polarion/ria/images/portlet/info.png"))
-                        .title(this.context.localization().getString("macro.general.showQuery"))
-                        .onClick("var style = getElementById('" + uid + "').style; style.display = (style.display == 'block') ? 'none' : 'block';");
-                HtmlTagBuilder div = builder.tag().div();
-                div.attributes().id(uid).className("polarion-rpw-table-query");
-                div.append().textWithFormatting(this.dataSet.queryToShow());
-            }
+        if (!this.context.target().isPdf() && !StringUtils.isEmptyTrimmed(this.dataSet.queryToShow())) {
+            String uid = this.context.generateUniqueElementId();
+            HtmlTagBuilder tag = builder.tag().div();
+            tag.attributes().className("polarion-rpw-table-show-query");
+            tag.append().tag().img().attributes().src(HtmlLinkFactory.fromEncodedRelativeUrl("/polarion/ria/images/portlet/info.png"))
+                    .title(this.context.localization().getString("macro.general.showQuery"))
+                    .onClick("var style = getElementById('" + uid + "').style; style.display = (style.display == 'block') ? 'none' : 'block';");
+            HtmlTagBuilder div = builder.tag().div();
+            div.attributes().id(uid).className("polarion-rpw-table-query");
+            div.append().textWithFormatting(this.dataSet.queryToShow());
         }
     }
 
