@@ -36,12 +36,12 @@ public class WorkItemsDiffWidgetRenderer extends DiffWidgetRenderer {
     }
 
     public WorkItemsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params, @NotNull PolarionService polarionService) {
-        super(context, COLUMNS_PARAMETER, params, polarionService);
+        super(context, COLUMNS_PARAMETER, params, PrototypeEnum.WorkItem, polarionService);
 
         this.params = params;
         if (!context.getDisplayedScope().isGlobal()) {
             SortingParameter sortingParameter = new SortingParameterImpl.Builder(WIDGET_ID).byLuceneSortString(IUniqueObject.KEY_ID).build();
-            params.sourceParams().dataSet(initDataSet(WIDGET_ID, PrototypeEnum.WorkItem, context.getDisplayedScope(), sortingParameter, params.sourceParams().query()));
+            params.sourceParams().dataSet(initDataSet(WIDGET_ID, context.getDisplayedScope(), sortingParameter, params.sourceParams().query()));
         }
     }
 
