@@ -96,7 +96,7 @@ public class BottomQueryLinksBuilder {
             tag.attributes().className("polarion-rpw-table-show-query");
             tag.append().tag().img().attributes().src(HtmlLinkFactory.fromEncodedRelativeUrl("/polarion/ria/images/portlet/info.png"))
                     .title(this.context.localization().getString("macro.general.showQuery"))
-                    .onClick("var style = getElementById('" + uid + "').style; style.display = (style.display == 'block') ? 'none' : 'block';");
+                    .onClick("var style = document.getElementById('" + uid + "').style; style.display = (style.display == 'block') ? 'none' : 'block';");
             HtmlTagBuilder div = builder.tag().div();
             div.attributes().id(uid).className("polarion-rpw-table-query");
             div.append().textWithFormatting(this.dataSet.queryToShow());
