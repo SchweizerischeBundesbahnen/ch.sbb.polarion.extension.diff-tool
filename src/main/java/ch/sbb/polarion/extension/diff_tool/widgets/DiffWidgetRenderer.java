@@ -7,7 +7,6 @@ import ch.sbb.polarion.extension.generic.settings.SettingName;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.server.api.model.rp.widget.AbstractWidgetRenderer;
-import com.polarion.alm.server.api.model.rp.widget.BottomQueryLinksBuilder;
 import com.polarion.alm.shared.api.Scope;
 import com.polarion.alm.shared.api.model.ModelObject;
 import com.polarion.alm.shared.api.model.PrototypeEnum;
@@ -46,16 +45,20 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
     private final PolarionService polarionService;
     private final FieldsParameter columnsParameter;
     private final DiffWidgetParams diffWidgetParams;
+    private final PrototypeEnum allowedPrototype;
 
-    protected DiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull FieldsParameter columnsParameter, @NotNull DiffWidgetParams diffWidgetParams) {
-        this(context, columnsParameter, diffWidgetParams, new PolarionService());
+    protected DiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull FieldsParameter columnsParameter,
+                                 @NotNull DiffWidgetParams diffWidgetParams, @NotNull PrototypeEnum allowedPrototype) {
+        this(context, columnsParameter, diffWidgetParams, allowedPrototype, new PolarionService());
     }
 
-    protected DiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull FieldsParameter columnsParameter, @NotNull DiffWidgetParams diffWidgetParams, @NotNull PolarionService polarionService) {
+    protected DiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull FieldsParameter columnsParameter,
+                                 @NotNull DiffWidgetParams diffWidgetParams, @NotNull PrototypeEnum allowedPrototype, @NotNull PolarionService polarionService) {
         super(context);
         this.columnsParameter = columnsParameter;
         this.diffWidgetParams = diffWidgetParams;
         this.polarionService = polarionService;
+        this.allowedPrototype = allowedPrototype;
     }
 
     protected String getProjectId() {
@@ -70,7 +73,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
         return diffWidgetParams.configuration();
     }
 
-    protected DataSet initDataSet(@NotNull String widgetId, @NotNull PrototypeEnum allowedPrototype, @NotNull Scope scope,
+    protected DataSet initDataSet(@NotNull String widgetId, @NotNull Scope scope,
                                   @NotNull SortingParameter sortingParameter, @Nullable String query) {
         DataSetParameterImpl dataSetParameter = (DataSetParameterImpl) new DataSetParameterBuilder(widgetId)
                 .allowedPrototypes(allowedPrototype)
@@ -278,7 +281,7 @@ abstract class DiffWidgetRenderer extends AbstractWidgetRenderer {
 
     protected void renderFooter(@NotNull HtmlTagBuilder parent, @NotNull DataSetWidgetParams dataSetParams) {
         if (dataSetParams.dataSet() != null) {
-            (new BottomQueryLinksBuilder(context, dataSetParams.dataSet(), dataSetParams.recordsPerPage())).render(parent);
+            (new BottomQueryLinksBuilder(context, allowedPrototype, dataSetParams.dataSet(), dataSetParams.recordsPerPage())).render(parent);
 
             if (dataSetParams.lastPage() > 1) {
                 renderPaginator(parent, dataSetParams);

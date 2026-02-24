@@ -38,7 +38,7 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
     }
 
     public CollectionsDiffWidgetRenderer(@NotNull RichPageWidgetCommonContext context, @NotNull DiffWidgetParams params, @NotNull PolarionService polarionService) {
-        super(context, COLUMNS_PARAMETER, params, polarionService);
+        super(context, COLUMNS_PARAMETER, params, PrototypeEnum.BaselineCollection, polarionService);
 
         this.params = params;
     }
@@ -85,7 +85,7 @@ public class CollectionsDiffWidgetRenderer extends DiffWidgetRenderer {
     }
 
     private DataSet initDataSet(@NotNull Scope scope, @Nullable String query) {
-        return initDataSet(WIDGET_ID, PrototypeEnum.BaselineCollection, scope, sortingParameter, query);
+        return initDataSet(WIDGET_ID, scope, sortingParameter, query);
     }
 
     private void renderTable(@NotNull HtmlTagBuilder parent, @NotNull DataSetWidgetParams dataSetParams) {
