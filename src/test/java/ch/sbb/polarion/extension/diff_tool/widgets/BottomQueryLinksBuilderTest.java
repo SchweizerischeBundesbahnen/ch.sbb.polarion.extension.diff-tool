@@ -410,7 +410,7 @@ class BottomQueryLinksBuilderTest {
 
         verify(showQueryDivAttributes).className("polarion-rpw-table-show-query");
         verify(imgAttributes).title("Show Query");
-        verify(imgAttributes).onClick("var style = getElementById('unique-id-42').style; style.display = (style.display == 'block') ? 'none' : 'block';");
+        verify(imgAttributes).onClick("var style = document.getElementById('unique-id-42').style; style.display = (style.display == 'block') ? 'none' : 'block';");
         verify(queryContentDivAttributes).id("unique-id-42");
         verify(queryContentDivAttributes).className("polarion-rpw-table-query");
         verify(queryContentDivContent).textWithFormatting("type:req AND status:approved");
