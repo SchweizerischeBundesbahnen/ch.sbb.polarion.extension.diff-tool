@@ -1,5 +1,13 @@
 # Changelog
 
+## [7.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v7.2.0...v7.2.1) (2026-03-01)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v12.1.1 ([e4443c9](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/e4443c96b9561906b8429a02460dc55449513083))
+* Fix rendering bottom query in widgets in Polarion 2512 ([#407](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/407)) ([17c7a1d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/17c7a1d7045569b313e8c291513922aafd12bd83))
+
 ## [7.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v7.1.0...v7.2.0) (2026-02-23)
 
 
