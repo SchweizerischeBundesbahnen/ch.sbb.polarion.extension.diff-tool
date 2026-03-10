@@ -259,4 +259,67 @@ test.describe("page of diffing documents' WorkItems", () => {
     }
   });
 
+  test('select single field', async ({ page }) => {
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
+
+    const expandButton = page.locator('.control-pane .expand-button');
+    await expect(expandButton).toBeVisible({visible: true});
+    await expandButton.click();
+    expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
+
+    const perFieldMergeCheckbox = page.getByTestId('per-field-merge-selection');
+    await perFieldMergeCheckbox.isVisible();
+    await perFieldMergeCheckbox.click();
+
+    const selectAllCheckbox = page.locator('.header .merge-pane label.select-all input[type="checkbox"]');
+    await expect(selectAllCheckbox).toBeVisible();
+    await expect(selectAllCheckbox).toBeChecked({ checked: false });
+
+    let checkedFieldsCheckboxes = page.locator('.wi-diff .content .diff-wrapper .merge-ticker input[type="checkbox"]:checked');
+    let checkedFieldsCheckboxesCount = await checkedFieldsCheckboxes.count();
+    expect(checkedFieldsCheckboxesCount).toBe(0);
+
+    const firstSelectionCheckbox = page.locator('.wi-diff .merge-ticker input[type="checkbox"]').nth(0);
+    await firstSelectionCheckbox.isVisible();
+    await firstSelectionCheckbox.click();
+
+    // Check that "select all" is still unchecked
+    await expect(selectAllCheckbox).toBeChecked({ checked: false });
+
+    // Check that fields checkboxes of that pair are also checked
+    checkedFieldsCheckboxes = page.locator('.wi-diff .content .diff-wrapper .merge-ticker input[type="checkbox"]:checked');
+    checkedFieldsCheckboxesCount = await checkedFieldsCheckboxes.count();
+    expect(checkedFieldsCheckboxesCount).toBe(2);
+
+    // Then uncheck one of fields checkboxes
+    const firstCheckedFieldsCheckbox = checkedFieldsCheckboxes.nth(0);
+    await firstCheckedFieldsCheckbox.isVisible();
+    await firstCheckedFieldsCheckbox.click();
+
+    // Pair selection checkbox should still be checked
+    await expect(firstSelectionCheckbox).toBeChecked({ checked: true });
+
+    // And only on of fields checkboxes to stay checked
+    checkedFieldsCheckboxes = page.locator('.wi-diff .content .diff-wrapper .merge-ticker input[type="checkbox"]:checked');
+    checkedFieldsCheckboxesCount = await checkedFieldsCheckboxes.count();
+    expect(checkedFieldsCheckboxesCount).toBe(1);
+
+    const selectedPairs = page.locator('.wi-diff.selected');
+    const selectedPairsCount = await selectedPairs.count();
+    expect(selectedPairsCount).toBe(1);
+    const pairHeaders = selectedPairs.nth(0).locator(".wi-header");
+    for (let j = 0; j < await pairHeaders.count(); j++) {
+      await expect(pairHeaders.nth(j)).toBeVisible();
+      await expect(pairHeaders.nth(j)).toHaveCSS("background-color", "rgba(150, 190, 250, 0.2)");
+    }
+
+    // Check that merge buttons are enabled
+    const mergeButtons = page.locator('.header .merge-pane .merge-button .btn');
+    await expect(mergeButtons).toHaveCount(2);
+    for (let i = 0; i < 2; i++) {
+      await expect(mergeButtons.nth(i)).toBeVisible();
+      await expect(mergeButtons.nth(i)).toBeEnabled();
+    }
+  });
+
 });

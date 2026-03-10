@@ -1,6 +1,6 @@
 import useDiffService from "@/services/useDiffService";
 
-export default function MergeTicker({workItemsPair, diffs, selected, pairSelectedCallback}) {
+export default function PairMergeTicker({workItemsPair, diffs, selected, pairSelectedCallback}) {
   const diffService = useDiffService();
 
   const changeSelected = (event) => {

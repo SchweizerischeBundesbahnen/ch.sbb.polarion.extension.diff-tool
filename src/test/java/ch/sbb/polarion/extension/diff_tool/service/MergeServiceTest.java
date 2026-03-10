@@ -10,6 +10,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeP
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeWorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Project;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
@@ -270,14 +271,14 @@ class MergeServiceTest {
 
         IWorkItem rightWorkItem = mock(IWorkItem.class);
         when(rightWorkItem.getId()).thenReturn("right");
-        List<WorkItemsPair> workItemsPairs = new ArrayList<>();
+        List<MergeWorkItemsPair> workItemsPairs = new ArrayList<>();
 
         WorkItem sourceWorkItem = WorkItem.of(leftWorkItem);
         sourceWorkItem.setLastRevision("rev1");
         WorkItem targetWorkItem = WorkItem.of(rightWorkItem);
         targetWorkItem.setLastRevision("rev1");
 
-        WorkItemsPair workItemsPair = WorkItemsPair.builder().leftWorkItem(sourceWorkItem).rightWorkItem(targetWorkItem).build();
+        MergeWorkItemsPair workItemsPair = new MergeWorkItemsPair(sourceWorkItem, targetWorkItem, List.of());
         workItemsPairs.add(workItemsPair);
         DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, true, false);
 
@@ -439,8 +440,8 @@ class MergeServiceTest {
         IModule.IStructureNode targetNode = mock(IModule.IStructureNode.class);
         lenient().when(rightModule.getStructureNodeOfWI(rightWorkItem)).thenReturn(targetNode);
 
-        List<WorkItemsPair> workItemsPairs = new ArrayList<>();
-        workItemsPairs.add(WorkItemsPair.of(leftWorkItem, rightWorkItem));
+        List<MergeWorkItemsPair> workItemsPairs = new ArrayList<>();
+        workItemsPairs.add(new MergeWorkItemsPair(leftWorkItem, rightWorkItem, List.of()));
         DiffModel diffModel = mock(DiffModel.class);
 
         List<DiffField> diffFields = new ArrayList<>();
@@ -455,7 +456,7 @@ class MergeServiceTest {
         when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
         when(polarionService.getWorkItem("project1", "right", null)).thenReturn(rightWorkItem);
 
-        WorkItemsPair pair = WorkItemsPair.of(leftWorkItem, rightWorkItem);
+        MergeWorkItemsPair pair = new MergeWorkItemsPair(leftWorkItem, rightWorkItem, List.of());
         pair.getLeftWorkItem().setMovedOutlineNumber("1");
 
         mergeService.updateAndMoveItem(pair, context);
@@ -513,8 +514,8 @@ class MergeServiceTest {
         IWorkItem targetParentWorkItem = mock(IWorkItem.class);
         when(parentTargetNode.getWorkItem()).thenReturn(targetParentWorkItem);
 
-        List<WorkItemsPair> workItemsPairs = new ArrayList<>();
-        workItemsPairs.add(WorkItemsPair.of(leftWorkItem, rightWorkItem));
+        List<MergeWorkItemsPair> workItemsPairs = new ArrayList<>();
+        workItemsPairs.add(new MergeWorkItemsPair(leftWorkItem, rightWorkItem, List.of()));
         DiffModel diffModel = mock(DiffModel.class);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
         DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", null, "any", workItemsPairs, false, false);
@@ -524,7 +525,7 @@ class MergeServiceTest {
         when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
         when(polarionService.getWorkItem("project1", "right", null)).thenReturn(rightWorkItem);
 
-        WorkItemsPair pair = WorkItemsPair.of(leftWorkItem, rightWorkItem);
+        MergeWorkItemsPair pair = new MergeWorkItemsPair(leftWorkItem, rightWorkItem, List.of());
         pair.getLeftWorkItem().setMovedOutlineNumber("1");
 
         mergeService.updateAndMoveItem(pair, context);
@@ -582,8 +583,8 @@ class MergeServiceTest {
         IWorkItem targetParentWorkItem = mock(IWorkItem.class);
         when(parentTargetNode.getWorkItem()).thenReturn(targetParentWorkItem);
 
-        List<WorkItemsPair> workItemsPairs = new ArrayList<>();
-        workItemsPairs.add(WorkItemsPair.of(leftWorkItem, rightWorkItem));
+        List<MergeWorkItemsPair> workItemsPairs = new ArrayList<>();
+        workItemsPairs.add(new MergeWorkItemsPair(leftWorkItem, rightWorkItem, List.of()));
         DiffModel diffModel = mock(DiffModel.class);
         ILinkRoleOpt ilinkRoleOpt = mock(ILinkRoleOpt.class);
         when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(ilinkRoleOpt);
@@ -594,7 +595,7 @@ class MergeServiceTest {
         when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
         when(polarionService.getWorkItem("project1", "right", null)).thenReturn(rightWorkItem);
 
-        WorkItemsPair pair = WorkItemsPair.of(leftWorkItem, rightWorkItem);
+        MergeWorkItemsPair pair = new MergeWorkItemsPair(leftWorkItem, rightWorkItem, List.of());
         pair.getLeftWorkItem().setMovedOutlineNumber("1");
 
         MergeService service = spy(mergeService);
@@ -608,7 +609,7 @@ class MergeServiceTest {
     @Test
     void testFixReferencedWorkItem() {
         MergeService service = spy(mergeService);
-        doNothing().when(service).merge(any(), any(), any(), nullable(WorkItemsPair.class));
+        doNothing().when(service).merge(any(), any(), any(), nullable(MergeWorkItemsPair.class));
         doNothing().when(service).insertNode(any(), any(), any(), anyInt(), anyBoolean());
 
         IWorkItem pairedWorkItem = mock(IWorkItem.class);
@@ -807,7 +808,7 @@ class MergeServiceTest {
         when(rightWorkItem.getProjectId()).thenReturn("project1");
         when(rightWorkItem.getLastRevision()).thenReturn("rev1");
 
-        WorkItemsPair pair = WorkItemsPair.of(leftWorkItem, rightWorkItem);
+        MergeWorkItemsPair pair = new MergeWorkItemsPair(leftWorkItem, rightWorkItem, List.of());
         pair.getLeftWorkItem().setReferenced(true);
 
         DiffModel diffModel = mock(DiffModel.class);
@@ -857,8 +858,8 @@ class MergeServiceTest {
                 return runnable;
             });
 
-            List<WorkItemsPair> pairs = new ArrayList<>();
-            WorkItemsPair pair1 = mock(WorkItemsPair.class);
+            List<MergeWorkItemsPair> pairs = new ArrayList<>();
+            MergeWorkItemsPair pair1 = mock(MergeWorkItemsPair.class);
             WorkItem leftItem1 = mock(WorkItem.class);
             WorkItem rightItem1 = mock(WorkItem.class);
             when(pair1.getLeftWorkItem()).thenReturn(leftItem1);
@@ -916,7 +917,7 @@ class MergeServiceTest {
         WorkItem sourceWorkItem = mock(WorkItem.class);
         WorkItem targetWorkItem = mock(WorkItem.class);
 
-        WorkItemsPair pair = mock(WorkItemsPair.class);
+        MergeWorkItemsPair pair = mock(MergeWorkItemsPair.class);
 
         when(context.getSourceWorkItem(pair)).thenReturn(sourceWorkItem);
         when(context.getTargetWorkItem(pair)).thenReturn(targetWorkItem);
@@ -942,7 +943,7 @@ class MergeServiceTest {
         WorkItem sourceWorkItem = mock(WorkItem.class);
         WorkItem targetWorkItem = mock(WorkItem.class);
 
-        WorkItemsPair pair = mock(WorkItemsPair.class);
+        MergeWorkItemsPair pair = mock(MergeWorkItemsPair.class);
 
         when(context.getSourceWorkItem(pair)).thenReturn(sourceWorkItem);
         when(context.getTargetWorkItem(pair)).thenReturn(targetWorkItem);
@@ -1029,7 +1030,7 @@ class MergeServiceTest {
 
     @Test
     void testCreateReferencedWorkItemWhenTargetIsNull() {
-        WorkItemsPair pair = mock(WorkItemsPair.class);
+        MergeWorkItemsPair pair = mock(MergeWorkItemsPair.class);
         IWorkItem iWorkItem = mock(IWorkItem.class);
         when(iWorkItem.getProjectId()).thenReturn("projectA");
 
@@ -1070,7 +1071,7 @@ class MergeServiceTest {
 
     @Test
     void testCreateWorkItemWhenTargetIsNull() {
-        WorkItemsPair pair = mock(WorkItemsPair.class);
+        MergeWorkItemsPair pair = mock(MergeWorkItemsPair.class);
         IWorkItem iWorkItem = mock(IWorkItem.class);
         when(iWorkItem.getProjectId()).thenReturn("projectA");
 
@@ -1112,7 +1113,7 @@ class MergeServiceTest {
 
     @Test
     void testCreateWorkItemWhenTargetIsNullAndInsertFailed() {
-        WorkItemsPair pair = mock(WorkItemsPair.class);
+        MergeWorkItemsPair pair = mock(MergeWorkItemsPair.class);
         IWorkItem iWorkItem = mock(IWorkItem.class);
         when(iWorkItem.getProjectId()).thenReturn("projectA");
         when(iWorkItem.getId()).thenReturn("workItemId");
@@ -1163,7 +1164,8 @@ class MergeServiceTest {
         ));
         when(polarionService.getDeletableFields(any(), any(), any())).thenCallRealMethod();
 
-        WorkItemsPair pair = mock(WorkItemsPair.class);
+        MergeWorkItemsPair pair = mock(MergeWorkItemsPair.class);
+        when(pair.fieldSelectedForMerge(any())).thenReturn(true);
         IWorkItem iWorkItem = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
 
         WorkItem source = mock(WorkItem.class);
@@ -1252,7 +1254,7 @@ class MergeServiceTest {
         when(service.getWorkItem(target)).thenReturn(targetWorkItem);
         when(targetWorkItem.getId()).thenReturn("targetID");
 
-        WorkItemsPair pair = mock(WorkItemsPair.class);
+        MergeWorkItemsPair pair = mock(MergeWorkItemsPair.class);
         when(pair.getLeftWorkItem()).thenReturn(source);
         when(pair.getRightWorkItem()).thenReturn(target);
 
@@ -1700,8 +1702,8 @@ class MergeServiceTest {
         when(rightWorkItem.getProjectId()).thenReturn("project2");
         when(rightWorkItem.getLastRevision()).thenReturn("rev1");
 
-        List<WorkItemsPair> workItemsPairs = new ArrayList<>();
-        workItemsPairs.add(WorkItemsPair.of(leftWorkItem, rightWorkItem));
+        List<MergeWorkItemsPair> workItemsPairs = new ArrayList<>();
+        workItemsPairs.add(new MergeWorkItemsPair(leftWorkItem, rightWorkItem, List.of()));
         DiffModel diffModel = mock(DiffModel.class);
 
         List<DiffField> diffFields = new ArrayList<>();
@@ -1716,7 +1718,7 @@ class MergeServiceTest {
         when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
         when(polarionService.getWorkItem("project2", "right", null)).thenReturn(rightWorkItem);
 
-        WorkItemsPair pair = WorkItemsPair.of(leftWorkItem, rightWorkItem);
+        MergeWorkItemsPair pair = new MergeWorkItemsPair(leftWorkItem, rightWorkItem, List.of());
 
         assertThrows(IllegalStateException.class, () -> mergeService.updateAndMoveItem(pair, context), "Can't merge fields with different types, check that fields with key 'testSteps' have the same type in source and target work item");
     }
@@ -2042,7 +2044,8 @@ class MergeServiceTest {
         IWorkItem source = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
         IWorkItem target = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
         SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
-        WorkItemsPair pair = mock(WorkItemsPair.class, RETURNS_DEEP_STUBS);
+        MergeWorkItemsPair pair = mock(MergeWorkItemsPair.class, RETURNS_DEEP_STUBS);
+        when(pair.fieldSelectedForMerge(any())).thenReturn(true);
 
         DiffField richField = DiffField.builder().key("richTextField").wiTypeId("rich").build();
         when(context.getDiffModel().getDiffFields()).thenReturn(List.of(richField));
@@ -2065,7 +2068,8 @@ class MergeServiceTest {
         IWorkItem source = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
         IWorkItem target = mock(IWorkItem.class, RETURNS_DEEP_STUBS);
         SettingsAwareMergeContext context = mock(SettingsAwareMergeContext.class, RETURNS_DEEP_STUBS);
-        WorkItemsPair pair = mock(WorkItemsPair.class, RETURNS_DEEP_STUBS);
+        MergeWorkItemsPair pair = mock(MergeWorkItemsPair.class, RETURNS_DEEP_STUBS);
+        when(pair.fieldSelectedForMerge(any())).thenReturn(true);
 
         DiffField attachmentsField = DiffField.builder().key("attachments").wiTypeId("List").build();
         when(context.getDiffModel().getDiffFields()).thenReturn(List.of(attachmentsField));

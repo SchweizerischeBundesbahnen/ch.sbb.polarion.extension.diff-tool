@@ -9,6 +9,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeP
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeWorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
@@ -113,13 +114,13 @@ public class MergeService {
             return MergeResult.builder().success(false).mergeNotAuthorized(true).build();
         }
 
-        List<WorkItemsPair> pairs = mergeParams.getPairs();
+        List<MergeWorkItemsPair> pairs = mergeParams.getPairs();
         removeDuplicatedOrConflictingPairs(pairs, context);
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
             // Here we separate some operations based on their type attempting to reduce merge steps to achieve desired document state.
             pairs.removeIf(pair -> createOrDeleteItem(pair, context, transaction));
-            for (WorkItemsPair pair : pairs) {
+            for (MergeWorkItemsPair pair : pairs) {
                 updateAndMoveItem(pair, context);
             }
 
@@ -231,14 +232,14 @@ public class MergeService {
             return MergeResult.builder().success(false).mergeNotAuthorized(true).build();
         }
 
-        List<WorkItemsPair> pairs = mergeParams.getPairs();
+        List<MergeWorkItemsPair> pairs = mergeParams.getPairs();
         removeDuplicatedOrConflictingPairs(pairs, context);
 
         ILinkRoleOpt linkRoleObj = polarionService.getLinkRoleById(context.linkRole, polarionService.getTrackerProject(context.getTargetProject().getId()));
 
         List<String> createdWorkItemIds = new ArrayList<>();
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            for (WorkItemsPair pair : pairs) {
+            for (MergeWorkItemsPair pair : pairs) {
                 IWorkItem createdTarget = createItem(pair, linkRoleObj, context);
                 if (createdTarget != null) {
                     context.putTargetWorkItem(pair, createdTarget);
@@ -252,7 +253,7 @@ public class MergeService {
         });
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            for (WorkItemsPair pair : pairs) {
+            for (MergeWorkItemsPair pair : pairs) {
                 WorkItem target = context.getTargetWorkItem(pair);
                 boolean reportModification = !createdWorkItemIds.contains(target.getId());
                 updateItem(pair, context, reportModification);
@@ -271,7 +272,7 @@ public class MergeService {
     @VisibleForTesting
     @SuppressWarnings("java:S3776")
         // ignore cognitive complexity complaint
-    boolean createOrDeleteItem(WorkItemsPair pair, DocumentsMergeContext context, WriteTransaction transaction) {
+    boolean createOrDeleteItem(MergeWorkItemsPair pair, DocumentsMergeContext context, WriteTransaction transaction) {
         IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
         IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
 
@@ -346,7 +347,7 @@ public class MergeService {
     @VisibleForTesting
     @SuppressWarnings("java:S3776")
         // ignore cognitive complexity complaint
-    void updateAndMoveItem(WorkItemsPair pair, DocumentsMergeContext context) {
+    void updateAndMoveItem(MergeWorkItemsPair pair, DocumentsMergeContext context) {
         IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
         IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
         boolean moveRequested = pair.getLeftWorkItem().getMovedOutlineNumber() != null || pair.getRightWorkItem().getMovedOutlineNumber() != null;
@@ -382,7 +383,7 @@ public class MergeService {
     }
 
     @VisibleForTesting
-    void updateItem(WorkItemsPair pair, WorkItemsMergeContext context, boolean reportModification) {
+    void updateItem(MergeWorkItemsPair pair, WorkItemsMergeContext context, boolean reportModification) {
         IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
         IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
 
@@ -486,7 +487,7 @@ public class MergeService {
      * b) several pairs which have particular work item as a source/target but different value as a counterpart
      * I these cases we must leave only the first pair in the list.
      */
-    private void removeDuplicatedOrConflictingPairs(List<WorkItemsPair> pairs, SettingsAwareMergeContext context) {
+    private void removeDuplicatedOrConflictingPairs(List<MergeWorkItemsPair> pairs, SettingsAwareMergeContext context) {
         Set<String> processedSourceIds = new HashSet<>();
         Set<String> processedTargetIds = new HashSet<>();
         pairs.removeIf(pair -> {
@@ -523,7 +524,7 @@ public class MergeService {
     /**
      * Solution based on internal Polarion classes usage.
      */
-    IWorkItem copyWorkItemToDocument(IWorkItem sourceWorkItem, @NotNull InternalWriteTransaction transaction, DocumentsMergeContext context, WorkItemsPair pair) {
+    IWorkItem copyWorkItemToDocument(IWorkItem sourceWorkItem, @NotNull InternalWriteTransaction transaction, DocumentsMergeContext context, MergeWorkItemsPair pair) {
         DleWIsMergeActionExecuter executer = getDleWIsMergeActionExecuter(sourceWorkItem, transaction, context);
 
         if (!executer.workItemsCreatedByDuplicateAction.isEmpty()) {
@@ -543,8 +544,11 @@ public class MergeService {
                 createdWorkItem.addLinkedItem(sourceWorkItem, new LinkRoleOpt(new EnumOption(roleEnumId, context.linkRole)), null, false);
             }
             removeWrongHyperlinks(createdWorkItem, context, pair);
-            cleanUpFields(createdWorkItem, context.getTargetModule().getProject().getContextId(), context.getDiffModel().getDiffFields(), new NonListFieldCleaner());
-            cleanUpFields(createdWorkItem, context.getTargetModule().getProject().getContextId(), context.getDiffModel().getDiffFields(), new ListFieldCleaner());
+
+            List<DiffField> allowedFields = context.getDiffModel().getDiffFields().stream().filter(pair::fieldSelectedForMerge).toList();
+
+            cleanUpFields(createdWorkItem, context.getTargetModule().getProject().getContextId(), allowedFields, new NonListFieldCleaner());
+            cleanUpFields(createdWorkItem, context.getTargetModule().getProject().getContextId(), allowedFields, new ListFieldCleaner());
             createdWorkItem.save();
 
             reloadModule(context.getTargetModule());
@@ -715,8 +719,12 @@ public class MergeService {
     }
 
     @VisibleForTesting
-    void merge(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, WorkItemsPair pair) {
+    void merge(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, MergeWorkItemsPair pair) {
         for (DiffField field : orderForMerge(context.getDiffModel().getDiffFields())) {
+            if (!pair.fieldSelectedForMerge(field)) {
+                continue; // Skip processing if field wasn't explicitly or implicitly selected for merge
+            }
+
             Object fieldValue = polarionService.getFieldValue(source, field.getKey());
             if (IWorkItem.KEY_HYPERLINKS.equals(field.getKey()) && (fieldValue == null || fieldValue instanceof Collection<?>)) {
                 mergeHyperlinks(target, (Collection<?>) fieldValue, context, pair);

@@ -288,6 +288,15 @@ export default function ControlPane({diff_type}) {
                 </label>
               </div>
           }
+          {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF && diff_type !== DiffTypes.DOCUMENTS_CONTENT_DIFF &&
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" value="" checked={context.state.individualFieldsSelection} id="per-field-merge-selection"
+                       onChange={() => context.state.setIndividualFieldsSelection(!context.state.individualFieldsSelection)} data-testid="per-field-merge-selection" />
+                <label className="form-check-label" htmlFor="per-field-merge-selection" title="Allows you to refine the merge scope to specific fields within each item">
+                  Individual fields selection
+                </label>
+              </div>
+          }
           <div className="export-controls">
             <h1>Export to PDF</h1>
             <div className="select-set">

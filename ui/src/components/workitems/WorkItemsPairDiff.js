@@ -1,4 +1,4 @@
-import MergeTicker from "@/components/merge/MergeTicker";
+import PairMergeTicker from "@/components/merge/PairMergeTicker";
 import {LEFT, RIGHT, WorkItemHeader} from "@/components/WorkItemHeader";
 import {useContext, useEffect, useState} from "react";
 import useImageUtils from "@/utils/useImageUtils";
@@ -193,7 +193,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
             backgroundColor: "#f6f6f6",
             display: 'flex'
           }} className="header row g-0" data-testid={`${workItemsPair.leftWorkItem.id}-header`}>
-            <MergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />
+            <PairMergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />
             <WorkItemHeader workItem={workItemsPair.leftWorkItem} side={LEFT} />
 
             {diffs && diffs.length > 0

@@ -6,7 +6,7 @@ import {faChevronDown, faChevronUp, faEquals, faQuestion} from "@fortawesome/fre
 import useRemote from "@/services/useRemote";
 import AppContext from "@/components/AppContext";
 import {useSearchParams} from "next/navigation";
-import MergeTicker from "@/components/merge/MergeTicker";
+import PairMergeTicker from "@/components/merge/PairMergeTicker";
 import Modal from "@/components/Modal";
 import useDiffService from "@/services/useDiffService";
 import useImageUtils from "@/utils/useImageUtils";
@@ -143,6 +143,9 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
       const rightWiId = workItemsPair.rightWorkItem ? workItemsPair.rightWorkItem.id : null;
       dataLoadedCallback(currentIndex, error, diffsExist, selected, leftChapter, rightChapter, leftWiId, rightWiId);
       if (diffsExist) {
+        workItemsPair.fieldsToMerge = diffData.fieldDiffs
+            .filter(fieldDiff => fieldDiff.id !== "outlineNumber" && fieldDiff.id !== "externalProjectWorkItem")
+            .map(fieldDiff => ({id: fieldDiff.id, selected: selected}));
         mergingContext.setPairSelected(currentIndex, workItemsPair, selected); // Initialize pair in selection registry
       } else {
         mergingContext.resetRegistryEntry(currentIndex); // Reset pair in selection registry
@@ -266,7 +269,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
             backgroundColor: asHeaderInDocument ? "#eeeeee" : "#f6f6f6",
             display: isChapterVisible(leftChapter, true) || isChapterVisible(rightChapter, false) || !context.state.hideChaptersIfNoDifference || error ? 'flex' : 'none'
           }} className="header row g-0">
-            <MergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />
+            <PairMergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />
 
             <WorkItemHeader workItem={workItemsPair.leftWorkItem} asHeaderInDocument={asHeaderInDocument}
                             movedOutlineNumber={workItemsPair.rightWorkItem?.movedOutlineNumber}
@@ -286,7 +289,8 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
           {loading && <div className="loader wi-loader"></div>}
           {!loading && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber)
               && !(workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.externalProjectWorkItem)
-              && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.externalProjectWorkItem) && <DiffContent diffs={diffs} expanded={expanded}/>}
+              && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.externalProjectWorkItem)
+              && <DiffContent workItemsPair={workItemsPair} pairSelected={selected} pairSelectedCallback={pairSelected} diffs={diffs} expanded={expanded}/>}
         </div>
         <Modal title="Information" cancelButtonTitle="OK" visible={childrenSelectionModalVisible}
                setVisible={setChildrenSelectionModalVisible} className="modal-md">

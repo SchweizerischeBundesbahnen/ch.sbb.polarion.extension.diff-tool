@@ -34,7 +34,7 @@ public class DocumentsMergeParams extends MergeParams {
 
     @SuppressWarnings("java:S107")
     public DocumentsMergeParams(DocumentIdentifier leftDocument, DocumentIdentifier rightDocument, MergeDirection direction, String linkRole,
-                                String configName, String configCacheBucketId, List<WorkItemsPair> pairs, Boolean allowReferencedWorkItemMerge, boolean updateAttachmentReferences) {
+                                String configName, String configCacheBucketId, List<MergeWorkItemsPair> pairs, Boolean allowReferencedWorkItemMerge, boolean updateAttachmentReferences) {
         super(direction, linkRole, configName, configCacheBucketId, updateAttachmentReferences, pairs);
         this.leftDocument = leftDocument;
         this.rightDocument = rightDocument;

@@ -14,6 +14,7 @@ export function useAppContext(){
   const [preserveComments, setPreserveComments] = useState(false);
   const [copyMissingDocumentAttachments, setCopyMissingDocumentAttachments] = useState(true);
   const [updateAttachmentReferences, setUpdateAttachmentReferences] = useState(true);
+  const [individualFieldsSelection, setIndividualFieldsSelection] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [diffsExist, setDiffsExist] = useState(false);
   const [selectedItemsCount, setSelectedItemsCount] = useState(0);
@@ -44,6 +45,8 @@ export function useAppContext(){
     setCopyMissingDocumentAttachments,
     updateAttachmentReferences,
     setUpdateAttachmentReferences,
+    individualFieldsSelection,
+    setIndividualFieldsSelection,
     dataLoaded,
     setDataLoaded,
     diffsExist,
