@@ -721,7 +721,7 @@ public class MergeService {
     @VisibleForTesting
     void merge(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, MergeWorkItemsPair pair) {
         for (DiffField field : orderForMerge(context.getDiffModel().getDiffFields())) {
-            if (!pair.fieldSelectedForMerge(field)) {
+            if (pair != null && !pair.fieldSelectedForMerge(field)) {
                 continue; // Skip processing if field wasn't explicitly or implicitly selected for merge
             }
 

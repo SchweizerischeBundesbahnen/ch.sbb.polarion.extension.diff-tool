@@ -2111,7 +2111,11 @@
         "description": "Work items pair to be merged",
         "properties": {
           "fieldsToMerge": {
-            "$ref": "#/components/schemas/MergeField"
+            "description": "List of fields to be merged",
+            "items": {
+              "$ref": "#/components/schemas/MergeField"
+            },
+            "type": "array"
           },
           "leftWorkItem": {
             "$ref": "#/components/schemas/WorkItem"

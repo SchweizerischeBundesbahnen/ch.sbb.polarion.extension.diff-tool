@@ -105,6 +105,9 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
       const diffsExist = diffData && diffData.fieldDiffs && diffData.fieldDiffs.length > 0;
       dataLoadedCallback(currentIndex, error, diffsExist);
       if (diffsExist) {
+        workItemsPair.fieldsToMerge = diffData.fieldDiffs
+            .filter(fieldDiff => fieldDiff.id !== "outlineNumber" && fieldDiff.id !== "externalProjectWorkItem")
+            .map(fieldDiff => ({id: fieldDiff.id, selected: selected}));
         mergingContext.setPairSelected(currentIndex, workItemsPair, selected); // Initialize pair in selection registry
       } else {
         mergingContext.resetRegistryEntry(currentIndex); // Reset pair in selection registry
@@ -206,7 +209,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
           </div>
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
           {loading && <div className="loader wi-loader"></div>}
-          {!loading && <DiffContent diffs={diffs} expanded={expanded}/>}
+          {!loading && <DiffContent workItemsPair={workItemsPair} pairSelected={selected} pairSelectedCallback={pairSelected} diffs={diffs} expanded={expanded}/>}
         </div>
       </>
   )

@@ -59,7 +59,10 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectedCal
     }
   }, [selected])
 
-  const changeSelected = () => {
+  const changeSelected = (event) => {
+    if (event) {
+      event.stopPropagation();
+    }
     setSelected(!selected);
   }
 

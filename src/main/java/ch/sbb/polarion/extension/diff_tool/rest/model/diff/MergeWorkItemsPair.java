@@ -18,7 +18,7 @@ import java.util.List;
 @Schema(description = "Work items pair to be merged")
 public class MergeWorkItemsPair extends WorkItemsPair {
 
-    @Schema(description = "List of fields to be merged", implementation = MergeField.class)
+    @Schema(description = "List of fields to be merged")
     private List<MergeField> fieldsToMerge;
 
     public MergeWorkItemsPair(@NotNull IWorkItem leftWorkItem, @Nullable IWorkItem rightWorkItem, @NotNull List<MergeField> fieldsToMerge) {
@@ -37,5 +37,10 @@ public class MergeWorkItemsPair extends WorkItemsPair {
         }
         MergeField mergeField = fieldsToMerge.stream().filter(f -> f.getId().equals(diffField.getKey())).findFirst().orElse(null);
         return mergeField != null && mergeField.isSelected();
+    }
+
+    @Override
+    protected boolean canEqual(final Object other) {
+        return other instanceof MergeWorkItemsPair;
     }
 }
