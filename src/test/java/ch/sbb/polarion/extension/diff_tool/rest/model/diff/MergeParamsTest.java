@@ -14,8 +14,8 @@ class MergeParamsTest {
 
     @Test
     void testBuilderCreatesInstance() {
-        WorkItemsPair pair = new WorkItemsPair();
-        List<WorkItemsPair> pairs = List.of(pair);
+        MergeWorkItemsPair pair = new MergeWorkItemsPair();
+        List<MergeWorkItemsPair> pairs = List.of(pair);
 
         MergeParams params = MergeParams.builder()
                 .direction(MergeDirection.LEFT_TO_RIGHT)
@@ -44,8 +44,8 @@ class MergeParamsTest {
 
     @Test
     void testAllArgsConstructor() {
-        WorkItemsPair pair = new WorkItemsPair();
-        List<WorkItemsPair> pairs = List.of(pair);
+        MergeWorkItemsPair pair = new MergeWorkItemsPair();
+        List<MergeWorkItemsPair> pairs = List.of(pair);
 
         MergeParams params = new MergeParams(
                 MergeDirection.RIGHT_TO_LEFT,
@@ -82,8 +82,8 @@ class MergeParamsTest {
     @Test
     void testSettersAndGetters() {
         MergeParams params = new MergeParams();
-        WorkItemsPair pair = new WorkItemsPair();
-        List<WorkItemsPair> pairs = List.of(pair);
+        MergeWorkItemsPair pair = new MergeWorkItemsPair();
+        List<MergeWorkItemsPair> pairs = List.of(pair);
 
         params.setDirection(MergeDirection.LEFT_TO_RIGHT);
         params.setLinkRole("newRole");
@@ -100,7 +100,7 @@ class MergeParamsTest {
 
     @Test
     void testEqualsAndHashCode() {
-        List<WorkItemsPair> pairs = List.of(new WorkItemsPair());
+        List<MergeWorkItemsPair> pairs = List.of(new MergeWorkItemsPair());
 
         MergeParams params1 = MergeParams.builder()
                 .direction(MergeDirection.LEFT_TO_RIGHT)

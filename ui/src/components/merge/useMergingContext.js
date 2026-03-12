@@ -63,7 +63,7 @@ export function useMergingContext({contentDiffing = false} = {}){
   };
 
   const itemsEqual = (item1, item2) => {
-    return (!item1 && !item2) || (item1 && item2 && item1.outlineNumber === item2.outlineNumber && item2.movedOutlineNumber === item2.movedOutlineNumber);
+    return (!item1 && !item2) || (item1 && item2 && item1.outlineNumber === item2.outlineNumber && item1.movedOutlineNumber === item2.movedOutlineNumber);
   };
 
   const isIndexSelected = (indexToCheck) => {

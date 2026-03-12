@@ -350,9 +350,13 @@ a:hover {
   font-weight: 300;
 }
 
-.wi-diff > .header {
+.wi-diff > .header.row {
   position: relative;
   line-height: 1em;
+}
+
+.wi-diff > .content.row {
+    position: relative;
 }
 
 .wi-diff.referenced-left .diff-leaf.left, .wi-diff.referenced-right .diff-leaf.right  {
@@ -517,7 +521,6 @@ a.wi-badge:hover {
     padding-left: 1rem;
     margin-bottom: 0;
 }
-
 .diff-viewer {
   display: table;
   width: 100%;
@@ -525,6 +528,11 @@ a.wi-badge:hover {
   /*border-left: 1px solid rgba(0, 0, 0, 0.1);*/
   /*border-right: 1px solid rgba(0, 0, 0, 0.1);*/
 }
+
+.diff-wrapper.selected > .diff-viewer {
+    background-color: #96befa21;
+}
+
 .diff-leaf {
   overflow: hidden;
   display: table-cell;

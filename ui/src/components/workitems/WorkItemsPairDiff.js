@@ -1,4 +1,4 @@
-import MergeTicker from "@/components/merge/MergeTicker";
+import PairMergeTicker from "@/components/merge/PairMergeTicker";
 import {LEFT, RIGHT, WorkItemHeader} from "@/components/WorkItemHeader";
 import {useContext, useEffect, useState} from "react";
 import useImageUtils from "@/utils/useImageUtils";
@@ -105,6 +105,9 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
       const diffsExist = diffData && diffData.fieldDiffs && diffData.fieldDiffs.length > 0;
       dataLoadedCallback(currentIndex, error, diffsExist);
       if (diffsExist) {
+        workItemsPair.fieldsToMerge = diffData.fieldDiffs
+            .filter(fieldDiff => fieldDiff.id !== "outlineNumber" && fieldDiff.id !== "externalProjectWorkItem")
+            .map(fieldDiff => ({id: fieldDiff.id, selected: selected}));
         mergingContext.setPairSelected(currentIndex, workItemsPair, selected); // Initialize pair in selection registry
       } else {
         mergingContext.resetRegistryEntry(currentIndex); // Reset pair in selection registry
@@ -193,7 +196,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
             backgroundColor: "#f6f6f6",
             display: 'flex'
           }} className="header row g-0" data-testid={`${workItemsPair.leftWorkItem.id}-header`}>
-            <MergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />
+            <PairMergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />
             <WorkItemHeader workItem={workItemsPair.leftWorkItem} side={LEFT} />
 
             {diffs && diffs.length > 0
@@ -206,7 +209,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
           </div>
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
           {loading && <div className="loader wi-loader"></div>}
-          {!loading && <DiffContent diffs={diffs} expanded={expanded}/>}
+          {!loading && <DiffContent workItemsPair={workItemsPair} pairSelected={selected} pairSelectedCallback={pairSelected} diffs={diffs} expanded={expanded}/>}
         </div>
       </>
   )

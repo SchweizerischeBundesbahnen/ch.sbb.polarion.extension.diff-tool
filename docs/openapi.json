@@ -1822,7 +1822,7 @@
             "type": "string"
           },
           "pairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
+            "$ref": "#/components/schemas/MergeWorkItemsPair"
           },
           "preserveComments": {
             "description": "Indicates whether comments must be preserved during merge operation",
@@ -1946,6 +1946,20 @@
           },
           "workItemTypeName": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MergeField": {
+        "description": "Represents a field of WorkItem potentially to be merged",
+        "properties": {
+          "id": {
+            "description": "Field ID",
+            "type": "string"
+          },
+          "selected": {
+            "description": "If field is selected for merge",
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -2089,6 +2103,25 @@
           "targetModuleHasStructuralChanges": {
             "description": "Indicates whether the target module has structural changes",
             "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "MergeWorkItemsPair": {
+        "description": "Work items pair to be merged",
+        "properties": {
+          "fieldsToMerge": {
+            "description": "List of fields to be merged",
+            "items": {
+              "$ref": "#/components/schemas/MergeField"
+            },
+            "type": "array"
+          },
+          "leftWorkItem": {
+            "$ref": "#/components/schemas/WorkItem"
+          },
+          "rightWorkItem": {
+            "$ref": "#/components/schemas/WorkItem"
           }
         },
         "type": "object"
@@ -2402,7 +2435,7 @@
             "type": "string"
           },
           "pairs": {
-            "$ref": "#/components/schemas/WorkItemsPair"
+            "$ref": "#/components/schemas/MergeWorkItemsPair"
           },
           "rightProject": {
             "$ref": "#/components/schemas/Project"
