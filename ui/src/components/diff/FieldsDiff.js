@@ -7,7 +7,7 @@ import FieldMergeTicker from "@/components/merge/FieldMergeTicker";
 const ARROW_HEIGHT = 7;
 const GAP = 2;
 
-export default function FieldsDiff({workItemsPair, pairSelected, pairSelectedCallback, fieldId, fieldName, oldValue, newValue, issues}) {
+export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTrigger, pairSelectedCallback, fieldId, fieldName, oldValue, newValue, issues}) {
   const context = useContext(AppContext);
 
   const [display, setDisplay] = useState(true);
@@ -38,8 +38,10 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectedCal
   }, [fieldId, context.state.showOutlineNumbersDiff]);
 
   useEffect(() => {
-    setSelected(pairSelected);
-  }, [pairSelected])
+    if (pairSelectionTrigger > 0) {
+      setSelected(pairSelected);
+    }
+  }, [pairSelectionTrigger])
 
   useEffect(() => {
     if (workItemsPair) {
@@ -49,11 +51,11 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectedCal
       }
 
       if (selected) {
-        pairSelectedCallback(true, true); // Select pair as soon as any of its field is selected
+        pairSelectedCallback(true, true, true); // Select pair as soon as any of its field is selected (fromField=true)
       } else {
         const anyFieldStillSelected = workItemsPair.fieldsToMerge.find(fieldToMerge => fieldToMerge.selected === true);
         if (!anyFieldStillSelected) {
-          pairSelectedCallback(false, true); // Unselect pair if all its field are unselected
+          pairSelectedCallback(false, true, true); // Unselect pair if all its field are unselected (fromField=true)
         }
       }
     }
