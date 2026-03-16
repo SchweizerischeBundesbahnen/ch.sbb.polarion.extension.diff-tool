@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.3.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v7.3.0...v7.3.1) (2026-03-16)
+
+
+### Bug Fixes
+
+* Selecting a field shouldn't automatically select all other fields of the pair ([#415](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/415)) ([4280d39](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/4280d39a757f65d3d8d01f3d1d8aeff676661c23))
+
 ## [7.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v7.2.0...v7.3.0) (2026-03-12)
 
 
