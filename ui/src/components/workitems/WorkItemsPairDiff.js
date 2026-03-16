@@ -27,6 +27,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
   const [diffs, setDiffs] = useState([]);
   const [dataLoadedFired, setDataLoadedFired] = useState(false);
   const [selected, setSelected] = useState(mergingContext.isIndexSelected(currentIndex));
+  const [pairSelectionTrigger, setPairSelectionTrigger] = useState(0);
 
   useEffect(() => {
     if (onHold && loadingContext.pairLoadingAllowed(currentIndex)) {
@@ -127,9 +128,13 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
     }
   }, [mergingContext.selectAllTrigger]);
 
-  const pairSelected = (selected) => {
+  const pairSelected = (selectedValue, forceAndSuppressWarnings, fromField) => {
     if (workItemsPair) {
-      mergingContext.setPairSelected(currentIndex, workItemsPair, selected);
+      mergingContext.setPairSelected(currentIndex, workItemsPair, selectedValue);
+      setSelected(selectedValue);
+      if (!fromField) {
+        setPairSelectionTrigger(prev => prev === Number.MAX_VALUE ? 1 : prev + 1);
+      }
     }
   };
 
@@ -209,7 +214,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
           </div>
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
           {loading && <div className="loader wi-loader"></div>}
-          {!loading && <DiffContent workItemsPair={workItemsPair} pairSelected={selected} pairSelectedCallback={pairSelected} diffs={diffs} expanded={expanded}/>}
+          {!loading && <DiffContent workItemsPair={workItemsPair} pairSelected={selected} pairSelectionTrigger={pairSelectionTrigger} pairSelectedCallback={pairSelected} diffs={diffs} expanded={expanded}/>}
         </div>
       </>
   )

@@ -2,7 +2,7 @@ import {useContext, useEffect, useRef, useState} from "react";
 import FieldsDiff from "@/components/diff/FieldsDiff";
 import AppContext from "@/components/AppContext";
 
-export default function DiffContent({workItemsPair, pairSelected, pairSelectedCallback, diffs, expanded}) {
+export default function DiffContent({workItemsPair, pairSelected, pairSelectionTrigger, pairSelectedCallback, diffs, expanded}) {
   const context = useContext(AppContext);
   const ref = useRef(null);
   const [height, setHeight] = useState(0);
@@ -21,7 +21,8 @@ export default function DiffContent({workItemsPair, pairSelected, pairSelectedCa
   }} className={`content row g-0`} ref={ref} data-testid="diff-content">
 
     {diffs.map((diff, index) => (
-        <FieldsDiff key={index} workItemsPair={workItemsPair} pairSelected={pairSelected} pairSelectedCallback={pairSelectedCallback}
+        <FieldsDiff key={index} workItemsPair={workItemsPair} pairSelected={pairSelected}
+                    pairSelectionTrigger={pairSelectionTrigger} pairSelectedCallback={pairSelectedCallback}
                     fieldId={diff.id} fieldName={diff.name} oldValue={diff.oldValue} newValue={diff.newValue} issues={diff.issues} />
     ))}
 

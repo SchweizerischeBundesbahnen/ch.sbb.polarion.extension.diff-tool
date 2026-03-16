@@ -35,6 +35,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
   const [diffs, setDiffs] = useState([]);
   const [dataLoadedFired, setDataLoadedFired] = useState(false);
   const [selected, setSelected] = useState(mergingContext.isIndexSelected(currentIndex));
+  const [pairSelectionTrigger, setPairSelectionTrigger] = useState(0);
   const [childrenSelectionModalVisible, setChildrenSelectionModalVisible] = useState(false);
 
   useEffect(() => {
@@ -165,16 +166,20 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
     }
   }, [mergingContext.selectAllTrigger]);
 
-  const pairSelected = (selected, forceAndSuppressWarnings) => {
+  const pairSelected = (selectedValue, forceAndSuppressWarnings, fromField) => {
     if (workItemsPair) {
-      if (selected || unSelectionAllowedCallback(workItemsPair) || forceAndSuppressWarnings) {
-        mergingContext.setPairSelected(currentIndex, workItemsPair, selected);
+      if (selectedValue || unSelectionAllowedCallback(workItemsPair) || forceAndSuppressWarnings) {
+        mergingContext.setPairSelected(currentIndex, workItemsPair, selectedValue);
+        setSelected(selectedValue);
+        if (!fromField) {
+          setPairSelectionTrigger(prev => prev === Number.MAX_VALUE ? 1 : prev + 1);
+        }
         if (workItemsPair.leftWorkItem && workItemsPair.rightWorkItem) {
           // In case of moved items UI contains them twice, once to show moved sign for left work item, another time - for right work item.
           // This code makes their selection/un-selection in sync
-          setMirroredPairSelectedCallback(workItemsPair, selected);
+          setMirroredPairSelectedCallback(workItemsPair, selectedValue);
         }
-        if (selected && workItemsPair.leftWorkItem && workItemsPair.rightWorkItem
+        if (selectedValue && workItemsPair.leftWorkItem && workItemsPair.rightWorkItem
             && (workItemsPair.leftWorkItem.movedOutlineNumber || workItemsPair.rightWorkItem.movedOutlineNumber)) {
           // Automatically select all children items of selected heading item
           if (selectChildrenCallback(workItemsPair) && !asHeaderInDocument && !forceAndSuppressWarnings) {
@@ -290,7 +295,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
           {!loading && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber)
               && !(workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.externalProjectWorkItem)
               && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.externalProjectWorkItem)
-              && <DiffContent workItemsPair={workItemsPair} pairSelected={selected} pairSelectedCallback={pairSelected} diffs={diffs} expanded={expanded}/>}
+              && <DiffContent workItemsPair={workItemsPair} pairSelected={selected} pairSelectionTrigger={pairSelectionTrigger} pairSelectedCallback={pairSelected} diffs={diffs} expanded={expanded}/>}
         </div>
         <Modal title="Information" cancelButtonTitle="OK" visible={childrenSelectionModalVisible}
                setVisible={setChildrenSelectionModalVisible} className="modal-md">
