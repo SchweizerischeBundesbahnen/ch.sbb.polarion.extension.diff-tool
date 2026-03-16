@@ -172,7 +172,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
         mergingContext.setPairSelected(currentIndex, workItemsPair, selectedValue);
         setSelected(selectedValue);
         if (!fromField) {
-          setPairSelectionTrigger(prev => prev + 1);
+          setPairSelectionTrigger(prev => prev === Number.MAX_VALUE ? 1 : prev + 1);
         }
         if (workItemsPair.leftWorkItem && workItemsPair.rightWorkItem) {
           // In case of moved items UI contains them twice, once to show moved sign for left work item, another time - for right work item.

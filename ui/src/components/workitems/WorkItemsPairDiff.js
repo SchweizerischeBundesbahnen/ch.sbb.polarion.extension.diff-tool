@@ -133,7 +133,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
       mergingContext.setPairSelected(currentIndex, workItemsPair, selectedValue);
       setSelected(selectedValue);
       if (!fromField) {
-        setPairSelectionTrigger(prev => prev + 1);
+        setPairSelectionTrigger(prev => prev === Number.MAX_VALUE ? 1 : prev + 1);
       }
     }
   };
