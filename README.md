@@ -17,7 +17,7 @@ This Polarion extension provides functionality of diffing:
 * inlined content of 2 documents, inserted there not via work items, but directly
 * arbitrary set of work items in one project with their counterpart work items from another project
 
-...and then to merge selected diffs in any direction. First 2 options are available either via selecting 2 certain documents
+...and then to merge selected diffs from left to right document. First 2 options are available either via selecting 2 certain documents
 or via a collection of documents.
 
 In case of diffing work items, appropriate counterpart work items (from another document or another project) are always seeking
@@ -133,7 +133,7 @@ Default value is `2`. Increasing this value may speed up the process but can als
 1. Open a document in Polarion.
 2. In the toolbar choose Show Sidebar ➙ Document Properties ➙ Documents Comparison.
 3. Choose another document and desired options and click `Compare`.
-4. Another tab will be opened in browser listing documents differences. Later you can select certain differences and merge them in any direction.
+4. Another tab will be opened in browser listing documents differences. Later you can select certain differences and merge them from left to right document.
 
 ### Document copy creation
 1. Open a document in Polarion.
@@ -145,14 +145,14 @@ Default value is `2`. Increasing this value may speed up the process but can als
 1. In Polarion navigation tree choose Diff Tool ➙ Multiple Work Items.
 2. Choose target project, link role by which items to be linked, then select work items from table below to be compared, preliminary filtering them to show ones you need.
 3. Finally, click Compare button.
-4. Another tab will be opened in browser listing selected work items differences. Later you can select certain differences and merge them in any direction.
+4. Another tab will be opened in browser listing selected work items differences. Later you can select certain differences and merge them from left to right Work Item.
 
 ### Collections diffing
 1. In Polarion navigation tree choose Diff Tool ➙ Collections.
 2. You will see 2 tables listing collections. Left one is displaying collections from current project, right one is displaying collections from project selected in dropdown Target project.
 3. Select one collection from left table and one collection from right table, preliminary filtering them to show ones you need.
 4. Choose link role by which work items to be linked, then click Compare button.
-5. Another tab will be opened in browser listing documents differences. You can change documents from collections to be compared in side pane. Later you can select certain differences and merge them in any direction.
+5. Another tab will be opened in browser listing documents differences. You can change documents from collections to be compared in side pane. Later you can select certain differences and merge them from left to right document.
 
 ## REST API
 
