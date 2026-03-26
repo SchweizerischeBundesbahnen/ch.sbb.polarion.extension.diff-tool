@@ -15,6 +15,7 @@ import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";
 import Modal from "@/components/Modal";
 import MergePane from "@/components/merge/MergePane";
 import MergeResultModal from "@/components/merge/MergeResultModal";
+import * as DiffTypes from "@/DiffTypes";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'targetProjectId', 'linkRole', 'ids'];
 
@@ -38,9 +39,9 @@ export default function WorkItemsDiff() {
   const [structuralChangesWarning, setStructuralChangesWarning] = useState(false);  // means that documents have undergone structural changes as a result of merge operation
   const [mergeReportModalVisible, setMergeReportModalVisible] = useState(false);
 
-  const mergeCallback = (direction) => {
+  const mergeCallback = (mergeDirection, linkRoleDirection) => {
     setMergeInProgress(true);
-    diffService.sendWorkItemsMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, context.state.updateAttachmentReferences)
+    diffService.sendWorkItemsMergeRequest(searchParams, mergeDirection, linkRoleDirection, configCacheId, loadingContext, mergingContext, context.state.updateAttachmentReferences)
         .then((data) => {
           setMergeReport(data.mergeReport);
           setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);
@@ -100,7 +101,8 @@ export default function WorkItemsDiff() {
         <ProjectHeader project={workItemsData.rightProject} />
       </div>
       <ProgressBar loadingContext={loadingContext} />
-      <MergePane leftContext={workItemsData.leftProject} rightContext={workItemsData.rightProject} mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
+      <MergePane leftContext={workItemsData.leftProject} rightContext={workItemsData.rightProject}  diff_type={DiffTypes.WORK_ITEMS_DIFF}
+                 mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
     </div>
 
     <ErrorsOverlay loadingContext={loadingContext} />

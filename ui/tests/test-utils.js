@@ -36,15 +36,15 @@ const workItemsMergeFixtureDataProvider = (requestBody) => {
     } else if (requestBody.pairs[0].leftWorkItem.id === "EL-11600") {
       fixtureFile = "EL-11600_NONE_merge.json";
     }
-  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-4977" && requestBody.pairs[0].rightWorkItem.id === "DP-11559" && requestBody.direction === 0) {
+  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-4977" && requestBody.pairs[0].rightWorkItem.id === "DP-11559" && requestBody.mergeDirection === 0) {
     fixtureFile = "EL-4977_DP-11559_merge.json";
-  }  else if (requestBody.pairs[0].leftWorkItem.id === "EL-4977" && requestBody.pairs[0].rightWorkItem.id === "DP-11559" && requestBody.direction === 1) {
-    fixtureFile = "EL-4977_DP-11559_conflicted_merge.json";
-  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-11575" && requestBody.pairs[0].rightWorkItem.id === "EL-11575" && requestBody.direction === 0) {
+  }  else if (requestBody.pairs[0].leftWorkItem.id === "DP-11559" && requestBody.pairs[0].rightWorkItem.id === "EL-4977" && requestBody.mergeDirection === 0) {
+    fixtureFile = "DP-11559_EL-4977_conflicted_merge.json";
+  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-11575" && requestBody.pairs[0].rightWorkItem.id === "EL-11575" && requestBody.leftDocument.projectId === "elibrary") {
     fixtureFile = "EL-11575_EL-11575_merge_into_referenced.json";
-  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-11575" && requestBody.pairs[0].rightWorkItem.id === "EL-11575" && requestBody.direction === 1) {
+  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-11575" && requestBody.pairs[0].rightWorkItem.id === "EL-11575" && requestBody.leftDocument.projectId === "drivepilot") {
     fixtureFile = "EL-11575_EL-11575_merge_from_referenced.json";
-  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-157" && requestBody.pairs[0].rightWorkItem.id === "DP-11562" && requestBody.direction === 0) {
+  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-157" && requestBody.pairs[0].rightWorkItem.id === "DP-11562" && requestBody.mergeDirection === 0) {
     fixtureFile = "EL-157_DP-11562_merge.json";
   } else if (requestBody.pairs[0].leftWorkItem.id === "EL-14873" && requestBody.pairs[0].rightWorkItem.id === "DP-536") {
     fixtureFile = "EL-14873_DP-536.json";

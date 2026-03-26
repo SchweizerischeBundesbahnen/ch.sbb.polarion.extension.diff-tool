@@ -68,13 +68,9 @@ test.describe("page of diffing documents' WorkItems", () => {
     await expect(selectAllCheckbox).toBeVisible();
     await expect(selectAllCheckbox).toBeChecked({ checked: false });
 
-    const mergeButtons = page.locator('.header .merge-pane .merge-button .btn');
-    await expect(mergeButtons).toHaveCount(2);
-    for (let i = 0; i < 2; i++) {
-      await expect(mergeButtons.nth(i)).toBeVisible();
-      await expect(mergeButtons.nth(i)).toBeDisabled();
-    }
-
+    const mergeButton = page.locator('.header .merge-pane .merge-button .btn');
+    await expect(mergeButton).toBeVisible();
+    await expect(mergeButton).toBeDisabled();
   });
 
   test('control pane', async ({ page }) => {
@@ -201,13 +197,10 @@ test.describe("page of diffing documents' WorkItems", () => {
       await expect(mergeTickers.nth(i)).toBeChecked();
     }
 
-    // Check that merge buttons are enabled
-    const mergeButtons = page.locator('.header .merge-pane .merge-button .btn');
-    await expect(mergeButtons).toHaveCount(2);
-    for (let i = 0; i < 2; i++) {
-      await expect(mergeButtons.nth(i)).toBeVisible();
-      await expect(mergeButtons.nth(i)).toBeEnabled();
-    }
+    // Check that merge button is enabled
+    const mergeButton = page.locator('.header .merge-pane .merge-button .btn');
+    await expect(mergeButton).toBeVisible();
+    await expect(mergeButton).toBeEnabled();
 
     // And finally check that number of pairs visually marked as selected equal to number of selected checkboxes,
     // also check that headers of selected pairs change background
@@ -250,13 +243,47 @@ test.describe("page of diffing documents' WorkItems", () => {
       await expect(pairHeaders.nth(j)).toHaveCSS("background-color", "rgba(150, 190, 250, 0.2)");
     }
 
-    // Check that merge buttons are enabled
-    const mergeButtons = page.locator('.header .merge-pane .merge-button .btn');
-    await expect(mergeButtons).toHaveCount(2);
-    for (let i = 0; i < 2; i++) {
-      await expect(mergeButtons.nth(i)).toBeVisible();
-      await expect(mergeButtons.nth(i)).toBeEnabled();
-    }
+    // Check that merge button is enabled
+    const mergeButton = page.locator('.header .merge-pane .merge-button .btn');
+    await expect(mergeButton).toBeVisible();
+    await expect(mergeButton).toBeEnabled();
+  });
+
+  test('swap documents', async ({ page, mockApi }) => {
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
+
+    // Verify initial state: elibrary on the left, drivepilot on the right
+    await expect(page.getByTestId('LEFT-project').locator(".path-value")).toHaveText("E-Library");
+    await expect(page.getByTestId('RIGHT-project').locator(".path-value")).toHaveText("Drive Pilot");
+    await expect(page.getByTestId('LEFT-doc-title')).toContainText("Catalog Specification");
+    await expect(page.getByTestId('RIGHT-doc-title')).toContainText("Catalog Design");
+
+    // Mock endpoints needed after swap (drivepilot becomes source) — must be registered after initial state is verified
+    await mockApi.mockEndpoint({ url: '**/settings/diff/names?scope=project/drivepilot/', fixtureFile: 'configs.json' });
+    await mockApi.mockEndpoint({ url: '**/diff/documents', fixtureFile: 'reversed-documents-diff.json' });
+
+    // Click swap button and wait for URL to change
+    const swapButton = page.locator('.swap-button');
+    await expect(swapButton).toBeVisible();
+    await swapButton.click();
+
+    // Wait for client-side navigation to complete
+    await expect(page).toHaveURL(/sourceProjectId=drivepilot/);
+
+    // Wait for the diff data to reload after swap
+    await expect(page.getByTestId('LEFT-project').locator(".path-value")).toHaveText("Drive Pilot");
+    await expect(page.getByTestId('RIGHT-project').locator(".path-value")).toHaveText("E-Library");
+    await expect(page.getByTestId('LEFT-doc-title')).toContainText("Catalog Design");
+    await expect(page.getByTestId('RIGHT-doc-title')).toContainText("Catalog Specification");
+
+    // Verify URL params are swapped
+    const url = new URL(page.url());
+    expect(url.searchParams.get('sourceProjectId')).toBe('drivepilot');
+    expect(url.searchParams.get('sourceSpaceId')).toBe('Design');
+    expect(url.searchParams.get('sourceDocument')).toBe('Catalog Design');
+    expect(url.searchParams.get('targetProjectId')).toBe('elibrary');
+    expect(url.searchParams.get('targetSpaceId')).toBe('Specification');
+    expect(url.searchParams.get('targetDocument')).toBe('Catalog Specification');
   });
 
   test('select single field', async ({ page }) => {
@@ -313,13 +340,10 @@ test.describe("page of diffing documents' WorkItems", () => {
       await expect(pairHeaders.nth(j)).toHaveCSS("background-color", "rgba(150, 190, 250, 0.2)");
     }
 
-    // Check that merge buttons are enabled
-    const mergeButtons = page.locator('.header .merge-pane .merge-button .btn');
-    await expect(mergeButtons).toHaveCount(2);
-    for (let i = 0; i < 2; i++) {
-      await expect(mergeButtons.nth(i)).toBeVisible();
-      await expect(mergeButtons.nth(i)).toBeEnabled();
-    }
+    // Check that merge button is enabled
+    const mergeButton = page.locator('.header .merge-pane .merge-button .btn');
+    await expect(mergeButton).toBeVisible();
+    await expect(mergeButton).toBeEnabled();
   });
 
 });

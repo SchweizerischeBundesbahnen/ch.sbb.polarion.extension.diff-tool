@@ -23,7 +23,7 @@ public class DocumentsFieldsMergeParams {
     private DocumentIdentifier rightDocument;
 
     @Schema(description = "The direction of the merge operation", implementation = MergeDirection.class)
-    private MergeDirection direction;
+    private MergeDirection mergeDirection;
 
     @Schema(description = "List of fields IDs to be considered in the merge operation")
     private List<String> fieldIds;

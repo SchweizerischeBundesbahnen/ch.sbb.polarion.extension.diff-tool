@@ -55,8 +55,8 @@ public class MergeInternalController {
             }
     )
     public MergeResult mergeDocuments(@Parameter(required = true) DocumentsMergeParams mergeParams) {
-        if (mergeParams == null || mergeParams.getLeftDocument() == null || mergeParams.getRightDocument() == null || mergeParams.getDirection() == null) {
-            throw new BadRequestException("Parameters 'leftDocument', 'rightDocument' and 'direction' should be provided");
+        if (mergeParams == null || mergeParams.getLeftDocument() == null || mergeParams.getRightDocument() == null || mergeParams.getMergeDirection() == null) {
+            throw new BadRequestException("Parameters 'leftDocument', 'rightDocument' and 'mergeDirection' should be provided");
         }
         return mergeService.mergeDocuments(mergeParams);
     }
@@ -85,9 +85,9 @@ public class MergeInternalController {
             }
     )
     public MergeResult mergeDocumentsFields(@Parameter(required = true) DocumentsFieldsMergeParams mergeParams) {
-        if (mergeParams == null || mergeParams.getLeftDocument() == null || mergeParams.getRightDocument() == null || mergeParams.getDirection() == null
+        if (mergeParams == null || mergeParams.getLeftDocument() == null || mergeParams.getRightDocument() == null || mergeParams.getMergeDirection() == null
                 || mergeParams.getFieldIds() == null || mergeParams.getFieldIds().isEmpty()) {
-            throw new BadRequestException("Parameters 'leftDocument', 'rightDocument', 'direction' and 'fieldIds' should be provided");
+            throw new BadRequestException("Parameters 'leftDocument', 'rightDocument', 'mergeDirection' and 'fieldIds' should be provided");
         }
         return mergeService.mergeDocumentsFields(mergeParams);
     }
@@ -116,9 +116,9 @@ public class MergeInternalController {
             }
     )
     public MergeResult mergeDocumentsContent(@Parameter(required = true) DocumentsContentMergeParams mergeParams) {
-        if (mergeParams == null || mergeParams.getLeftDocument() == null || mergeParams.getRightDocument() == null || mergeParams.getDirection() == null
+        if (mergeParams == null || mergeParams.getLeftDocument() == null || mergeParams.getRightDocument() == null || mergeParams.getMergeDirection() == null
                 || mergeParams.getPairs() == null || mergeParams.getPairs().isEmpty()) {
-            throw new BadRequestException("Parameters 'leftDocument', 'rightDocument', 'direction' and 'pairs' should be provided");
+            throw new BadRequestException("Parameters 'leftDocument', 'rightDocument', 'mergeDirection' and 'pairs' should be provided");
         }
         return mergeService.mergeDocumentsContent(mergeParams);
     }
@@ -147,8 +147,8 @@ public class MergeInternalController {
             }
     )
     public MergeResult mergeWorkItems(@Parameter(required = true) WorkItemsMergeParams mergeParams) {
-        if (mergeParams == null || mergeParams.getLeftProject() == null || mergeParams.getRightProject() == null || mergeParams.getDirection() == null) {
-            throw new BadRequestException("Parameters 'leftProject', 'rightProject' and 'direction' should be provided");
+        if (mergeParams == null || mergeParams.getLeftProject() == null || mergeParams.getRightProject() == null || mergeParams.getMergeDirection() == null) {
+            throw new BadRequestException("Parameters 'leftProject', 'rightProject' and 'mergeDirection' should be provided");
         }
         return mergeService.mergeWorkItems(mergeParams);
     }

@@ -17,6 +17,10 @@ import MergeResultModal from "@/components/merge/MergeResultModal";
 import CollectionHeader from "@/components/collections/CollectionHeader";
 import DocumentProjectHeader from "@/components/documents/DocumentProjectHeader";
 import {DIFF_SIDES} from "@/components/diff/DiffLeaf";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faRightLeft} from "@fortawesome/free-solid-svg-icons";
+import useSwapDocuments from "@/utils/useSwapDocuments";
+import * as DiffTypes from "@/DiffTypes";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument'];
 
@@ -24,6 +28,7 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
   const context = useContext(AppContext);
   const searchParams = useSearchParams();
   const diffService = useDiffService();
+  const swapDocuments = useSwapDocuments();
 
   const loadingContext = useLoadingContext();
   const mergingContext = useMergingContext({});
@@ -46,7 +51,6 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
     }
 
     loadDiff();
-
   }, [searchParams]);
 
   const loadDiff = () => {
@@ -135,17 +139,23 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
           <CollectionHeader collection={enclosingCollections.rightCollection} side={DIFF_SIDES.RIGHT}/>
         </>}
         {!enclosingCollections && <>
-          <DocumentProjectHeader document={fieldsData.leftDocument}/>
-          <DocumentProjectHeader document={fieldsData.rightDocument}/>
+          <DocumentProjectHeader document={fieldsData.leftDocument} side={DIFF_SIDES.LEFT} />
+          <DocumentProjectHeader document={fieldsData.rightDocument} side={DIFF_SIDES.RIGHT} />
         </>}
       </div>
-      <div className="row g-0">
-        <DocumentHeader document={fieldsData.leftDocument} />
-        <DocumentHeader document={fieldsData.rightDocument} />
+      <div className="row g-0" style={{ position: "relative" }}>
+        <DocumentHeader document={fieldsData.leftDocument} side={DIFF_SIDES.LEFT} />
+        <button className="btn btn-secondary btn-xs swap-button" onClick={swapDocuments}
+                title="Swap source and target documents. Be aware that Fields selection will be cleared by this action."
+                aria-label="Swap documents">
+          <FontAwesomeIcon icon={faRightLeft} />
+        </button>
+        <DocumentHeader document={fieldsData.rightDocument} side={DIFF_SIDES.RIGHT} />
       </div>
 
       <ProgressBar loadingContext={loadingContext}/>
-      <MergePane leftContext={fieldsData.leftDocument} rightContext={fieldsData.rightDocument} mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext}/>
+      <MergePane leftContext={fieldsData.leftDocument} rightContext={fieldsData.rightDocument} diff_type={DiffTypes.DOCUMENTS_FIELDS_DIFF}
+                 mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext}/>
     </div>
 
     <ErrorsOverlay loadingContext={loadingContext}/>

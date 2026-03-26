@@ -10,7 +10,7 @@ test.describe("diffing and merging of documents' fields", () => {
     await mockApi.mockEndpoint({url: '**/diff/documents-fields', fixtureFile: 'documents-fields.json'});
     await mockApi.mockFieldsMergeEndpoint();
 
-    await page.goto('/documents?sourceProjectId=elibrary&sourceSpaceId=Specification&sourceDocument=Catalog%20Specification&targetProjectId=drivepilot&targetSpaceId=Design&targetDocument=Catalog%20Design&linkRole=relates_to&compareAs=Fields');
+    await page.goto('/documents?sourceProjectId=elibrary&sourceSpaceId=Specification&sourceDocument=Catalog%20Specification&targetProjectId=drivepilot&targetSpaceId=Design&targetDocument=Catalog%20Design&linkRole=relates_to&config=Default&compareAs=Fields');
   });
 
   test('version field diff', async ({ page }) => {
@@ -112,6 +112,34 @@ test.describe("diffing and merging of documents' fields", () => {
     `));
   });
 
+  test('swap documents', async ({ page, mockApi }) => {
+    // Mock endpoints needed after swap (drivepilot becomes source)
+    await mockApi.mockEndpoint({url: '**/settings/diff/names?scope=project/drivepilot/', fixtureFile: 'configs.json'});
+
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
+
+    // Verify initial state: elibrary on the left, drivepilot on the right
+    await expect(page.getByTestId('LEFT-doc-title')).toContainText("Catalog Specification");
+    await expect(page.getByTestId('RIGHT-doc-title')).toContainText("Catalog Design");
+
+    // Click swap button and wait for URL to change
+    const swapButton = page.locator('.swap-button');
+    await expect(swapButton).toBeVisible();
+    await swapButton.click();
+
+    // Wait for client-side navigation to complete
+    await expect(page).toHaveURL(/sourceProjectId=drivepilot/);
+
+    // Verify URL params are swapped
+    const url = new URL(page.url());
+    expect(url.searchParams.get('sourceProjectId')).toBe('drivepilot');
+    expect(url.searchParams.get('sourceSpaceId')).toBe('Design');
+    expect(url.searchParams.get('sourceDocument')).toBe('Catalog Design');
+    expect(url.searchParams.get('targetProjectId')).toBe('elibrary');
+    expect(url.searchParams.get('targetSpaceId')).toBe('Specification');
+    expect(url.searchParams.get('targetDocument')).toBe('Catalog Specification');
+  });
+
   test('merge canceled', async ({ page }) => {
     let requestWasMade = false;
 
@@ -190,7 +218,7 @@ test.describe("diffing and merging of documents' fields", () => {
 
     if (request.method() === 'POST') {
       const postData = JSON.parse(request.postData() || '{}');
-      expect(postData.direction).toBe(0);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.fieldIds).toStrictEqual(["version"]);
 
       expect(postData.leftDocument.projectId).toBe("elibrary");
@@ -251,7 +279,7 @@ test.describe("diffing and merging of documents' fields", () => {
     await selectionCheckbox.isVisible();
     await selectionCheckbox.click();
 
-    const mergeButton = page.locator('.header .merge-pane .merge-button .btn').nth(1);
+    const mergeButton = page.locator('.header .merge-pane .merge-button .btn');
     await expect(mergeButton).toBeEnabled();
     await mergeButton.isEnabled();
     await mergeButton.click();
@@ -259,7 +287,7 @@ test.describe("diffing and merging of documents' fields", () => {
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible();
     const mergeConfirmation = page.getByTestId("merge-confirmation");
     await expect(mergeConfirmation).toBeVisible();
-    await expect(mergeConfirmation).toHaveText("Are you sure you want to merge selected items from target to source document?");
+    await expect(mergeConfirmation).toHaveText("Are you sure you want to merge selected items from source to target document?");
 
     const actionButton = page.getByTestId("merge-confirmation-modal-action-button");
     await expect(actionButton).toBeVisible();
@@ -277,7 +305,7 @@ test.describe("diffing and merging of documents' fields", () => {
 
     if (request.method() === 'POST') {
       const postData = JSON.parse(request.postData() || '{}');
-      expect(postData.direction).toBe(1);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.fieldIds).toStrictEqual(["docRevision"]);
 
       expect(postData.leftDocument.projectId).toBe("elibrary");
@@ -348,7 +376,7 @@ test.describe("diffing and merging of documents' fields", () => {
 
     if (request.method() === 'POST') {
       const postData = JSON.parse(request.postData() || '{}');
-      expect(postData.direction).toBe(0);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.fieldIds).toStrictEqual(["docLanguage"]);
 
       expect(postData.leftDocument.projectId).toBe("elibrary");

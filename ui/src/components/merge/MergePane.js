@@ -1,18 +1,23 @@
-import {faArrowLeftLong, faArrowRightLong} from "@fortawesome/free-solid-svg-icons";
+import {faArrowRightLong} from "@fortawesome/free-solid-svg-icons";
 import MergeButton from "@/components/merge/MergeButton";
 import {useContext, useEffect, useState} from "react";
 import Modal from "@/components/Modal";
 import AppContext from "@/components/AppContext";
-import {LEFT_TO_RIGHT, RIGHT_TO_LEFT} from "@/components/merge/useMergingContext";
+import {LEFT_TO_RIGHT} from "@/components/merge/useMergingContext";
+import * as DiffTypes from "@/DiffTypes";
 
-export default function MergePane({leftContext, rightContext, mergingContext, mergeCallback, loadingContext}) {
-  const context = useContext(AppContext);
+export const LINK_ROLE_DIRECTION_DIRECT = "DIRECT";
+export const LINK_ROLE_DIRECTION_REVERSE = "REVERSE";
+
+export default function MergePane({leftContext, rightContext, diff_type, mergingContext, mergeCallback, loadingContext}) {
+  const appContext = useContext(AppContext);
 
   const [display, setDisplay] = useState('none');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectAllVisible, setSelectAllVisible] = useState(false);
-  const [direction, setDirection] = useState(-1);
+  const [mergeDirection, setMergeDirection] = useState(-1);
   const [structuralChanges, setStructuralChanges] = useState(false);
+  const [linkRoleDirection, setLinkRoleDirection] = useState(LINK_ROLE_DIRECTION_DIRECT);
 
   useEffect(() => {
     if (loadingContext.diffsLoadingProgress === 100 && !loadingContext.diffsLoadingErrors) {
@@ -23,15 +28,15 @@ export default function MergePane({leftContext, rightContext, mergingContext, me
   }, [loadingContext.diffsLoadingProgress, loadingContext.diffsLoadingErrors]);
 
   useEffect(() => {
-    context.state.setControlPaneAccessible(!modalVisible);
+    appContext.state.setControlPaneAccessible(!modalVisible);
   }, [modalVisible]);
 
   useEffect(() => {
-    setSelectAllVisible(context.state.diffsExist);
-  }, [context.state.diffsExist]);
+    setSelectAllVisible(appContext.state.diffsExist);
+  }, [appContext.state.diffsExist]);
 
   const confirmMerge = (direction) => {
-    setDirection(direction);
+    setMergeDirection(direction);
     if (!mergingContext.documentContentDiffing) {
       const pairsToMerge = mergingContext.getSelectedValues();
       setStructuralChanges(containsStructuralChanges(pairsToMerge));
@@ -54,10 +59,12 @@ export default function MergePane({leftContext, rightContext, mergingContext, me
   };
 
   const merge = () => {
-    if (direction >= 0) {
-      mergeCallback(direction);
+    if (mergeDirection >= 0) {
+      mergeCallback(mergeDirection, linkRoleDirection);
     }
   };
+
+  const mergeDisabled = !rightContext || rightContext.revision || !rightContext.authorizedForMerge;
 
   return (
       <>
@@ -76,21 +83,25 @@ export default function MergePane({leftContext, rightContext, mergingContext, me
                 select all
               </label>
             </div>
-            {!rightContext || rightContext.revision && <span>Target document not in HEAD, which locks merging into it</span>}
+            {(!rightContext || rightContext.revision) && <span>Target document not in HEAD, which locks merging into it</span>}
             {rightContext && !rightContext.authorizedForMerge && <span>You are not authorized to merge into target project</span>}
+            {!mergeDisabled && (diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.WORK_ITEMS_DIFF) && <label className="link-role-direction-label">
+              <span className="link-role-direction-text">Link role direction for created WorkItems:</span>
+              <select className="form-select link-role-direction-select" value={linkRoleDirection}
+                      onChange={(e) => setLinkRoleDirection(e.target.value)} title="Link role direction for created WorkItems">
+                <option value={LINK_ROLE_DIRECTION_DIRECT}>Direct</option>
+                <option value={LINK_ROLE_DIRECTION_REVERSE}>Reverse</option>
+              </select>
+            </label>}
             <MergeButton fontAwesomeIcon={faArrowRightLong} clickHandler={() => confirmMerge(LEFT_TO_RIGHT)}
-                         style={{justifyContent: "right"}} disabled={!rightContext || rightContext.revision || !rightContext.authorizedForMerge || mergingContext.selectionCount === 0}/>
+                         style={{justifyContent: "right"}} disabled={mergeDisabled || mergingContext.selectionCount === 0} />
           </div>
           <div className="col collapsed-border merge-button-container">
-            <MergeButton fontAwesomeIcon={faArrowLeftLong} clickHandler={() => confirmMerge(RIGHT_TO_LEFT)}
-                         style={{justifyContent: "left"}} disabled={!leftContext || leftContext.revision || !leftContext.authorizedForMerge || mergingContext.selectionCount === 0}/>
-            {!leftContext || leftContext.revision && <span>Source document not in HEAD, which locks merging into it</span>}
-            {leftContext && !leftContext.authorizedForMerge && <span>You are not authorized to merge into source project</span>}
           </div>
         </div>
         <Modal title="Merge confirmation" cancelButtonTitle="Cancel" actionButtonTitle="Merge" actionButtonHandler={merge}
                visible={modalVisible} setVisible={setModalVisible} className="modal-md" testId="merge-confirmation-modal">
-          <p data-testid="merge-confirmation">Are you sure you want to merge selected items {direction === LEFT_TO_RIGHT ? "from source to target" : "from target to source"} document?</p>
+          <p data-testid="merge-confirmation">Are you sure you want to merge selected items {mergeDirection === LEFT_TO_RIGHT ? "from source to target" : "from target to source"} document?</p>
           {structuralChanges
               && <p style={{fontWeight: 'bolder'}} data-testid="merge-confirmation-structural-changes-warning">Be aware that you have selected items to be merged which will lead to document&apos;s structural changes.
                 After merge is finished, diffs view will automatically be reloaded to actualize documents structure.</p>

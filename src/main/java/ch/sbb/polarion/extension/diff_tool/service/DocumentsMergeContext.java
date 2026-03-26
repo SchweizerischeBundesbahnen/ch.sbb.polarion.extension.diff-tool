@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.LinkRoleDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
@@ -42,9 +43,11 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext imple
     @Setter
     boolean copyMissingDocumentAttachments;
 
+    @SuppressWarnings("java:S107")
     public DocumentsMergeContext(@NotNull PolarionService polarionService, @NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier,
-                                 @NotNull MergeDirection direction, @NotNull String linkRole, @NotNull DiffModel diffModel, boolean updateAttachmentReferences) {
-        super(direction, linkRole, diffModel, updateAttachmentReferences);
+                                 @NotNull MergeDirection direction, @NotNull String linkRole, @NotNull LinkRoleDirection linkRoleDirection,
+                                 @NotNull DiffModel diffModel, boolean updateAttachmentReferences) {
+        super(direction, linkRole, linkRoleDirection, diffModel, updateAttachmentReferences);
         this.leftDocumentIdentifier = leftDocumentIdentifier;
         this.rightDocumentIdentifier = rightDocumentIdentifier;
 

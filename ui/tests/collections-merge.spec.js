@@ -126,7 +126,7 @@ test.describe("page of diffing Collections", () => {
       const postData = JSON.parse(request.postData() || '{}');
       expect(postData.allowReferencedWorkItemMerge).toBe(false);
       expect(postData.configName).toBe("Default");
-      expect(postData.direction).toBe(0);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.linkRole).toBe("relates_to");
 
       expect(postData.leftDocument.projectId).toBe("elibrary");

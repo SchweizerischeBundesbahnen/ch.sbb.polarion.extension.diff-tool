@@ -75,6 +75,34 @@ test.describe("diffing of documents' contents", () => {
     expect(normalizeHtml(diffRightHtml)).toBe(normalizeHtml(``));
   });
 
+  test('swap documents', async ({ page, mockApi }) => {
+    // Mock endpoints needed after swap (drivepilot becomes source)
+    await mockApi.mockEndpoint({ url: '**/settings/diff/names?scope=project/drivepilot/', fixtureFile: 'configs.json' });
+
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
+
+    // Verify initial state: elibrary on the left, drivepilot on the right
+    await expect(page.getByTestId('LEFT-doc-title')).toContainText("Building Specification v2");
+    await expect(page.getByTestId('RIGHT-doc-title')).toContainText("Building Specification v3");
+
+    // Click swap button and wait for URL to change
+    const swapButton = page.locator('.swap-button');
+    await expect(swapButton).toBeVisible();
+    await swapButton.click();
+
+    // Wait for client-side navigation to complete
+    await expect(page).toHaveURL(/sourceProjectId=drivepilot/);
+
+    // Verify URL params are swapped
+    const url = new URL(page.url());
+    expect(url.searchParams.get('sourceProjectId')).toBe('drivepilot');
+    expect(url.searchParams.get('sourceSpaceId')).toBe('Specification');
+    expect(url.searchParams.get('sourceDocument')).toBe('Building Specification v3');
+    expect(url.searchParams.get('targetProjectId')).toBe('elibrary');
+    expect(url.searchParams.get('targetSpaceId')).toBe('Specification');
+    expect(url.searchParams.get('targetDocument')).toBe('Building Specification v2');
+  });
+
   test('content merge canceled', async ({ page }) => {
     let requestWasMade = false;
 
@@ -153,7 +181,7 @@ test.describe("diffing of documents' contents", () => {
 
     if (request.method() === 'POST') {
       const postData = JSON.parse(request.postData() || '{}');
-      expect(postData.direction).toBe(0);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.pairs).toStrictEqual([{leftWorkItemId: "EL-63012", rightWorkItemId: "DP-1154", contentPosition: "BELOW"}]);
 
       expect(postData.leftDocument.projectId).toBe("elibrary");
@@ -214,7 +242,7 @@ test.describe("diffing of documents' contents", () => {
     await selectionCheckbox.isVisible();
     await selectionCheckbox.click();
 
-    const mergeButton = page.locator('.header .merge-pane .merge-button .btn').nth(1);
+    const mergeButton = page.locator('.header .merge-pane .merge-button .btn');
     await expect(mergeButton).toBeEnabled();
     await mergeButton.isEnabled();
     await mergeButton.click();
@@ -222,7 +250,7 @@ test.describe("diffing of documents' contents", () => {
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible();
     const mergeConfirmation = page.getByTestId("merge-confirmation");
     await expect(mergeConfirmation).toBeVisible();
-    await expect(mergeConfirmation).toHaveText("Are you sure you want to merge selected items from target to source document?");
+    await expect(mergeConfirmation).toHaveText("Are you sure you want to merge selected items from source to target document?");
 
     const actionButton = page.getByTestId("merge-confirmation-modal-action-button");
     await expect(actionButton).toBeVisible();
@@ -240,7 +268,7 @@ test.describe("diffing of documents' contents", () => {
 
     if (request.method() === 'POST') {
       const postData = JSON.parse(request.postData() || '{}');
-      expect(postData.direction).toBe(1);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.pairs).toStrictEqual([{leftWorkItemId: "EL-63013", rightWorkItemId: "DP-1155", contentPosition: "BELOW"}]);
 
       expect(postData.leftDocument.projectId).toBe("elibrary");
@@ -311,7 +339,7 @@ test.describe("diffing of documents' contents", () => {
 
     if (request.method() === 'POST') {
       const postData = JSON.parse(request.postData() || '{}');
-      expect(postData.direction).toBe(0);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.pairs).toStrictEqual([{leftWorkItemId: "EL-63016", rightWorkItemId: "DP-1158", contentPosition: "BELOW"}]);
 
       expect(postData.leftDocument.projectId).toBe("elibrary");

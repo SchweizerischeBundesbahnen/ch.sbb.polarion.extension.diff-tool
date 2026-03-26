@@ -17,6 +17,10 @@ import {useMergingContext} from "@/components/merge/useMergingContext";
 import Loading from "@/components/loading/Loading";
 import ContentAnchorsDiff, {CONTENT_ABOVE, CONTENT_BELOW} from "@/components/documents/ContentAnchorsDiff";
 import {DIFF_SIDES} from "@/components/diff/DiffLeaf";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faRightLeft} from "@fortawesome/free-solid-svg-icons";
+import useSwapDocuments from "@/utils/useSwapDocuments";
+import * as DiffTypes from "@/DiffTypes";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument'];
 
@@ -24,6 +28,7 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
   const context = useContext(AppContext);
   const searchParams = useSearchParams();
   const diffService = useDiffService();
+  const swapDocuments = useSwapDocuments();
 
   const loadingContext = useLoadingContext();
   const mergingContext = useMergingContext({contentDiffing: true});
@@ -120,16 +125,22 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
           <CollectionHeader collection={enclosingCollections.rightCollection} side={DIFF_SIDES.RIGHT} />
         </>}
         {!enclosingCollections && <>
-          <DocumentProjectHeader document={docsData.leftDocument} />
-          <DocumentProjectHeader document={docsData.rightDocument} />
+          <DocumentProjectHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />
+          <DocumentProjectHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />
         </>}
       </div>
-      <div className="row g-0">
-        <DocumentHeader document={docsData.leftDocument} />
-        <DocumentHeader document={docsData.rightDocument} />
+      <div className="row g-0" style={{ position: "relative" }}>
+        <DocumentHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />
+        <button className="btn btn-secondary btn-xs swap-button" onClick={swapDocuments}
+                title="Swap source and target documents. Be aware that pairs selection will be cleared by this action."
+                aria-label="Swap documents">
+          <FontAwesomeIcon icon={faRightLeft} />
+        </button>
+        <DocumentHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />
       </div>
 
-      <MergePane leftContext={docsData.leftDocument} rightContext={docsData.rightDocument} mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
+      <MergePane leftContext={docsData.leftDocument} rightContext={docsData.rightDocument}  diff_type={DiffTypes.DOCUMENTS_CONTENT_DIFF}
+                 mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
     </div>
 
     <ErrorsOverlay loadingContext={loadingContext}/>

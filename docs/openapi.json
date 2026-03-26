@@ -1647,16 +1647,16 @@
       "DocumentsContentMergeParams": {
         "description": "Documents content merge input data",
         "properties": {
-          "direction": {
+          "leftDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
+          },
+          "mergeDirection": {
             "description": "Enum representing the direction of a merge operation",
             "enum": [
               "LEFT_TO_RIGHT",
               "RIGHT_TO_LEFT"
             ],
             "type": "string"
-          },
-          "leftDocument": {
-            "$ref": "#/components/schemas/DocumentIdentifier"
           },
           "pairs": {
             "$ref": "#/components/schemas/DocumentsContentMergePair"
@@ -1749,14 +1749,6 @@
       "DocumentsFieldsMergeParams": {
         "description": "Documents fields merge input data",
         "properties": {
-          "direction": {
-            "description": "Enum representing the direction of a merge operation",
-            "enum": [
-              "LEFT_TO_RIGHT",
-              "RIGHT_TO_LEFT"
-            ],
-            "type": "string"
-          },
           "fieldIds": {
             "description": "List of fields IDs to be considered in the merge operation",
             "items": {
@@ -1767,6 +1759,14 @@
           },
           "leftDocument": {
             "$ref": "#/components/schemas/DocumentIdentifier"
+          },
+          "mergeDirection": {
+            "description": "Enum representing the direction of a merge operation",
+            "enum": [
+              "LEFT_TO_RIGHT",
+              "RIGHT_TO_LEFT"
+            ],
+            "type": "string"
           },
           "rightDocument": {
             "$ref": "#/components/schemas/DocumentIdentifier"
@@ -1806,19 +1806,27 @@
             "description": "Indicates if missing referenced document attachments must be copied",
             "type": "boolean"
           },
-          "direction": {
-            "description": "Enum representing the direction of a merge operation",
-            "enum": [
-              "LEFT_TO_RIGHT",
-              "RIGHT_TO_LEFT"
-            ],
-            "type": "string"
-          },
           "leftDocument": {
             "$ref": "#/components/schemas/DocumentIdentifier"
           },
           "linkRole": {
             "description": "The role of the link connecting work item pairs",
+            "type": "string"
+          },
+          "linkRoleDirection": {
+            "description": "Enum representing the direction of a link role for newly created WorkItem",
+            "enum": [
+              "DIRECT",
+              "REVERSE"
+            ],
+            "type": "string"
+          },
+          "mergeDirection": {
+            "description": "Enum representing the direction of a merge operation",
+            "enum": [
+              "LEFT_TO_RIGHT",
+              "RIGHT_TO_LEFT"
+            ],
             "type": "string"
           },
           "pairs": {
@@ -2419,19 +2427,27 @@
             "description": "The configuration name to use for the merge operation",
             "type": "string"
           },
-          "direction": {
-            "description": "Enum representing the direction of a merge operation",
-            "enum": [
-              "LEFT_TO_RIGHT",
-              "RIGHT_TO_LEFT"
-            ],
-            "type": "string"
-          },
           "leftProject": {
             "$ref": "#/components/schemas/Project"
           },
           "linkRole": {
             "description": "The role of the link connecting work item pairs",
+            "type": "string"
+          },
+          "linkRoleDirection": {
+            "description": "Enum representing the direction of a link role for newly created WorkItem",
+            "enum": [
+              "DIRECT",
+              "REVERSE"
+            ],
+            "type": "string"
+          },
+          "mergeDirection": {
+            "description": "Enum representing the direction of a merge operation",
+            "enum": [
+              "LEFT_TO_RIGHT",
+              "RIGHT_TO_LEFT"
+            ],
             "type": "string"
           },
           "pairs": {

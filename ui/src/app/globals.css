@@ -195,13 +195,50 @@ a:hover {
 .merge-button-container {
   display: flex;
   padding: .6rem;
+  container-type: inline-size;
 }
 
-.merge-button-container span {
+.merge-button-container > span {
   align-content: center;
   font-size: .7em;
   color: #666666;
   margin: 0 1em;
+}
+
+.link-role-direction-label {
+  display: flex;
+  align-items: center;
+  font-size: .7em;
+  color: #666666;
+  white-space: nowrap;
+  margin-right: 0.5rem;
+  gap: 0.4rem;
+}
+
+@container (max-width: 450px) {
+  .link-role-direction-text {
+    display: none;
+  }
+}
+
+.link-role-direction-select {
+  display: inline-block;
+  width: auto;
+  font-size: 1em;
+  padding: 0.2rem 2rem 0.2rem 0.5rem;
+  height: auto;
+  line-height: 1.4;
+  border: 1px solid #adb5bd;
+  border-radius: 4px;
+  color: #495057;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.link-role-direction-select:focus {
+  border-color: var(--polarion-blue);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+  outline: none;
 }
 
 .sticky-top {
@@ -341,6 +378,33 @@ a:hover {
 
 .doc-title {
   font-size: 1.2em;
+}
+
+.swap-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    font-size: .75em;
+    background-color: var(--polarion-blue);
+    box-shadow: 0 0 8px rgba(0, 0, 0, .2);
+    border: 1px solid rgba(255, 255, 255, .3);
+    border-radius: 50%;
+    color: rgba(255, 255, 255, .6);
+    transition: all 0.2s ease;
+    z-index: 1;
+}
+
+.swap-button:hover {
+    background-color: #0289b9;
+    color: #fff;
+    border-color: rgba(255, 255, 255, .5);
+    box-shadow: 0 0 8px rgba(255, 255, 255, .2);
 }
 
 .wi-diff {
