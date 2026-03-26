@@ -43,6 +43,7 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext imple
     @Setter
     boolean copyMissingDocumentAttachments;
 
+    @SuppressWarnings("java:S107")
     public DocumentsMergeContext(@NotNull PolarionService polarionService, @NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier,
                                  @NotNull MergeDirection direction, @NotNull String linkRole, @NotNull LinkRoleDirection linkRoleDirection,
                                  @NotNull DiffModel diffModel, boolean updateAttachmentReferences) {
