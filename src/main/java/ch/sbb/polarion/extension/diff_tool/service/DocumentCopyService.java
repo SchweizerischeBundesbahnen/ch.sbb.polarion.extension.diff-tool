@@ -84,7 +84,7 @@ public class DocumentCopyService {
         IModule sourceModule = polarionService.getModule(sourceProjectId, sourceSpaceId, sourceDocumentName, revision);
         DiffModel diffModel = DiffModelCachedResource.get(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId(),
                 documentDuplicateParams.getConfigName(), null);
-        DocumentCopyContext context = new DocumentCopyContext(linkRoleId, diffModel);
+        DocumentCopyContext context = new DocumentCopyContext(linkRoleId, null, diffModel);
         List<DiffField> allowedFields = diffModel.getDiffFields();
 
         // ---------

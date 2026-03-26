@@ -33,9 +33,9 @@ public class DocumentsMergeParams extends MergeParams {
     private boolean copyMissingDocumentAttachments;
 
     @SuppressWarnings("java:S107")
-    public DocumentsMergeParams(DocumentIdentifier leftDocument, DocumentIdentifier rightDocument, MergeDirection direction, String linkRole,
+    public DocumentsMergeParams(DocumentIdentifier leftDocument, DocumentIdentifier rightDocument, MergeDirection direction, String linkRole, LinkRoleDirection linkRoleDirection,
                                 String configName, String configCacheBucketId, List<MergeWorkItemsPair> pairs, Boolean allowReferencedWorkItemMerge, boolean updateAttachmentReferences) {
-        super(direction, linkRole, configName, configCacheBucketId, updateAttachmentReferences, pairs);
+        super(direction, linkRole, linkRoleDirection, configName, configCacheBucketId, updateAttachmentReferences, pairs);
         this.leftDocument = leftDocument;
         this.rightDocument = rightDocument;
         this.allowReferencedWorkItemMerge = allowReferencedWorkItemMerge;

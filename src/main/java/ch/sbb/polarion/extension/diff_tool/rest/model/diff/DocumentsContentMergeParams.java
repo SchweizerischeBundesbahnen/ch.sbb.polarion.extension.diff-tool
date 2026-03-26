@@ -23,7 +23,7 @@ public class DocumentsContentMergeParams {
     private DocumentIdentifier rightDocument;
 
     @Schema(description = "The direction of the merge operation", implementation = MergeDirection.class)
-    private MergeDirection direction;
+    private MergeDirection mergeDirection;
 
     @Schema(description = "List of merge pairs to be considered in the merge operation", implementation = DocumentsContentMergePair.class)
     private List<DocumentsContentMergePair> pairs;

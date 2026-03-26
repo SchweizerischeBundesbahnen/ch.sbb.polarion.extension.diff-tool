@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.LinkRoleDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Project;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
@@ -11,8 +12,8 @@ public class WorkItemsMergeContext extends SettingsAwareMergeContext {
     final Project rightProject;
 
     public WorkItemsMergeContext(@NotNull Project leftProject, @NotNull Project rightProject, @NotNull MergeDirection direction,
-                                 @NotNull String linkRole, @NotNull DiffModel diffModel, boolean updateAttachmentReferences) {
-        super(direction, linkRole, diffModel, updateAttachmentReferences);
+                                 @NotNull String linkRole, @NotNull LinkRoleDirection linkRoleDirection, @NotNull DiffModel diffModel, boolean updateAttachmentReferences) {
+        super(direction, linkRole, linkRoleDirection, diffModel, updateAttachmentReferences);
         this.leftProject = leftProject;
         this.rightProject = rightProject;
     }

@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.LinkRoleDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Project;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
@@ -19,6 +20,7 @@ class WorkItemsMergeContextTest {
     private MergeDirection rightToLeft;
     private DiffModel diffModel;
     private final String linkRole = "testRole";
+    private final LinkRoleDirection linkRoleDirection = LinkRoleDirection.DIRECT;
 
     @BeforeEach
     void setUp() {
@@ -31,25 +33,25 @@ class WorkItemsMergeContextTest {
 
     @Test
     void testGetSourceProjectLeftToRight() {
-        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, leftToRight, linkRole, diffModel, false);
+        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, leftToRight, linkRole, linkRoleDirection, diffModel, false);
         assertEquals(leftProject, context.getSourceProject());
     }
 
     @Test
     void testGetSourceProjectRightToLeft() {
-        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, rightToLeft, linkRole, diffModel, false);
+        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, rightToLeft, linkRole, linkRoleDirection, diffModel, false);
         assertEquals(rightProject, context.getSourceProject());
     }
 
     @Test
     void testGetTargetProjectLeftToRight() {
-        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, leftToRight, linkRole, diffModel, false);
+        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, leftToRight, linkRole, linkRoleDirection, diffModel, false);
         assertEquals(rightProject, context.getTargetProject());
     }
 
     @Test
     void testGetTargetProjectRightToLeft() {
-        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, rightToLeft, linkRole, diffModel, false);
+        WorkItemsMergeContext context = new WorkItemsMergeContext(leftProject, rightProject, rightToLeft, linkRole, linkRoleDirection, diffModel, false);
         assertEquals(leftProject, context.getTargetProject());
     }
 }

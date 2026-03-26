@@ -161,7 +161,7 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                                      IWorkItem workItemA, IWorkItem workItemB, DiffContext context) {
         List<ILinkedWorkItemStruct> toRemove = new ArrayList<>();
         Set<String> oppositeWorkItems = linksA.stream()
-                .filter(l -> notFromModule(l.getLinkedItem(), workItemB.getModule()))
+                .filter(l -> workItemB.getModule() == null || notFromModule(l.getLinkedItem(), workItemB.getModule()))
                 .map(l -> l.getLinkedItem().getId())
                 .collect(Collectors.toSet());
 

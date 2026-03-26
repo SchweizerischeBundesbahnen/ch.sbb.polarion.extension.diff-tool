@@ -225,7 +225,7 @@ export default function useDiffService() {
     return [];
   };
 
-  const sendDocumentsMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, docsData,
+  const sendDocumentsMergeRequest = (searchParams, mergeDirection, linkRoleDirection, configCacheId, loadingContext, mergingContext, docsData,
                                      allowReferencedWorkItemMerge, preserveComments, copyMissingDocumentAttachments, updateAttachmentReferences) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
@@ -239,8 +239,9 @@ export default function useDiffService() {
         body: JSON.stringify({
           leftDocument: leftDocument,
           rightDocument: rightDocument,
-          direction: direction,
+          mergeDirection: mergeDirection,
           linkRole: searchParams.get('linkRole'),
+          linkRoleDirection: linkRoleDirection,
           configName: searchParams.get('config'),
           configCacheBucketId: configCacheId,
           pairs: filterRedundant(mergingContext.getSelectedValues()),
@@ -264,7 +265,7 @@ export default function useDiffService() {
     });
   };
 
-  const sendDocumentsFieldsMergeRequest = (searchParams, direction, loadingContext, mergingContext, docsData) => {
+  const sendDocumentsFieldsMergeRequest = (searchParams, mergeDirection, loadingContext, mergingContext, docsData) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
     leftDocument.moduleXmlRevision = docsData.leftDocument.moduleXmlRevision;
@@ -277,7 +278,7 @@ export default function useDiffService() {
         body: JSON.stringify({
           leftDocument: leftDocument,
           rightDocument: rightDocument,
-          direction: direction,
+          mergeDirection: mergeDirection,
           fieldIds: mergingContext.getSelectedValues()
         }),
         contentType: "application/json"
@@ -294,7 +295,7 @@ export default function useDiffService() {
     });
   };
 
-  const sendDocumentsContentMergeRequest = (searchParams, direction, loadingContext, mergingContext, docsData, preserveComments) => {
+  const sendDocumentsContentMergeRequest = (searchParams, mergeDirection, loadingContext, mergingContext, docsData, preserveComments) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
     leftDocument.moduleXmlRevision = docsData.leftDocument.moduleXmlRevision;
@@ -319,7 +320,7 @@ export default function useDiffService() {
         body: JSON.stringify({
           leftDocument: leftDocument,
           rightDocument: rightDocument,
-          direction: direction,
+          mergeDirection: mergeDirection,
           preserveComments: preserveComments,
           pairs: pairs
         }),
@@ -337,7 +338,7 @@ export default function useDiffService() {
     });
   };
 
-  const sendWorkItemsMergeRequest = (searchParams, direction, configCacheId, loadingContext, mergingContext, updateAttachmentReferences) => {
+  const sendWorkItemsMergeRequest = (searchParams, mergeDirection, linkRoleDirection, configCacheId, loadingContext, mergingContext, updateAttachmentReferences) => {
 
     return new Promise((resolve, reject) => {
       remote.sendRequest({
@@ -350,8 +351,9 @@ export default function useDiffService() {
           rightProject: {
             id: searchParams.get(`targetProjectId`)
           },
-          direction: direction,
+          mergeDirection: mergeDirection,
           linkRole: searchParams.get('linkRole'),
+          linkRoleDirection: linkRoleDirection,
           configName: searchParams.get('config'),
           configCacheBucketId: configCacheId,
           updateAttachmentReferences: updateAttachmentReferences,

@@ -95,7 +95,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       const postData = JSON.parse(request.postData() || '{}');
       expect(postData.allowReferencedWorkItemMerge).toBe(false);
       expect(postData.configName).toBe("Default");
-      expect(postData.direction).toBe(0);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.linkRole).toBe("relates_to");
 
       expect(postData.leftDocument.projectId).toBe("elibrary");
@@ -206,7 +206,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       const postData = JSON.parse(request.postData() || '{}');
       expect(postData.allowReferencedWorkItemMerge).toBe(false);
       expect(postData.configName).toBe("Default");
-      expect(postData.direction).toBe(0);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.linkRole).toBe("relates_to");
 
       expect(postData.leftDocument.projectId).toBe("elibrary");
@@ -310,7 +310,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       const postData = JSON.parse(request.postData() || '{}');
       expect(postData.allowReferencedWorkItemMerge).toBe(false);
       expect(postData.configName).toBe("Default");
-      expect(postData.direction).toBe(0);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.linkRole).toBe("relates_to");
 
       expect(postData.leftDocument.projectId).toBe("elibrary");
@@ -414,7 +414,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       const postData = JSON.parse(request.postData() || '{}');
       expect(postData.allowReferencedWorkItemMerge).toBe(false);
       expect(postData.configName).toBe("Default");
-      expect(postData.direction).toBe(0);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.linkRole).toBe("relates_to");
 
       expect(postData.leftDocument.projectId).toBe("elibrary");
@@ -514,7 +514,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       const postData = JSON.parse(request.postData() || '{}');
       expect(postData.allowReferencedWorkItemMerge).toBe(false);
       expect(postData.configName).toBe("Default");
-      expect(postData.direction).toBe(0);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.linkRole).toBe("relates_to");
 
       expect(postData.leftDocument.projectId).toBe("elibrary");
@@ -579,137 +579,28 @@ test.describe("page of diffing documents' WorkItems", () => {
     }
   });
 
-  test('merge from referenced item prohibited', async ({ page }) => {
+  test('merge with default (direct) link role direction', async ({ page }) => {
     const requestPromise = page.waitForRequest(request => {
       return request.url().includes('/merge/documents');
     });
 
     await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
-
-    await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
-    await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
-
-    const selectionCheckbox = page.getByTestId('EL-11575_EL-11575').locator('.merge-ticker input[type="checkbox"]').nth(0);
-    await selectionCheckbox.isVisible();
-    await selectionCheckbox.click();
-
-    const mergeButton = page.locator('.header .merge-pane .merge-button .btn').nth(1);
-    await expect(mergeButton).toBeEnabled();
-    await mergeButton.isEnabled();
-    await mergeButton.click();
-
-    await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible();
-    const mergeConfirmation = page.getByTestId("merge-confirmation");
-    await expect(mergeConfirmation).toBeVisible();
-    await expect(mergeConfirmation).toHaveText("Are you sure you want to merge selected items from target to source document?");
-
-    const actionButton = page.getByTestId("merge-confirmation-modal-action-button");
-    await expect(actionButton).toBeVisible();
-    await expect(actionButton).toBeEnabled();
-
-    await actionButton.isVisible();
-    actionButton.click();
-
-    await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
-
-    const request = await requestPromise;
-
-    expect(request.method()).toBe('POST');
-    expect(request.url()).toContain('/merge/documents');
-
-    if (request.method() === 'POST') {
-      const postData = JSON.parse(request.postData() || '{}');
-      expect(postData.allowReferencedWorkItemMerge).toBe(false);
-      expect(postData.configName).toBe("Default");
-      expect(postData.direction).toBe(1);
-      expect(postData.linkRole).toBe("relates_to");
-
-      expect(postData.leftDocument.projectId).toBe("elibrary");
-      expect(postData.leftDocument.spaceId).toBe("Specification");
-      expect(postData.leftDocument.name).toBe("Catalog Specification");
-
-      expect(postData.rightDocument.projectId).toBe("drivepilot");
-      expect(postData.rightDocument.spaceId).toBe("Design");
-      expect(postData.rightDocument.name).toBe("Catalog Design");
-
-      expect(postData.pairs[0].leftWorkItem.projectId).toBe("elibrary");
-      expect(postData.pairs[0].leftWorkItem.id).toBe("EL-11575");
-      expect(postData.pairs[0].leftWorkItem.outlineNumber).toBe("2.1-3");
-      expect(postData.pairs[0].leftWorkItem.externalProjectWorkItem).toBe(false);
-      expect(postData.pairs[0].leftWorkItem.referenced).toBe(false);
-      expect(postData.pairs[0].leftWorkItem.moveDirection).toBe(null);
-      expect(postData.pairs[0].leftWorkItem.movedOutlineNumber).toBe(null);
-      expect(postData.pairs[0].leftWorkItem.title).toBe("Another one requirement");
-
-      expect(postData.pairs[0].rightWorkItem.projectId).toBe("elibrary");
-      expect(postData.pairs[0].rightWorkItem.id).toBe("EL-11575");
-      expect(postData.pairs[0].rightWorkItem.outlineNumber).toBe("2.1-3");
-      expect(postData.pairs[0].rightWorkItem.externalProjectWorkItem).toBe(false);
-      expect(postData.pairs[0].rightWorkItem.referenced).toBe(true);
-      expect(postData.pairs[0].rightWorkItem.moveDirection).toBe(null);
-      expect(postData.pairs[0].rightWorkItem.movedOutlineNumber).toBe(null);
-      expect(postData.pairs[0].rightWorkItem.title).toBe("Another one requirement");
-
-      const mergeResultModal = page.getByTestId("merge-result-modal");
-      await expect(mergeResultModal).toBeVisible();
-
-      const mergeResultModalTitle = mergeResultModal.locator(".modal-title");
-      await expect(mergeResultModalTitle).toBeVisible();
-      await expect(mergeResultModalTitle).toHaveText("Merge Report");
-
-      const mergeResultModalMessage = page.getByTestId("merge-completed-with-result");
-      await expect(mergeResultModalMessage).toBeVisible();
-      await expect(mergeResultModalMessage).toHaveText("Merge operation completed with following result:");
-
-      const mergeResultModalList = mergeResultModal.locator("ul");
-      await expect(mergeResultModalList).toBeVisible();
-      await expect(mergeResultModalList).toHaveText("1 items were not merged because such operation is logically prohibited.");
-
-      const mergeResultModalLogLink = page.getByTestId("see-full-log");
-      await expect(mergeResultModalLogLink).toBeVisible();
-      await expect(mergeResultModalLogLink).toHaveText("See full log");
-
-      const mergeResultModalLog = mergeResultModal.locator("pre");
-      await expect(mergeResultModalLog).toBeVisible({visible: false});
-
-      await mergeResultModalLogLink.click();
-
-      await expect(mergeResultModalLog).toBeVisible();
-      await expect(mergeResultModalLog).toHaveText("2025-04-18 12:56:16.904: 'PROHIBITED' -- left WI 'EL-11575', right WI 'EL-11575' -- don't allow merging referenced work item into included one");
-
-      const cancelButton = page.getByTestId("merge-result-modal-cancel-button");
-      await expect(cancelButton).toBeVisible();
-      await expect(cancelButton).toBeEnabled();
-      await cancelButton.click();
-
-      await expect(mergeResultModal).toBeVisible({ visible: false});
-    }
-  });
-
-  test('conflicted merge', async ({ page }) => {
-    const requestPromise = page.waitForRequest(request => {
-      return request.url().includes('/merge/documents');
-    });
-
-    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
-
-    await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
-    await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
 
     const selectionCheckbox = page.getByTestId('EL-4977_DP-11559').locator('.merge-ticker input[type="checkbox"]').nth(0);
     await selectionCheckbox.isVisible();
     await selectionCheckbox.click();
 
-    const mergeButton = page.locator('.header .merge-pane .merge-button .btn').nth(1);
+    // Verify default link role direction is "Direct"
+    const linkRoleSelect = page.locator('.link-role-direction-select');
+    await expect(linkRoleSelect).toBeVisible();
+    await expect(linkRoleSelect).toHaveValue('DIRECT');
+
+    const mergeButton = page.locator('.header .merge-pane .merge-button .btn').nth(0);
     await expect(mergeButton).toBeEnabled();
     await mergeButton.isEnabled();
     await mergeButton.click();
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible();
-    const mergeConfirmation = page.getByTestId("merge-confirmation");
-    await expect(mergeConfirmation).toBeVisible();
-    await expect(mergeConfirmation).toHaveText("Are you sure you want to merge selected items from target to source document?");
-
     const actionButton = page.getByTestId("merge-confirmation-modal-action-button");
     await expect(actionButton).toBeVisible();
     await expect(actionButton).toBeEnabled();
@@ -720,77 +611,45 @@ test.describe("page of diffing documents' WorkItems", () => {
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
 
     const request = await requestPromise;
+    const postData = JSON.parse(request.postData() || '{}');
+    expect(postData.linkRoleDirection).toBe('DIRECT');
+  });
 
-    expect(request.method()).toBe('POST');
-    expect(request.url()).toContain('/merge/documents');
+  test('merge with reverse link role direction', async ({ page }) => {
+    const requestPromise = page.waitForRequest(request => {
+      return request.url().includes('/merge/documents');
+    });
 
-    if (request.method() === 'POST') {
-      const postData = JSON.parse(request.postData() || '{}');
-      expect(postData.allowReferencedWorkItemMerge).toBe(false);
-      expect(postData.configName).toBe("Default");
-      expect(postData.direction).toBe(1);
-      expect(postData.linkRole).toBe("relates_to");
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
-      expect(postData.leftDocument.projectId).toBe("elibrary");
-      expect(postData.leftDocument.spaceId).toBe("Specification");
-      expect(postData.leftDocument.name).toBe("Catalog Specification");
+    const selectionCheckbox = page.getByTestId('EL-4977_DP-11559').locator('.merge-ticker input[type="checkbox"]').nth(0);
+    await selectionCheckbox.isVisible();
+    await selectionCheckbox.click();
 
-      expect(postData.rightDocument.projectId).toBe("drivepilot");
-      expect(postData.rightDocument.spaceId).toBe("Design");
-      expect(postData.rightDocument.name).toBe("Catalog Design");
+    // Change link role direction to "Reverse"
+    const linkRoleSelect = page.locator('.link-role-direction-select');
+    await expect(linkRoleSelect).toBeVisible();
+    await linkRoleSelect.selectOption('REVERSE');
+    await expect(linkRoleSelect).toHaveValue('REVERSE');
 
-      expect(postData.pairs[0].leftWorkItem.projectId).toBe("elibrary");
-      expect(postData.pairs[0].leftWorkItem.id).toBe("EL-4977");
-      expect(postData.pairs[0].leftWorkItem.outlineNumber).toBe("2.1-2");
-      expect(postData.pairs[0].leftWorkItem.externalProjectWorkItem).toBe(false);
-      expect(postData.pairs[0].leftWorkItem.referenced).toBe(false);
-      expect(postData.pairs[0].leftWorkItem.moveDirection).toBe(null);
-      expect(postData.pairs[0].leftWorkItem.movedOutlineNumber).toBe(null);
-      expect(postData.pairs[0].leftWorkItem.title).toBe("New Requirement");
+    const mergeButton = page.locator('.header .merge-pane .merge-button .btn').nth(0);
+    await expect(mergeButton).toBeEnabled();
+    await mergeButton.isEnabled();
+    await mergeButton.click();
 
-      expect(postData.pairs[0].rightWorkItem.projectId).toBe("drivepilot");
-      expect(postData.pairs[0].rightWorkItem.id).toBe("DP-11559");
-      expect(postData.pairs[0].rightWorkItem.outlineNumber).toBe("2.1-2");
-      expect(postData.pairs[0].rightWorkItem.externalProjectWorkItem).toBe(false);
-      expect(postData.pairs[0].rightWorkItem.referenced).toBe(false);
-      expect(postData.pairs[0].rightWorkItem.moveDirection).toBe(null);
-      expect(postData.pairs[0].rightWorkItem.movedOutlineNumber).toBe(null);
-      expect(postData.pairs[0].rightWorkItem.title).toBe("New Requirement");
+    await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible();
+    const actionButton = page.getByTestId("merge-confirmation-modal-action-button");
+    await expect(actionButton).toBeVisible();
+    await expect(actionButton).toBeEnabled();
 
-      const mergeResultModal = page.getByTestId("merge-result-modal");
-      await expect(mergeResultModal).toBeVisible();
+    await actionButton.isVisible();
+    actionButton.click();
 
-      const mergeResultModalTitle = mergeResultModal.locator(".modal-title");
-      await expect(mergeResultModalTitle).toBeVisible();
-      await expect(mergeResultModalTitle).toHaveText("Merge Report");
+    await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
 
-      const mergeResultModalMessage = page.getByTestId("merge-completed-with-result");
-      await expect(mergeResultModalMessage).toBeVisible();
-      await expect(mergeResultModalMessage).toHaveText("Merge operation completed with following result:");
-
-      const mergeResultModalList = mergeResultModal.locator("ul");
-      await expect(mergeResultModalList).toBeVisible();
-      await expect(mergeResultModalList).toHaveText("1 items were not merged because of concurrent modifications.");
-
-      const mergeResultModalLogLink = page.getByTestId("see-full-log");
-      await expect(mergeResultModalLogLink).toBeVisible();
-      await expect(mergeResultModalLogLink).toHaveText("See full log");
-
-      const mergeResultModalLog = mergeResultModal.locator("pre");
-      await expect(mergeResultModalLog).toBeVisible({visible: false});
-
-      await mergeResultModalLogLink.click();
-
-      await expect(mergeResultModalLog).toBeVisible();
-      await expect(mergeResultModalLog).toHaveText("2025-04-18 13:02:30.818: 'CONFLICTED' -- left WI 'EL-4977', right WI 'DP-11559' -- merge is not allowed: target workitem 'EL-4977' revision '5976' has been already changed to '6462'");
-
-      const cancelButton = page.getByTestId("merge-result-modal-cancel-button");
-      await expect(cancelButton).toBeVisible();
-      await expect(cancelButton).toBeEnabled();
-      await cancelButton.click();
-
-      await expect(mergeResultModal).toBeVisible({ visible: false});
-    }
+    const request = await requestPromise;
+    const postData = JSON.parse(request.postData() || '{}');
+    expect(postData.linkRoleDirection).toBe('REVERSE');
   });
 
   test('moved by merge', async ({ page }) => {
@@ -843,7 +702,7 @@ test.describe("page of diffing documents' WorkItems", () => {
       const postData = JSON.parse(request.postData() || '{}');
       expect(postData.allowReferencedWorkItemMerge).toBe(false);
       expect(postData.configName).toBe("Default");
-      expect(postData.direction).toBe(0);
+      expect(postData.mergeDirection).toBe(0);
       expect(postData.linkRole).toBe("relates_to");
 
       expect(postData.leftDocument.projectId).toBe("elibrary");

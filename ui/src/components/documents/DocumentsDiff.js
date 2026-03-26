@@ -18,13 +18,19 @@ import CollectionHeader from "@/components/collections/CollectionHeader";
 import DocumentProjectHeader from "@/components/documents/DocumentProjectHeader";
 import MergeResultModal from "@/components/merge/MergeResultModal";
 import {DIFF_SIDES} from "@/components/diff/DiffLeaf";
+import {faRightLeft} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import useSwapDocuments from "@/utils/useSwapDocuments";
+import * as DiffTypes from "@/DiffTypes";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument', 'linkRole'];
+const PAIRS_COUNT_TO_ASK_SWAP_CONFIRMATION = 200; // Threshold above which a diff reload takes relatively long — prompt the user for confirmation beyond this limit.
 
 export default function DocumentsDiff({ enclosingCollections }) {
   const context = useContext(AppContext);
   const searchParams = useSearchParams();
   const diffService = useDiffService();
+  const swapDocuments = useSwapDocuments();
 
   const loadingContext = useLoadingContext();
   const mergingContext = useMergingContext({});
@@ -41,6 +47,7 @@ export default function DocumentsDiff({ enclosingCollections }) {
   const [mergeNotAuthorizedWarning, setMergeNotAuthorizedWarning] = useState(false);  // means that merge to target document is not authorized for current user
   const [structuralChangesWarning, setStructuralChangesWarning] = useState(false);  // means that documents have undergone structural changes as a result of merge operation
   const [mergeReportModalVisible, setMergeReportModalVisible] = useState(false);
+  const [swapConfirmModalVisible, setSwapConfirmModalVisible] = useState(false);
 
   useEffect(() => {
     const missingParams = REQUIRED_PARAMS.filter(param => !searchParams.get(param));
@@ -97,9 +104,9 @@ export default function DocumentsDiff({ enclosingCollections }) {
     }
   };
 
-  const mergeCallback = (direction) => {
+  const mergeCallback = (mergeDirection, linkRoleDirection) => {
     setMergeInProgress(true);
-    diffService.sendDocumentsMergeRequest(searchParams, direction, configCacheId, loadingContext, mergingContext, docsData,
+    diffService.sendDocumentsMergeRequest(searchParams, mergeDirection, linkRoleDirection, configCacheId, loadingContext, mergingContext, docsData,
                                           context.state.allowReferencedWorkItemMerge, context.state.preserveComments,
                                           context.state.copyMissingDocumentAttachments, context.state.updateAttachmentReferences)
         .then((data) => {
@@ -186,6 +193,14 @@ export default function DocumentsDiff({ enclosingCollections }) {
     }
   }
 
+  const confirmAndSwapDocuments = () => {
+    if (loadingContext.pairsCount < PAIRS_COUNT_TO_ASK_SWAP_CONFIRMATION) {
+      swapDocuments();
+    } else {
+      setSwapConfirmModalVisible(true);
+    }
+  }
+
   if (loadingContext.pairsLoading) return <Loading message="Loading paired WorkItems" />;
 
   if (loadingContext.pairsLoadingError || !docsData || !docsData.leftDocument || !docsData.rightDocument || !docsData.pairedWorkItems) {
@@ -210,15 +225,28 @@ export default function DocumentsDiff({ enclosingCollections }) {
       </div>
       <div className="row g-0">
         <DocumentHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />
+        <button className="btn btn-secondary btn-xs swap-button" onClick={confirmAndSwapDocuments}
+                title="Swap source and target documents. Be aware that WorkItems/Fields selection will be cleared by this action.">
+          <FontAwesomeIcon icon={faRightLeft} />
+        </button>
         <DocumentHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />
       </div>
 
       <ProgressBar loadingContext={loadingContext} />
-      <MergePane leftContext={docsData.leftDocument} rightContext={docsData.rightDocument} mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
+      <MergePane leftContext={docsData.leftDocument} rightContext={docsData.rightDocument}  diff_type={DiffTypes.DOCUMENTS_DIFF}
+                 mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
     </div>
 
     <ErrorsOverlay loadingContext={loadingContext} />
     <MergeInProgressOverlay mergeInProgress={mergeInProgress} />
+
+    <Modal title="Swap documents" cancelButtonTitle="Cancel" actionButtonTitle="Swap" actionButtonHandler={swapDocuments}
+           visible={swapConfirmModalVisible} setVisible={setSwapConfirmModalVisible} className="modal-md">
+      <p>
+        This diff contains {loadingContext.pairsCount} work item pairs. Swapping documents will reload the entire diff which might take a while.
+        Also current pairs/fields selection will be cleared. Are you sure you want to proceed?
+      </p>
+    </Modal>
 
     <Modal title="Merge error" cancelButtonTitle="Close" visible={mergeErrorModalVisible} setVisible={setMergeErrorModalVisible} className="modal-md error">
       <p>{mergeError}</p>

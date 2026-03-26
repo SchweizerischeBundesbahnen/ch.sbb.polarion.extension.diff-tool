@@ -9,10 +9,10 @@
         "operationResultType": "CONFLICTED",
         "workItemsPair": {
           "leftWorkItem": {
-            "id": "EL-4977",
+            "id": "DP-11559",
             "title": "New Requirement",
             "outlineNumber": "2.1-2",
-            "projectId": "elibrary",
+            "projectId": "drivepilot",
             "referenced": false,
             "revision": null,
             "lastRevision": "5976",
@@ -22,10 +22,10 @@
             "fields": []
           },
           "rightWorkItem": {
-            "id": "DP-11559",
+            "id": "EL-4977",
             "title": "New Requirement",
             "outlineNumber": "2.1-2",
-            "projectId": "drivepilot",
+            "projectId": "elibrary",
             "referenced": false,
             "revision": null,
             "lastRevision": "6461",
@@ -45,7 +45,7 @@
     "moveFailed": [],
     "moveSkipped": [],
     "mergeDetached": [],
-    "logs": "2025-04-18 13:02:30.818: 'CONFLICTED' -- left WI 'EL-4977', right WI 'DP-11559' -- merge is not allowed: target workitem 'EL-4977' revision '5976' has been already changed to '6462'",
+    "logs": "2025-04-18 13:02:30.818: 'CONFLICTED' -- left WI 'DP-11559', right WI 'EL-4977' -- merge is not allowed: target workitem 'EL-4977' revision '5976' has been already changed to '6462'",
     "warnings": [],
     "modified": [],
     "deleted": [],

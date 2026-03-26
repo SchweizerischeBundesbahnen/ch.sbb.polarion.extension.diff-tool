@@ -7,6 +7,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.LinkRoleDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeWorkItemsPair;
@@ -65,7 +66,6 @@ import org.jetbrains.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -103,7 +103,8 @@ public class MergeService {
         polarionService.evictDocumentsCache(documentIdentifier1, documentIdentifier2);
 
         DiffModel diffModel = DiffModelCachedResource.get(documentIdentifier1.getProjectId(), mergeParams.getConfigName(), mergeParams.getConfigCacheBucketId());
-        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, documentIdentifier1, documentIdentifier2, mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, mergeParams.isUpdateAttachmentReferences())
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, documentIdentifier1, documentIdentifier2, mergeParams.getMergeDirection(),
+                mergeParams.getLinkRole(), mergeParams.getLinkRoleDirection(), diffModel, mergeParams.isUpdateAttachmentReferences())
                 .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge())
                 .setPreserveComments(mergeParams.isPreserveComments())
                 .setCopyMissingDocumentAttachments(mergeParams.isCopyMissingDocumentAttachments());
@@ -161,7 +162,7 @@ public class MergeService {
 
     public MergeResult mergeDocumentsFields(@NotNull DocumentsFieldsMergeParams mergeParams) {
 
-        DocumentsFieldsMergeContext context = new DocumentsFieldsMergeContext(mergeParams.getDirection(), mergeParams.getLeftDocument(), mergeParams.getRightDocument());
+        DocumentsFieldsMergeContext context = new DocumentsFieldsMergeContext(mergeParams.getMergeDirection(), mergeParams.getLeftDocument(), mergeParams.getRightDocument());
 
         IModule source = polarionService.getModule(context.getSourceDocumentIdentifier());
         IModule target = polarionService.getModule(context.getTargetDocumentIdentifier());
@@ -195,7 +196,7 @@ public class MergeService {
     }
 
     public MergeResult mergeDocumentsContent(@NotNull DocumentsContentMergeParams mergeParams) {
-        DocumentsContentMergeContext context = new DocumentsContentMergeContext(mergeParams.getLeftDocument(), mergeParams.getRightDocument(), mergeParams.getDirection(), mergeParams.isPreserveComments());
+        DocumentsContentMergeContext context = new DocumentsContentMergeContext(mergeParams.getLeftDocument(), mergeParams.getRightDocument(), mergeParams.getMergeDirection(), mergeParams.isPreserveComments());
 
         IModule sourceModule = polarionService.getModule(context.getSourceDocumentIdentifier());
         IModule targetModule = polarionService.getModule(context.getTargetDocumentIdentifier());
@@ -226,7 +227,7 @@ public class MergeService {
         String leftProjectId = mergeParams.getLeftProject().getId();
         DiffModel diffModel = DiffModelCachedResource.get(leftProjectId, mergeParams.getConfigName(), mergeParams.getConfigCacheBucketId());
         WorkItemsMergeContext context = new WorkItemsMergeContext(mergeParams.getLeftProject(), mergeParams.getRightProject(),
-                mergeParams.getDirection(), mergeParams.getLinkRole(), diffModel, mergeParams.isUpdateAttachmentReferences());
+                mergeParams.getMergeDirection(), mergeParams.getLinkRole(), mergeParams.getLinkRoleDirection(), diffModel, mergeParams.isUpdateAttachmentReferences());
 
         if (!polarionService.userAuthorizedForMerge(context.getTargetProject().getId())) {
             return MergeResult.builder().success(false).mergeNotAuthorized(true).build();
@@ -324,8 +325,14 @@ public class MergeService {
         if (context.getSourceWorkItem(pair) != null && context.getTargetWorkItem(pair) == null) {
             IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
             IWorkItem newWorkItem = polarionService.getTrackerProject(context.getTargetProject().getId()).createWorkItem(Objects.requireNonNull(source.getType()).getId());
-            newWorkItem.addLinkedItem(source, linkRoleObj, null, false);
-            newWorkItem.save();
+            if (context.getLinkRoleDirection() == LinkRoleDirection.DIRECT) {
+                newWorkItem.addLinkedItem(source, linkRoleObj, null, false);
+                newWorkItem.save();
+            } else {
+                newWorkItem.save();
+                source.addLinkedItem(newWorkItem, linkRoleObj, null, false);
+                source.save();
+            }
             context.reportEntry(CREATED, pair, NEW_WORKITEM_CREATED_MESSAGE.formatted(newWorkItem.getId(), source.getId()));
             return newWorkItem;
         }
@@ -537,11 +544,11 @@ public class MergeService {
             IWorkItem createdWorkItem = polarionService.getWorkItem(createdWorkItemReference.projectId(), createdWorkItemReference.id());
             createdWorkItem.removeLinkedItem(sourceWorkItem, new EnumOption(roleEnumId, "branched_from"));
             // Link is added either to source or target item depending on merge direction
-            if (context.getDirection() == MergeDirection.RIGHT_TO_LEFT) {
+            if (context.getLinkRoleDirection() == LinkRoleDirection.DIRECT) {
+                createdWorkItem.addLinkedItem(sourceWorkItem, new LinkRoleOpt(new EnumOption(roleEnumId, context.linkRole)), null, false);
+            } else {
                 sourceWorkItem.addLinkedItem(createdWorkItem, new LinkRoleOpt(new EnumOption(roleEnumId, context.linkRole)), null, false);
                 sourceWorkItem.save();
-            } else {
-                createdWorkItem.addLinkedItem(sourceWorkItem, new LinkRoleOpt(new EnumOption(roleEnumId, context.linkRole)), null, false);
             }
             removeWrongHyperlinks(createdWorkItem, context, pair);
 

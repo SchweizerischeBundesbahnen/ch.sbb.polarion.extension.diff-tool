@@ -74,7 +74,7 @@ test.describe("page of diffing WorkItems WorkItems", () => {
     await expect(selectAllCheckbox).toBeChecked({ checked: false });
 
     const mergeButtons = page.locator('.header .merge-pane .merge-button .btn');
-    await expect(mergeButtons).toHaveCount(2);
+    await expect(mergeButtons).toHaveCount(1);
 
     const redundancyModal = page.getByTestId('redundancy-modal');
     await expect(redundancyModal).toBeVisible();
