@@ -143,7 +143,7 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
           <DocumentProjectHeader document={fieldsData.rightDocument} side={DIFF_SIDES.RIGHT} />
         </>}
       </div>
-      <div className="row g-0">
+      <div className="row g-0" style={{ position: "relative" }}>
         <DocumentHeader document={fieldsData.leftDocument} side={DIFF_SIDES.LEFT} />
         <button className="btn btn-secondary btn-xs swap-button" onClick={swapDocuments}
                 title="Swap source and target documents. Be aware that Fields selection will be cleared by this action.">

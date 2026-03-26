@@ -83,7 +83,7 @@ export default function MergePane({leftContext, rightContext, diff_type, merging
                 select all
               </label>
             </div>
-            {!rightContext || rightContext.revision && <span>Target document not in HEAD, which locks merging into it</span>}
+            {(!rightContext || rightContext.revision) && <span>Target document not in HEAD, which locks merging into it</span>}
             {rightContext && !rightContext.authorizedForMerge && <span>You are not authorized to merge into target project</span>}
             {!mergeDisabled && (diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.WORK_ITEMS_DIFF) && <label className="link-role-direction-label">
               <span className="link-role-direction-text">Link role direction for created WorkItems:</span>

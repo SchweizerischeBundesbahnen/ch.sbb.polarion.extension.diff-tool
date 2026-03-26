@@ -24,11 +24,9 @@ public class MergeParams {
     private String linkRole;
 
     @Schema(description = "The direction of the link role for newly created WorkItem", implementation = LinkRoleDirection.class)
-    @JsonSetter(nulls = Nulls.SKIP)
     private LinkRoleDirection linkRoleDirection = LinkRoleDirection.DIRECT;
 
     @Schema(description = "The configuration name to use for the merge operation", defaultValue = NamedSettings.DEFAULT_NAME)
-    @JsonSetter(nulls = Nulls.SKIP)
     private String configName = NamedSettings.DEFAULT_NAME;
 
     @Schema(description = "The ID of the configuration cache bucket")
@@ -40,4 +38,11 @@ public class MergeParams {
     @Schema(description = "List of WorkItem pairs to be considered in the merge operation", implementation = MergeWorkItemsPair.class)
     private List<MergeWorkItemsPair> pairs;
 
+    public LinkRoleDirection getLinkRoleDirection() {
+        return linkRoleDirection != null ? linkRoleDirection : LinkRoleDirection.DIRECT;
+    }
+
+    public String getConfigName() {
+        return configName != null ? configName : NamedSettings.DEFAULT_NAME;
+    }
 }

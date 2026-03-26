@@ -43,7 +43,7 @@ test.describe("page of diffing reversed documents' WorkItems", () => {
     await expect(actionButton).toBeEnabled();
 
     await actionButton.isVisible();
-    actionButton.click();
+    await actionButton.click();
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
 
@@ -150,7 +150,7 @@ test.describe("page of diffing reversed documents' WorkItems", () => {
     await expect(actionButton).toBeEnabled();
 
     await actionButton.isVisible();
-    actionButton.click();
+    await actionButton.click();
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
 

@@ -183,7 +183,7 @@ export default function DocumentsDiff({ enclosingCollections }) {
             && pairToCheck.leftWorkItem.outlineNumber.startsWith(parentPair.leftWorkItem.outlineNumber))
         || (pairToCheck.rightWorkItem && parentPair.rightWorkItem
             && pairToCheck.rightWorkItem.outlineNumber !== parentPair.rightWorkItem.outlineNumber
-            && pairToCheck.rightWorkItem.outlineNumber.startsWith(parentPair.rightWorkItem.outlineNumber))
+            && pairToCheck.rightWorkItem.outlineNumber.startsWith(parentPair.rightWorkItem.outlineNumber));
   };
 
   const setWarningModalVisibleAndReloadIfNeeded = (visible) => {
@@ -191,7 +191,7 @@ export default function DocumentsDiff({ enclosingCollections }) {
     if (!visible && structuralChangesWarning) {
       location.reload();
     }
-  }
+  };
 
   const confirmAndSwapDocuments = () => {
     if (loadingContext.pairsCount < PAIRS_COUNT_TO_ASK_SWAP_CONFIRMATION) {
@@ -199,7 +199,7 @@ export default function DocumentsDiff({ enclosingCollections }) {
     } else {
       setSwapConfirmModalVisible(true);
     }
-  }
+  };
 
   if (loadingContext.pairsLoading) return <Loading message="Loading paired WorkItems" />;
 
@@ -223,7 +223,7 @@ export default function DocumentsDiff({ enclosingCollections }) {
           <DocumentProjectHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />
         </>}
       </div>
-      <div className="row g-0">
+      <div className="row g-0" style={{ position: "relative" }}>
         <DocumentHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />
         <button className="btn btn-secondary btn-xs swap-button" onClick={confirmAndSwapDocuments}
                 title="Swap source and target documents. Be aware that WorkItems/Fields selection will be cleared by this action.">

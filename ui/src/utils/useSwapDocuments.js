@@ -15,11 +15,11 @@ export default function useSwapDocuments() {
   const pathname = usePathname();
 
   return () => {
-    const params = [];
+    const params = new URLSearchParams();
     for (const [key, value] of searchParams.entries()) {
       const swappedKey = SWAP_MAPPING[key] || key;
-      params.push(`${swappedKey}=${value}`);
+      params.append(swappedKey, value);
     }
-    router.push(pathname + '?' + params.join('&'));
+    router.push(pathname + '?' + params.toString());
   };
 }

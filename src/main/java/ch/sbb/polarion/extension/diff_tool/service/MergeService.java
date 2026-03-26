@@ -543,7 +543,7 @@ public class MergeService {
             String roleEnumId = ((IEnumType) structType.getKeyType("role")).getEnumerationId();
             IWorkItem createdWorkItem = polarionService.getWorkItem(createdWorkItemReference.projectId(), createdWorkItemReference.id());
             createdWorkItem.removeLinkedItem(sourceWorkItem, new EnumOption(roleEnumId, "branched_from"));
-            // Link is added either to source or target item depending on merge direction
+            // Link is added either to source or target item depending on link role direction
             if (context.getLinkRoleDirection() == LinkRoleDirection.DIRECT) {
                 createdWorkItem.addLinkedItem(sourceWorkItem, new LinkRoleOpt(new EnumOption(roleEnumId, context.linkRole)), null, false);
             } else {
