@@ -132,7 +132,8 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
       <div className="row g-0" style={{ position: "relative" }}>
         <DocumentHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />
         <button className="btn btn-secondary btn-xs swap-button" onClick={swapDocuments}
-                title="Swap source and target documents. Be aware that pairs selection will be cleared by this action.">
+                title="Swap source and target documents. Be aware that pairs selection will be cleared by this action."
+                aria-label="Swap documents">
           <FontAwesomeIcon icon={faRightLeft} />
         </button>
         <DocumentHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />

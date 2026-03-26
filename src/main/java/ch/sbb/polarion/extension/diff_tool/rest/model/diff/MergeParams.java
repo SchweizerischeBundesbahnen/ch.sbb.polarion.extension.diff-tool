@@ -1,8 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
