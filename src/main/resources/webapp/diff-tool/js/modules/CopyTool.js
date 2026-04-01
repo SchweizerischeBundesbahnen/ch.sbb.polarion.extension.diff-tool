@@ -69,7 +69,9 @@ export default class CopyTool extends GenericMixin {
     this.ctx.disableIf("create-document", true);
     this.loadSpaces(false, () => {
       this.spaceDropdown.refresh();
-      this.reloadSettings(this.ctx.getValue("copy-project-selector"), false)
+      this.reloadSettings(this.ctx.getValue("copy-project-selector"), false).then(() => {
+        this.configDropdown.refresh();
+      });
     });
   }
 

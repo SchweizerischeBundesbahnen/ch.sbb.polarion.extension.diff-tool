@@ -193,7 +193,9 @@ export default class DiffTool extends GenericMixin {
 
   newDocumentSelected() {
     if (this.settingsProjectId !== this.sourceProjectId) {
-      this.reloadSettings(this.sourceProjectId, true);
+      this.reloadSettings(this.sourceProjectId, true).then(() => {
+        this.configDropdown.refresh();
+      });
     }
   }
 

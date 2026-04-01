@@ -34,12 +34,12 @@ export default class GenericMixin {
 
   reloadSettings(projectId, diff) {
     this.actionInProgress({inProgress: true, diff: diff});
-    this.callAsync({
+    const configSelector = document.getElementById(`${this.prefix(diff)}-config-selector`);
+    configSelector.innerHTML = "";
+    return this.callAsync({
       url: `/polarion/diff-tool/rest/internal/settings/diff/names?scope=project/${projectId}/`
     }).then((response) => {
       this.actionInProgress({inProgress: false, diff: diff});
-      const configSelector = document.getElementById(`${this.prefix(diff)}-config-selector`);
-      configSelector.innerHTML = "";
       for (const {name} of response) {
         const option = document.createElement('option');
         option.value = name;
