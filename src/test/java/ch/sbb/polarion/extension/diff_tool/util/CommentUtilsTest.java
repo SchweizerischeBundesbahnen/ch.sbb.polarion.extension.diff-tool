@@ -7,7 +7,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -317,6 +319,97 @@ class CommentUtilsTest {
         CommentUtils.removeComments(element);
 
         assertTrue(element.children().isEmpty());
+    }
+
+    @Test
+    void testRemapCommentIds_replacesKnownIds() {
+        String content = "text <span id=\"polarion-comment:10\"></span> more <span id=\"polarion-comment:20\"></span>";
+        Map<String, String> map = Map.of("10", "100", "20", "200");
+
+        String result = CommentUtils.remapCommentIds(content, map);
+
+        assertEquals("text <span id=\"polarion-comment:100\"></span> more <span id=\"polarion-comment:200\"></span>", result);
+    }
+
+    @Test
+    void testRemapCommentIds_removesUnmappedIds() {
+        String content = "text <span id=\"polarion-comment:10\"></span> more <span id=\"polarion-comment:20\"></span>";
+        Map<String, String> map = Map.of("10", "100");
+
+        String result = CommentUtils.remapCommentIds(content, map);
+
+        assertEquals("text <span id=\"polarion-comment:100\"></span> more ", result);
+    }
+
+    @Test
+    void testRemapCommentIds_noMarkers() {
+        String content = "plain text without markers";
+
+        String result = CommentUtils.remapCommentIds(content, Map.of("1", "2"));
+
+        assertEquals("plain text without markers", result);
+    }
+
+    @Test
+    void testRemapCommentIds_emptyMap() {
+        String content = "text <span id=\"polarion-comment:10\"></span>";
+
+        String result = CommentUtils.remapCommentIds(content, Collections.emptyMap());
+
+        assertEquals("text ", result);
+    }
+
+    @Test
+    void testReinsertCommentMarkersByContext_exactPositionMatch() {
+        String source = "Hello <span id=\"polarion-comment:5\"></span>World";
+        String target = "Hello World";
+        Map<String, String> map = Map.of("5", "50");
+
+        String result = CommentUtils.reinsertCommentMarkersByContext(source, target, map);
+
+        assertEquals("Hello <span id=\"polarion-comment:50\"></span>World", result);
+    }
+
+    @Test
+    void testReinsertCommentMarkersByContext_multipleMarkers() {
+        String source = "AAA<span id=\"polarion-comment:1\"></span>BBB<span id=\"polarion-comment:2\"></span>CCC";
+        String target = "AAABBBCCC";
+        Map<String, String> map = Map.of("1", "10", "2", "20");
+
+        String result = CommentUtils.reinsertCommentMarkersByContext(source, target, map);
+
+        assertTrue(result.contains("<span id=\"polarion-comment:10\"></span>"));
+        assertTrue(result.contains("<span id=\"polarion-comment:20\"></span>"));
+        assertEquals("AAA<span id=\"polarion-comment:10\"></span>BBB<span id=\"polarion-comment:20\"></span>CCC", result);
+    }
+
+    @Test
+    void testReinsertCommentMarkersByContext_fallbackToAppend() {
+        String source = "<span id=\"polarion-comment:1\"></span>";
+        String target = "completely different content";
+        Map<String, String> map = Map.of("1", "10");
+
+        String result = CommentUtils.reinsertCommentMarkersByContext(source, target, map);
+
+        assertTrue(result.startsWith("completely different content"));
+        assertTrue(result.contains("<span id=\"polarion-comment:10\"></span>"));
+    }
+
+    @Test
+    void testReinsertCommentMarkersByContext_unmappedIdsSkipped() {
+        String source = "Hello <span id=\"polarion-comment:5\"></span>World";
+        String target = "Hello World";
+
+        String result = CommentUtils.reinsertCommentMarkersByContext(source, target, Collections.emptyMap());
+
+        assertEquals("Hello World", result);
+    }
+
+    @Test
+    void testReinsertCommentMarkersByContext_emptySource() {
+        String result = CommentUtils.reinsertCommentMarkersByContext("", "target content", Map.of("1", "2"));
+
+        assertEquals("target content", result);
     }
 
 }
