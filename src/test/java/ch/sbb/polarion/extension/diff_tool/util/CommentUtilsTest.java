@@ -374,4 +374,52 @@ class CommentUtilsTest {
         assertEquals("target content", result);
     }
 
+    @Test
+    void testCopyCommentMarkers_onlyAfterContext() {
+        // Marker at the very start of source — no "before" context, only "after"
+        String source = "<span id=\"polarion-comment:1\"></span>World of text";
+        String target = "World of text";
+        Map<String, String> map = Map.of("1", "10");
+
+        String result = CommentUtils.copyCommentMarkers(source, target, map);
+
+        assertEquals("<span id=\"polarion-comment:10\"></span>World of text", result);
+    }
+
+    @Test
+    void testCopyCommentMarkers_onlyAfterContext_noMatchInTarget() {
+        // Marker at start, "after" context doesn't exist in target — marker is dropped
+        String source = "<span id=\"polarion-comment:1\"></span>unique source text";
+        String target = "completely different target";
+        Map<String, String> map = Map.of("1", "10");
+
+        String result = CommentUtils.copyCommentMarkers(source, target, map);
+
+        assertEquals("completely different target", result);
+    }
+
+    @Test
+    void testCopyCommentMarkers_onlyBeforeContext() {
+        // Marker at the very end of source — no "after" context, only "before"
+        String source = "Hello world<span id=\"polarion-comment:1\"></span>";
+        String target = "Hello world";
+        Map<String, String> map = Map.of("1", "10");
+
+        String result = CommentUtils.copyCommentMarkers(source, target, map);
+
+        assertEquals("Hello world<span id=\"polarion-comment:10\"></span>", result);
+    }
+
+    @Test
+    void testCopyCommentMarkers_onlyBeforeContext_noMatchInTarget() {
+        // Marker at end, "before" context doesn't exist in target — marker is dropped
+        String source = "unique source text<span id=\"polarion-comment:1\"></span>";
+        String target = "completely different target";
+        Map<String, String> map = Map.of("1", "10");
+
+        String result = CommentUtils.copyCommentMarkers(source, target, map);
+
+        assertEquals("completely different target", result);
+    }
+
 }
