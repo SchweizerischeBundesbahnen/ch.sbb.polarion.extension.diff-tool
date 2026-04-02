@@ -1,5 +1,13 @@
 # Changelog
 
+## [8.0.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.0.0...v8.0.1) (2026-04-01)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v14.1.1 ([581b825](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/581b8254fccd1fb23cdc0a019644440809357652))
+* refresh configuration dropdown after reloading data ([#424](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/424)) ([1b9c1a5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/1b9c1a5eb50a0ba23a5677286fefcdfa864179ca)), closes [#423](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/423)
+
 ## [8.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v7.3.1...v8.0.0) (2026-03-26)
 
 
