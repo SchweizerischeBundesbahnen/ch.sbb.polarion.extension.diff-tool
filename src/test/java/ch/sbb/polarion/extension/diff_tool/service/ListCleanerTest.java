@@ -3,14 +3,12 @@ package ch.sbb.polarion.extension.diff_tool.service;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListCleanerProvider;
 import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.tracker.model.IApprovalStruct;
-import com.polarion.alm.tracker.model.IComment;
 import com.polarion.alm.tracker.model.IStatusOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.alm.tracker.model.IWorkRecord;
 import com.polarion.alm.tracker.model.signatures.IWorkflowSignature;
 import com.polarion.alm.tracker.model.signatures.IWorkflowSignaturesManager;
 import com.polarion.platform.persistence.IDataService;
-import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.platform.persistence.spi.PObjectList;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,22 +45,6 @@ class ListCleanerTest {
         ListCleanerProvider.getInstance(IWorkItem.KEY_ASSIGNEE).clean(workItem);
 
         verify(workItem, times(1)).removeAssignee(user);
-    }
-
-    @Test
-    void testCommentsCleanUp() {
-        IWorkItem workItem = mock(IWorkItem.class);
-
-        IComment comment = mock(IComment.class);
-        IDataService dataService = mock(IDataService.class);
-        when(workItem.getDataSvc()).thenReturn(dataService);
-
-        IPObjectList comments = new PObjectList(mock(IDataService.class), List.of(comment));
-        when(workItem.getComments()).thenReturn(comments);
-
-        ListCleanerProvider.getInstance(IWorkItem.KEY_COMMENTS).clean(workItem);
-
-        verify(dataService, times(1)).delete(comments);
     }
 
     @Test

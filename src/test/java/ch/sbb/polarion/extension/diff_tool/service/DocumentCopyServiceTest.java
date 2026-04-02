@@ -18,9 +18,11 @@ import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.model.IApprovalStruct;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.IModuleComment;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
+import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.platform.persistence.ICustomFieldsService;
 import com.polarion.platform.persistence.IDataService;
 import com.polarion.platform.persistence.model.IPObject;
@@ -122,7 +124,7 @@ class DocumentCopyServiceTest {
 
         DocumentDuplicateParams duplicateParams = new DocumentDuplicateParams(targetDocumentIdentifier, "targetTitle", "linkRoleId", "configName", HandleReferencesType.DEFAULT);
 
-        IModule sourceModule = mock(IModule.class);
+        IModule sourceModule = mock(IModule.class, RETURNS_DEEP_STUBS);
         when(trackerService.getModuleManager().getModule(eq(sourceProject), any())).thenReturn(sourceModule);
         IDataService sourceModuleDataService = mock(IDataService.class);
         when(sourceModuleDataService.getVersionedInstance(any(IObjectId.class), anyString())).thenReturn(sourceModule);
@@ -294,6 +296,133 @@ class DocumentCopyServiceTest {
         copyService.cleanUpFields(module, contextId, Collections.emptyList(), new ListFieldCleaner());
 
         verify(workItem, times(1)).removeApprovee(user);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testCopyModuleComments_noComments() {
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+        IPObjectList<IModuleComment> emptyComments = mock(IPObjectList.class);
+        when(emptyComments.isEmpty()).thenReturn(true);
+        when(sourceModule.getRootComments(true)).thenReturn(emptyComments);
+
+        copyService.copyModuleComments(sourceModule, targetModule);
+
+        verify(targetModule, never()).createComment(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testCopyModuleComments_rootCommentsWithMarkers() {
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        // Source has one root comment
+        IModuleComment sourceComment = mock(IModuleComment.class);
+        when(sourceComment.getId()).thenReturn("5");
+        when(sourceComment.getText()).thenReturn(Text.plain("comment text"));
+        when(sourceComment.isResolvedComment()).thenReturn(false);
+        IPObjectList<IModuleComment> childComments = mock(IPObjectList.class);
+        when(childComments.iterator()).thenReturn(Collections.emptyIterator());
+        when(sourceComment.getChildComments()).thenReturn(childComments);
+
+        IPObjectList<IModuleComment> rootComments = mock(IPObjectList.class);
+        when(rootComments.isEmpty()).thenReturn(false);
+        when(rootComments.iterator()).thenReturn(List.of(sourceComment).iterator());
+        when(sourceModule.getRootComments(true)).thenReturn(rootComments);
+
+        // Target comment created
+        IModuleComment targetComment = mock(IModuleComment.class);
+        when(targetComment.getId()).thenReturn("50");
+        when(targetModule.createComment(any(Text.class))).thenReturn(targetComment);
+
+        // Home page with comment markers
+        when(sourceModule.getHomePageContent()).thenReturn(Text.html("page <span id=\"polarion-comment:5\"></span> content"));
+        when(targetModule.getHomePageContent()).thenReturn(Text.html("page  content"));
+
+        copyService.copyModuleComments(sourceModule, targetModule);
+
+        verify(targetModule).createComment(Text.plain("comment text"));
+        verify(targetComment).save();
+        verify(targetModule).setHomePageContent(argThat(text ->
+                text.getContent().contains("<span id=\"polarion-comment:50\"></span>")));
+        verify(targetModule).save();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testCopyModuleComments_resolvedComment() {
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        IModuleComment sourceComment = mock(IModuleComment.class);
+        when(sourceComment.getId()).thenReturn("10");
+        when(sourceComment.getText()).thenReturn(Text.plain("resolved comment"));
+        when(sourceComment.isResolvedComment()).thenReturn(true);
+        IPObjectList<IModuleComment> childComments = mock(IPObjectList.class);
+        when(childComments.iterator()).thenReturn(Collections.emptyIterator());
+        when(sourceComment.getChildComments()).thenReturn(childComments);
+
+        IPObjectList<IModuleComment> rootComments = mock(IPObjectList.class);
+        when(rootComments.isEmpty()).thenReturn(false);
+        when(rootComments.iterator()).thenReturn(List.of(sourceComment).iterator());
+        when(sourceModule.getRootComments(true)).thenReturn(rootComments);
+
+        IModuleComment targetComment = mock(IModuleComment.class);
+        when(targetComment.getId()).thenReturn("100");
+        when(targetModule.createComment(any(Text.class))).thenReturn(targetComment);
+
+        when(sourceModule.getHomePageContent()).thenReturn(null);
+
+        copyService.copyModuleComments(sourceModule, targetModule);
+
+        verify(targetComment).setResolvedComment(true);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testCopyModuleComments_nestedChildComments() {
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        // Child comment
+        IModuleComment sourceChild = mock(IModuleComment.class);
+        when(sourceChild.getId()).thenReturn("20");
+        when(sourceChild.getText()).thenReturn(Text.plain("child text"));
+        when(sourceChild.isResolvedComment()).thenReturn(false);
+        IPObjectList<IModuleComment> grandchildren = mock(IPObjectList.class);
+        when(grandchildren.iterator()).thenReturn(Collections.emptyIterator());
+        when(sourceChild.getChildComments()).thenReturn(grandchildren);
+
+        // Root comment with child
+        IModuleComment sourceRoot = mock(IModuleComment.class);
+        when(sourceRoot.getId()).thenReturn("10");
+        when(sourceRoot.getText()).thenReturn(Text.plain("root text"));
+        when(sourceRoot.isResolvedComment()).thenReturn(false);
+        IPObjectList<IModuleComment> children = mock(IPObjectList.class);
+        when(children.iterator()).thenReturn(List.of(sourceChild).iterator());
+        when(sourceRoot.getChildComments()).thenReturn(children);
+
+        IPObjectList<IModuleComment> rootComments = mock(IPObjectList.class);
+        when(rootComments.isEmpty()).thenReturn(false);
+        when(rootComments.iterator()).thenReturn(List.of(sourceRoot).iterator());
+        when(sourceModule.getRootComments(true)).thenReturn(rootComments);
+
+        IModuleComment targetRoot = mock(IModuleComment.class);
+        when(targetRoot.getId()).thenReturn("100");
+        when(targetModule.createComment(any(Text.class))).thenReturn(targetRoot);
+
+        IModuleComment targetChild = mock(IModuleComment.class);
+        when(targetChild.getId()).thenReturn("200");
+        when(targetRoot.createChildComment(any(Text.class))).thenReturn(targetChild);
+
+        when(sourceModule.getHomePageContent()).thenReturn(null);
+
+        copyService.copyModuleComments(sourceModule, targetModule);
+
+        verify(targetModule).createComment(Text.plain("root text"));
+        verify(targetRoot).createChildComment(Text.plain("child text"));
     }
 
 }

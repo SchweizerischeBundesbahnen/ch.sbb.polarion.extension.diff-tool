@@ -8,18 +8,23 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.FieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
+import ch.sbb.polarion.extension.diff_tool.util.CommentUtils;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import com.polarion.alm.projects.model.IFolder;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.internal.model.WorkItem;
+import com.polarion.alm.tracker.model.ICommentBase;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.IModuleComment;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.StringUtils;
+import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
+import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.location.ILocation;
 import com.polarion.subterra.base.location.Location;
@@ -27,11 +32,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 public class DocumentCopyService {
+
+    private static final Logger log = Logger.getLogger(DocumentCopyService.class);
 
     private final PolarionService polarionService;
     private final MergeService mergeService;
@@ -105,6 +114,11 @@ public class DocumentCopyService {
         }));
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
+            copyModuleComments(sourceModule, targetModule);
+            return null;
+        });
+
+        TransactionalExecutor.executeInWriteTransaction(transaction -> {
             if (linkRole != null && !sourceProjectId.equals(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())) {
                 fixLinksInRichTextFields(targetModule, sourceProjectId, linkRole.getId(), allowedFields);
             }
@@ -164,6 +178,74 @@ public class DocumentCopyService {
                 return true;
             }
         }).toList();
+    }
+
+    @VisibleForTesting
+    void copyModuleComments(@NotNull IModule sourceModule, @NotNull IModule targetModule) {
+        IPObjectList<IModuleComment> sourceRootComments = sourceModule.getRootComments(true);
+        if (sourceRootComments.isEmpty()) {
+            return;
+        }
+
+        Map<String, String> oldToNewCommentIdMap = new LinkedHashMap<>();
+
+        for (IModuleComment sourceRootComment : sourceRootComments) {
+            IModuleComment newRootComment = targetModule.createComment(sourceRootComment.getText());
+            copyCommentMetadata(sourceRootComment, newRootComment, targetModule);
+            newRootComment.save();
+            oldToNewCommentIdMap.put(sourceRootComment.getId(), newRootComment.getId());
+            copyChildComments(sourceRootComment, newRootComment, targetModule, oldToNewCommentIdMap);
+        }
+
+        copyCommentMarkers(sourceModule, targetModule, oldToNewCommentIdMap);
+    }
+
+    private void copyChildComments(@NotNull IModuleComment sourceParent, @NotNull IModuleComment targetParent, @NotNull IModule targetModule,
+                                   @NotNull Map<String, String> oldToNewCommentIdMap) {
+        IPObjectList<IModuleComment> children = sourceParent.getChildComments();
+        for (IModuleComment sourceChild : children) {
+            IModuleComment newChild = targetParent.createChildComment(sourceChild.getText());
+            copyCommentMetadata(sourceChild, newChild, targetModule);
+            newChild.save();
+            oldToNewCommentIdMap.put(sourceChild.getId(), newChild.getId());
+            copyChildComments(sourceChild, newChild, targetModule, oldToNewCommentIdMap);
+        }
+    }
+
+    private void copyCommentMetadata(@NotNull IModuleComment source, @NotNull IModuleComment target, @NotNull IModule targetModule) {
+        target.setValue(ICommentBase.KEY_CREATED, source.getCreated());
+        try {
+            polarionService.getSecurityService().doAsSystemUser((java.security.PrivilegedAction<Void>) () -> {
+                target.setValue(ICommentBase.KEY_AUTHOR, source.getAuthor());
+                return null;
+            });
+        } catch (Exception e) {
+            String authorName = source.getAuthor() != null ? source.getAuthor().getName() : "<null>";
+            log.warn(String.format("Could not assign source comment author [%s] in target module [%s]: %s", authorName, targetModule.getModuleLocation(), e.getMessage()));
+            try {
+                target.setValue(ICommentBase.KEY_AUTHOR, targetModule.getAuthor());
+                log.warn("Fallback: target module author assigned as a comment author: " + e.getMessage());
+            } catch (Exception ex) {
+                log.warn("Could not assign target module author as a comment author (as a fallback): " + ex.getMessage());
+            }
+        }
+
+        if (source.isResolvedComment()) {
+            target.setResolvedComment(true);
+        }
+    }
+
+    private void copyCommentMarkers(@NotNull IModule sourceModule, @NotNull IModule targetModule,
+                                    @NotNull Map<String, String> oldToNewCommentIdMap) {
+        if (sourceModule.getHomePageContent() == null || targetModule.getHomePageContent() == null) {
+            return;
+        }
+        if (CommentUtils.extractCommentIds(sourceModule.getHomePageContent().getContent()).isEmpty()) {
+            return;
+        }
+        String updatedContent = CommentUtils.copyCommentMarkers(sourceModule.getHomePageContent().getContent(), targetModule.getHomePageContent().getContent(), oldToNewCommentIdMap);
+        targetModule.setHomePageContent(new Text(targetModule.getHomePageContent().getType(), updatedContent));
+        targetModule.save();
     }
 
 }
