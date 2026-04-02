@@ -220,12 +220,13 @@ public class DocumentCopyService {
                 return null;
             });
         } catch (Exception e) {
-            log.warn(String.format("Could not assign source comment author [%s] in target module [%s]: " + e.getMessage(), source.getAuthor().getName(), targetModule.getModuleLocation()));
+            String authorName = source.getAuthor() != null ? source.getAuthor().getName() : "<null>";
+            log.warn(String.format("Could not assign source comment author [%s] in target module [%s]: %s", authorName, targetModule.getModuleLocation(), e.getMessage()));
             try {
                 target.setValue(ICommentBase.KEY_AUTHOR, targetModule.getAuthor());
                 log.warn("Fallback: target module author assigned as a comment author: " + e.getMessage());
             } catch (Exception ex) {
-                log.warn("Could not assign target module author as a comment author (as a fallback): " + e.getMessage());
+                log.warn("Could not assign target module author as a comment author (as a fallback): " + ex.getMessage());
             }
         }
 

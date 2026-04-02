@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 public class CommentUtils {
 
     private static final String COMMENT_REGEX = "<span id=[\"']polarion-comment:(?<id>\\d+)[\"'][^>]*>(?:</span>)?";
+    private static Pattern COMMENT_PATTERN = Pattern.compile(COMMENT_REGEX);
+    private static final int CONTEXT_WINDOW = 50;
 
     public List<String> extractCommentIds(@Nullable String content) {
         List<String> commentIds = new ArrayList<>();
@@ -64,36 +66,12 @@ public class CommentUtils {
     }
 
     /**
-     * Replaces comment IDs in content using the provided mapping.
-     * Markers whose IDs are not present in the map are removed.
-     */
-    public String remapCommentIds(@NotNull String content, @NotNull Map<String, String> oldToNewIdMap) {
-        Pattern pattern = Pattern.compile(COMMENT_REGEX);
-        Matcher matcher = pattern.matcher(content);
-        StringBuilder result = new StringBuilder();
-        while (matcher.find()) {
-            String oldId = matcher.group("id");
-            String newId = oldToNewIdMap.get(oldId);
-            if (newId != null) {
-                matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group().replace("polarion-comment:" + oldId, "polarion-comment:" + newId)));
-            } else {
-                matcher.appendReplacement(result, "");
-            }
-        }
-        matcher.appendTail(result);
-        return result.toString();
-    }
-
-    private static final int CONTEXT_WINDOW = 50;
-
-    /**
      * Copies comment markers from source HTML into target HTML using surrounding context matching.
      * For each marker in the source, captures surrounding text context and finds the matching position
      * in the target to insert the corresponding marker. Falls back to appending at the end if no match is found.
      */
     public String copyCommentMarkers(@NotNull String sourceHtmlWithMarkers, @NotNull String targetHtmlWithoutMarkers, @NotNull Map<String, String> oldToNewIdMap) {
-        Pattern pattern = Pattern.compile(COMMENT_REGEX);
-        Matcher matcher = pattern.matcher(sourceHtmlWithMarkers);
+        Matcher matcher = COMMENT_PATTERN.matcher(sourceHtmlWithMarkers);
 
         List<MarkerInsert> inserts = new ArrayList<>();
         List<String> fallbackIds = new ArrayList<>();
@@ -112,8 +90,8 @@ public class CommentUtils {
             String after = sourceHtmlWithMarkers.substring(markerEnd, Math.min(sourceHtmlWithMarkers.length(), markerEnd + CONTEXT_WINDOW));
 
             // Strip any other comment markers from context strings to get clean search patterns
-            String cleanBefore = pattern.matcher(before).replaceAll("");
-            String cleanAfter = pattern.matcher(after).replaceAll("");
+            String cleanBefore = COMMENT_PATTERN.matcher(before).replaceAll("");
+            String cleanAfter = COMMENT_PATTERN.matcher(after).replaceAll("");
 
             String newMarker = "<span id=\"polarion-comment:%s\"></span>".formatted(newId);
 
@@ -122,18 +100,20 @@ public class CommentUtils {
                 int idx = targetHtmlWithoutMarkers.indexOf(searchPattern);
                 if (idx >= 0) {
                     inserts.add(new MarkerInsert(idx + cleanBefore.length(), newMarker));
-                    continue;
                 }
-            }
-            // Try matching with just the "before" context
-            if (!cleanBefore.isEmpty()) {
+            } else if (!cleanAfter.isEmpty()) { // Try matching with just the "after" context
+                int idx = targetHtmlWithoutMarkers.indexOf(cleanAfter);
+                if (idx >= 0) {
+                    inserts.add(new MarkerInsert(idx, newMarker));
+                }
+            } else if (!cleanBefore.isEmpty()) { // Try matching with just the "before" context
                 int idx = targetHtmlWithoutMarkers.indexOf(cleanBefore);
                 if (idx >= 0) {
                     inserts.add(new MarkerInsert(idx + cleanBefore.length(), newMarker));
-                    continue;
                 }
+            } else {
+                fallbackIds.add(newId);
             }
-            fallbackIds.add(newId);
         }
 
         // Sort inserts by position descending to avoid offset shifting

@@ -322,44 +322,6 @@ class CommentUtilsTest {
     }
 
     @Test
-    void testRemapCommentIds_replacesKnownIds() {
-        String content = "text <span id=\"polarion-comment:10\"></span> more <span id=\"polarion-comment:20\"></span>";
-        Map<String, String> map = Map.of("10", "100", "20", "200");
-
-        String result = CommentUtils.remapCommentIds(content, map);
-
-        assertEquals("text <span id=\"polarion-comment:100\"></span> more <span id=\"polarion-comment:200\"></span>", result);
-    }
-
-    @Test
-    void testRemapCommentIds_removesUnmappedIds() {
-        String content = "text <span id=\"polarion-comment:10\"></span> more <span id=\"polarion-comment:20\"></span>";
-        Map<String, String> map = Map.of("10", "100");
-
-        String result = CommentUtils.remapCommentIds(content, map);
-
-        assertEquals("text <span id=\"polarion-comment:100\"></span> more ", result);
-    }
-
-    @Test
-    void testRemapCommentIds_noMarkers() {
-        String content = "plain text without markers";
-
-        String result = CommentUtils.remapCommentIds(content, Map.of("1", "2"));
-
-        assertEquals("plain text without markers", result);
-    }
-
-    @Test
-    void testRemapCommentIds_emptyMap() {
-        String content = "text <span id=\"polarion-comment:10\"></span>";
-
-        String result = CommentUtils.remapCommentIds(content, Collections.emptyMap());
-
-        assertEquals("text ", result);
-    }
-
-    @Test
     void testCopyCommentMarkers_exactPositionMatch() {
         String source = "Hello <span id=\"polarion-comment:5\"></span>World";
         String target = "Hello World";
