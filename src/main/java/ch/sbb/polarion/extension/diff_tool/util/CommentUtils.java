@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class CommentUtils {
 
     private static final String COMMENT_REGEX = "<span id=[\"']polarion-comment:(?<id>\\d+)[\"'][^>]*>(?:</span>)?";
-    private static Pattern COMMENT_PATTERN = Pattern.compile(COMMENT_REGEX);
+    private static final Pattern COMMENT_PATTERN = Pattern.compile(COMMENT_REGEX);
     private static final int CONTEXT_WINDOW = 50;
 
     public List<String> extractCommentIds(@Nullable String content) {
@@ -77,53 +77,62 @@ public class CommentUtils {
         List<String> fallbackIds = new ArrayList<>();
 
         while (matcher.find()) {
-            String oldId = matcher.group("id");
-            String newId = oldToNewIdMap.get(oldId);
+            String newId = oldToNewIdMap.get(matcher.group("id"));
             if (newId == null) {
                 continue;
             }
 
-            int markerStart = matcher.start();
-            int markerEnd = matcher.end();
-
-            String before = sourceHtmlWithMarkers.substring(Math.max(0, markerStart - CONTEXT_WINDOW), markerStart);
-            String after = sourceHtmlWithMarkers.substring(markerEnd, Math.min(sourceHtmlWithMarkers.length(), markerEnd + CONTEXT_WINDOW));
-
-            // Strip any other comment markers from context strings to get clean search patterns
-            String cleanBefore = COMMENT_PATTERN.matcher(before).replaceAll("");
-            String cleanAfter = COMMENT_PATTERN.matcher(after).replaceAll("");
-
+            String cleanBefore = extractCleanContext(sourceHtmlWithMarkers, Math.max(0, matcher.start() - CONTEXT_WINDOW), matcher.start());
+            String cleanAfter = extractCleanContext(sourceHtmlWithMarkers, matcher.end(), Math.min(sourceHtmlWithMarkers.length(), matcher.end() + CONTEXT_WINDOW));
             String newMarker = "<span id=\"polarion-comment:%s\"></span>".formatted(newId);
 
-            if (!cleanBefore.isEmpty() && !cleanAfter.isEmpty()) {
-                String searchPattern = cleanBefore + cleanAfter;
-                int idx = targetHtmlWithoutMarkers.indexOf(searchPattern);
-                if (idx >= 0) {
-                    inserts.add(new MarkerInsert(idx + cleanBefore.length(), newMarker));
-                }
-            } else if (!cleanAfter.isEmpty()) { // Try matching with just the "after" context
-                int idx = targetHtmlWithoutMarkers.indexOf(cleanAfter);
-                if (idx >= 0) {
-                    inserts.add(new MarkerInsert(idx, newMarker));
-                }
-            } else if (!cleanBefore.isEmpty()) { // Try matching with just the "before" context
-                int idx = targetHtmlWithoutMarkers.indexOf(cleanBefore);
-                if (idx >= 0) {
-                    inserts.add(new MarkerInsert(idx + cleanBefore.length(), newMarker));
-                }
-            } else {
+            int position = findInsertPosition(targetHtmlWithoutMarkers, cleanBefore, cleanAfter);
+            if (position >= 0) {
+                inserts.add(new MarkerInsert(position, newMarker));
+            } else if (cleanBefore.isEmpty() && cleanAfter.isEmpty()) {
                 fallbackIds.add(newId);
             }
         }
 
-        // Sort inserts by position descending to avoid offset shifting
+        return applyInserts(targetHtmlWithoutMarkers, inserts, fallbackIds);
+    }
+
+    private String extractCleanContext(@NotNull String source, int from, int to) {
+        return COMMENT_PATTERN.matcher(source.substring(from, to)).replaceAll("");
+    }
+
+    /**
+     * Finds the insert position in the target HTML by matching surrounding context.
+     * Tries both contexts combined first, then falls back to individual context matching.
+     *
+     * @return insert position, or -1 if no match found
+     */
+    private int findInsertPosition(@NotNull String target, @NotNull String cleanBefore, @NotNull String cleanAfter) {
+        if (!cleanBefore.isEmpty() && !cleanAfter.isEmpty()) {
+            int idx = target.indexOf(cleanBefore + cleanAfter);
+            if (idx >= 0) {
+                return idx + cleanBefore.length();
+            }
+        } else if (!cleanAfter.isEmpty()) {
+            int idx = target.indexOf(cleanAfter);
+            if (idx >= 0) {
+                return idx;
+            }
+        } else if (!cleanBefore.isEmpty()) {
+            int idx = target.indexOf(cleanBefore);
+            if (idx >= 0) {
+                return idx + cleanBefore.length();
+            }
+        }
+        return -1;
+    }
+
+    private String applyInserts(@NotNull String target, @NotNull List<MarkerInsert> inserts, @NotNull List<String> fallbackIds) {
         inserts.sort((a, b) -> Integer.compare(b.position, a.position));
-        StringBuilder result = new StringBuilder(targetHtmlWithoutMarkers);
+        StringBuilder result = new StringBuilder(target);
         for (MarkerInsert insert : inserts) {
             result.insert(insert.position, insert.marker);
         }
-
-        // Append any markers that couldn't be positioned
         return appendComments(result.toString(), fallbackIds);
     }
 
