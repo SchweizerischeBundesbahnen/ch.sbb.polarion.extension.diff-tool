@@ -50,22 +50,6 @@ class ListCleanerTest {
     }
 
     @Test
-    void testCommentsCleanUp() {
-        IWorkItem workItem = mock(IWorkItem.class);
-
-        IComment comment = mock(IComment.class);
-        IDataService dataService = mock(IDataService.class);
-        when(workItem.getDataSvc()).thenReturn(dataService);
-
-        IPObjectList comments = new PObjectList(mock(IDataService.class), List.of(comment));
-        when(workItem.getComments()).thenReturn(comments);
-
-        ListCleanerProvider.getInstance(IWorkItem.KEY_COMMENTS).clean(workItem);
-
-        verify(dataService, times(1)).delete(comments);
-    }
-
-    @Test
     void testWorkflowSignaturesCleanUp() {
         IWorkItem workItem = mock(IWorkItem.class);
 

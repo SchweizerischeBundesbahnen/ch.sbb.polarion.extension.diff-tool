@@ -87,12 +87,11 @@ public class CommentUtils {
     private static final int CONTEXT_WINDOW = 50;
 
     /**
-     * Re-inserts comment markers from source HTML into target HTML using surrounding context matching.
+     * Copies comment markers from source HTML into target HTML using surrounding context matching.
      * For each marker in the source, captures surrounding text context and finds the matching position
-     * in the target to insert the remapped marker. Falls back to appending at the end if no match is found.
+     * in the target to insert the corresponding marker. Falls back to appending at the end if no match is found.
      */
-    public String reinsertCommentMarkersByContext(@NotNull String sourceHtmlWithMarkers, @NotNull String targetHtmlWithoutMarkers,
-                                                  @NotNull Map<String, String> oldToNewIdMap) {
+    public String copyCommentMarkers(@NotNull String sourceHtmlWithMarkers, @NotNull String targetHtmlWithoutMarkers, @NotNull Map<String, String> oldToNewIdMap) {
         Pattern pattern = Pattern.compile(COMMENT_REGEX);
         Matcher matcher = pattern.matcher(sourceHtmlWithMarkers);
 

@@ -166,75 +166,6 @@ public class DocumentCopyService {
         }
     }
 
-    @VisibleForTesting
-    void copyModuleComments(@NotNull IModule sourceModule, @NotNull IModule targetModule) {
-        IPObjectList<IModuleComment> sourceRootComments = sourceModule.getRootComments(true);
-        if (sourceRootComments.isEmpty()) {
-            return;
-        }
-
-        Map<String, String> oldToNewCommentIdMap = new LinkedHashMap<>();
-
-        for (IModuleComment sourceRootComment : sourceRootComments) {
-            IModuleComment newRootComment = targetModule.createComment(sourceRootComment.getText());
-            copyCommentMetadata(sourceRootComment, newRootComment, targetModule);
-            oldToNewCommentIdMap.put(sourceRootComment.getId(), newRootComment.getId());
-            newRootComment.save();
-            copyChildComments(sourceRootComment, newRootComment, targetModule, oldToNewCommentIdMap);
-        }
-
-//        reinsertCommentMarkersInHomePage(sourceModule, targetModule, oldToNewCommentIdMap);
-    }
-
-    private void copyChildComments(@NotNull IModuleComment sourceParent, @NotNull IModuleComment targetParent, @NotNull IModule targetModule,
-                                   @NotNull Map<String, String> oldToNewCommentIdMap) {
-        IPObjectList<IModuleComment> children = sourceParent.getChildComments();
-        for (IModuleComment sourceChild : children) {
-            IModuleComment newChild = targetParent.createChildComment(sourceChild.getText());
-            copyCommentMetadata(sourceChild, newChild, targetModule);
-            oldToNewCommentIdMap.put(sourceChild.getId(), newChild.getId());
-            newChild.save();
-            copyChildComments(sourceChild, newChild, targetModule, oldToNewCommentIdMap);
-        }
-    }
-
-    private void copyCommentMetadata(@NotNull IModuleComment source, @NotNull IModuleComment target, @NotNull IModule targetModule) {
-        target.setValue(ICommentBase.KEY_CREATED, source.getCreated());
-        try {
-            polarionService.getSecurityService().doAsSystemUser((java.security.PrivilegedAction<Void>) () -> {
-                target.setValue(ICommentBase.KEY_AUTHOR, source.getAuthor());
-                return null;
-            });
-        } catch (Exception e) {
-            try {
-                target.setValue(ICommentBase.KEY_AUTHOR, targetModule.getAuthor());
-            } catch (Exception ex) {
-                log.warn("Could not create imported comment metadata: " + ex.getMessage());
-            }
-        }
-
-        if (source.isResolvedComment()) {
-            target.setResolvedComment(true);
-        }
-    }
-
-    private void reinsertCommentMarkersInHomePage(@NotNull IModule sourceModule, @NotNull IModule targetModule,
-                                                  @NotNull Map<String, String> oldToNewCommentIdMap) {
-        Text sourceHomePage = sourceModule.getHomePageContent();
-        if (sourceHomePage == null || sourceHomePage.getContent() == null) {
-            return;
-        }
-        String sourceContent = sourceHomePage.getContent();
-        if (CommentUtils.extractCommentIds(sourceContent).isEmpty()) {
-            return;
-        }
-        Text targetHomePage = targetModule.getHomePageContent();
-        String targetContent = targetHomePage != null && targetHomePage.getContent() != null ? targetHomePage.getContent() : "";
-        String updatedContent = CommentUtils.reinsertCommentMarkersByContext(sourceContent, targetContent, oldToNewCommentIdMap);
-        targetModule.setHomePageContent(new Text(sourceHomePage.getType(), updatedContent));
-        targetModule.save();
-    }
-
     private List<IWorkItem> getWorkItemsForCleanUp(@NotNull IModule module) {
         List<IWorkItem> externalWorkItems = module.getExternalWorkItems();
         return module.getAllWorkItems().stream().filter(item -> {
@@ -247,6 +178,73 @@ public class DocumentCopyService {
                 return true;
             }
         }).toList();
+    }
+
+    @VisibleForTesting
+    void copyModuleComments(@NotNull IModule sourceModule, @NotNull IModule targetModule) {
+        IPObjectList<IModuleComment> sourceRootComments = sourceModule.getRootComments(true);
+        if (sourceRootComments.isEmpty()) {
+            return;
+        }
+
+        Map<String, String> oldToNewCommentIdMap = new LinkedHashMap<>();
+
+        for (IModuleComment sourceRootComment : sourceRootComments) {
+            IModuleComment newRootComment = targetModule.createComment(sourceRootComment.getText());
+            copyCommentMetadata(sourceRootComment, newRootComment, targetModule);
+            newRootComment.save();
+            oldToNewCommentIdMap.put(sourceRootComment.getId(), newRootComment.getId());
+            copyChildComments(sourceRootComment, newRootComment, targetModule, oldToNewCommentIdMap);
+        }
+
+        copyCommentMarkers(sourceModule, targetModule, oldToNewCommentIdMap);
+    }
+
+    private void copyChildComments(@NotNull IModuleComment sourceParent, @NotNull IModuleComment targetParent, @NotNull IModule targetModule,
+                                   @NotNull Map<String, String> oldToNewCommentIdMap) {
+        IPObjectList<IModuleComment> children = sourceParent.getChildComments();
+        for (IModuleComment sourceChild : children) {
+            IModuleComment newChild = targetParent.createChildComment(sourceChild.getText());
+            copyCommentMetadata(sourceChild, newChild, targetModule);
+            newChild.save();
+            oldToNewCommentIdMap.put(sourceChild.getId(), newChild.getId());
+            copyChildComments(sourceChild, newChild, targetModule, oldToNewCommentIdMap);
+        }
+    }
+
+    private void copyCommentMetadata(@NotNull IModuleComment source, @NotNull IModuleComment target, @NotNull IModule targetModule) {
+        target.setValue(ICommentBase.KEY_CREATED, source.getCreated());
+        try {
+            polarionService.getSecurityService().doAsSystemUser((java.security.PrivilegedAction<Void>) () -> {
+                target.setValue(ICommentBase.KEY_AUTHOR, source.getAuthor());
+                return null;
+            });
+        } catch (Exception e) {
+            log.warn(String.format("Could not assign source comment author [%s] in target module [%s]: " + e.getMessage(), source.getAuthor().getName(), targetModule.getModuleLocation()));
+            try {
+                target.setValue(ICommentBase.KEY_AUTHOR, targetModule.getAuthor());
+                log.warn("Fallback: target module author assigned as a comment author: " + e.getMessage());
+            } catch (Exception ex) {
+                log.warn("Could not assign target module author as a comment author (as a fallback): " + e.getMessage());
+            }
+        }
+
+        if (source.isResolvedComment()) {
+            target.setResolvedComment(true);
+        }
+    }
+
+    private void copyCommentMarkers(@NotNull IModule sourceModule, @NotNull IModule targetModule,
+                                    @NotNull Map<String, String> oldToNewCommentIdMap) {
+        if (sourceModule.getHomePageContent() == null || targetModule.getHomePageContent() == null) {
+            return;
+        }
+        if (CommentUtils.extractCommentIds(sourceModule.getHomePageContent().getContent()).isEmpty()) {
+            return;
+        }
+        String updatedContent = CommentUtils.copyCommentMarkers(sourceModule.getHomePageContent().getContent(), targetModule.getHomePageContent().getContent(), oldToNewCommentIdMap);
+        targetModule.setHomePageContent(new Text(targetModule.getHomePageContent().getType(), updatedContent));
+        targetModule.save();
     }
 
 }

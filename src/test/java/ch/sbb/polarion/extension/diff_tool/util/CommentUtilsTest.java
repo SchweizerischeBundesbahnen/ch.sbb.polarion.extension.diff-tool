@@ -360,23 +360,23 @@ class CommentUtilsTest {
     }
 
     @Test
-    void testReinsertCommentMarkersByContext_exactPositionMatch() {
+    void testCopyCommentMarkers_exactPositionMatch() {
         String source = "Hello <span id=\"polarion-comment:5\"></span>World";
         String target = "Hello World";
         Map<String, String> map = Map.of("5", "50");
 
-        String result = CommentUtils.reinsertCommentMarkersByContext(source, target, map);
+        String result = CommentUtils.copyCommentMarkers(source, target, map);
 
         assertEquals("Hello <span id=\"polarion-comment:50\"></span>World", result);
     }
 
     @Test
-    void testReinsertCommentMarkersByContext_multipleMarkers() {
+    void testCopyCommentMarkersByContext_multipleMarkers() {
         String source = "AAA<span id=\"polarion-comment:1\"></span>BBB<span id=\"polarion-comment:2\"></span>CCC";
         String target = "AAABBBCCC";
         Map<String, String> map = Map.of("1", "10", "2", "20");
 
-        String result = CommentUtils.reinsertCommentMarkersByContext(source, target, map);
+        String result = CommentUtils.copyCommentMarkers(source, target, map);
 
         assertTrue(result.contains("<span id=\"polarion-comment:10\"></span>"));
         assertTrue(result.contains("<span id=\"polarion-comment:20\"></span>"));
@@ -384,30 +384,30 @@ class CommentUtilsTest {
     }
 
     @Test
-    void testReinsertCommentMarkersByContext_fallbackToAppend() {
+    void testCopyCommentMarkers_fallbackToAppend() {
         String source = "<span id=\"polarion-comment:1\"></span>";
         String target = "completely different content";
         Map<String, String> map = Map.of("1", "10");
 
-        String result = CommentUtils.reinsertCommentMarkersByContext(source, target, map);
+        String result = CommentUtils.copyCommentMarkers(source, target, map);
 
         assertTrue(result.startsWith("completely different content"));
         assertTrue(result.contains("<span id=\"polarion-comment:10\"></span>"));
     }
 
     @Test
-    void testReinsertCommentMarkersByContext_unmappedIdsSkipped() {
+    void testCopyCommentMarkers_unmappedIdsSkipped() {
         String source = "Hello <span id=\"polarion-comment:5\"></span>World";
         String target = "Hello World";
 
-        String result = CommentUtils.reinsertCommentMarkersByContext(source, target, Collections.emptyMap());
+        String result = CommentUtils.copyCommentMarkers(source, target, Collections.emptyMap());
 
         assertEquals("Hello World", result);
     }
 
     @Test
-    void testReinsertCommentMarkersByContext_emptySource() {
-        String result = CommentUtils.reinsertCommentMarkersByContext("", "target content", Map.of("1", "2"));
+    void testCopyCommentMarkers_emptySource() {
+        String result = CommentUtils.copyCommentMarkers("", "target content", Map.of("1", "2"));
 
         assertEquals("target content", result);
     }
