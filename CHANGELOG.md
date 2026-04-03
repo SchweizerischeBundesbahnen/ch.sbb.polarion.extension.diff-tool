@@ -1,5 +1,17 @@
 # Changelog
 
+## [8.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.0.1...v8.1.0) (2026-04-03)
+
+
+### Features
+
+* Copy livedoc comments when duplicating documents ([#430](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/430)) ([c54c456](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/c54c4564ef3608bcb634681f691c455c54011be2))
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v14.1.2 ([5b13285](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/5b132857caa1a20f8fd4cfeedb1df94ab272fb89))
+
 ## [8.0.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.0.0...v8.0.1) (2026-04-01)
 
 
