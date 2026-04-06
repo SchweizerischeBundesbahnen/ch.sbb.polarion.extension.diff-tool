@@ -15,7 +15,7 @@
     "@playwright/test": "1.59.1",
     "@types/node": "25.5.2",
     "cross-spawn": "7.0.6",
-    "eslint": "10.1.0",
+    "eslint": "10.2.0",
     "eslint-config-next": "16.2.2",
     "istanbul-lib-coverage": "3.2.2",
     "nyc": "18.0.0"
