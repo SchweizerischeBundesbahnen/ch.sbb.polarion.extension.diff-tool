@@ -196,7 +196,8 @@ public class DocumentCopyService {
             oldToNewCommentIdMap.put(sourceRootComment.getId(), newRootComment.getId());
             copyChildComments(sourceRootComment, newRootComment, targetModule, oldToNewCommentIdMap);
             if (sourceRootComment.isResolvedComment()) {
-                // Resolved flag can be set only to root comment and at the time point when all its child comments are already created, as a result new save is needed
+                // The resolved flag can be set only on a root comment.
+                // Set it only after all child comments have been created, which requires an additional save.
                 newRootComment.setResolvedComment(true);
                 newRootComment.save();
             }

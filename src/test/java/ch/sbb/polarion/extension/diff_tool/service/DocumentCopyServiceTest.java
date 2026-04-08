@@ -379,7 +379,7 @@ class DocumentCopyServiceTest {
         copyService.copyModuleComments(sourceModule, targetModule);
 
         verify(targetComment).setResolvedComment(true);
-        verify(targetComment, times(2)).save(); // first save for child nodes creation, second save to persist metadata
+        verify(targetComment, times(2)).save(); // first save during comment creation, second save to persist the resolved flag
     }
 
     @Test
