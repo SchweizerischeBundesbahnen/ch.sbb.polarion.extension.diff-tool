@@ -625,8 +625,9 @@ public class DiffService {
     WorkItem buildWorkItem(@NotNull IWorkItem iWorkItem, @NotNull Set<String> fieldIds, @Nullable String outlineNumber,
                            boolean referenced, @Nullable DocumentReference documentReference, boolean compareEnumsById) {
         WorkItem workItem = WorkItem.of(iWorkItem, outlineNumber, referenced, (documentReference != null && !iWorkItem.getProjectId().equals(documentReference.projectId())));
-        Set<FieldMetadata> fields = new HashSet<>(polarionService.getGeneralFields(IWorkItem.PROTO, iWorkItem.getContextId()));
-        fields.addAll(polarionService.getCustomFields(IWorkItem.PROTO, iWorkItem.getContextId(), Optional.ofNullable(iWorkItem.getType()).map(IEnumOption::getId).orElse(null)));
+        String optTypeId = Optional.ofNullable(iWorkItem.getType()).map(IEnumOption::getId).orElse(null);
+        Set<FieldMetadata> fields = new HashSet<>(polarionService.getGeneralFields(IWorkItem.PROTO, iWorkItem.getContextId(), optTypeId));
+        fields.addAll(polarionService.getCustomFields(IWorkItem.PROTO, iWorkItem.getContextId(), optTypeId));
         for (String fieldId : fieldIds) {
             IType fieldType = fields.stream().filter(f -> f.getId().equals(fieldId)).map(FieldMetadata::getType).findFirst().orElse(null);
             workItem.addField(

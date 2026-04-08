@@ -526,7 +526,7 @@ class DiffServiceTest {
 
         // Mock polarionService.getGeneralFields and polarionService.getCustomFields
         FieldMetadata statusMetadata = createMockFieldMetadata("status");
-        when(polarionService.getGeneralFields(anyString(), any())).thenReturn(Set.of(statusMetadata));
+        when(polarionService.getGeneralFields(anyString(), any(), nullable(String.class))).thenReturn(Set.of(statusMetadata));
         FieldMetadata customFieldMetadata = createMockFieldMetadata("customField");
         when(polarionService.getCustomFields(anyString(), any(), isNull())).thenReturn(Set.of(customFieldMetadata));
 
