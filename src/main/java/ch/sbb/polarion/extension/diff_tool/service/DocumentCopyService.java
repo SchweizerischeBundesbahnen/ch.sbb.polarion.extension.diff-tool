@@ -191,10 +191,15 @@ public class DocumentCopyService {
 
         for (IModuleComment sourceRootComment : sourceRootComments) {
             IModuleComment newRootComment = targetModule.createComment(sourceRootComment.getText());
-            copyCommentMetadata(sourceRootComment, newRootComment, targetModule);
+            // This save is needed for child nodes creation
             newRootComment.save();
             oldToNewCommentIdMap.put(sourceRootComment.getId(), newRootComment.getId());
             copyChildComments(sourceRootComment, newRootComment, targetModule, oldToNewCommentIdMap);
+            // We need to copy metadata after child nodes creation for "resolved" flag to spread across the comments tree
+            // This special handling is needed only for root comments, for child comment this is not needed
+            copyCommentMetadata(sourceRootComment, newRootComment, targetModule, true);
+            // And second save to persist metadata
+            newRootComment.save();
         }
 
         copyCommentMarkers(sourceModule, targetModule, oldToNewCommentIdMap);
@@ -205,14 +210,14 @@ public class DocumentCopyService {
         IPObjectList<IModuleComment> children = sourceParent.getChildComments();
         for (IModuleComment sourceChild : children) {
             IModuleComment newChild = targetParent.createChildComment(sourceChild.getText());
-            copyCommentMetadata(sourceChild, newChild, targetModule);
+            copyCommentMetadata(sourceChild, newChild, targetModule, false);
             newChild.save();
             oldToNewCommentIdMap.put(sourceChild.getId(), newChild.getId());
             copyChildComments(sourceChild, newChild, targetModule, oldToNewCommentIdMap);
         }
     }
 
-    private void copyCommentMetadata(@NotNull IModuleComment source, @NotNull IModuleComment target, @NotNull IModule targetModule) {
+    private void copyCommentMetadata(@NotNull IModuleComment source, @NotNull IModuleComment target, @NotNull IModule targetModule, boolean rootComment) {
         target.setValue(ICommentBase.KEY_CREATED, source.getCreated());
         try {
             polarionService.getSecurityService().doAsSystemUser((java.security.PrivilegedAction<Void>) () -> {
@@ -230,7 +235,7 @@ public class DocumentCopyService {
             }
         }
 
-        if (source.isResolvedComment()) {
+        if (rootComment && source.isResolvedComment()) { // Only root comments can be resolved
             target.setResolvedComment(true);
         }
     }

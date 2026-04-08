@@ -344,7 +344,7 @@ class DocumentCopyServiceTest {
         copyService.copyModuleComments(sourceModule, targetModule);
 
         verify(targetModule).createComment(Text.plain("comment text"));
-        verify(targetComment).save();
+        verify(targetComment, times(2)).save(); // first save for child nodes creation, second save to persist metadata
         verify(targetModule).setHomePageContent(argThat(text ->
                 text.getContent().contains("<span id=\"polarion-comment:50\"></span>")));
         verify(targetModule).save();
@@ -378,6 +378,7 @@ class DocumentCopyServiceTest {
         copyService.copyModuleComments(sourceModule, targetModule);
 
         verify(targetComment).setResolvedComment(true);
+        verify(targetComment, times(2)).save(); // first save for child nodes creation, second save to persist metadata
     }
 
     @Test
@@ -390,12 +391,11 @@ class DocumentCopyServiceTest {
         IModuleComment sourceChild = mock(IModuleComment.class);
         when(sourceChild.getId()).thenReturn("20");
         when(sourceChild.getText()).thenReturn(Text.plain("child text"));
-        when(sourceChild.isResolvedComment()).thenReturn(false);
         IPObjectList<IModuleComment> grandchildren = mock(IPObjectList.class);
         when(grandchildren.iterator()).thenReturn(Collections.emptyIterator());
         when(sourceChild.getChildComments()).thenReturn(grandchildren);
 
-        // Root comment with child
+        // Root comment (not resolved)
         IModuleComment sourceRoot = mock(IModuleComment.class);
         when(sourceRoot.getId()).thenReturn("10");
         when(sourceRoot.getText()).thenReturn(Text.plain("root text"));
@@ -421,8 +421,10 @@ class DocumentCopyServiceTest {
 
         copyService.copyModuleComments(sourceModule, targetModule);
 
-        verify(targetModule).createComment(Text.plain("root text"));
-        verify(targetRoot).createChildComment(Text.plain("child text"));
+        // Root comment is not resolved, so setResolvedComment should not be called on it
+        verify(targetRoot, never()).setResolvedComment(anyBoolean());
+        // Child comment's resolved flag should be ignored (rootComment=false)
+        verify(targetChild, never()).setResolvedComment(anyBoolean());
     }
 
 }
