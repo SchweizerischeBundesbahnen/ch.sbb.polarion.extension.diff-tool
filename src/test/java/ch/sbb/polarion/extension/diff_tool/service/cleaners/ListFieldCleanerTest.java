@@ -43,6 +43,7 @@ class ListFieldCleanerTest {
 
         cleaner.clean(workItem, field);
 
+        verify(workItem).getFieldType("unknownListField");
         verifyNoMoreInteractions(workItem);
     }
 

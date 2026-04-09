@@ -121,7 +121,7 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                                     List<ILinkedWorkItemStruct> links, ILinkRoleOpt linkRole,
                                     IWorkItem workItemA, IWorkItem workItemB, boolean backLink) {
         for (ILinkedWorkItemStruct link : links) {
-            if (link.getLinkRole() != null && link.getLinkRole().equals(linkRole) && sameWorkItem(link, workItemA)) {
+            if (Objects.equals(link.getLinkRole(), linkRole) && sameWorkItem(link, workItemA)) {
                 resultRows.add(markChanged(renderLinkedItem(link, workItemB, backLink), NONE));
                 toRemove.add(link);
             }
@@ -132,11 +132,11 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                                       List<ILinkedWorkItemStruct> linksA, List<ILinkedWorkItemStruct> linksB,
                                       ILinkRoleOpt linkRole, IWorkItem workItemA, IWorkItem workItemB) {
         for (ILinkedWorkItemStruct linkA : linksA) {
-            if (linkA.getLinkRole() == null || !linkA.getLinkRole().equals(linkRole)) {
+            if (!Objects.equals(linkA.getLinkRole(), linkRole)) {
                 continue;
             }
             for (ILinkedWorkItemStruct linkB : linksB) {
-                if (linkB.getLinkRole().equals(linkRole) && sameWorkItem(linkA, linkB.getLinkedItem())) {
+                if (Objects.equals(linkB.getLinkRole(), linkRole) && sameWorkItem(linkA, linkB.getLinkedItem())) {
                     ModificationType modType = determineModificationType(linkA, linkB, workItemA, workItemB);
                     resultRows.add(markChanged(renderLinkedItem(linkB, workItemB, false), modType));
                     toRemove.add(linkA);
