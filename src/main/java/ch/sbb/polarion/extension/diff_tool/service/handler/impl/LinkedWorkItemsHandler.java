@@ -73,7 +73,7 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
         // rest items we mark as added/removed
         for (ILinkRoleOpt linkRole : allRoles) {
             for (ILinkedWorkItemStruct link : linksB) {
-                if (link.getLinkRole().equals(linkRole)) {
+                if (Objects.equals(link.getLinkRole(), linkRole)) {
                     resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), ADDED));
                     resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), REMOVED));
                 }
@@ -168,7 +168,7 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
 
         for (ILinkRoleOpt linkRole : allRoles) {
             for (ILinkedWorkItemStruct link : linksB) {
-                if (!link.getLinkRole().equals(linkRole) || !sameProjectItems(workItemB, link.getLinkedItem())) {
+                if (!Objects.equals(link.getLinkRole(), linkRole) || !sameProjectItems(workItemB, link.getLinkedItem())) {
                     continue;
                 }
                 List<IWorkItem> pairedWorkItems = context.getPolarionService().getPairedWorkItems(
