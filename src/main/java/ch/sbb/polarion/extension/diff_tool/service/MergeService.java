@@ -360,7 +360,9 @@ public class MergeService {
         boolean moveRequested = pair.getLeftWorkItem().getMovedOutlineNumber() != null || pair.getRightWorkItem().getMovedOutlineNumber() != null;
 
         if (!context.getTargetModule().getExternalWorkItems().contains(target)) {
-            if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
+            if (context.getTargetWorkItem(pair).getRevision() != null) {
+                context.reportEntry(PROHIBITED, pair, "don't allow merging into work item in certain (not HEAD) revision");
+            } else if (!context.getTargetWorkItem(pair).getLastRevision().equals(target.getLastRevision())) {
                 context.reportEntry(CONFLICTED, pair, "merge is not allowed: target workitem '%s' revision '%s' has been already changed to '%s'"
                         .formatted(target.getId(), context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision()));
             } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {

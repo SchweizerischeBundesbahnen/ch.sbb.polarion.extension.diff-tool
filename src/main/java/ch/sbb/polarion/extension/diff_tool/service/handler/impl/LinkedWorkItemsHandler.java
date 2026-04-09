@@ -88,6 +88,7 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                                                List<ILinkedWorkItemStruct> linksBBack) {
         return Stream.concat(Stream.concat(linksA.stream(), linksABack.stream()), Stream.concat(linksB.stream(), linksBBack.stream()))
                 .map(ILinkedWorkItemStruct::getLinkRole)
+                .filter(Objects::nonNull)
                 .filter(role -> filterRole(role, context))
                 .distinct()
                 .sorted(Comparator.comparing(IEnumOption::getName, Comparator.nullsLast(String::compareTo)))
@@ -120,7 +121,7 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                                     List<ILinkedWorkItemStruct> links, ILinkRoleOpt linkRole,
                                     IWorkItem workItemA, IWorkItem workItemB, boolean backLink) {
         for (ILinkedWorkItemStruct link : links) {
-            if (link.getLinkRole().equals(linkRole) && sameWorkItem(link, workItemA)) {
+            if (link.getLinkRole() != null && link.getLinkRole().equals(linkRole) && sameWorkItem(link, workItemA)) {
                 resultRows.add(markChanged(renderLinkedItem(link, workItemB, backLink), NONE));
                 toRemove.add(link);
             }
@@ -131,7 +132,7 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                                       List<ILinkedWorkItemStruct> linksA, List<ILinkedWorkItemStruct> linksB,
                                       ILinkRoleOpt linkRole, IWorkItem workItemA, IWorkItem workItemB) {
         for (ILinkedWorkItemStruct linkA : linksA) {
-            if (!linkA.getLinkRole().equals(linkRole)) {
+            if (linkA.getLinkRole() == null || !linkA.getLinkRole().equals(linkRole)) {
                 continue;
             }
             for (ILinkedWorkItemStruct linkB : linksB) {
