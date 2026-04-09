@@ -344,7 +344,8 @@ class DocumentCopyServiceTest {
         copyService.copyModuleComments(sourceModule, targetModule);
 
         verify(targetModule).createComment(Text.plain("comment text"));
-        verify(targetComment).save();
+        verify(targetComment, times(1)).save(); // non-resolved root is saved only once
+        verify(targetComment, never()).setResolvedComment(anyBoolean());
         verify(targetModule).setHomePageContent(argThat(text ->
                 text.getContent().contains("<span id=\"polarion-comment:50\"></span>")));
         verify(targetModule).save();
@@ -378,6 +379,7 @@ class DocumentCopyServiceTest {
         copyService.copyModuleComments(sourceModule, targetModule);
 
         verify(targetComment).setResolvedComment(true);
+        verify(targetComment, times(2)).save(); // first save during comment creation, second save to persist the resolved flag
     }
 
     @Test
@@ -390,12 +392,11 @@ class DocumentCopyServiceTest {
         IModuleComment sourceChild = mock(IModuleComment.class);
         when(sourceChild.getId()).thenReturn("20");
         when(sourceChild.getText()).thenReturn(Text.plain("child text"));
-        when(sourceChild.isResolvedComment()).thenReturn(false);
         IPObjectList<IModuleComment> grandchildren = mock(IPObjectList.class);
         when(grandchildren.iterator()).thenReturn(Collections.emptyIterator());
         when(sourceChild.getChildComments()).thenReturn(grandchildren);
 
-        // Root comment with child
+        // Root comment (not resolved)
         IModuleComment sourceRoot = mock(IModuleComment.class);
         when(sourceRoot.getId()).thenReturn("10");
         when(sourceRoot.getText()).thenReturn(Text.plain("root text"));
@@ -423,6 +424,59 @@ class DocumentCopyServiceTest {
 
         verify(targetModule).createComment(Text.plain("root text"));
         verify(targetRoot).createChildComment(Text.plain("child text"));
+        verify(targetRoot, times(1)).save(); // non-resolved root saved once
+        verify(targetChild, times(1)).save();
+        verify(targetRoot, never()).setResolvedComment(anyBoolean());
+        verify(targetChild, never()).setResolvedComment(anyBoolean());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void testCopyModuleComments_resolvedRootWithChildren() {
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+
+        // Child comment
+        IModuleComment sourceChild = mock(IModuleComment.class);
+        when(sourceChild.getId()).thenReturn("20");
+        when(sourceChild.getText()).thenReturn(Text.plain("child text"));
+        IPObjectList<IModuleComment> grandchildren = mock(IPObjectList.class);
+        when(grandchildren.iterator()).thenReturn(Collections.emptyIterator());
+        when(sourceChild.getChildComments()).thenReturn(grandchildren);
+
+        // Resolved root comment with a child
+        IModuleComment sourceRoot = mock(IModuleComment.class);
+        when(sourceRoot.getId()).thenReturn("10");
+        when(sourceRoot.getText()).thenReturn(Text.plain("root text"));
+        when(sourceRoot.isResolvedComment()).thenReturn(true);
+        IPObjectList<IModuleComment> children = mock(IPObjectList.class);
+        when(children.iterator()).thenReturn(List.of(sourceChild).iterator());
+        when(sourceRoot.getChildComments()).thenReturn(children);
+
+        IPObjectList<IModuleComment> rootComments = mock(IPObjectList.class);
+        when(rootComments.isEmpty()).thenReturn(false);
+        when(rootComments.iterator()).thenReturn(List.of(sourceRoot).iterator());
+        when(sourceModule.getRootComments(true)).thenReturn(rootComments);
+
+        IModuleComment targetRoot = mock(IModuleComment.class);
+        when(targetRoot.getId()).thenReturn("100");
+        when(targetModule.createComment(any(Text.class))).thenReturn(targetRoot);
+
+        IModuleComment targetChild = mock(IModuleComment.class);
+        when(targetChild.getId()).thenReturn("200");
+        when(targetRoot.createChildComment(any(Text.class))).thenReturn(targetChild);
+
+        when(sourceModule.getHomePageContent()).thenReturn(null);
+
+        copyService.copyModuleComments(sourceModule, targetModule);
+
+        // Resolved flag set on root after children exist
+        verify(targetRoot).setResolvedComment(true);
+        // Root saved twice: once after metadata, once after resolved flag
+        verify(targetRoot, times(2)).save();
+        // Child saved once, no resolved flag set on it (Polarion propagates from root)
+        verify(targetChild, times(1)).save();
+        verify(targetChild, never()).setResolvedComment(anyBoolean());
     }
 
 }

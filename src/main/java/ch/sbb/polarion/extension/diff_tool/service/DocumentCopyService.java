@@ -195,6 +195,12 @@ public class DocumentCopyService {
             newRootComment.save();
             oldToNewCommentIdMap.put(sourceRootComment.getId(), newRootComment.getId());
             copyChildComments(sourceRootComment, newRootComment, targetModule, oldToNewCommentIdMap);
+            if (sourceRootComment.isResolvedComment()) {
+                // The resolved flag can be set only on a root comment.
+                // Set it only after all child comments have been created, which requires an additional save.
+                newRootComment.setResolvedComment(true);
+                newRootComment.save();
+            }
         }
 
         copyCommentMarkers(sourceModule, targetModule, oldToNewCommentIdMap);
@@ -228,10 +234,6 @@ public class DocumentCopyService {
             } catch (Exception ex) {
                 log.warn("Could not assign target module author as a comment author (as a fallback): " + ex.getMessage());
             }
-        }
-
-        if (source.isResolvedComment()) {
-            target.setResolvedComment(true);
         }
     }
 
