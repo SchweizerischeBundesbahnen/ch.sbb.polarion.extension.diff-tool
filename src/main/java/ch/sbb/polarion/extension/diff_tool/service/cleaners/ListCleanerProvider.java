@@ -20,6 +20,7 @@ public final class ListCleanerProvider {
         INSTANCES.put(IWorkItem.KEY_APPROVALS, new ApprovalsCleaner());
         INSTANCES.put(IWorkItem.KEY_ASSIGNEE, new AssigneeCleaner());
         INSTANCES.put(IWorkflowObject.KEY_WORKFLOW_SIGNATURES, new WorkflowSignaturesCleaner());
+        INSTANCES.put(IWorkItem.KEY_COMMENTS, new CommentsCleaner());
         INSTANCES.put(IWorkItem.KEY_WORK_RECORDS, new WorkRecordsCleaner());
     }
 
@@ -52,6 +53,13 @@ public final class ListCleanerProvider {
                     workItem.removeAssignee(user);
                 }
             }
+        }
+    }
+
+    private static class CommentsCleaner implements ListCleaner {
+        @Override
+        public void clean(@NotNull IWorkItem workItem) {
+            workItem.getDataSvc().delete(workItem.getComments());
         }
     }
 
