@@ -1,5 +1,15 @@
 # Changelog
 
+## [8.1.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.1.0...v8.1.1) (2026-04-09)
+
+
+### Bug Fixes
+
+* **deps:** update nextjs monorepo to v16.2.2 ([cb7b6da](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/cb7b6da9b08be21d38396ef06c99ad5058830e45))
+* Fixes setting resolved flag for comments ([#434](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/434)) ([5e9aebd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/5e9aebdc1a5eb9d99d4552dc071c36b6e75dd2a5))
+* prohibit explicitly merging into revision not relying on Polarion, additional null checks and more tests ([#435](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/435)) ([3e4696e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/3e4696ebdc9b71e9ccc3c7caab60160f6cbc60da))
+* rollback code which was removed previously by mistake ([#436](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/436)) ([963e9bd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/963e9bdb6a1c1d9b48823c0ad5ac07e1527099c4))
+
 ## [8.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.0.1...v8.1.0) (2026-04-03)
 
 
