@@ -1455,6 +1455,7 @@
             "type": "string"
           },
           "copyDocumentComments": {
+            "default": false,
             "description": "Whether document comments should be copied to the target document",
             "type": "boolean"
           },
