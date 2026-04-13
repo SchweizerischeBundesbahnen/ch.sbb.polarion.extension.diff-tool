@@ -1454,6 +1454,11 @@
             "description": "The configuration name to use for the duplication, which specifies which fields of work items to copy",
             "type": "string"
           },
+          "copyDocumentComments": {
+            "default": false,
+            "description": "Whether document comments should be copied to the target document",
+            "type": "boolean"
+          },
           "handleReferences": {
             "default": "DEFAULT",
             "description": "Declares how references should be handled during copy operation",

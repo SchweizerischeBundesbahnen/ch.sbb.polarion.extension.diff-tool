@@ -113,10 +113,12 @@ public class DocumentCopyService {
             return createdModule;
         }));
 
-        TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            copyModuleComments(sourceModule, targetModule);
-            return null;
-        });
+        if (documentDuplicateParams.isCopyDocumentComments()) {
+            TransactionalExecutor.executeInWriteTransaction(transaction -> {
+                copyModuleComments(sourceModule, targetModule);
+                return null;
+            });
+        }
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
             if (linkRole != null && !sourceProjectId.equals(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())) {
