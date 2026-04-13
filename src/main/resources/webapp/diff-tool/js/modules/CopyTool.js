@@ -105,6 +105,7 @@ export default class CopyTool extends GenericMixin {
       linkRoleId: linkRole,
       configName: config,
       handleReferences: handleRefs,
+      copyDocumentComments: this.ctx.getElementById("copy-comments-checkbox").checked,
     };
     const revisionUrlPart = this.sourceRevision ? `?revision=${this.sourceRevision}` : '';
 

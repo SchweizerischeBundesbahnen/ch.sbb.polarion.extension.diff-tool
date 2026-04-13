@@ -4,6 +4,7 @@ import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,6 +21,7 @@ class DocumentDuplicateParamsTest {
                 .linkRoleId("linkRole1")
                 .configName("customConfig")
                 .handleReferences(HandleReferencesType.KEEP)
+                .copyDocumentComments(true)
                 .build();
 
         assertEquals(targetDoc, params.getTargetDocumentIdentifier());
@@ -27,6 +29,7 @@ class DocumentDuplicateParamsTest {
         assertEquals("linkRole1", params.getLinkRoleId());
         assertEquals("customConfig", params.getConfigName());
         assertEquals(HandleReferencesType.KEEP, params.getHandleReferences());
+        assertTrue(params.isCopyDocumentComments());
     }
 
     @Test
@@ -37,6 +40,7 @@ class DocumentDuplicateParamsTest {
         assertNull(params.getTargetDocumentTitle());
         assertNull(params.getLinkRoleId());
         assertNull(params.getHandleReferences());
+        assertFalse(params.isCopyDocumentComments());
     }
 
     @Test
@@ -44,13 +48,14 @@ class DocumentDuplicateParamsTest {
         BaseDocumentIdentifier targetDoc = new BaseDocumentIdentifier("project", "space", "doc");
 
         DocumentDuplicateParams params = new DocumentDuplicateParams(
-                targetDoc, "Title", "role", "config", HandleReferencesType.CREATE_MISSING);
+                targetDoc, "Title", "role", "config", HandleReferencesType.CREATE_MISSING, true);
 
         assertEquals(targetDoc, params.getTargetDocumentIdentifier());
         assertEquals("Title", params.getTargetDocumentTitle());
         assertEquals("role", params.getLinkRoleId());
         assertEquals("config", params.getConfigName());
         assertEquals(HandleReferencesType.CREATE_MISSING, params.getHandleReferences());
+        assertTrue(params.isCopyDocumentComments());
     }
 
     @Test
@@ -79,12 +84,14 @@ class DocumentDuplicateParamsTest {
         params.setLinkRoleId("newRole");
         params.setConfigName("newConfig");
         params.setHandleReferences(HandleReferencesType.ALWAYS_OVERWRITE);
+        params.setCopyDocumentComments(true);
 
         assertEquals(targetDoc, params.getTargetDocumentIdentifier());
         assertEquals("New Title", params.getTargetDocumentTitle());
         assertEquals("newRole", params.getLinkRoleId());
         assertEquals("newConfig", params.getConfigName());
         assertEquals(HandleReferencesType.ALWAYS_OVERWRITE, params.getHandleReferences());
+        assertTrue(params.isCopyDocumentComments());
     }
 
     @Test
@@ -97,6 +104,7 @@ class DocumentDuplicateParamsTest {
                 .linkRoleId("role")
                 .configName("config")
                 .handleReferences(HandleReferencesType.DEFAULT)
+                .copyDocumentComments(true)
                 .build();
 
         DocumentDuplicateParams params2 = DocumentDuplicateParams.builder()
@@ -105,6 +113,7 @@ class DocumentDuplicateParamsTest {
                 .linkRoleId("role")
                 .configName("config")
                 .handleReferences(HandleReferencesType.DEFAULT)
+                .copyDocumentComments(true)
                 .build();
 
         assertEquals(params1, params2);

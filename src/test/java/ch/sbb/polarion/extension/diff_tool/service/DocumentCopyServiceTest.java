@@ -122,7 +122,7 @@ class DocumentCopyServiceTest {
         when(projectService.getProject("srcProj")).thenReturn(sourceProject);
         when(projectService.getProject("targetProjectId")).thenReturn(targetProject);
 
-        DocumentDuplicateParams duplicateParams = new DocumentDuplicateParams(targetDocumentIdentifier, "targetTitle", "linkRoleId", "configName", HandleReferencesType.DEFAULT);
+        DocumentDuplicateParams duplicateParams = new DocumentDuplicateParams(targetDocumentIdentifier, "targetTitle", "linkRoleId", "configName", HandleReferencesType.DEFAULT, false);
 
         IModule sourceModule = mock(IModule.class, RETURNS_DEEP_STUBS);
         when(trackerService.getModuleManager().getModule(eq(sourceProject), any())).thenReturn(sourceModule);
@@ -164,6 +164,8 @@ class DocumentCopyServiceTest {
                 copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
         verify(copyService, times(0)).fixLinksInRichTextFields(any(), any(), nullable(String.class), any());
         verify(trackerService.getFolderManager(), times(1)).createFolder(nullable(String.class), nullable(String.class), nullable(String.class));
+        // copyDocumentComments is false, so comments should not be copied
+        verify(copyService, never()).copyModuleComments(any(), any());
 
         // provide link role + make it available
         duplicateParams.setLinkRoleId("linkRoleId");
@@ -174,6 +176,14 @@ class DocumentCopyServiceTest {
         assertDoesNotThrow(() ->
                 copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
         verify(copyService, times(1)).fixLinksInRichTextFields(any(), any(), nullable(String.class), any());
+        // still no comment copying since copyDocumentComments is false
+        verify(copyService, never()).copyModuleComments(any(), any());
+
+        // now enable copying comments
+        duplicateParams.setCopyDocumentComments(true);
+        assertDoesNotThrow(() ->
+                copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
+        verify(copyService, times(1)).copyModuleComments(any(), any());
     }
 
     @Test

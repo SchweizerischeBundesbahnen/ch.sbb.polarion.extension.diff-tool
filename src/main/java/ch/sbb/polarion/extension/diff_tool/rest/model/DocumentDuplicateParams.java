@@ -28,6 +28,9 @@ public class DocumentDuplicateParams {
     @Schema(description = "Declares how references should be handled during copy operation", defaultValue = "DEFAULT")
     private HandleReferencesType handleReferences;
 
+    @Schema(description = "Whether document comments should be copied to the target document")
+    private boolean copyDocumentComments;
+
     public String getConfigName() {
         return configName != null ? configName : NamedSettings.DEFAULT_NAME;
     }
