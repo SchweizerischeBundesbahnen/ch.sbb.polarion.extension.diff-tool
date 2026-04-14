@@ -1,5 +1,17 @@
 # Changelog
 
+## [8.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.1.1...v8.2.0) (2026-04-13)
+
+
+### Features
+
+* add possibility to choose if document comments should be copied or not ([#442](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/442)) ([9a142a2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9a142a27a06e0b3603350a0673ae02d78af7aaeb))
+
+
+### Bug Fixes
+
+* **deps:** update dependency next to v16.2.3 [security] ([#439](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/439)) ([fa0fbaa](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/fa0fbaa4c57b7882ce693634727bb4d2208f8eab))
+
 ## [8.1.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.1.0...v8.1.1) (2026-04-09)
 
 
