@@ -631,6 +631,11 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         return getModule(documentIdentifier.getProjectId(), documentIdentifier.getSpaceId(), documentIdentifier.getName(), documentIdentifier.getRevision());
     }
 
+    public boolean userIsGlobalAdmin() {
+        String currentUser = securityService.getCurrentUser();
+        return securityService.getRolesForUser(currentUser).contains("admin");
+    }
+
     public boolean userAuthorizedForMerge(@NotNull String projectId) {
         AuthorizationModel projectCustomFieldsSettingsModel = (AuthorizationModel)
                 NamedSettingsRegistry.INSTANCE.getByFeatureName(AuthorizationSettings.FEATURE_NAME).read(
