@@ -1,5 +1,6 @@
 <%@ page import="ch.sbb.polarion.extension.generic.rest.model.Version" %>
 <%@ page import="ch.sbb.polarion.extension.generic.util.ExtensionInfo" %>
+<%@ page import="com.polarion.core.util.EscapeChars" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
@@ -157,7 +158,7 @@
         <div class="status-message" id="status-message" style="display:none"></div>
     </div>
 
-    <input id="scope" type="hidden" value="<%= request.getParameter("scope")%>"/>
+    <input id="scope" type="hidden" value="<%= EscapeChars.forHTMLAttribute(request.getParameter("scope")) %>"/>
     <input id="bundle-timestamp" type="hidden" value="<%= ch.sbb.polarion.extension.generic.util.VersionUtils.getVersion().getBundleBuildTimestamp() %>"/>
 </div>
 

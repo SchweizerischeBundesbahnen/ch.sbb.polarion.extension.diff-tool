@@ -51,6 +51,7 @@ import com.polarion.alm.ui.shared.FieldRenderType;
 import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.platform.IPlatformService;
+import com.polarion.platform.security.AdministrationPermission;
 import com.polarion.platform.persistence.ICustomFieldsService;
 import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.IPObjectList;
@@ -631,9 +632,8 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         return getModule(documentIdentifier.getProjectId(), documentIdentifier.getSpaceId(), documentIdentifier.getName(), documentIdentifier.getRevision());
     }
 
-    public boolean userIsGlobalAdmin() {
-        String currentUser = securityService.getCurrentUser();
-        return securityService.getRolesForUser(currentUser).contains("admin");
+    public boolean hasSufficientPermissions() {
+        return securityService.hasPermission(AdministrationPermission.forAction(AdministrationPermission.ACTION_PROJECT_CREATE), null);
     }
 
     public boolean userAuthorizedForMerge(@NotNull String projectId) {

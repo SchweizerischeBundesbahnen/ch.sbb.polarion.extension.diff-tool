@@ -79,15 +79,15 @@ public class ProjectDuplicationInternalController {
                             )
                     ),
                     @ApiResponse(responseCode = "400", description = "Validation error"),
-                    @ApiResponse(responseCode = "403", description = "Caller is not a global Polarion administrator")
+                    @ApiResponse(responseCode = "403", description = "Not authorized")
             }
     )
     public DuplicationJobInfo duplicateProject(DuplicationRequest request) {
         if (request == null) {
             throw new BadRequestException("Request body is required");
         }
-        if (!polarionService.userIsGlobalAdmin()) {
-            throw new ForbiddenException("Project duplication is restricted to global administrators");
+        if (!polarionService.hasSufficientPermissions()) {
+            throw new ForbiddenException("Project duplication is now allowed");
         }
         try {
             return scheduler.schedule(request);
@@ -109,12 +109,12 @@ public class ProjectDuplicationInternalController {
                                     schema = @Schema(implementation = DuplicationJobInfo.class)
                             )
                     ),
-                    @ApiResponse(responseCode = "403", description = "Caller is not a global Polarion administrator")
+                    @ApiResponse(responseCode = "403", description = "Not authorized")
             }
     )
     public List<DuplicationJobInfo> listDuplicationJobs() {
-        if (!polarionService.userIsGlobalAdmin()) {
-            throw new ForbiddenException("Project duplication is restricted to global administrators");
+        if (!polarionService.hasSufficientPermissions()) {
+            throw new ForbiddenException("Project duplication is now allowed");
         }
         return scheduler.listJobs();
     }

@@ -63,7 +63,7 @@ class ProjectDuplicationInternalControllerTest {
 
     @Test
     void duplicateProjectForbiddenForNonAdmin() {
-        when(polarionService.userIsGlobalAdmin()).thenReturn(false);
+        when(polarionService.hasSufficientPermissions()).thenReturn(false);
 
         assertThrows(ForbiddenException.class, () -> controller.duplicateProject(sampleRequest()));
         verify(scheduler, never()).schedule(any());
@@ -71,7 +71,7 @@ class ProjectDuplicationInternalControllerTest {
 
     @Test
     void duplicateProjectSchedulesWhenAdmin() {
-        when(polarionService.userIsGlobalAdmin()).thenReturn(true);
+        when(polarionService.hasSufficientPermissions()).thenReturn(true);
         DuplicationJobInfo info = DuplicationJobInfo.builder().jobId("J-1").jobName("test").monitorUrl("/polarion/#/jobs?jobId=J-1").build();
         when(scheduler.schedule(any())).thenReturn(info);
 
@@ -83,7 +83,7 @@ class ProjectDuplicationInternalControllerTest {
 
     @Test
     void duplicateProjectMapsValidationErrorsTo400() {
-        when(polarionService.userIsGlobalAdmin()).thenReturn(true);
+        when(polarionService.hasSufficientPermissions()).thenReturn(true);
         when(scheduler.schedule(any())).thenThrow(new IllegalArgumentException("invalid"));
 
         assertThrows(BadRequestException.class, () -> controller.duplicateProject(sampleRequest()));
