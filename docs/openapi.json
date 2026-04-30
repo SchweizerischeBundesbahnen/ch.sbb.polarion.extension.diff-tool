@@ -588,7 +588,7 @@
             "description": "Validation error"
           },
           "403": {
-            "description": "Caller is not a global Polarion administrator"
+            "description": "Not authorized"
           }
         },
         "summary": "Schedules an asynchronous job that duplicates a project via template export/import",
@@ -612,7 +612,7 @@
             "description": "List of jobs"
           },
           "403": {
-            "description": "Caller is not a global Polarion administrator"
+            "description": "Not authorized"
           }
         },
         "summary": "Lists all project duplication jobs created by this extension, newest first",

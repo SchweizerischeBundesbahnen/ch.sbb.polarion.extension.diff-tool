@@ -87,7 +87,7 @@ public class ProjectDuplicationInternalController {
             throw new BadRequestException("Request body is required");
         }
         if (!polarionService.hasSufficientPermissions()) {
-            throw new ForbiddenException("Project duplication is now allowed");
+            throw new ForbiddenException("Project duplication is not allowed");
         }
         try {
             return scheduler.schedule(request);
@@ -114,7 +114,7 @@ public class ProjectDuplicationInternalController {
     )
     public List<DuplicationJobInfo> listDuplicationJobs() {
         if (!polarionService.hasSufficientPermissions()) {
-            throw new ForbiddenException("Project duplication is now allowed");
+            throw new ForbiddenException("Project duplication is not allowed");
         }
         return scheduler.listJobs();
     }

@@ -139,7 +139,8 @@ class ProjectDuplicationServiceTest {
         mockSourceMissing();
         mockTarget(false);
 
-        assertThrows(IllegalArgumentException.class, () -> service.duplicate(validRequest()));
+        DuplicationRequest request = validRequest();
+        assertThrows(IllegalArgumentException.class, () -> service.duplicate(request));
         verify(connection, never()).copy(any(ILocation.class), any(ILocation.class), any(Boolean.class));
     }
 
@@ -148,7 +149,8 @@ class ProjectDuplicationServiceTest {
         mockSource("SRC");
         mockTarget(true);
 
-        assertThrows(IllegalArgumentException.class, () -> service.duplicate(validRequest()));
+        DuplicationRequest request = validRequest();
+        assertThrows(IllegalArgumentException.class, () -> service.duplicate(request));
         verify(connection, never()).copy(any(ILocation.class), any(ILocation.class), any(Boolean.class));
     }
 
@@ -157,7 +159,8 @@ class ProjectDuplicationServiceTest {
         mockSource("");
         mockTarget(false);
 
-        assertThrows(IllegalStateException.class, () -> service.duplicate(validRequest()));
+        DuplicationRequest request = validRequest();
+        assertThrows(IllegalStateException.class, () -> service.duplicate(request));
         verify(connection, never()).copy(any(ILocation.class), any(ILocation.class), any(Boolean.class));
     }
 
@@ -168,7 +171,8 @@ class ProjectDuplicationServiceTest {
         doThrow(new RuntimeException("boom")).when(lifecycleManager)
                 .createProject(any(ILocation.class), anyString(), anyString(), anyMap());
 
-        assertThrows(RuntimeException.class, () -> service.duplicate(validRequest()));
+        DuplicationRequest request = validRequest();
+        assertThrows(RuntimeException.class, () -> service.duplicate(request));
 
         verify(connection, times(1)).copy(any(ILocation.class), any(ILocation.class), eq(false));
         verify(connection, times(1)).delete(any(ILocation.class));

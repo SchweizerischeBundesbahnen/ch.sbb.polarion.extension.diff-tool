@@ -36,7 +36,9 @@ public class ProjectDuplicationService {
 
     private static final Logger logger = Logger.getLogger(ProjectDuplicationService.class);
 
-    // Polarion internal constants from com.polarion.alm.projects.internal.ProjectLifecycleManager
+    // Polarion internal constants from com.polarion.alm.projects.internal.ProjectLifecycleManager.
+    // The path is fixed by Polarion's repository layout, not configurable.
+    @SuppressWarnings("java:S1075") // hardcoded URI is part of Polarion's contract
     static final String TEMPLATES_ROOT_PATH = "/.polarion/projects/templates/";
     static final String TEMPLATE_PROP_FILE = "template.properties";
     static final String TEMPLATE_LOCATION_REPO = "repo";

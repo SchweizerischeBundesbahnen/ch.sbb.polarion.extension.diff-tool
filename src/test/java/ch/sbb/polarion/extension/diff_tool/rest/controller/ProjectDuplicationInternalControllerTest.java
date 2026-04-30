@@ -64,8 +64,9 @@ class ProjectDuplicationInternalControllerTest {
     @Test
     void duplicateProjectForbiddenForNonAdmin() {
         when(polarionService.hasSufficientPermissions()).thenReturn(false);
+        DuplicationRequest request = sampleRequest();
 
-        assertThrows(ForbiddenException.class, () -> controller.duplicateProject(sampleRequest()));
+        assertThrows(ForbiddenException.class, () -> controller.duplicateProject(request));
         verify(scheduler, never()).schedule(any());
     }
 
@@ -85,7 +86,8 @@ class ProjectDuplicationInternalControllerTest {
     void duplicateProjectMapsValidationErrorsTo400() {
         when(polarionService.hasSufficientPermissions()).thenReturn(true);
         when(scheduler.schedule(any())).thenThrow(new IllegalArgumentException("invalid"));
+        DuplicationRequest request = sampleRequest();
 
-        assertThrows(BadRequestException.class, () -> controller.duplicateProject(sampleRequest()));
+        assertThrows(BadRequestException.class, () -> controller.duplicateProject(request));
     }
 }
