@@ -79,7 +79,6 @@ public class ProjectDuplicationJobScheduler {
                 .finishTime(job.getFinishTime())
                 .completeness(job.getCompletness())
                 .currentTaskName(job.getCurrentTaskName())
-                .monitorUrl("/polarion/#/jobs?jobId=" + job.getId())
                 .logUrl("/polarion/job-report?jobId=" + job.getId())
                 .build();
     }

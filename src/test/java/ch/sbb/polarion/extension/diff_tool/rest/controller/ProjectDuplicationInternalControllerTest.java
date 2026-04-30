@@ -73,7 +73,7 @@ class ProjectDuplicationInternalControllerTest {
     @Test
     void duplicateProjectSchedulesWhenAdmin() {
         when(polarionService.hasSufficientPermissions()).thenReturn(true);
-        DuplicationJobInfo info = DuplicationJobInfo.builder().jobId("J-1").jobName("test").monitorUrl("/polarion/#/jobs?jobId=J-1").build();
+        DuplicationJobInfo info = DuplicationJobInfo.builder().jobId("J-1").jobName("test").logUrl("/polarion/job-report?jobId=J-1").build();
         when(scheduler.schedule(any())).thenReturn(info);
 
         DuplicationJobInfo result = controller.duplicateProject(sampleRequest());

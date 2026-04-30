@@ -86,7 +86,6 @@ class ProjectDuplicationJobSchedulerTest {
         assertEquals("J-1", info.getJobId());
         assertEquals("RUNNING", info.getState());
         assertEquals("OK", info.getStatusType());
-        assertEquals("/polarion/#/jobs?jobId=J-1", info.getMonitorUrl());
         assertEquals("/polarion/job-report?jobId=J-1", info.getLogUrl());
         assertEquals(0.5f, info.getCompleteness());
     }

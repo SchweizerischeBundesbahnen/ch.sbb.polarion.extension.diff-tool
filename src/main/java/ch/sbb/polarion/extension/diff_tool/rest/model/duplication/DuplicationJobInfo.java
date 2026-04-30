@@ -42,9 +42,6 @@ public class DuplicationJobInfo {
     @Schema(description = "Name of the current task within the job")
     private String currentTaskName;
 
-    @Schema(description = "Relative URL of the Polarion job monitor page filtered to this job")
-    private String monitorUrl;
-
-    @Schema(description = "Relative URL of the Polarion job log/report")
+    @Schema(description = "Relative URL of the Polarion job log/report page")
     private String logUrl;
 }

@@ -1975,11 +1975,7 @@
             "type": "string"
           },
           "logUrl": {
-            "description": "Relative URL of the Polarion job log/report",
-            "type": "string"
-          },
-          "monitorUrl": {
-            "description": "Relative URL of the Polarion job monitor page filtered to this job",
+            "description": "Relative URL of the Polarion job log/report page",
             "type": "string"
           },
           "startTime": {
