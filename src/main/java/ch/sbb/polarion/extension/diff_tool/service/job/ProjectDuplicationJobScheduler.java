@@ -20,20 +20,24 @@ public class ProjectDuplicationJobScheduler {
 
     private final IJobService jobService;
     private final ProjectDuplicationService duplicationService;
+    private final IJobUnitFactory jobUnitFactory;
 
     public ProjectDuplicationJobScheduler() {
-        this(PlatformContext.getPlatform().lookupService(IJobService.class), new ProjectDuplicationService());
+        this(PlatformContext.getPlatform().lookupService(IJobService.class),
+                new ProjectDuplicationService(),
+                new ProjectDuplicationJobUnitFactory());
     }
 
     public ProjectDuplicationJobScheduler(@NotNull IJobService jobService,
-                                          @NotNull ProjectDuplicationService duplicationService) {
+                                          @NotNull ProjectDuplicationService duplicationService,
+                                          @NotNull IJobUnitFactory jobUnitFactory) {
         this.jobService = jobService;
         this.duplicationService = duplicationService;
+        this.jobUnitFactory = jobUnitFactory;
     }
 
     public @NotNull DuplicationJobInfo schedule(@NotNull DuplicationRequest request) {
-        ProjectDuplicationJobUnit jobUnit = new ProjectDuplicationJobUnit(
-                request, duplicationService, ProjectDuplicationJobUnitFactory.getInstance());
+        ProjectDuplicationJobUnit jobUnit = new ProjectDuplicationJobUnit(request, duplicationService, jobUnitFactory);
         IJob job;
         try {
             job = jobService.getJobManager().spawnJob(jobUnit, null);

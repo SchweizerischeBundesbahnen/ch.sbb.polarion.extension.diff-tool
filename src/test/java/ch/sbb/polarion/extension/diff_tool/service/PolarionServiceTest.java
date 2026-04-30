@@ -40,6 +40,7 @@ import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.platform.persistence.model.IPrototype;
 import com.polarion.platform.persistence.spi.PObjectList;
+import com.polarion.platform.security.AdministrationPermission;
 import com.polarion.platform.security.ISecurityService;
 import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.data.model.ICustomField;
@@ -71,6 +72,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -1063,5 +1065,14 @@ class PolarionServiceTest {
         lenient().when(role.getId()).thenReturn(linkedRoleId);
         lenient().when(link.getLinkRole()).thenReturn(role);
         return link;
+    }
+
+    @Test
+    void hasSufficientPermissionsDelegatesToSecurityServiceProjectCreatePermission() {
+        when(securityService.hasPermission(any(AdministrationPermission.class), eq(null))).thenReturn(true);
+        assertTrue(polarionService.hasSufficientPermissions());
+
+        when(securityService.hasPermission(any(AdministrationPermission.class), eq(null))).thenReturn(false);
+        assertFalse(polarionService.hasSufficientPermissions());
     }
 }
