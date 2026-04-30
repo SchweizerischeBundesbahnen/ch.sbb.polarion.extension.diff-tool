@@ -11,6 +11,8 @@ import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.ILogger;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.platform.core.PlatformContext;
+import com.polarion.platform.jobs.IProgressMonitor;
+import com.polarion.platform.jobs.spi.NullProgressMonitor;
 import com.polarion.platform.service.repository.IRepositoryConnection;
 import com.polarion.platform.service.repository.IRepositoryService;
 import com.polarion.subterra.base.location.ILocation;
@@ -25,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 
 /**
  * Duplicates a Polarion project by SVN-copying it into the repo-based template area, then
@@ -51,6 +54,15 @@ public class ProjectDuplicationService {
 
     static final String EPHEMERAL_TEMPLATE_PREFIX = "_diff_tool_dup_";
 
+    // Progress weights — sum is TOTAL_WORK_UNITS. Values are estimates based on observed durations
+    // (SVN copy is server-side O(1), createProject is the heavy applyTemplate phase).
+    public static final int TOTAL_WORK_UNITS = 100;
+    static final int WORK_VALIDATE = 1;
+    static final int WORK_COPY_TO_TEMPLATE = 30;
+    static final int WORK_WRITE_TEMPLATE_PROPERTIES = 1;
+    static final int WORK_CREATE_PROJECT = 65;
+    static final int WORK_CLEANUP = 3;
+
     private final IProjectService projectService;
     private final ITrackerService trackerService;
     private final IRepositoryService repositoryService;
@@ -70,21 +82,36 @@ public class ProjectDuplicationService {
     }
 
     public void duplicate(@NotNull DuplicationRequest request) {
-        duplicate(request, null);
+        duplicate(request, null, null);
+    }
+
+    public void duplicate(@NotNull DuplicationRequest request, @Nullable ILogger progressLog) {
+        duplicate(request, progressLog, null);
     }
 
     /**
      * @param progressLog optional logger that receives one info message per phase. If supplied,
-     *                    these messages also appear in the Polarion job log/report. Pass {@code null}
-     *                    when calling outside of a job context.
+     *                    these messages also appear in the Polarion job log/report.
+     * @param progressMonitor optional progress monitor whose {@code subTask} label and
+     *                    {@code worked} counter are updated per phase. Pass {@code null} to
+     *                    skip progress reporting (e.g. when calling outside a job context).
+     *                    Cancellation is checked between phases — once a phase has started
+     *                    its SVN transaction it cannot be aborted.
      */
-    public void duplicate(@NotNull DuplicationRequest request, @Nullable ILogger progressLog) {
+    public void duplicate(@NotNull DuplicationRequest request,
+                          @Nullable ILogger progressLog,
+                          @Nullable IProgressMonitor progressMonitor) {
+        IProgressMonitor monitor = progressMonitor != null ? progressMonitor : new NullProgressMonitor();
         long t0 = System.currentTimeMillis();
-        phase(progressLog, "[1/5] Validating request and resolving source project '" + request.getSourceProjectId() + "'");
+
+        step(monitor, progressLog, "Validating request",
+                "[1/5] Validating request and resolving source project '" + request.getSourceProjectId() + "'");
         Context ctx = validate(request);
-        phase(progressLog, "      Source location: " + ctx.sourceLocation
+        progressLog(progressLog, "      Source location: " + ctx.sourceLocation
                 + " ; source tracker prefix: '" + ctx.sourcePrefixWithoutDash + "-'"
                 + " ; new tracker prefix: '" + ctx.newPrefixWithoutDash + "-'");
+        monitor.worked(WORK_VALIDATE);
+        checkCanceled(monitor);
 
         String templateId = EPHEMERAL_TEMPLATE_PREFIX + UUID.randomUUID().toString().replace("-", "");
         ILocation templateLocation = Location.getLocationWithRepository(IRepositoryService.DEFAULT, TEMPLATES_ROOT_PATH + templateId);
@@ -92,27 +119,34 @@ public class ProjectDuplicationService {
 
         boolean[] templateCreated = {false};
         try {
-            phase(progressLog, "[2/5] SVN-copying source project to ephemeral template " + templateLocation.getLocationPath());
+            step(monitor, progressLog, "SVN-copying source project to ephemeral template",
+                    "[2/5] SVN-copying source project to ephemeral template " + templateLocation.getLocationPath());
             long t1 = System.currentTimeMillis();
             TransactionalExecutor.executeInWriteTransaction(transaction -> {
                 repositoryService.getConnection(templateLocation).copy(ctx.sourceLocation, templateLocation, false);
                 return null;
             });
             templateCreated[0] = true;
-            phase(progressLog, "      Template copy committed in " + secs(t1) + " s");
+            progressLog(progressLog, "      Template copy committed in " + secs(t1) + " s");
+            monitor.worked(WORK_COPY_TO_TEMPLATE);
+            checkCanceled(monitor);
 
-            phase(progressLog, "[3/5] Writing template metadata (template.properties)");
+            step(monitor, progressLog, "Writing template metadata",
+                    "[3/5] Writing template metadata (template.properties)");
             TransactionalExecutor.executeInWriteTransaction(transaction -> {
                 writeTemplateProperties(repositoryService.getConnection(templateLocation), templateLocation, templateId, ctx);
                 return null;
             });
+            monitor.worked(WORK_WRITE_TEMPLATE_PROPERTIES);
+            checkCanceled(monitor);
 
             Map<String, String> params = new HashMap<>();
             params.put(PARAM_TRACKER_PREFIX, ctx.newPrefixWithoutDash);
             params.put(PARAM_TEMPLATE_TRACKER_PREFIX_REPLACE, ctx.sourcePrefixWithoutDash);
             params.put(PARAM_PROJECT_NAME, request.getTargetProjectId());
 
-            phase(progressLog, "[4/5] Creating project '" + request.getTargetProjectId() + "' at "
+            step(monitor, progressLog, "Creating new project from template (renaming work items, updating links)",
+                    "[4/5] Creating project '" + request.getTargetProjectId() + "' at "
                     + request.getLocation() + " from template (renames work item IDs '"
                     + ctx.sourcePrefixWithoutDash + "-*' -> '" + ctx.newPrefixWithoutDash + "-*' and updates references)"
                     + " - this is the longest phase and may take several minutes for large projects");
@@ -121,18 +155,22 @@ public class ProjectDuplicationService {
                 projectService.getLifecycleManager().createProject(targetLocation, request.getTargetProjectId(), templateId, params);
                 return null;
             });
-            phase(progressLog, "      Project created in " + secs(t4) + " s");
+            progressLog(progressLog, "      Project created in " + secs(t4) + " s");
+            monitor.worked(WORK_CREATE_PROJECT);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
             throw new IllegalStateException("Project duplication failed: " + e.getMessage(), e);
         } finally {
             if (templateCreated[0]) {
-                phase(progressLog, "[5/5] Removing ephemeral template " + templateLocation.getLocationPath());
+                // Always clean up, even if cancelled — we don't want orphan templates.
+                step(monitor, progressLog, "Removing ephemeral template",
+                        "[5/5] Removing ephemeral template " + templateLocation.getLocationPath());
                 deleteTemplateQuietly(templateLocation, templateId, progressLog);
+                monitor.worked(WORK_CLEANUP);
             }
         }
-        phase(progressLog, "Done in " + secs(t0) + " s. Open the new project: " + projectUrl(request.getTargetProjectId()));
+        progressLog(progressLog, "Done in " + secs(t0) + " s. Open the new project: " + projectUrl(request.getTargetProjectId()));
     }
 
     public static @NotNull String projectUrl(@NotNull String projectId) {
@@ -226,10 +264,29 @@ public class ProjectDuplicationService {
         }
     }
 
-    private static void phase(@Nullable ILogger progressLog, @NotNull String message) {
+    /**
+     * Marks the start of a phase: short {@code subTaskLabel} goes to the progress monitor (visible
+     * in Polarion job-monitor UI), the longer {@code logMessage} goes to both the class logger and
+     * the optional job logger.
+     */
+    private static void step(@NotNull IProgressMonitor monitor,
+                             @Nullable ILogger progressLog,
+                             @NotNull String subTaskLabel,
+                             @NotNull String logMessage) {
+        monitor.subTask(subTaskLabel);
+        progressLog(progressLog, logMessage);
+    }
+
+    private static void progressLog(@Nullable ILogger progressLog, @NotNull String message) {
         logger.info(message);
         if (progressLog != null) {
             progressLog.info(message);
+        }
+    }
+
+    private static void checkCanceled(@NotNull IProgressMonitor monitor) {
+        if (monitor.isCanceled()) {
+            throw new CancellationException("Project duplication cancelled by user");
         }
     }
 

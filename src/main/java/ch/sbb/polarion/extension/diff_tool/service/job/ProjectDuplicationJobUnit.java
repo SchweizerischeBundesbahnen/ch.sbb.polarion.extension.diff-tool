@@ -8,6 +8,8 @@ import com.polarion.platform.jobs.IProgressMonitor;
 import com.polarion.platform.jobs.spi.AbstractJobUnit;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.CancellationException;
+
 public class ProjectDuplicationJobUnit extends AbstractJobUnit {
 
     private final DuplicationRequest request;
@@ -26,12 +28,19 @@ public class ProjectDuplicationJobUnit extends AbstractJobUnit {
     }
 
     @Override
+    public int getWorkLength() {
+        return ProjectDuplicationService.TOTAL_WORK_UNITS;
+    }
+
+    @Override
     protected IJobStatus runInternal(IProgressMonitor monitor) {
         try {
-            monitor.beginTask(getName(), IProgressMonitor.UNKNOWN);
-            duplicationService.duplicate(request, getLogger());
+            duplicationService.duplicate(request, getLogger(), monitor);
             return getStatusOK("Project '" + request.getTargetProjectId() + "' has been created. Open: "
                     + ProjectDuplicationService.projectUrl(request.getTargetProjectId()));
+        } catch (CancellationException e) {
+            getLogger().info("Project duplication cancelled");
+            return getStatusCancelled("Project duplication cancelled by user");
         } catch (Exception e) {
             getLogger().error("Project duplication failed", e);
             return getStatusFailed("Project duplication failed: " + e.getMessage(), e);

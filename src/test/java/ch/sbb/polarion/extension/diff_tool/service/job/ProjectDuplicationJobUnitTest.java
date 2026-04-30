@@ -41,6 +41,11 @@ class ProjectDuplicationJobUnitTest {
     }
 
     @Test
+    void getWorkLengthReturnsTotalWorkUnits() {
+        assertEquals(ProjectDuplicationService.TOTAL_WORK_UNITS, jobUnit.getWorkLength());
+    }
+
+    @Test
     void runInternalReturnsOkAndCallsServiceOnSuccess() {
         IJobStatus status = jobUnit.run(monitor);
 
@@ -48,20 +53,30 @@ class ProjectDuplicationJobUnitTest {
         assertEquals(IJobStatus.JobStatusType.STATUS_TYPE_OK, status.getType());
         assertTrue(status.getMessage().contains("dst"));
         assertTrue(status.getMessage().contains("/project/dst"));
-        verify(duplicationService).duplicate(any(DuplicationRequest.class), any(ILogger.class));
-        verify(monitor).beginTask(jobUnit.getName(), IProgressMonitor.UNKNOWN);
+        verify(duplicationService).duplicate(any(DuplicationRequest.class), any(ILogger.class), any(IProgressMonitor.class));
         verify(monitor).done();
     }
 
     @Test
     void runInternalReturnsFailedStatusOnException() {
         doThrow(new IllegalStateException("boom"))
-                .when(duplicationService).duplicate(any(DuplicationRequest.class), any(ILogger.class));
+                .when(duplicationService).duplicate(any(DuplicationRequest.class), any(ILogger.class), any(IProgressMonitor.class));
 
         IJobStatus status = jobUnit.run(monitor);
 
         assertEquals(IJobStatus.JobStatusType.STATUS_TYPE_FAILED, status.getType());
         assertTrue(status.getMessage().contains("boom"));
+        verify(monitor).done();
+    }
+
+    @Test
+    void runInternalReturnsCancelledStatusWhenServiceThrowsCancellationException() {
+        doThrow(new java.util.concurrent.CancellationException("by user"))
+                .when(duplicationService).duplicate(any(DuplicationRequest.class), any(ILogger.class), any(IProgressMonitor.class));
+
+        IJobStatus status = jobUnit.run(monitor);
+
+        assertEquals(IJobStatus.JobStatusType.STATUS_TYPE_CANCELLED, status.getType());
         verify(monitor).done();
     }
 }
