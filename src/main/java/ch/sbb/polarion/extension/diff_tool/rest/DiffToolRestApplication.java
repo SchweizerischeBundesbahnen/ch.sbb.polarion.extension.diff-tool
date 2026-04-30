@@ -8,6 +8,8 @@ import ch.sbb.polarion.extension.diff_tool.rest.controller.MergeApiController;
 import ch.sbb.polarion.extension.diff_tool.rest.controller.MergeInternalController;
 import ch.sbb.polarion.extension.diff_tool.rest.controller.ExecutionQueueQueueManagementApiController;
 import ch.sbb.polarion.extension.diff_tool.rest.controller.ExecutionQueueManagementInternalController;
+import ch.sbb.polarion.extension.diff_tool.rest.controller.ProjectDuplicationApiController;
+import ch.sbb.polarion.extension.diff_tool.rest.controller.ProjectDuplicationInternalController;
 import ch.sbb.polarion.extension.diff_tool.rest.controller.UtilityApiController;
 import ch.sbb.polarion.extension.diff_tool.rest.controller.UtilityInternalController;
 import ch.sbb.polarion.extension.diff_tool.rest.exception.QueueFullExceptionMapper;
@@ -70,7 +72,9 @@ public class DiffToolRestApplication extends GenericRestApplication {
                 UtilityInternalController.class,
                 UtilityApiController.class,
                 ExecutionQueueManagementInternalController.class,
-                ExecutionQueueQueueManagementApiController.class
+                ExecutionQueueQueueManagementApiController.class,
+                ProjectDuplicationInternalController.class,
+                ProjectDuplicationApiController.class
         );
     }
 

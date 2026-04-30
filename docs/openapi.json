@@ -540,6 +540,87 @@
         ]
       }
     },
+    "/api/projects": {
+      "get": {
+        "operationId": "listProjects",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectInfo"
+                }
+              }
+            },
+            "description": "List of projects"
+          }
+        },
+        "summary": "Lists all projects readable by the current user (used to populate the source-project dropdown)",
+        "tags": [
+          "Project Duplication"
+        ]
+      }
+    },
+    "/api/projects/duplicate": {
+      "post": {
+        "operationId": "duplicateProject",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DuplicationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicationJobInfo"
+                }
+              }
+            },
+            "description": "Job scheduled; response carries the Polarion job id and a URL to the job monitor"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        },
+        "summary": "Schedules an asynchronous job that duplicates a project via template export/import",
+        "tags": [
+          "Project Duplication"
+        ]
+      }
+    },
+    "/api/projects/duplicate/jobs": {
+      "get": {
+        "operationId": "listDuplicationJobs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicationJobInfo"
+                }
+              }
+            },
+            "description": "List of jobs"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        },
+        "summary": "Lists all project duplication jobs created by this extension, newest first",
+        "tags": [
+          "Project Duplication"
+        ]
+      }
+    },
     "/api/projects/{projectId}/hyperlink-roles": {
       "get": {
         "operationId": "getAllHyperlinkRoles",
@@ -1863,6 +1944,88 @@
         },
         "type": "object"
       },
+      "DuplicationJobInfo": {
+        "description": "Information about a project duplication job",
+        "properties": {
+          "completeness": {
+            "description": "Progress (0.0 to 1.0)",
+            "format": "float",
+            "type": "number"
+          },
+          "creationTime": {
+            "description": "Creation time (epoch milliseconds)",
+            "format": "int64",
+            "type": "integer"
+          },
+          "currentTaskName": {
+            "description": "Name of the current task within the job",
+            "type": "string"
+          },
+          "finishTime": {
+            "description": "Finish time (epoch milliseconds, 0 if still running)",
+            "format": "int64",
+            "type": "integer"
+          },
+          "jobId": {
+            "description": "Polarion job id",
+            "type": "string"
+          },
+          "jobName": {
+            "description": "Human-readable job name",
+            "type": "string"
+          },
+          "logUrl": {
+            "description": "Relative URL of the Polarion job log/report page",
+            "type": "string"
+          },
+          "startTime": {
+            "description": "Start time (epoch milliseconds, 0 if not started)",
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "description": "Job state: UNSCHEDULED, ACTIVATING, WAITING, RUNNING, FINISHED, CANCELED",
+            "type": "string"
+          },
+          "statusMessage": {
+            "description": "Status message (failure cause or success summary)",
+            "type": "string"
+          },
+          "statusType": {
+            "description": "Final job status type: OK, FAILED, CANCELED. Null while still running.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "DuplicationRequest": {
+        "description": "Parameters to duplicate a Polarion project via template export/import",
+        "properties": {
+          "location": {
+            "description": "Repository location path for the new project (e.g. /MyProjects/copy-of-foo)",
+            "type": "string"
+          },
+          "sourceProjectId": {
+            "description": "ID of the existing project to duplicate",
+            "type": "string"
+          },
+          "targetProjectId": {
+            "description": "ID for the new project being created",
+            "type": "string"
+          },
+          "trackerPrefix": {
+            "description": "Tracker prefix for work items in the new project (e.g. ABC- ; the trailing dash is added automatically if missing)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "sourceProjectId",
+          "targetProjectId",
+          "trackerPrefix"
+        ],
+        "type": "object"
+      },
       "ExtensionInfo": {
         "properties": {
           "context": {
@@ -2152,6 +2315,20 @@
           },
           "name": {
             "description": "The project name",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectInfo": {
+        "description": "Lightweight view of a Polarion project for selection lists",
+        "properties": {
+          "id": {
+            "description": "Project id",
+            "type": "string"
+          },
+          "name": {
+            "description": "Project display name",
             "type": "string"
           }
         },
