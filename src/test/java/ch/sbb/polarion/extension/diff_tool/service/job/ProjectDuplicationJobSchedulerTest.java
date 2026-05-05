@@ -27,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -159,7 +160,7 @@ class ProjectDuplicationJobSchedulerTest {
         lenient().when(platform.lookupService(IPlatformService.class)).thenReturn(mock(IPlatformService.class));
         when(PlatformContext.getPlatform()).thenReturn(platform);
 
-        new ProjectDuplicationJobScheduler();
+        assertNotNull(new ProjectDuplicationJobScheduler());
     }
 
     @Test

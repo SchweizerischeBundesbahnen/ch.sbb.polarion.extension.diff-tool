@@ -23,6 +23,7 @@ import javax.ws.rs.ForbiddenException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -61,7 +62,7 @@ class ProjectDuplicationInternalControllerTest {
         when(platform.lookupService(IJobService.class)).thenReturn(mock(IJobService.class));
         try (MockedStatic<PlatformContext> mocked = mockStatic(PlatformContext.class)) {
             mocked.when(PlatformContext::getPlatform).thenReturn(platform);
-            new ProjectDuplicationInternalController();
+            assertNotNull(new ProjectDuplicationInternalController());
         }
     }
 

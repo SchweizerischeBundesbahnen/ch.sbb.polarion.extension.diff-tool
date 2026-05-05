@@ -68,7 +68,7 @@ class ProjectDuplicationApiControllerTest {
     }
 
     @Test
-    void listProjectsDelegatesViaCallPrivileged() throws Exception {
+    void listProjectsDelegatesViaCallPrivileged() {
         when(polarionService.getProjects()).thenReturn(List.of());
 
         controller.listProjects();
@@ -78,7 +78,7 @@ class ProjectDuplicationApiControllerTest {
     }
 
     @Test
-    void duplicateProjectDelegatesViaCallPrivileged() throws Exception {
+    void duplicateProjectDelegatesViaCallPrivileged() {
         when(polarionService.hasSufficientPermissions()).thenReturn(true);
         DuplicationJobInfo info = DuplicationJobInfo.builder().jobId("J-API").build();
         when(scheduler.schedule(any())).thenReturn(info);
@@ -92,7 +92,7 @@ class ProjectDuplicationApiControllerTest {
     }
 
     @Test
-    void listDuplicationJobsDelegatesViaCallPrivileged() throws Exception {
+    void listDuplicationJobsDelegatesViaCallPrivileged() {
         when(polarionService.hasSufficientPermissions()).thenReturn(true);
         when(scheduler.listJobs()).thenReturn(List.of());
 

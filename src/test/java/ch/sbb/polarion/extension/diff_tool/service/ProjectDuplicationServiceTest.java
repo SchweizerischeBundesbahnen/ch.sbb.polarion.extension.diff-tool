@@ -10,11 +10,9 @@ import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.core.util.logging.ILogger;
 import org.mockito.MockedConstruction;
-import com.polarion.platform.IPlatformService;
 import com.polarion.platform.core.IPlatform;
 import com.polarion.platform.core.PlatformContext;
 import com.polarion.platform.jobs.IProgressMonitor;
-import com.polarion.platform.security.ISecurityService;
 import com.polarion.platform.service.repository.IRepositoryConnection;
 import com.polarion.platform.service.repository.IRepositoryService;
 import com.polarion.subterra.base.location.ILocation;
@@ -23,7 +21,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.concurrent.CancellationException;
@@ -32,6 +29,7 @@ import java.io.InputStream;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,7 +40,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -222,7 +219,7 @@ class ProjectDuplicationServiceTest {
     }
 
     @Test
-    void duplicateTwoArgOverloadAcceptsLoggerWithoutMonitor() throws Exception {
+    void duplicateTwoArgOverloadAcceptsLoggerWithoutMonitor() {
         mockSource("SRC");
         mockTarget(false);
         ILogger logger = mock(ILogger.class);
@@ -345,7 +342,7 @@ class ProjectDuplicationServiceTest {
     }
 
     @Test
-    void writeTemplatePropertiesWrapsIOExceptionInIllegalState() throws Exception {
+    void writeTemplatePropertiesWrapsIOExceptionInIllegalState() {
         mockSource("SRC");
         mockTarget(false);
         // Force the underlying ByteArrayOutputStream to throw, so Properties.store(...) propagates IOException.
@@ -361,14 +358,13 @@ class ProjectDuplicationServiceTest {
 
     @Test
     void noArgConstructorLooksUpServicesViaPlatformContext() {
-        // PlatformContextMockExtension has already registered a MockedStatic<PlatformContext>;
-        // we just stub its return value here.
+        // Stub the static MockedStatic that PlatformContextMockExtension already registered for this test
         IPlatform platform = mock(IPlatform.class);
         when(platform.lookupService(IProjectService.class)).thenReturn(projectService);
         when(platform.lookupService(ITrackerService.class)).thenReturn(trackerService);
         when(platform.lookupService(IRepositoryService.class)).thenReturn(repositoryService);
         when(PlatformContext.getPlatform()).thenReturn(platform);
 
-        new ProjectDuplicationService();
+        assertNotNull(new ProjectDuplicationService());
     }
 }
