@@ -7,6 +7,7 @@ import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.platform.persistence.IEnumOption;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,11 +27,12 @@ public class CalculatePairsContext {
     private final List<IWorkItem> leftDocumentWorkItems;
     @Getter
     private final List<IWorkItem> rightDocumentWorkItems;
+    @Nullable
     private final ILinkRoleOpt linkedByRole;
     private final List<String> statusesToIgnore;
     private final Map<IWorkItem, String> outlineNumbersCache = new HashMap<>();
 
-    public CalculatePairsContext(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @NotNull ILinkRoleOpt linkedByRole, @NotNull List<String> statusesToIgnore) {
+    public CalculatePairsContext(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @Nullable ILinkRoleOpt linkedByRole, @NotNull List<String> statusesToIgnore) {
         this.leftDocument = leftDocument;
         this.rightDocument = rightDocument;
         this.linkedByRole = linkedByRole;
@@ -48,7 +50,7 @@ public class CalculatePairsContext {
     }
 
     public boolean isSuitableLinkRole(ILinkRoleOpt roleOpt) {
-        return Objects.equals(linkedByRole.getId(), roleOpt.getId());
+        return linkedByRole != null && Objects.equals(linkedByRole.getId(), roleOpt.getId());
     }
 
     public boolean hasStatusToIgnore(IWorkItem workItem) {

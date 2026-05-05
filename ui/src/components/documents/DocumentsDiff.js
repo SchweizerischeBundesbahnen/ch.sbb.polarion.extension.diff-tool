@@ -23,7 +23,13 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import useSwapDocuments from "@/utils/useSwapDocuments";
 import * as DiffTypes from "@/DiffTypes";
 
-const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument', 'linkRole'];
+const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument'];
+
+const isSameDocument = (searchParams) => {
+  return searchParams.get('sourceProjectId') === searchParams.get('targetProjectId')
+      && searchParams.get('sourceSpaceId') === searchParams.get('targetSpaceId')
+      && searchParams.get('sourceDocument') === searchParams.get('targetDocument');
+};
 const PAIRS_COUNT_TO_ASK_SWAP_CONFIRMATION = 200; // Threshold above which a diff reload takes relatively long — prompt the user for confirmation beyond this limit.
 
 export default function DocumentsDiff({ enclosingCollections }) {
@@ -50,7 +56,8 @@ export default function DocumentsDiff({ enclosingCollections }) {
   const [swapConfirmModalVisible, setSwapConfirmModalVisible] = useState(false);
 
   useEffect(() => {
-    const missingParams = REQUIRED_PARAMS.filter(param => !searchParams.get(param));
+    const requiredParams = isSameDocument(searchParams) ? REQUIRED_PARAMS : [...REQUIRED_PARAMS, 'linkRole'];
+    const missingParams = requiredParams.filter(param => !searchParams.get(param));
     if (missingParams.length > 0) {
       loadingContext.pairsLoadingFinishedWithError(`Following parameters are missing: [${missingParams.join(", ")}]`);
       return;
