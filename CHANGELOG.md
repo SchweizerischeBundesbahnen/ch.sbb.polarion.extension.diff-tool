@@ -1,5 +1,17 @@
 # Changelog
 
+## [8.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.2.0...v8.2.1) (2026-05-05)
+
+
+### Bug Fixes
+
+* comparison logic should allow missing link role for same documents ([#452](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/452)) ([a2d9799](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/a2d9799a01c21fff8390b335a264d40a80497269)), closes [#451](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/451)
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v12.3.0 ([b384fe9](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/b384fe9af8d2dbff5abc564068ef734bfe81800f))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v12.4.0 ([927a3e8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/927a3e85c04e5d85a0c214e9388cccbcf0cdfbfe))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v12.4.1 ([889440d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/889440dd0331780f8cb7ff76693381f47ec278f2))
+* **deps:** update dependency uuid to v14 [security] ([#446](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/446)) ([3f13e74](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/3f13e74fbeca4e4ec8998b7aa66c25c16b32383e))
+* **deps:** update nextjs monorepo to v16.2.4 ([662c197](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/662c197b7570b49165ac56c726885d03ee2e60c3))
+
 ## [8.2.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.1.1...v8.2.0) (2026-04-13)
 
 
