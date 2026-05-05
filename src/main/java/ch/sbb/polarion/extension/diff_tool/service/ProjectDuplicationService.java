@@ -157,13 +157,9 @@ public class ProjectDuplicationService {
             });
             progressLog(progressLog, "      Project created in " + secs(t4) + " s");
             monitor.worked(WORK_CREATE_PROJECT);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new IllegalStateException("Project duplication failed: " + e.getMessage(), e);
         } finally {
             if (templateCreated[0]) {
-                // Always clean up, even if cancelled — we don't want orphan templates.
+                // Always clean up, even if cancelled or createProject failed — we don't want orphan templates.
                 step(monitor, progressLog, "Removing ephemeral template",
                         "[5/5] Removing ephemeral template " + templateLocation.getLocationPath());
                 deleteTemplateQuietly(templateLocation, templateId, progressLog);

@@ -3,6 +3,12 @@ package ch.sbb.polarion.extension.diff_tool.service.job;
 import ch.sbb.polarion.extension.diff_tool.rest.model.duplication.DuplicationJobInfo;
 import ch.sbb.polarion.extension.diff_tool.rest.model.duplication.DuplicationRequest;
 import ch.sbb.polarion.extension.diff_tool.service.ProjectDuplicationService;
+import ch.sbb.polarion.extension.generic.test_extensions.PlatformContextMockExtension;
+import com.polarion.alm.projects.IProjectService;
+import com.polarion.alm.tracker.ITrackerService;
+import com.polarion.platform.IPlatformService;
+import com.polarion.platform.core.IPlatform;
+import com.polarion.platform.core.PlatformContext;
 import com.polarion.platform.jobs.GenericJobException;
 import com.polarion.platform.jobs.IJob;
 import com.polarion.platform.jobs.IJobManager;
@@ -11,8 +17,12 @@ import com.polarion.platform.jobs.IJobStatus;
 import com.polarion.platform.jobs.IJobUnit;
 import com.polarion.platform.jobs.IJobUnitFactory;
 import com.polarion.platform.jobs.JobState;
+import com.polarion.platform.security.ISecurityService;
+import com.polarion.platform.service.repository.IRepositoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
@@ -27,6 +37,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith({MockitoExtension.class, PlatformContextMockExtension.class})
 class ProjectDuplicationJobSchedulerTest {
 
     private IJobService jobService;
@@ -41,7 +52,7 @@ class ProjectDuplicationJobSchedulerTest {
         jobManager = mock(IJobManager.class);
         duplicationService = mock(ProjectDuplicationService.class);
         jobUnitFactory = new ProjectDuplicationJobUnitFactory();
-        when(jobService.getJobManager()).thenReturn(jobManager);
+        lenient().when(jobService.getJobManager()).thenReturn(jobManager);
         scheduler = new ProjectDuplicationJobScheduler(jobService, duplicationService, jobUnitFactory);
     }
 
@@ -125,16 +136,30 @@ class ProjectDuplicationJobSchedulerTest {
     @Test
     void listJobsSkipsJobsWithMissingUnitOrCreator() {
         IJob noUnit = mock(IJob.class);
-        when(noUnit.getJobUnit()).thenReturn(null);
-        when(noUnit.getCreationTime()).thenReturn(1L);
+        lenient().when(noUnit.getJobUnit()).thenReturn(null);
+        lenient().when(noUnit.getCreationTime()).thenReturn(1L);
         IJob noCreator = mock(IJob.class);
         IJobUnit unit = mock(IJobUnit.class);
-        when(unit.getCreator()).thenReturn(null);
-        when(noCreator.getJobUnit()).thenReturn(unit);
-        when(noCreator.getCreationTime()).thenReturn(2L);
+        lenient().when(unit.getCreator()).thenReturn(null);
+        lenient().when(noCreator.getJobUnit()).thenReturn(unit);
+        lenient().when(noCreator.getCreationTime()).thenReturn(2L);
         when(jobManager.getJobs()).thenReturn(List.of(noUnit, noCreator));
 
         assertTrue(scheduler.listJobs().isEmpty());
+    }
+
+    @Test
+    void noArgConstructorLooksUpJobServiceViaPlatformContext() {
+        IPlatform platform = mock(IPlatform.class);
+        lenient().when(platform.lookupService(IJobService.class)).thenReturn(jobService);
+        lenient().when(platform.lookupService(IProjectService.class)).thenReturn(mock(IProjectService.class));
+        lenient().when(platform.lookupService(ITrackerService.class)).thenReturn(mock(ITrackerService.class));
+        lenient().when(platform.lookupService(IRepositoryService.class)).thenReturn(mock(IRepositoryService.class));
+        lenient().when(platform.lookupService(ISecurityService.class)).thenReturn(mock(ISecurityService.class));
+        lenient().when(platform.lookupService(IPlatformService.class)).thenReturn(mock(IPlatformService.class));
+        when(PlatformContext.getPlatform()).thenReturn(platform);
+
+        new ProjectDuplicationJobScheduler();
     }
 
     @Test

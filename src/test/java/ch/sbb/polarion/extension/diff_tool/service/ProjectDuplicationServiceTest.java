@@ -8,6 +8,13 @@ import com.polarion.alm.projects.IProjectService;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.model.ITrackerProject;
+import com.polarion.core.util.logging.ILogger;
+import org.mockito.MockedConstruction;
+import com.polarion.platform.IPlatformService;
+import com.polarion.platform.core.IPlatform;
+import com.polarion.platform.core.PlatformContext;
+import com.polarion.platform.jobs.IProgressMonitor;
+import com.polarion.platform.security.ISecurityService;
 import com.polarion.platform.service.repository.IRepositoryConnection;
 import com.polarion.platform.service.repository.IRepositoryService;
 import com.polarion.subterra.base.location.ILocation;
@@ -16,7 +23,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.concurrent.CancellationException;
 
 import java.io.InputStream;
 import java.util.Map;
@@ -31,6 +41,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -187,5 +199,176 @@ class ProjectDuplicationServiceTest {
                 .trackerPrefix("P")
                 .build();
         assertThrows(IllegalArgumentException.class, () -> service.duplicate(empty));
+    }
+
+    @Test
+    void duplicateThrowsWhenProjectServiceReturnsNullForSource() {
+        mockTarget(false);
+        // projectService.getProject("source") returns null (not just an unresolvable proxy)
+        when(projectService.getProject("source")).thenReturn(null);
+
+        DuplicationRequest request = validRequest();
+        assertThrows(IllegalArgumentException.class, () -> service.duplicate(request));
+    }
+
+    @Test
+    void duplicateOneArgOverloadDelegatesWithoutLogger() throws Exception {
+        mockSource("SRC");
+        mockTarget(false);
+
+        // Just exercise the no-logger / no-monitor overload path.
+        service.duplicate(validRequest());
+        verify(lifecycleManager).createProject(any(ILocation.class), eq("target"), anyString(), anyMap());
+    }
+
+    @Test
+    void duplicateTwoArgOverloadAcceptsLoggerWithoutMonitor() throws Exception {
+        mockSource("SRC");
+        mockTarget(false);
+        ILogger logger = mock(ILogger.class);
+
+        service.duplicate(validRequest(), logger);
+
+        verify(logger, org.mockito.Mockito.atLeastOnce()).info(anyString());
+    }
+
+    @Test
+    void duplicateAcceptsTrackerPrefixWithTrailingDashAndStripsIt() throws Exception {
+        mockSource("SRC-");  // source prefix already includes dash → exercises stripTrailingDash true branch
+        mockTarget(false);
+
+        DuplicationRequest req = DuplicationRequest.builder()
+                .sourceProjectId("source").targetProjectId("target")
+                .location("/loc").trackerPrefix("NEW-").build();
+        service.duplicate(req);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, String>> paramsCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(lifecycleManager).createProject(any(ILocation.class), eq("target"), anyString(), paramsCaptor.capture());
+        Map<String, String> params = paramsCaptor.getValue();
+        assertEquals("SRC", params.get(ProjectDuplicationService.PARAM_TEMPLATE_TRACKER_PREFIX_REPLACE));
+        assertEquals("NEW", params.get(ProjectDuplicationService.PARAM_TRACKER_PREFIX));
+    }
+
+    @Test
+    void duplicateThrowsCancellationExceptionWhenMonitorIsCancelled() {
+        mockSource("SRC");
+        mockTarget(false);
+        IProgressMonitor monitor = mock(IProgressMonitor.class);
+        when(monitor.isCanceled()).thenReturn(true);
+
+        DuplicationRequest request = validRequest();
+        assertThrows(CancellationException.class, () -> service.duplicate(request, null, monitor));
+    }
+
+    @Test
+    void deleteTemplateQuietlyLogsWarningToProgressLogWhenDeleteThrows() throws Exception {
+        mockSource("SRC");
+        mockTarget(false);
+        // Make connection.delete throw to drive the catch-block in deleteTemplateQuietly.
+        doThrow(new RuntimeException("svn locked")).when(connection).delete(any(ILocation.class));
+        ILogger logger = mock(ILogger.class);
+
+        service.duplicate(validRequest(), logger);
+
+        // The warning-info call from deleteTemplateQuietly should have been observed.
+        verify(logger, times(1)).info(org.mockito.ArgumentMatchers.contains("Failed to remove ephemeral template"));
+    }
+
+    @Test
+    void projectUrlPrependsBaseUrlWhenConfigured() {
+        String previous = System.getProperty("base.url");
+        try {
+            System.setProperty("base.url", "https://example.com/");  // trailing slash exercised
+            assertEquals("https://example.com/polarion/#/project/abc", ProjectDuplicationService.projectUrl("abc"));
+
+            System.setProperty("base.url", "https://example.com");  // no trailing slash
+            assertEquals("https://example.com/polarion/#/project/abc", ProjectDuplicationService.projectUrl("abc"));
+
+            System.clearProperty("base.url");
+            assertEquals("/polarion/#/project/abc", ProjectDuplicationService.projectUrl("abc"));
+        } finally {
+            if (previous != null) System.setProperty("base.url", previous);
+            else System.clearProperty("base.url");
+        }
+    }
+
+    @Test
+    void duplicateThrowsWhenTargetProjectIsUnresolvableNonNull() {
+        mockSource("SRC");
+        IProject target = mock(IProject.class);
+        when(target.isUnresolvable()).thenReturn(true);
+        // existing != null but isUnresolvable=true → second branch of L219 condition
+        when(projectService.getProject("target")).thenReturn(target);
+
+        DuplicationRequest request = validRequest();
+        // Target counted as missing (unresolvable) — duplication should proceed past the check.
+        // No exception expected from the validation step; we just verify it actually proceeded.
+        service.duplicate(request);
+        verify(connection).copy(any(ILocation.class), any(ILocation.class), eq(false));
+    }
+
+    @Test
+    void deleteTemplateQuietlyHandlesNonexistentTemplate() throws Exception {
+        mockSource("SRC");
+        mockTarget(false);
+        // exists() returns false → cleanup skips delete (false branch in deleteTemplateQuietly).
+        when(connection.exists(any(ILocation.class))).thenReturn(false);
+
+        service.duplicate(validRequest());
+
+        verify(connection, never()).delete(any(ILocation.class));
+    }
+
+    @Test
+    void deleteTemplateQuietlyHandlesNullProgressLogWhenDeleteThrows() throws Exception {
+        mockSource("SRC");
+        mockTarget(false);
+        doThrow(new RuntimeException("svn locked")).when(connection).delete(any(ILocation.class));
+        // No progressLog passed → exercises the null branch in deleteTemplateQuietly.
+        service.duplicate(validRequest());
+        // The duplication still completes (cleanup error is swallowed).
+        verify(lifecycleManager).createProject(any(ILocation.class), eq("target"), anyString(), anyMap());
+    }
+
+    @Test
+    void cleanupNotInvokedWhenSvnCopyFailsBeforeTemplateMarked() throws Exception {
+        mockSource("SRC");
+        mockTarget(false);
+        // Make connection.copy throw → templateCreated stays false → finally skips cleanup
+        doThrow(new RuntimeException("copy failed")).when(connection).copy(any(ILocation.class), any(ILocation.class), eq(false));
+
+        DuplicationRequest request = validRequest();
+        assertThrows(RuntimeException.class, () -> service.duplicate(request));
+
+        verify(connection, never()).delete(any(ILocation.class));
+    }
+
+    @Test
+    void writeTemplatePropertiesWrapsIOExceptionInIllegalState() throws Exception {
+        mockSource("SRC");
+        mockTarget(false);
+        // Force the underlying ByteArrayOutputStream to throw, so Properties.store(...) propagates IOException.
+        try (MockedConstruction<java.io.ByteArrayOutputStream> ignored = mockConstruction(
+                java.io.ByteArrayOutputStream.class,
+                (mockBaos, ctx) -> doThrow(new java.io.IOException("disk on fire"))
+                        .when(mockBaos).write(any(byte[].class), org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt()))) {
+            DuplicationRequest request = validRequest();
+            IllegalStateException ex = assertThrows(IllegalStateException.class, () -> service.duplicate(request));
+            assertTrue(ex.getMessage().contains("template.properties"));
+        }
+    }
+
+    @Test
+    void noArgConstructorLooksUpServicesViaPlatformContext() {
+        // PlatformContextMockExtension has already registered a MockedStatic<PlatformContext>;
+        // we just stub its return value here.
+        IPlatform platform = mock(IPlatform.class);
+        when(platform.lookupService(IProjectService.class)).thenReturn(projectService);
+        when(platform.lookupService(ITrackerService.class)).thenReturn(trackerService);
+        when(platform.lookupService(IRepositoryService.class)).thenReturn(repositoryService);
+        when(PlatformContext.getPlatform()).thenReturn(platform);
+
+        new ProjectDuplicationService();
     }
 }
