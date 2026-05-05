@@ -26,9 +26,13 @@ import * as DiffTypes from "@/DiffTypes";
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument'];
 
 const isSameDocument = (searchParams) => {
-  return searchParams.get('sourceProjectId') === searchParams.get('targetProjectId')
-      && searchParams.get('sourceSpaceId') === searchParams.get('targetSpaceId')
-      && searchParams.get('sourceDocument') === searchParams.get('targetDocument');
+  const sourceProjectId = searchParams.get('sourceProjectId');
+  const sourceSpaceId = searchParams.get('sourceSpaceId');
+  const sourceDocument = searchParams.get('sourceDocument');
+  return Boolean(sourceProjectId && sourceSpaceId && sourceDocument)
+      && sourceProjectId === searchParams.get('targetProjectId')
+      && sourceSpaceId === searchParams.get('targetSpaceId')
+      && sourceDocument === searchParams.get('targetDocument');
 };
 const PAIRS_COUNT_TO_ASK_SWAP_CONFIRMATION = 200; // Threshold above which a diff reload takes relatively long — prompt the user for confirmation beyond this limit.
 
