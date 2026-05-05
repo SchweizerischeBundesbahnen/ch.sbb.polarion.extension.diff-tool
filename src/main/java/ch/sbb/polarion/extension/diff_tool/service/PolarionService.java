@@ -310,7 +310,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     }
 
     @SneakyThrows
-    public List<WorkItemsPair> getPairedWorkItems(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @NotNull ILinkRoleOpt linkRole, @NotNull List<String> statusesToIgnore) {
+    public List<WorkItemsPair> getPairedWorkItems(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @Nullable ILinkRoleOpt linkRole, @NotNull List<String> statusesToIgnore) {
         CalculatePairsContext context = new CalculatePairsContext(leftDocument, rightDocument, linkRole, statusesToIgnore);
 
         // First we need to use sets for both direct and inverse pairs to exclude duplications
@@ -521,7 +521,11 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     }
 
     @SuppressWarnings("squid:S1166") // Initial exception swallowed intentionally
-    public List<IWorkItem> getPairedWorkItems(@NotNull IWorkItem toWorkItem, @NotNull String targetProjectId, @NotNull String linkRoleId) {
+    public List<IWorkItem> getPairedWorkItems(@NotNull IWorkItem toWorkItem, @NotNull String targetProjectId, @Nullable String linkRoleId) {
+        if (linkRoleId == null) {
+            // No link role means no cross-document pairing — used when comparing different revisions of the same document.
+            return Collections.emptyList();
+        }
         return Stream.concat(toWorkItem.getLinkedWorkItemsStructsDirect().stream(), toWorkItem.getLinkedWorkItemsStructsBack().stream())
                 .filter(linkedWorkItemStruct -> linkedWorkItemStruct.getLinkRole() != null && linkedWorkItemStruct.getLinkRole().getId().equals(linkRoleId))
                 .map(linkedWorkItemStruct -> {

@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
-    <version>8.2.1-SNAPSHOT</version>
+    <version>8.2.1</version>
     <packaging>jar</packaging>
 
     <name>Polarion ALM extension to diff/merge Documents/WorkItems</name>
@@ -69,7 +69,7 @@
         <html5diff.version>1.4.5</html5diff.version>
         <ehcache.version>3.8.0</ehcache.version>
 
-        <pdf-exporter.version>12.4.0</pdf-exporter.version>
+        <pdf-exporter.version>12.4.1</pdf-exporter.version>
 
         <awaitility.version>4.3.0</awaitility.version>
 

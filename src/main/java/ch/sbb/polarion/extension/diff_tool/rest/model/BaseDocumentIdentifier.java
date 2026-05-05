@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Objects;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,4 +20,14 @@ public class BaseDocumentIdentifier {
 
     @Schema(description = "Name of the document")
     private String name;
+
+    /**
+     * Returns true when both identifiers point to the same document (regardless of revision).
+     */
+    public boolean pointsToSameDocumentAs(BaseDocumentIdentifier other) {
+        return other != null
+                && Objects.equals(projectId, other.projectId)
+                && Objects.equals(spaceId, other.spaceId)
+                && Objects.equals(name, other.name);
+    }
 }

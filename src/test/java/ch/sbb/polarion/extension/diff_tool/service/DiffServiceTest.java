@@ -931,10 +931,12 @@ class DiffServiceTest {
     @Test
     void testGetDocumentsDiffThrowsExceptionForInvalidLinkRole() {
         IModule leftDocument = mock(IModule.class);
+        IModule rightDocument = mock(IModule.class);
         ITrackerProject trackerProject = mock(ITrackerProject.class);
         when(leftDocument.getProject()).thenReturn(trackerProject);
 
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "left", "rev1")).thenReturn(leftDocument);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "right", "rev1")).thenReturn(rightDocument);
         when(polarionService.getLinkRoleById("invalid-role", trackerProject)).thenReturn(null);
 
         DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").revision("rev1").build();
@@ -944,6 +946,125 @@ class DiffServiceTest {
                 diffService.getDocumentsDiff(leftDocumentIdentifier, rightDocumentIdentifier, "invalid-role", null, null));
 
         assertTrue(exception.getMessage().contains("invalid-role"));
+    }
+
+    @Test
+    void testGetDocumentsDiffThrowsForMissingLinkRoleWhenDocumentsDiffer() {
+        IModule leftDocument = mock(IModule.class);
+        IModule rightDocument = mock(IModule.class);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "left", "rev1")).thenReturn(leftDocument);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "right", "rev1")).thenReturn(rightDocument);
+
+        DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").revision("rev1").build();
+        DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").revision("rev1").build();
+
+        assertThrows(IllegalArgumentException.class, () ->
+                diffService.getDocumentsDiff(leftDocumentIdentifier, rightDocumentIdentifier, null, null, null));
+        assertThrows(IllegalArgumentException.class, () ->
+                diffService.getDocumentsDiff(leftDocumentIdentifier, rightDocumentIdentifier, "", null, null));
+        verify(polarionService, never()).getLinkRoleById(anyString(), any());
+    }
+
+    @Test
+    void testGetDocumentsDiffAllowsMissingLinkRoleForSameDocument() {
+        IModule document = mockSameDocumentForDiff();
+
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev1")).thenReturn(document);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev2")).thenReturn(document);
+        when(polarionService.getPairedWorkItems(eq(document), eq(document), isNull(), anyList())).thenReturn(Collections.emptyList());
+        when(polarionService.getDocumentWorkItemsCache()).thenReturn(mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class));
+
+        DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev1").build();
+        DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev2").build();
+
+        org.springframework.web.context.request.ServletRequestAttributes attrs =
+                mock(org.springframework.web.context.request.ServletRequestAttributes.class);
+        when(attrs.getRequest()).thenReturn(mock(javax.servlet.http.HttpServletRequest.class));
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(attrs);
+        try (org.mockito.MockedStatic<ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource> mockedDiffModel =
+                     mockStatic(ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.class)) {
+            mockedDiffModel.when(() -> ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.get(any(), any(), any()))
+                    .thenReturn(ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel.builder().build());
+            assertNotNull(diffService.getDocumentsDiff(leftDocumentIdentifier, rightDocumentIdentifier, null, null, null));
+            assertNotNull(diffService.getDocumentsDiff(leftDocumentIdentifier, rightDocumentIdentifier, "", null, null));
+        } finally {
+            org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
+        }
+        // No link role lookup must happen for same-document compare with empty linkRoleId.
+        verify(polarionService, never()).getLinkRoleById(anyString(), any());
+    }
+
+    @Test
+    void testGetDocumentsDiffRequiresLinkRoleWhenProjectDiffers() {
+        IModule leftDocument = mock(IModule.class);
+        IModule rightDocument = mock(IModule.class);
+        when(polarionService.getDocumentWithFilledRevision("projectA", "space1", "doc", null)).thenReturn(leftDocument);
+        when(polarionService.getDocumentWithFilledRevision("projectB", "space1", "doc", null)).thenReturn(rightDocument);
+
+        DocumentIdentifier left = DocumentIdentifier.builder().projectId("projectA").spaceId("space1").name("doc").build();
+        DocumentIdentifier right = DocumentIdentifier.builder().projectId("projectB").spaceId("space1").name("doc").build();
+
+        assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(left, right, null, null, null));
+    }
+
+    @Test
+    void testGetDocumentsDiffRequiresLinkRoleWhenSpaceDiffers() {
+        IModule leftDocument = mock(IModule.class);
+        IModule rightDocument = mock(IModule.class);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", null)).thenReturn(leftDocument);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space2", "doc", null)).thenReturn(rightDocument);
+
+        DocumentIdentifier left = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").build();
+        DocumentIdentifier right = DocumentIdentifier.builder().projectId("project1").spaceId("space2").name("doc").build();
+
+        // Same project + name, but different space ⇒ documents differ ⇒ linkRole still required.
+        assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(left, right, null, null, null));
+    }
+
+    @Test
+    void testGetDocumentsDiffRequiresLinkRoleWhenNameDiffers() {
+        IModule leftDocument = mock(IModule.class);
+        IModule rightDocument = mock(IModule.class);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "left", null)).thenReturn(leftDocument);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "right", null)).thenReturn(rightDocument);
+
+        DocumentIdentifier left = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").build();
+        DocumentIdentifier right = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").build();
+
+        // Same project + space, but different name ⇒ documents differ ⇒ linkRole still required.
+        assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(left, right, null, null, null));
+    }
+
+    @Test
+    void testGetDocumentsContentDiffAllowsMissingLinkRoleForSameDocument() {
+        IModule document = mockSameDocumentForDiff();
+        when(document.getHomePageContent()).thenReturn(Text.html(""));
+
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev1")).thenReturn(document);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev2")).thenReturn(document);
+        when(polarionService.getPairedWorkItems(eq(document), eq(document), isNull(), anyList())).thenReturn(Collections.emptyList());
+
+        DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev1").build();
+        DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev2").build();
+
+        assertNotNull(diffService.getDocumentsContentDiff(leftDocumentIdentifier, rightDocumentIdentifier, null));
+        verify(polarionService, never()).getLinkRoleById(anyString(), any());
+    }
+
+    private IModule mockSameDocumentForDiff() {
+        IModule document = mock(IModule.class);
+        lenient().when(document.getProjectId()).thenReturn("project1");
+        IDataService dataService = mock(IDataService.class);
+        IRevision revision = mock(IRevision.class);
+        lenient().when(revision.getName()).thenReturn("1");
+        when(dataService.getLastStorageRevision()).thenReturn(revision);
+        when(document.getDataSvc()).thenReturn(dataService);
+        ILocation moduleLocation = mock(ILocation.class);
+        when(document.getModuleLocation()).thenReturn(moduleLocation);
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        lenient().when(trackerProject.getId()).thenReturn("project1");
+        lenient().when(document.getProject()).thenReturn(trackerProject);
+        return document;
     }
 
     // ==================== getCollectionsDiff() method tests ====================

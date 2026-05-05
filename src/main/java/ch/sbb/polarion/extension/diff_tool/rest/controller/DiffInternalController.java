@@ -78,7 +78,11 @@ public class DiffInternalController {
             }
     )
     public DocumentsDiff getDocumentsDiff(@Parameter(required = true) DocumentsDiffParams documentsDiffParams) {
-        if (documentsDiffParams == null || documentsDiffParams.getLeftDocument() == null || documentsDiffParams.getRightDocument() == null || documentsDiffParams.getLinkRole() == null) {
+        if (documentsDiffParams == null
+                || documentsDiffParams.getLeftDocument() == null
+                || documentsDiffParams.getRightDocument() == null
+                || (documentsDiffParams.getLinkRole() == null
+                && !documentsDiffParams.getLeftDocument().pointsToSameDocumentAs(documentsDiffParams.getRightDocument()))) {
             throw new BadRequestException("Parameters 'leftDocument', 'rightDocument' and 'linkRole' should be provided");
         }
         return schedule(DIFF_DOCUMENTS, () ->

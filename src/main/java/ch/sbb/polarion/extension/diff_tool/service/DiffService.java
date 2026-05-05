@@ -83,6 +83,7 @@ public class DiffService {
 
     private static final CharSequence DAISY_DIFF_CHANGED_FRAGMENT = "class=\"diff-html-";
     private static final String INVALID_ROLE_ID_MESSAGE = "No link role could be found by ID '%s'";
+    private static final String MISSING_ROLE_ID_MESSAGE = "Parameter 'linkRole' is required when comparing different documents";
     private final PolarionService polarionService;
 
     // We will execute diff operation twice: using direct & reverse order.
@@ -110,13 +111,9 @@ public class DiffService {
     public DocumentsContentDiff getDocumentsContentDiff(DocumentIdentifier leftDocumentIdentifier, DocumentIdentifier rightDocumentIdentifier, String linkRoleId) {
         IModule leftDocument = polarionService.getDocumentWithFilledRevision(leftDocumentIdentifier.getProjectId(), leftDocumentIdentifier.getSpaceId(),
                 leftDocumentIdentifier.getName(), leftDocumentIdentifier.getRevision());
-        ILinkRoleOpt linkRole = polarionService.getLinkRoleById(linkRoleId, leftDocument.getProject());
-        if (linkRole == null) {
-            throw new IllegalArgumentException(String.format(INVALID_ROLE_ID_MESSAGE, linkRoleId));
-        }
-
         IModule rightDocument = polarionService.getDocumentWithFilledRevision(rightDocumentIdentifier.getProjectId(), rightDocumentIdentifier.getSpaceId(),
                 rightDocumentIdentifier.getName(), rightDocumentIdentifier.getRevision());
+        ILinkRoleOpt linkRole = resolveLinkRole(linkRoleId, leftDocument, leftDocumentIdentifier, rightDocumentIdentifier);
 
         List<WorkItemsPair> pairedWorkItems = polarionService.getPairedWorkItems(leftDocument, rightDocument, linkRole, Collections.emptyList());
         List<DocumentContentAnchorsPair> pairedDocumentContentAnchors = getPairedDocumentContentAnchors(leftDocument, rightDocument, pairedWorkItems);
@@ -169,13 +166,9 @@ public class DiffService {
     public DocumentsDiff getDocumentsDiff(DocumentIdentifier leftDocumentIdentifier, DocumentIdentifier rightDocumentIdentifier, String linkRoleId, String configName, String configCacheBucketId) {
         IModule leftDocument = polarionService.getDocumentWithFilledRevision(leftDocumentIdentifier.getProjectId(), leftDocumentIdentifier.getSpaceId(),
                 leftDocumentIdentifier.getName(), leftDocumentIdentifier.getRevision());
-        ILinkRoleOpt linkRole = polarionService.getLinkRoleById(linkRoleId, leftDocument.getProject());
-        if (linkRole == null) {
-            throw new IllegalArgumentException(String.format(INVALID_ROLE_ID_MESSAGE, linkRoleId));
-        }
-
         IModule rightDocument = polarionService.getDocumentWithFilledRevision(rightDocumentIdentifier.getProjectId(), rightDocumentIdentifier.getSpaceId(),
                 rightDocumentIdentifier.getName(), rightDocumentIdentifier.getRevision());
+        ILinkRoleOpt linkRole = resolveLinkRole(linkRoleId, leftDocument, leftDocumentIdentifier, rightDocumentIdentifier);
 
         DiffModel diffModel = DiffModelCachedResource.get(leftDocumentIdentifier.getProjectId(), configName, configCacheBucketId);
 
@@ -191,6 +184,24 @@ public class DiffService {
                 .rightDocument(Document.from(rightDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(rightDocumentIdentifier.getProjectId())))
                 .pairedWorkItems(pairedWorkItems)
                 .build();
+    }
+
+    @Nullable
+    private ILinkRoleOpt resolveLinkRole(@Nullable String linkRoleId, @NotNull IModule leftDocument,
+                                         @NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier) {
+        // When comparing different revisions of the same document, work items are paired by ID directly,
+        // so a link role is not needed (and the UI doesn't supply one).
+        if (linkRoleId == null || linkRoleId.isEmpty()) {
+            if (leftDocumentIdentifier.pointsToSameDocumentAs(rightDocumentIdentifier)) {
+                return null;
+            }
+            throw new IllegalArgumentException(MISSING_ROLE_ID_MESSAGE);
+        }
+        ILinkRoleOpt linkRole = polarionService.getLinkRoleById(linkRoleId, leftDocument.getProject());
+        if (linkRole == null) {
+            throw new IllegalArgumentException(String.format(INVALID_ROLE_ID_MESSAGE, linkRoleId));
+        }
+        return linkRole;
     }
 
     List<WorkItemsPair> handleMovedItems(@NotNull List<WorkItemsPair> pairedWorkItems) {
