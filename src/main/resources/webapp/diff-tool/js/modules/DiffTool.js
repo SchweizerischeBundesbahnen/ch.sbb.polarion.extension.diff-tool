@@ -205,13 +205,16 @@ export default class DiffTool extends GenericMixin {
     const targetSpace = sameDoc ? this.sourceSpace : this.ctx.getValue("comparison-space-selector");
     const targetDocument = sameDoc ? this.sourceDocument : this.ctx.getValue("document-selector");
     const targetRevision = this.ctx.getValue(this.manualRevision() ? "select-revision-manual-input" : "revision-selector");
-    const linkRole = this.ctx.getValue("comparison-link-role-selector");
+    const linkRole = sameDoc ? "" : this.ctx.getValue("comparison-link-role-selector");
     const config = this.ctx.getValue("comparison-config-selector");
 
     let path = `/polarion/diff-tool-app/ui/app/documents.html`
         + `?sourceProjectId=${this.sourceProjectId}&sourceSpaceId=${this.sourceSpace}&sourceDocument=${this.sourceDocument}`
         + `&targetProjectId=${targetProjectId}&targetSpaceId=${targetSpace}&targetDocument=${targetDocument}`
-        + `&linkRole=${linkRole}&config=${config}&compareAs=Workitems`;
+        + `&config=${config}&compareAs=Workitems`;
+    if (linkRole) {
+        path += `&linkRole=${linkRole}`;
+    }
     if (this.sourceRevision) {
       path += `&sourceRevision=${this.sourceRevision}`;
     }

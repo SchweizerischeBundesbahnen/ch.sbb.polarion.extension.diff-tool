@@ -1022,6 +1022,18 @@ class PolarionServiceTest {
         assertTrue(result.isEmpty());
     }
 
+    @Test
+    void testGetPairedWorkItemsWithNullLinkRoleIdReturnsEmpty() {
+        // No link role means no cross-document pairing — used when comparing different revisions of the same document.
+        IWorkItem sourceWorkItem = mock(IWorkItem.class);
+
+        List<IWorkItem> result = polarionService.getPairedWorkItems(sourceWorkItem, "targetProject", null);
+
+        assertTrue(result.isEmpty());
+        verify(sourceWorkItem, never()).getLinkedWorkItemsStructsDirect();
+        verify(sourceWorkItem, never()).getLinkedWorkItemsStructsBack();
+    }
+
     private IModule mockDocument(String name, Date created) {
         IModule document = mock(IModule.class);
         lenient().when(document.getProjectId()).thenReturn(PROJECT_ID);
