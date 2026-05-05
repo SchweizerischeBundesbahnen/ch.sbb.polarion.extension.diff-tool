@@ -83,6 +83,7 @@ public class DiffService {
 
     private static final CharSequence DAISY_DIFF_CHANGED_FRAGMENT = "class=\"diff-html-";
     private static final String INVALID_ROLE_ID_MESSAGE = "No link role could be found by ID '%s'";
+    private static final String MISSING_ROLE_ID_MESSAGE = "Parameter 'linkRole' is required when comparing different documents";
     private final PolarionService polarionService;
 
     // We will execute diff operation twice: using direct & reverse order.
@@ -194,7 +195,7 @@ public class DiffService {
             if (leftDocumentIdentifier.pointsToSameDocumentAs(rightDocumentIdentifier)) {
                 return null;
             }
-            throw new IllegalArgumentException(String.format(INVALID_ROLE_ID_MESSAGE, linkRoleId));
+            throw new IllegalArgumentException(MISSING_ROLE_ID_MESSAGE);
         }
         ILinkRoleOpt linkRole = polarionService.getLinkRoleById(linkRoleId, leftDocument.getProject());
         if (linkRole == null) {
