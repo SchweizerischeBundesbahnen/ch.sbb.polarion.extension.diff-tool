@@ -222,7 +222,7 @@ export default class DiffTool extends GenericMixin {
       path += `&targetRevision=${targetRevision}`;
     }
 
-    const fieldsSelectionId = crypto.randomUUID();
+    const fieldsSelectionHash = crypto.randomUUID();
     const ttlMs = 24 * 60 * 60 * 1000;
     const now = Date.now();
     Object.keys(localStorage)
@@ -237,8 +237,8 @@ export default class DiffTool extends GenericMixin {
             localStorage.removeItem(key);
           }
         });
-    localStorage.setItem(fieldsSelectionId + "_individualFieldsSelection", JSON.stringify({value: true, ts: now}));
-    path += `&individualFieldsSelection=${fieldsSelectionId}`;
+    localStorage.setItem(fieldsSelectionHash + "_individualFieldsSelection", JSON.stringify({value: true, ts: now}));
+    path += `&individualFieldsSelection=${fieldsSelectionHash}`;
 
     if (document.getElementById("use-work-items-filter").checked) {
       const filter = this.ctx.getValue("work-items-filter-input");
