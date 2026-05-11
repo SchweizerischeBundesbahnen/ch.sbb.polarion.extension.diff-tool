@@ -22,8 +22,16 @@ export function useAppContext(){
     if (!hashId) {
       return true;
     }
-    const stored = localStorage.getItem(hashId + "_individualFieldsSelection");
-    return stored === null ? true : stored === "true";
+    const raw = localStorage.getItem(hashId + "_individualFieldsSelection");
+    if (!raw) {
+      return true;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      return typeof parsed.value === "boolean" ? parsed.value : true;
+    } catch (e) {
+      return true;
+    }
   });
   const [dataLoaded, setDataLoaded] = useState(false);
   const [diffsExist, setDiffsExist] = useState(false);
@@ -35,7 +43,10 @@ export function useAppContext(){
     }
     const hashId = new URLSearchParams(window.location.search).get("individualFieldsSelection");
     if (hashId) {
-      localStorage.setItem(hashId + "_individualFieldsSelection", String(individualFieldsSelection));
+      localStorage.setItem(
+          hashId + "_individualFieldsSelection",
+          JSON.stringify({value: individualFieldsSelection, ts: Date.now()})
+      );
     }
   }, [individualFieldsSelection]);
 

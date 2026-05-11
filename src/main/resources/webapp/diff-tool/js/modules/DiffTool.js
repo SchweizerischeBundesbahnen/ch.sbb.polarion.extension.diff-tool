@@ -223,14 +223,43 @@ export default class DiffTool extends GenericMixin {
     }
 
     const fieldsSelectionId = crypto.randomUUID();
-    localStorage.setItem(fieldsSelectionId + "_individualFieldsSelection", "true");
+    const ttlMs = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    Object.keys(localStorage)
+        .filter(key => key.endsWith("_individualFieldsSelection"))
+        .forEach(key => {
+          try {
+            const parsed = JSON.parse(localStorage.getItem(key));
+            if (!parsed || typeof parsed.ts !== "number" || now - parsed.ts > ttlMs) {
+              localStorage.removeItem(key);
+            }
+          } catch (e) {
+            localStorage.removeItem(key);
+          }
+        });
+    localStorage.setItem(fieldsSelectionId + "_individualFieldsSelection", JSON.stringify({value: true, ts: now}));
     path += `&individualFieldsSelection=${fieldsSelectionId}`;
 
     if (document.getElementById("use-work-items-filter").checked) {
       const filter = this.ctx.getValue("work-items-filter-input");
+      const type = document.getElementById("include-work-items").checked ? "include" : "exclude";
       this.digestMessage(filter).then(digestHex => {
-        localStorage.setItem(digestHex + "_filter", filter);
-        localStorage.setItem(digestHex + "_type", document.getElementById("include-work-items").checked ? "include" : "exclude");
+        Object.keys(localStorage)
+            .filter(key => key.endsWith("_filter"))
+            .forEach(key => {
+              try {
+                const parsed = JSON.parse(localStorage.getItem(key));
+                if (!parsed || typeof parsed.ts !== "number" || now - parsed.ts > ttlMs) {
+                  localStorage.removeItem(key);
+                }
+              } catch (e) {
+                localStorage.removeItem(key);
+              }
+            });
+        Object.keys(localStorage)
+            .filter(key => key.endsWith("_type"))
+            .forEach(key => localStorage.removeItem(key));
+        localStorage.setItem(digestHex + "_filter", JSON.stringify({value: filter, type: type, ts: now}));
         path += `&filter=${digestHex}`;
         window.open(path, '_blank');
       });
