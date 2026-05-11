@@ -222,6 +222,10 @@ export default class DiffTool extends GenericMixin {
       path += `&targetRevision=${targetRevision}`;
     }
 
+    const fieldsSelectionId = crypto.randomUUID();
+    localStorage.setItem(fieldsSelectionId + "_individualFieldsSelection", "true");
+    path += `&individualFieldsSelection=${fieldsSelectionId}`;
+
     if (document.getElementById("use-work-items-filter").checked) {
       const filter = this.ctx.getValue("work-items-filter-input");
       this.digestMessage(filter).then(digestHex => {

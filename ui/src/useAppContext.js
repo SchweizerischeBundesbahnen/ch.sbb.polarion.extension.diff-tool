@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
 export function useAppContext(){
   const [headerPinned, setHeaderPinned] = useState(false);
@@ -14,10 +14,30 @@ export function useAppContext(){
   const [preserveComments, setPreserveComments] = useState(false);
   const [copyMissingDocumentAttachments, setCopyMissingDocumentAttachments] = useState(true);
   const [updateAttachmentReferences, setUpdateAttachmentReferences] = useState(true);
-  const [individualFieldsSelection, setIndividualFieldsSelection] = useState(false);
+  const [individualFieldsSelection, setIndividualFieldsSelection] = useState(() => {
+    if (typeof window === "undefined") {
+      return true;
+    }
+    const hashId = new URLSearchParams(window.location.search).get("individualFieldsSelection");
+    if (!hashId) {
+      return true;
+    }
+    const stored = localStorage.getItem(hashId + "_individualFieldsSelection");
+    return stored === null ? true : stored === "true";
+  });
   const [dataLoaded, setDataLoaded] = useState(false);
   const [diffsExist, setDiffsExist] = useState(false);
   const [selectedItemsCount, setSelectedItemsCount] = useState(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const hashId = new URLSearchParams(window.location.search).get("individualFieldsSelection");
+    if (hashId) {
+      localStorage.setItem(hashId + "_individualFieldsSelection", String(individualFieldsSelection));
+    }
+  }, [individualFieldsSelection]);
 
   return { headerPinned,
     setHeaderPinned,
