@@ -1,5 +1,19 @@
 # Changelog
 
+## [8.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.2.1...v8.3.0) (2026-05-12)
+
+
+### Features
+
+* implement project duplication functionality ([#450](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/450)) ([c1a64c3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/c1a64c36e364ad58b94dec351d698e560f3eb528)), closes [#449](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/449)
+* individual fields selection is now defaulted to true and is stored if user changes this value during his/her session ([#455](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/455)) ([4320716](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/43207168fbc17b1b469c3b1d5ce77f9fc7a174e7))
+
+
+### Bug Fixes
+
+* **deps:** update nextjs monorepo to v16.2.5 ([5b06ee6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/5b06ee6ec80f901883616322974dbebfa5a4a510))
+* **deps:** update nextjs monorepo to v16.2.6 ([8a1c9f3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/8a1c9f32d5f5eba1f513f5f14bdb984528656eda))
+
 ## [8.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.2.0...v8.2.1) (2026-05-05)
 
 
