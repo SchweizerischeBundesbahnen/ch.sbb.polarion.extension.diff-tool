@@ -49,7 +49,8 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
       loadingContext.pairsLoadingFinishedWithError(`Following parameters are missing: [${missingParams.join(", ")}]`);
       return;
     }
-
+    // This attribute is not relevant for diffing documents fields and should be false here
+    context.state.setIndividualFieldsSelection(false);
     loadDiff();
   }, [searchParams]);
 

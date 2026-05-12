@@ -109,22 +109,34 @@ export default function useDiffService() {
   };
 
   const getFilteredPairs = (pairs, searchParams) => {
-    const filterHash = searchParams.get("filter");
-    const filterKey = filterHash && (filterHash + "_filter");
-    if (filterKey && localStorage && localStorage.getItem(filterKey)) {
-      const typeKey = filterHash + "_type";
+    const hashId = searchParams.get("additionalParams");
+    if (!hashId || !localStorage) {
+      return pairs;
+    }
+    const raw = localStorage.getItem(hashId + "_additionalParams");
+    if (!raw) {
+      return pairs;
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      return pairs;
+    }
+    if (!parsed || !parsed.filter || typeof parsed.filter.value !== "string") {
+      return pairs;
+    }
 
-      let filter = localStorage.getItem(filterKey);
-      if (filter.includes(",")) {
-        filter = filter.split(",");
-      } else if (filter.includes(" ")) {
-        filter = filter.split(" ");
-      }
-      if (localStorage.getItem(typeKey) === "exclude") {
-        return pairs.filter(pair => !pair.leftWorkItem || !filter.includes(pair.leftWorkItem.id));
-      } else if (localStorage.getItem(typeKey) === "include") {
-        return pairs.filter(pair => pair.leftWorkItem && filter.includes(pair.leftWorkItem.id))
-      }
+    let filter = parsed.filter.value;
+    if (filter.includes(",")) {
+      filter = filter.split(",");
+    } else if (filter.includes(" ")) {
+      filter = filter.split(" ");
+    }
+    if (parsed.filter.type === "exclude") {
+      return pairs.filter(pair => !pair.leftWorkItem || !filter.includes(pair.leftWorkItem.id));
+    } else if (parsed.filter.type === "include") {
+      return pairs.filter(pair => pair.leftWorkItem && filter.includes(pair.leftWorkItem.id));
     }
 
     return pairs;

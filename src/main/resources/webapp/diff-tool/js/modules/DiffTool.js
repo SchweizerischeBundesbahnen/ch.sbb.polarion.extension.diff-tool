@@ -222,17 +222,38 @@ export default class DiffTool extends GenericMixin {
       path += `&targetRevision=${targetRevision}`;
     }
 
+    const additionalParamsHash = crypto.randomUUID();
+    const ttlMs = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    Object.keys(localStorage)
+        .filter(key => key.endsWith("_additionalParams"))
+        .forEach(key => {
+          try {
+            const parsed = JSON.parse(localStorage.getItem(key));
+            if (!parsed || typeof parsed.ts !== "number" || now - parsed.ts > ttlMs) {
+              localStorage.removeItem(key);
+            }
+          } catch (e) {
+            localStorage.removeItem(key);
+          }
+        });
+
+    // Remove stale legacy params
+    Object.keys(localStorage)
+        .filter(key => key.endsWith("_filter") || key.endsWith("_type"))
+        .forEach(key => localStorage.removeItem(key));
+
+    const additionalParams = {individualFieldsSelection: true, ts: now};
     if (document.getElementById("use-work-items-filter").checked) {
-      const filter = this.ctx.getValue("work-items-filter-input");
-      this.digestMessage(filter).then(digestHex => {
-        localStorage.setItem(digestHex + "_filter", filter);
-        localStorage.setItem(digestHex + "_type", document.getElementById("include-work-items").checked ? "include" : "exclude");
-        path += `&filter=${digestHex}`;
-        window.open(path, '_blank');
-      });
-    } else {
-      window.open(path, '_blank');
+      additionalParams.filter = {
+        value: this.ctx.getValue("work-items-filter-input"),
+        type: document.getElementById("include-work-items").checked ? "include" : "exclude"
+      };
     }
+    localStorage.setItem(additionalParamsHash + "_additionalParams", JSON.stringify(additionalParams));
+    path += `&additionalParams=${additionalParamsHash}`;
+    window.open(path, '_blank');
   }
 
   compareSameDocument() {
@@ -269,14 +290,5 @@ export default class DiffTool extends GenericMixin {
 
   toggleWorkItemsFilter() {
     this.ctx.getElementById("work-items-filter-pane").style.display = this.ctx.getElementById("use-work-items-filter").checked ? "block" : "none";
-  }
-
-  async digestMessage(message) {
-    const msgUint8 = new TextEncoder().encode(message);
-    const hashBuffer = await window.crypto.subtle.digest("SHA-1", msgUint8);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
   }
 }
