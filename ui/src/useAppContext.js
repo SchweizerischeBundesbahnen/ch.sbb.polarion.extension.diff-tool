@@ -18,17 +18,17 @@ export function useAppContext(){
     if (typeof window === "undefined") {
       return true;
     }
-    const hashId = new URLSearchParams(window.location.search).get("individualFieldsSelection");
+    const hashId = new URLSearchParams(window.location.search).get("additionalParams");
     if (!hashId) {
       return true;
     }
-    const raw = localStorage.getItem(hashId + "_individualFieldsSelection");
+    const raw = localStorage.getItem(hashId + "_additionalParams");
     if (!raw) {
       return true;
     }
     try {
       const parsed = JSON.parse(raw);
-      return typeof parsed.value === "boolean" ? parsed.value : true;
+      return typeof parsed.individualFieldsSelection === "boolean" ? parsed.individualFieldsSelection : true;
     } catch (e) {
       return true;
     }
@@ -41,13 +41,26 @@ export function useAppContext(){
     if (typeof window === "undefined") {
       return;
     }
-    const hashId = new URLSearchParams(window.location.search).get("individualFieldsSelection");
-    if (hashId) {
-      localStorage.setItem(
-          hashId + "_individualFieldsSelection",
-          JSON.stringify({value: individualFieldsSelection, ts: Date.now()})
-      );
+    const hashId = new URLSearchParams(window.location.search).get("additionalParams");
+    if (!hashId) {
+      return;
     }
+    const key = hashId + "_additionalParams";
+    let current = {};
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          current = parsed;
+        }
+      }
+    } catch (e) {
+      current = {};
+    }
+    current.individualFieldsSelection = individualFieldsSelection;
+    current.ts = Date.now();
+    localStorage.setItem(key, JSON.stringify(current));
   }, [individualFieldsSelection]);
 
   return { headerPinned,

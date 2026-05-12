@@ -109,11 +109,11 @@ export default function useDiffService() {
   };
 
   const getFilteredPairs = (pairs, searchParams) => {
-    const filterHash = searchParams.get("filter");
-    if (!filterHash || !localStorage) {
+    const hashId = searchParams.get("additionalParams");
+    if (!hashId || !localStorage) {
       return pairs;
     }
-    const raw = localStorage.getItem(filterHash + "_filter");
+    const raw = localStorage.getItem(hashId + "_additionalParams");
     if (!raw) {
       return pairs;
     }
@@ -123,19 +123,19 @@ export default function useDiffService() {
     } catch (e) {
       return pairs;
     }
-    if (!parsed || typeof parsed.value !== "string") {
+    if (!parsed || !parsed.filter || typeof parsed.filter.value !== "string") {
       return pairs;
     }
 
-    let filter = parsed.value;
+    let filter = parsed.filter.value;
     if (filter.includes(",")) {
       filter = filter.split(",");
     } else if (filter.includes(" ")) {
       filter = filter.split(" ");
     }
-    if (parsed.type === "exclude") {
+    if (parsed.filter.type === "exclude") {
       return pairs.filter(pair => !pair.leftWorkItem || !filter.includes(pair.leftWorkItem.id));
-    } else if (parsed.type === "include") {
+    } else if (parsed.filter.type === "include") {
       return pairs.filter(pair => pair.leftWorkItem && filter.includes(pair.leftWorkItem.id));
     }
 
