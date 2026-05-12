@@ -176,6 +176,15 @@ test.describe("page of diffing documents' WorkItems", () => {
   test('select all', async ({ page }) => {
     await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
+    const expandButton = page.locator('.control-pane .expand-button');
+    await expect(expandButton).toBeVisible({visible: true});
+    await expandButton.click();
+    expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
+
+    const perFieldMergeCheckbox = page.getByTestId('per-field-merge-selection');
+    await perFieldMergeCheckbox.isVisible();
+    await perFieldMergeCheckbox.click();
+
     // Check first that headers of WI pairs are not visually marked as selected. Also hidden ones will be taken by locator below, but for this test this is not important
     const allPairs = page.locator('.wi-diff');
     for (let i = 0; i < await allPairs.count(); i++) {
@@ -190,7 +199,7 @@ test.describe("page of diffing documents' WorkItems", () => {
     await selectAllCheckbox.click();
 
     // Check that when "select all" is ticked all other selection checkboxes also ticked
-    const mergeTickers = page.locator('.wi-diff .merge-ticker input[type="checkbox"]');
+    const mergeTickers = page.locator('.wi-diff .header .merge-ticker input[type="checkbox"]');
     const mergeTickersCount = await mergeTickers.count();
     for (let i = 0; i < mergeTickersCount; i++) {
       await expect(mergeTickers.nth(i)).toBeVisible();
@@ -288,15 +297,6 @@ test.describe("page of diffing documents' WorkItems", () => {
 
   test('select single field', async ({ page }) => {
     await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
-
-    const expandButton = page.locator('.control-pane .expand-button');
-    await expect(expandButton).toBeVisible({visible: true});
-    await expandButton.click();
-    expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
-
-    const perFieldMergeCheckbox = page.getByTestId('per-field-merge-selection');
-    await perFieldMergeCheckbox.isVisible();
-    await perFieldMergeCheckbox.click();
 
     const selectAllCheckbox = page.locator('.header .merge-pane label.select-all input[type="checkbox"]');
     await expect(selectAllCheckbox).toBeVisible();
