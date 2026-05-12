@@ -47,6 +47,15 @@
                   projectScope="false"
                   projectGroupScope="false"
                   repositoryScope="true"/>
+
+        <extender id="project-duplication"
+                  name="Project Duplication"
+                  parentNodeId="diff-tool"
+                  iconUrl="/polarion/diff-tool-admin/ui/images/menu/16x16/duplication.svg"
+                  pageUrl="/polarion/diff-tool-admin/pages/project_duplication.jsp?scope=$scope$"
+                  projectScope="false"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
     </contribution>
 
     <contribution configuration-id="com.polarion.alm.wiki.renderingContext">
