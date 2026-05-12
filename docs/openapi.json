@@ -1984,7 +1984,15 @@
             "type": "integer"
           },
           "state": {
-            "description": "Job state: UNSCHEDULED, ACTIVATING, WAITING, RUNNING, FINISHED, CANCELED",
+            "description": "Polarion job state",
+            "enum": [
+              "UNSCHEDULED",
+              "ACTIVATING",
+              "WAITING",
+              "RUNNING",
+              "FINISHED",
+              "ABORTED"
+            ],
             "type": "string"
           },
           "statusMessage": {
@@ -1992,7 +2000,13 @@
             "type": "string"
           },
           "statusType": {
-            "description": "Final job status type: OK, FAILED, CANCELED. Null while still running.",
+            "description": "Final job status type",
+            "enum": [
+              "OK",
+              "CANCELLED",
+              "FAILED",
+              "UNKNOWN"
+            ],
             "type": "string"
           }
         },

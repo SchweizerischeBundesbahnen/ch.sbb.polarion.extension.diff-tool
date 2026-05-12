@@ -18,10 +18,10 @@ public class DuplicationJobInfo {
     @Schema(description = "Human-readable job name")
     private String jobName;
 
-    @Schema(description = "Job state: UNSCHEDULED, ACTIVATING, WAITING, RUNNING, FINISHED, CANCELED")
+    @Schema(description = "Polarion job state", implementation = JobStateName.class)
     private String state;
 
-    @Schema(description = "Final job status type: OK, FAILED, CANCELED. Null while still running.")
+    @Schema(description = "Final job status type. Null while still running.", implementation = JobStatusTypeName.class)
     private String statusType;
 
     @Schema(description = "Status message (failure cause or success summary)")
