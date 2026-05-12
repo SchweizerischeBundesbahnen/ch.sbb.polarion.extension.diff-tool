@@ -7,6 +7,7 @@ import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.model.ITrackerProject;
+import com.polarion.core.config.Configuration;
 import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.ILogger;
 import com.polarion.core.util.logging.Logger;
@@ -110,6 +111,15 @@ public class ProjectDuplicationService {
         progressLog(progressLog, "      Source location: " + ctx.sourceLocation
                 + " ; source tracker prefix: '" + ctx.sourcePrefixWithoutDash + "-'"
                 + " ; new tracker prefix: '" + ctx.newPrefixWithoutDash + "-'");
+        // If phase [4/5] runs longer than this timeout, the SVN session is closed by the pool
+        // and the createProject transaction fails to commit. Raise via polarion.properties:
+        //   com.polarion.repositorySessionTimeout=<seconds>   (default 600)
+        long svnSessionTimeoutMs = Configuration.getInstance().platform().repositorySessionTimeout();
+        long svnSessionCheckIntervalMs = Configuration.getInstance().platform().repositorySessionTimeoutCheckInterval();
+        progressLog(progressLog, "      SVN session timeout: " + (svnSessionTimeoutMs / 1000) + " s"
+                + " (com.polarion.repositorySessionTimeout)"
+                + " ; check interval: " + (svnSessionCheckIntervalMs / 1000) + " s"
+                + " (com.polarion.repositorySessionTimeoutCheckInterval)");
         monitor.worked(WORK_VALIDATE);
         checkCanceled(monitor);
 

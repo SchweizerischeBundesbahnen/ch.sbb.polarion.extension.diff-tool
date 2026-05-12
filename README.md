@@ -121,6 +121,25 @@ ch.sbb.polarion.extension.diff-tool.chunk.size=2
 
 Default value is `2`. Increasing this value may speed up the process but can also overload your Polarion server.
 
+### Project duplication on large projects
+
+Duplicating a project goes through Polarion's `IProjectLifecycleManager.createProject` API, which has to be wrapped in a single write transaction (this is the pattern Polarion's own "Create Project from Template" wizard uses). For very large source projects the long phase `[4/5] Creating project … from template` can run for tens of minutes inside that one transaction.
+
+Polarion's SVN repository pool closes idle sessions after `com.polarion.repositorySessionTimeout` seconds (default **600 s / 10 min**). If the createProject phase exceeds this limit, the transaction fails to commit with `RepositoryTimeoutException: Failed to retrieve repository. Most likely the operation took too long`, and the whole duplication is rolled back.
+
+For large projects, raise the timeout in `polarion.properties`:
+
+```properties
+# Maximum age (seconds) an SVN session may sit idle before the pool closes it.
+# Must be larger than the longest createProject phase you expect. Default: 600.
+com.polarion.repositorySessionTimeout=3600
+
+# How often (seconds) the background timer scans for idle sessions. Default: 180.
+com.polarion.repositorySessionTimeoutCheckInterval=600
+```
+
+Polarion must be restarted for these values to take effect — they are read once during startup. The current effective values are printed in the job log right after `[1/5] Validating request …`, so you can verify they were picked up.
+
 ## Extension Configuration
 
 1. On the top of the project's navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Project's administration page will be opened.
