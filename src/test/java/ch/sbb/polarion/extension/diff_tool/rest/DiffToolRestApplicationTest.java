@@ -32,7 +32,7 @@ class DiffToolRestApplicationTest {
             mockStaticSettings.when(ExecutionQueueSettings::readAsSystemUser).thenReturn(model);
 
             DiffToolRestApplication app = new DiffToolRestApplication();
-            assertEquals(10, app.getExtensionControllerClasses().size());
+            assertEquals(12, app.getExtensionControllerClasses().size());
             assertNotNull(DiffToolRestApplication.getExecutionService());
             assertNotNull(DiffToolRestApplication.getExecutionMonitor());
         } finally {
