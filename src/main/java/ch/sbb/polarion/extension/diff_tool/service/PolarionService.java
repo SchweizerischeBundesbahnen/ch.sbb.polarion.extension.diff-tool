@@ -306,7 +306,6 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                 .map(e -> LinkRole.builder().id(e.getId()).name(e.getName()).build()).toList();
     }
 
-    @SneakyThrows
     public List<WorkItemsPair> getPairedWorkItems(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @Nullable ILinkRoleOpt linkRole, @NotNull List<String> statusesToIgnore) {
         CalculatePairsContext context = new CalculatePairsContext(leftDocument, rightDocument, linkRole, statusesToIgnore);
 
