@@ -79,9 +79,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -313,25 +310,15 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     public List<WorkItemsPair> getPairedWorkItems(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @Nullable ILinkRoleOpt linkRole, @NotNull List<String> statusesToIgnore) {
         CalculatePairsContext context = new CalculatePairsContext(leftDocument, rightDocument, linkRole, statusesToIgnore);
 
-        // First we need to use sets for both direct and inverse pairs to exclude duplications
-        ExecutorService executor = Executors.newFixedThreadPool(2);
-
-        CompletableFuture<Set<Pair<IWorkItem, IWorkItem>>> pairsFuture = CompletableFuture.supplyAsync(() -> leftDocument.getAllWorkItems().stream()
+        Set<Pair<IWorkItem, IWorkItem>> pairsSet = leftDocument.getAllWorkItems().stream()
                 .map(workItem -> selectOutlinePairedWorkItems(workItem, false, context))
                 .flatMap(Set::stream)
-                .collect(Collectors.toSet()), executor);
+                .collect(Collectors.toSet());
 
-        CompletableFuture<Set<Pair<IWorkItem, IWorkItem>>> inversePairsFuture = CompletableFuture.supplyAsync(() -> rightDocument.getAllWorkItems().stream()
+        Set<Pair<IWorkItem, IWorkItem>> inversePairsSet = rightDocument.getAllWorkItems().stream()
                 .map(workItem -> selectOutlinePairedWorkItems(workItem, true, context))
                 .flatMap(Set::stream)
-                .collect(Collectors.toSet()), executor);
-
-        CompletableFuture<Void> completableFuture = CompletableFuture.allOf(pairsFuture, inversePairsFuture);
-        completableFuture.join();
-
-        Set<Pair<IWorkItem, IWorkItem>> pairsSet = pairsFuture.get();
-        Set<Pair<IWorkItem, IWorkItem>> inversePairsSet = inversePairsFuture.get();
-        executor.shutdown();
+                .collect(Collectors.toSet());
 
         // Then we put those pairs from inverse set which have not empty left part to direct set
         inversePairsSet.stream().filter(pair -> pair.getLeft() != null).forEach(pairsSet::add);
