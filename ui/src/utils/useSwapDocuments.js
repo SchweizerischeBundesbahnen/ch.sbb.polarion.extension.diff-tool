@@ -4,9 +4,11 @@ const SWAP_MAPPING = {
   sourceProjectId: 'targetProjectId',
   sourceSpaceId: 'targetSpaceId',
   sourceDocument: 'targetDocument',
+  sourceRevision: 'targetRevision',
   targetProjectId: 'sourceProjectId',
   targetSpaceId: 'sourceSpaceId',
   targetDocument: 'sourceDocument',
+  targetRevision: 'sourceRevision',
 };
 
 export default function useSwapDocuments() {
