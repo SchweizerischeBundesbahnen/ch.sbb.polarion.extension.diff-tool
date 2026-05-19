@@ -14,7 +14,7 @@ repos:
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: trailing-whitespace
-        exclude_types: [markdown]  # Avoid conflicts with markdown formatting
+        exclude_types: [markdown, xml, svg]  # markdown formatting; XML/SVG are structured assets
         exclude: ^src/test/resources/.*\.html$  # diff-tool fixtures: exact HTML, no normalization
       - id: check-xml
       - id: check-json
@@ -22,9 +22,11 @@ repos:
       - id: check-yaml
       - id: no-commit-to-branch
       - id: mixed-line-ending
-        exclude: ^src/test/resources/.*\.html$  # diff-tool fixtures: exact HTML, no normalization
+        exclude_types: [xml, svg]
+        exclude: ^src/test/resources/.*\.html$
       - id: end-of-file-fixer
-        exclude: ^src/test/resources/.*\.html$  # diff-tool fixtures: exact HTML, no normalization
+        exclude_types: [xml, svg]
+        exclude: ^src/test/resources/.*\.html$
       - id: pretty-format-json
         alias: pretty-format-openapi-json
         args: [--autofix, --no-ensure-ascii, '--top-keys=openapi,info,servers,paths,components']
