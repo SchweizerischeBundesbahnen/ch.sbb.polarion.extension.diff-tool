@@ -10,15 +10,23 @@ repos:
     rev: v6.0.0
     hooks:
       - id: check-added-large-files
+        args: [--maxkb=5120]
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: trailing-whitespace
+        exclude_types: [markdown, xml, svg]  # markdown formatting; XML/SVG are structured assets
+        exclude: ^src/test/resources/.*\.html$  # diff-tool fixtures: exact HTML, no normalization
       - id: check-xml
       - id: check-json
+      - id: check-toml
       - id: check-yaml
       - id: no-commit-to-branch
       - id: mixed-line-ending
+        exclude_types: [xml, svg]
+        exclude: ^src/test/resources/.*\.html$
       - id: end-of-file-fixer
+        exclude_types: [xml, svg]
+        exclude: ^src/test/resources/.*\.html$
       - id: pretty-format-json
         alias: pretty-format-openapi-json
         args: [--autofix, --no-ensure-ascii, '--top-keys=openapi,info,servers,paths,components']
