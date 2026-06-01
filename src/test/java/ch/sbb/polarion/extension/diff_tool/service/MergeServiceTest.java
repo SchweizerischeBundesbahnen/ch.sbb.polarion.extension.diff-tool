@@ -1797,10 +1797,10 @@ class MergeServiceTest {
         DocumentIdentifier doc2 = new DocumentIdentifier("project2", "space2", "doc2", "rev1", "rev1");
 
         CustomField sourceCustomFieldMock = mock(CustomField.class);
-        IType sourceTypeMock = mock(IType.class);
+        IType sourceTypeMock = mock(IEnumType.class);
         when(sourceCustomFieldMock.getType()).thenReturn(sourceTypeMock);
         CustomField targetCustomFieldMock = mock(CustomField.class);
-        IType targetTypeMock = mock(IType.class);
+        IType targetTypeMock = mock(IListType.class);
         when(targetCustomFieldMock.getType()).thenReturn(targetTypeMock);
         CustomFieldsService customFieldsServiceMock = mock(CustomFieldsService.class);
         when(customFieldsServiceMock.getCustomField(argThat(obj -> obj instanceof IWorkItem workItem && workItem.getProjectId().equals("project1")), any())).thenReturn(sourceCustomFieldMock);
