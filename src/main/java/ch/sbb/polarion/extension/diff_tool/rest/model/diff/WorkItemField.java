@@ -44,15 +44,27 @@ public class WorkItemField implements Comparable<WorkItemField> {
         int fieldNameDiff = this.name.compareTo(other.name);
         if (fieldNameDiff != 0) {
             return fieldNameDiff;
-        } else {
-            if (this.wiTypeName != null && other.wiTypeName != null) {
-                return this.wiTypeName.compareTo(other.wiTypeName);
-            } else if (this.wiTypeName != null) {
-                return 1;
-            } else if (other.wiTypeName != null) {
-                return -1;
-            }
-            return 0;
         }
+
+        int wiTypeNameDiff = compareNullable(this.wiTypeName, other.wiTypeName);
+        if (wiTypeNameDiff != 0) {
+            return wiTypeNameDiff;
+        }
+
+        // Two fields can share the same name and work item type but still be distinct custom fields with different
+        // keys, so the unique key is used as the final criterion to keep them apart (it stays 0 for the same field
+        // defined both globally and on a work item type, which is what we want to deduplicate).
+        return compareNullable(this.key, other.key);
+    }
+
+    private static int compareNullable(String first, String second) {
+        if (first != null && second != null) {
+            return first.compareTo(second);
+        } else if (first != null) {
+            return 1;
+        } else if (second != null) {
+            return -1;
+        }
+        return 0;
     }
 }
