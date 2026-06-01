@@ -818,7 +818,7 @@ public class MergeService {
             ICustomFieldsService customFieldsService = polarionService.getTrackerService().getDataService().getCustomFieldsService();
             ICustomField sourceCustomField = customFieldsService.getCustomField(source, field.getKey());
             ICustomField targetCustomField = customFieldsService.getCustomField(target, field.getKey());
-            if (!sourceCustomField.getType().equals(targetCustomField.getType())) { // ...and if types of this custom field in source and in target items are not equal then throw an error
+            if (!Objects.equals(sourceCustomField.getType().getClass(), targetCustomField.getType().getClass())) { // ...and if types of this custom field in source and in target items are not equal then throw an error
                 throw new IllegalStateException(String.format("Can't merge fields with different types, check that fields with key '%s' have the same type in source and target work item", field.getKey()));
             }
         }
