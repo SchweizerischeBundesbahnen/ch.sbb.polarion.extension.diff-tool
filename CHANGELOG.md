@@ -1,5 +1,17 @@
 # Changelog
 
+## [8.3.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.3.0...v8.3.1) (2026-06-01)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v14.1.4 ([d17c103](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d17c103938efe20cdc60c55fe0a52c1fbffd590b))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v12.4.2 ([5ff4654](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/5ff465411b2824c22a46c2cdd9f63a36dfd80b40))
+* Get rid of duplicated field definitions in case of the same custom field on global and wi level ([#465](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/465)) ([c37ab99](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/c37ab9957716551b9602b907379cb9b3186044d7))
+* narrow checking of field types just to their classes. ([#464](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/464)) ([1c0e5d3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/1c0e5d3ecc74832175c9fddf5fce08bc7bd576bb))
+* remove parallelism around non thread-safe code (inside Polarion), it doesn't influence overall performance ([#457](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/457)) ([44bca1e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/44bca1e32b4961af69962b82bd36e75c8b7829e0))
+* swap also revisions when swapping documents ([#460](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/460)) ([b0decc6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/b0decc6526220623c598de76f481179bd676d474))
+
 ## [8.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.2.1...v8.3.0) (2026-05-12)
 
 
