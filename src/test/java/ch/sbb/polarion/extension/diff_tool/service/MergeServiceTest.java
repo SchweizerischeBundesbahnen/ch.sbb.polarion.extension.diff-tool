@@ -1858,6 +1858,73 @@ class MergeServiceTest {
     }
 
     @Test
+    void testCorrespondingFieldTypesDoesNotThrowError() {
+        NamedSettingsRegistry.INSTANCE.register(List.of(new DiffSettings(settingsService)));
+        DocumentIdentifier doc1 = new DocumentIdentifier("project1", "space1", "doc1", "rev1", "rev1");
+        DocumentIdentifier doc2 = new DocumentIdentifier("project2", "space2", "doc2", "rev1", "rev1");
+
+        CustomField sourceCustomFieldMock = mock(CustomField.class);
+        IType sourceTypeMock = mock(IType.class);
+        when(sourceCustomFieldMock.getType()).thenReturn(sourceTypeMock);
+        CustomField targetCustomFieldMock = mock(CustomField.class);
+        IType targetTypeMock = mock(IType.class);
+        when(targetCustomFieldMock.getType()).thenReturn(targetTypeMock);
+        CustomFieldsService customFieldsServiceMock = mock(CustomFieldsService.class);
+        when(customFieldsServiceMock.getCustomField(argThat(obj -> obj instanceof IWorkItem workItem && workItem.getProjectId().equals("project1")), any())).thenReturn(sourceCustomFieldMock);
+        when(customFieldsServiceMock.getCustomField(argThat(obj -> obj instanceof IWorkItem workItem && workItem.getProjectId().equals("project2")), any())).thenReturn(targetCustomFieldMock);
+        IDataService dataServiceMock = mock(IDataService.class);
+        when(dataServiceMock.getCustomFieldsService()).thenReturn(customFieldsServiceMock);
+        ITrackerService trackerServiceMock = mock(ITrackerService.class);
+        when(trackerServiceMock.getDataService()).thenReturn(dataServiceMock);
+        when(polarionService.getTrackerService()).thenReturn(trackerServiceMock);
+
+        IModule leftModule = mock(IModule.class);
+        ILocation leftLocation = mock(ILocation.class);
+        when(leftLocation.getLocationPath()).thenReturn("space1/doc1");
+        when(leftModule.getModuleLocation()).thenReturn(leftLocation);
+        lenient().when(leftModule.getLastRevision()).thenReturn("rev1");
+        when(polarionService.getModule(doc1)).thenReturn(leftModule);
+
+        IModule rightModule = mock(IModule.class);
+        ILocation rightLocation = mock(ILocation.class);
+        when(rightLocation.getLocationPath()).thenReturn("space2/doc2");
+        when(rightModule.getModuleLocation()).thenReturn(rightLocation);
+        lenient().when(rightModule.getLastRevision()).thenReturn("rev1");
+        when(polarionService.getModule(doc2)).thenReturn(rightModule);
+
+        IWorkItem leftWorkItem = mock(IWorkItem.class);
+        when(leftWorkItem.getId()).thenReturn("left");
+        when(leftWorkItem.getProjectId()).thenReturn("project1");
+        when(leftWorkItem.getLastRevision()).thenReturn("rev1");
+        when(leftWorkItem.getPrototype()).thenReturn(mock(IPrototype.class));
+
+        IWorkItem rightWorkItem = mock(IWorkItem.class);
+        when(rightWorkItem.getId()).thenReturn("right");
+        when(rightWorkItem.getProjectId()).thenReturn("project2");
+        when(rightWorkItem.getLastRevision()).thenReturn("rev1");
+
+        List<MergeWorkItemsPair> workItemsPairs = new ArrayList<>();
+        workItemsPairs.add(new MergeWorkItemsPair(leftWorkItem, rightWorkItem, List.of()));
+        DiffModel diffModel = mock(DiffModel.class);
+
+        List<DiffField> diffFields = new ArrayList<>();
+        diffFields.add(DiffField.builder().key("testSteps").build());
+
+        when(diffModel.getDiffFields()).thenReturn(diffFields);
+        when(polarionService.getLinkRoleById(anyString(), any())).thenReturn(mock(ILinkRoleOpt.class));
+        DocumentsMergeParams mergeParams = new DocumentsMergeParams(doc1, doc2, MergeDirection.LEFT_TO_RIGHT, "any", LinkRoleDirection.DIRECT, null, "any", workItemsPairs, false, false);
+        DocumentsMergeContext context = new DocumentsMergeContext(polarionService, doc1, doc2, mergeParams.getMergeDirection(), mergeParams.getLinkRole(), mergeParams.getLinkRoleDirection(), diffModel, false)
+                .setAllowReferencedWorkItemMerge(mergeParams.isAllowedReferencedWorkItemMerge());
+
+        when(polarionService.getWorkItem("project1", "left", null)).thenReturn(leftWorkItem);
+        when(polarionService.getWorkItem("project2", "right", null)).thenReturn(rightWorkItem);
+
+        MergeWorkItemsPair pair = new MergeWorkItemsPair(leftWorkItem, rightWorkItem, List.of());
+
+        assertDoesNotThrow(() -> mergeService.updateAndMoveItem(pair, context));
+    }
+
+    @Test
     void testGetTestStepsData() {
         TestSteps testStepsMock = mock(TestSteps.class);
 
