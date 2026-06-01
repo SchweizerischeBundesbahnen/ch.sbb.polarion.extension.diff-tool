@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 @Data
 @Builder
@@ -57,7 +58,8 @@ public class WorkItemField implements Comparable<WorkItemField> {
         return compareNullable(this.key, other.key);
     }
 
-    private static int compareNullable(String first, String second) {
+    @VisibleForTesting
+    static int compareNullable(String first, String second) {
         if (first != null && second != null) {
             return first.compareTo(second);
         } else if (first != null) {

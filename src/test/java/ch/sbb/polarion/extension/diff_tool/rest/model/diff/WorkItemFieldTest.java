@@ -50,4 +50,32 @@ class WorkItemFieldTest {
         // The two fields with distinct keys are both retained; the true duplicate (same key/name/type) is discarded
         assertEquals(2, fields.size());
     }
+
+    @Test
+    void compareNullableShouldReturnZeroWhenBothNull() {
+        assertEquals(0, WorkItemField.compareNullable(null, null));
+    }
+
+    @Test
+    void compareNullableShouldReturnPositiveWhenSecondIsNull() {
+        assertEquals(1, WorkItemField.compareNullable("a", null));
+    }
+
+    @Test
+    void compareNullableShouldReturnNegativeWhenFirstIsNull() {
+        assertEquals(-1, WorkItemField.compareNullable(null, "a"));
+    }
+
+    @Test
+    void compareNullableShouldReturnZeroWhenBothEqual() {
+        assertEquals(0, WorkItemField.compareNullable("a", "a"));
+    }
+
+    @Test
+    void compareNullableShouldDelegateToStringCompareWhenBothNonNull() {
+        assertEquals("a".compareTo("b"), WorkItemField.compareNullable("a", "b"));
+        assertEquals("b".compareTo("a"), WorkItemField.compareNullable("b", "a"));
+        assertTrue(WorkItemField.compareNullable("a", "b") < 0);
+        assertTrue(WorkItemField.compareNullable("b", "a") > 0);
+    }
 }
