@@ -41,6 +41,18 @@ public class WorkItemField implements Comparable<WorkItemField> {
 
     @Override
     public int compareTo(@NotNull WorkItemField other) {
-        return this.name.compareTo(other.name);
+        int fieldNameDiff = this.name.compareTo(other.name);
+        if (fieldNameDiff != 0) {
+            return fieldNameDiff;
+        } else {
+            if (this.wiTypeName != null && other.wiTypeName != null) {
+                return this.wiTypeName.compareTo(other.wiTypeName);
+            } else if (this.wiTypeName != null) {
+                return 1;
+            } else if (other.wiTypeName != null) {
+                return -1;
+            }
+            return 0;
+        }
     }
 }

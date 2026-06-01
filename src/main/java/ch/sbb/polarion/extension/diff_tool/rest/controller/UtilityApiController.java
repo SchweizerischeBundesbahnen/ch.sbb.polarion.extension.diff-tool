@@ -37,7 +37,7 @@ public class UtilityApiController extends UtilityInternalController {
     }
 
     @Override
-    public List<WorkItemField> getAllWorkItemFields(String projectId) {
+    public Collection<WorkItemField> getAllWorkItemFields(String projectId) {
         return polarionService.callPrivileged(() -> super.getAllWorkItemFields(projectId));
     }
 
