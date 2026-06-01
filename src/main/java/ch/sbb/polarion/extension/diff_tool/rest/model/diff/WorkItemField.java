@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 @Data
 @Builder
@@ -41,6 +42,31 @@ public class WorkItemField implements Comparable<WorkItemField> {
 
     @Override
     public int compareTo(@NotNull WorkItemField other) {
-        return this.name.compareTo(other.name);
+        int fieldNameDiff = this.name.compareTo(other.name);
+        if (fieldNameDiff != 0) {
+            return fieldNameDiff;
+        }
+
+        int wiTypeNameDiff = compareNullable(this.wiTypeName, other.wiTypeName);
+        if (wiTypeNameDiff != 0) {
+            return wiTypeNameDiff;
+        }
+
+        // Two fields can share the same name and work item type but still be distinct custom fields with different
+        // keys, so the unique key is used as the final criterion to keep them apart (it stays 0 for the same field
+        // defined both globally and on a work item type, which is what we want to deduplicate).
+        return compareNullable(this.key, other.key);
+    }
+
+    @VisibleForTesting
+    static int compareNullable(String first, String second) {
+        if (first != null && second != null) {
+            return first.compareTo(second);
+        } else if (first != null) {
+            return 1;
+        } else if (second != null) {
+            return -1;
+        }
+        return 0;
     }
 }

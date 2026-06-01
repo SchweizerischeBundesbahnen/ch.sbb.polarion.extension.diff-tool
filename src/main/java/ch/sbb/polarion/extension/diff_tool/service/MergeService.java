@@ -1048,7 +1048,7 @@ public class MergeService {
 
     @VisibleForTesting
     void updateAttachmentReferences(IWorkItem target, Map<String, String> fileNamesMapping) {
-        List<WorkItemField> workItemFields = polarionService.getAllWorkItemFields(target.getProjectId());
+        Collection<WorkItemField> workItemFields = polarionService.getAllWorkItemFields(target.getProjectId());
         for (WorkItemField workItemField : workItemFields) {
             Object value = target.getValue(workItemField.getKey());
             if (value instanceof Text text) {

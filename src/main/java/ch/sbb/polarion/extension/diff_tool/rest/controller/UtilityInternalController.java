@@ -158,7 +158,7 @@ public class UtilityInternalController {
                     )
             }
     )
-    public List<WorkItemField> getAllWorkItemFields(@PathParam("projectId") String projectId) {
+    public Collection<WorkItemField> getAllWorkItemFields(@PathParam("projectId") String projectId) {
         if (StringUtils.isBlank(projectId)) {
             throw new BadRequestException(MISSING_PROJECT_ID_MESSAGE);
         }

@@ -78,6 +78,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -553,8 +554,8 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         });
     }
 
-    public List<WorkItemField> getAllWorkItemFields(@NotNull String projectId) {
-        List<WorkItemField> fields = new ArrayList<>(getStandardFields());
+    public Collection<WorkItemField> getAllWorkItemFields(@NotNull String projectId) {
+        Set<WorkItemField> fields = new TreeSet<>(getStandardFields());
 
         ITrackerProject trackerProject = getTrackerProject(projectId);
         IContextId contextId = trackerProject.getContextId();
@@ -563,7 +564,6 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             fields.addAll(getCustomFields(contextId, wiType));
         }
 
-        Collections.sort(fields);
         return fields;
     }
 
