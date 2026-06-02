@@ -27,7 +27,7 @@ class WorkItemFieldTest {
     }
 
     @Test
-    void shouldTreatSameFieldDefinedGloballyAndOnTypeAsIdentical() {
+    void shouldKeepGlobalAndTypeSpecificCopiesDistinct() {
         // Same custom field surfaced once globally (no work item type) and once for a specific type: same key
         WorkItemField globalCopy = WorkItemField.builder().key("custom").name("Custom Field").build();
         WorkItemField typeCopy = WorkItemField.builder().key("custom").name("Custom Field").wiTypeName("Requirement").build();

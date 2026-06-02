@@ -5,11 +5,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
 @Data
+@EqualsAndHashCode(of = {"name", "wiTypeName", "key"}) // equals/hashCode must stay aligned with compareTo, which orders by name, wiTypeName and key only
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
