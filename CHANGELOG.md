@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.3.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.3.1...v8.3.2) (2026-06-02)
+
+
+### Bug Fixes
+
+* upgrade generic to fix brake of diff application ([#467](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/467)) ([e9716b5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/e9716b54535822a25a1a0b0d3a986a6682b779aa))
+
 ## [8.3.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.3.0...v8.3.1) (2026-06-01)
 
 
