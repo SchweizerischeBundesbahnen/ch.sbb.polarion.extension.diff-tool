@@ -48,6 +48,7 @@ import com.polarion.alm.tracker.model.ITestStepKeyOpt;
 import com.polarion.alm.tracker.model.ITestSteps;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
+import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
 import com.polarion.platform.persistence.ICustomFieldsService;
 import com.polarion.platform.persistence.WrapperException;
@@ -82,6 +83,8 @@ import static ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils.*;
 import static com.polarion.alm.tracker.model.IWithAttachments.KEY_ATTACHMENTS;
 
 public class MergeService {
+
+    private static final Logger logger = Logger.getLogger(MergeService.class);
 
     private static final String TEST_STEPS = "steps";
     private static final String TEST_STEP_KEYS = "keys";
@@ -819,9 +822,31 @@ public class MergeService {
             ICustomField sourceCustomField = customFieldsService.getCustomField(source, field.getKey());
             ICustomField targetCustomField = customFieldsService.getCustomField(target, field.getKey());
             if (!Objects.equals(sourceCustomField.getType().getClass(), targetCustomField.getType().getClass())) { // ...and if types of this custom field in source and in target items are not equal then throw an error
+                logger.warn(String.format("Field %s has not equal types in source: %s, and in target: %s", field.getKey(), sourceCustomField.getType().getClass(), targetCustomField.getType().getClass()));
+                logger.warn(String.format("Source custom field attributes: %s", describeCustomField(sourceCustomField)));
+                logger.warn(String.format("Target custom field attributes: %s", describeCustomField(targetCustomField)));
                 throw new IllegalStateException(String.format("Can't merge fields with different types, check that fields with key '%s' have the same type in source and target work item", field.getKey()));
             }
         }
+    }
+
+    private String describeCustomField(ICustomField customField) {
+        if (customField == null) {
+            return "null";
+        }
+        return String.format("id=%s, type=%s, name=%s, description=%s, required=%s, multi=%s, reference=%s, defaultValue=%s, dependsOn=%s, dependentFieldIds=%s, dependencyMapping=%s, parameters=%s",
+                customField.getId(),
+                customField.getType(),
+                customField.getName(),
+                customField.getDescription(),
+                customField.isRequired(),
+                customField.isMulti(),
+                customField.isReference(),
+                customField.getDefaultValue(),
+                customField.getDependsOn(),
+                customField.getDependentFieldIds(),
+                customField.getDependencyMapping(),
+                customField.getParameters());
     }
 
     @VisibleForTesting
