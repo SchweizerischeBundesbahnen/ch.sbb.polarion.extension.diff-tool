@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.3.3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.3.2...v8.3.3) (2026-06-03)
+
+
+### Bug Fixes
+
+* add debug logging for merging custom fields (needed temporarily) ([d950434](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d950434f541a8cf03e9092c5930044c5b7446113))
+
 ## [8.3.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.3.1...v8.3.2) (2026-06-02)
 
 
