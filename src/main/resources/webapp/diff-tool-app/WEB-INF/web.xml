@@ -45,7 +45,7 @@
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>All</web-resource-name>
-            <url-pattern>/ui/app/_next/static/css/*</url-pattern>
+            <url-pattern>/ui/app/_next/static/*</url-pattern>
         </web-resource-collection>
     </security-constraint>
 
