@@ -649,7 +649,7 @@ a.wi-badge:hover {
 }
 
 @media print {
-  .control-pane, .merge-pane, .merge-ticker, .floating-button {
+  .control-pane, .merge-pane, .merge-ticker, .floating-button, .swap-button {
     display: none !important;
   }
 
