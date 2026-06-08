@@ -2,7 +2,6 @@ package ch.sbb.polarion.extension.diff_tool.util;
 
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
-import com.polarion.platform.internal.security.UserCredentials;
 import com.polarion.platform.internal.security.UserPrincipal;
 import com.polarion.subterra.base.location.Location;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.security.auth.DestroyFailedException;
+import javax.security.auth.Destroyable;
 import javax.security.auth.Subject;
 import java.util.List;
 
@@ -30,13 +31,21 @@ class DocumentWorkItemsCacheTest {
     private IWorkItem workItem3Mock;
     private Subject subject;
     private final List<UserPrincipal> principles = List.of(new UserPrincipal("testUser1"), new UserPrincipal("testUser2"));
-    private final List<UserCredentials> credentials = List.of(new UserCredentials("testKey1", "testLogin1", "testPassword1"),
-            new UserCredentials("testKey2", "testLogin2", "testPassword2"));
+    // Credentials are stubbed as Destroyable mocks. The cache only reads
+    // Subject.getPrincipals() (see DocumentWorkItemsCache.getSubjectKey), so the
+    // actual credential type is irrelevant — only the destroy() behaviour
+    // matters for the "destroyed credentials" test. We avoid real
+    // com.polarion.platform.internal.security.UserCredentials because in
+    // Polarion 2606 its static initializer reads
+    // `polarion.usercredentials.encrypt.decrypt.key` from the secrets manager,
+    // which isn't configured under Maven test scope.
+    private List<Destroyable> credentials;
 
     @BeforeEach
     void setup() {
         documentWorkItemsCache.clearCache();
         prepareDocumentWorkItems();
+        credentials = List.of(mock(Destroyable.class), mock(Destroyable.class));
         subject = new Subject();
         subject.getPrincipals().addAll(principles);
         subject.getPublicCredentials().addAll(credentials);
@@ -70,7 +79,13 @@ class DocumentWorkItemsCacheTest {
         // 1. Get workItem form document and save it to cache
         IWorkItem workItem1 = documentWorkItemsCache.getWorkItem(document, subject1, "test-workitem-id-1");
         // 2. Simulate destroy credentials by logout
-        subject1.getPublicCredentials().forEach(c -> ((UserCredentials) c).destroy());
+        subject1.getPublicCredentials().forEach(c -> {
+            try {
+                ((Destroyable) c).destroy();
+            } catch (DestroyFailedException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         // 3. Get workItem form cache with new subject
         IWorkItem workItem2 = documentWorkItemsCache.getWorkItem(document, subject2, "test-workitem-id-1");
