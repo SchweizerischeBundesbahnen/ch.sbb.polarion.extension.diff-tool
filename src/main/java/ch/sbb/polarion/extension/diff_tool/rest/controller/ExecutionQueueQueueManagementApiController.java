@@ -6,8 +6,8 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsE
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 
-import javax.inject.Singleton;
-import javax.ws.rs.Path;
+import jakarta.inject.Singleton;
+import jakarta.ws.rs.Path;
 import java.util.List;
 import java.util.Map;
 

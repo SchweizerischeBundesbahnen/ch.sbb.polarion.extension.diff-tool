@@ -3,8 +3,8 @@ package ch.sbb.polarion.extension.diff_tool.rest.controller;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.*;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 
-import javax.inject.Singleton;
-import javax.ws.rs.Path;
+import jakarta.inject.Singleton;
+import jakarta.ws.rs.Path;
 
 @Singleton
 @Secured

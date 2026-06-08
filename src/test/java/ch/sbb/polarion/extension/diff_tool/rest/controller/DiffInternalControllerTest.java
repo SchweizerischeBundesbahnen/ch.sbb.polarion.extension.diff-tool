@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 
-import javax.ws.rs.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;

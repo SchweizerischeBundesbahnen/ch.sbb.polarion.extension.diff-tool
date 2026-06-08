@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>14.1.5</version>
+        <version>14.1.6-SNAPSHOT</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
@@ -86,14 +86,14 @@
 
     <profiles>
         <profile>
-            <id>polarion2512</id>
+            <id>polarion2606</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
                 <commons-collections4.artifactId>org.apache.commons.commons-collections4_4.4.0</commons-collections4.artifactId>
                 <commons-lang3.artifactId>org.apache.commons.lang3_3.12.0</commons-lang3.artifactId>
-                <org.jsoup.artifactId>org.jsoup_1.15.2</org.jsoup.artifactId>
+                <org.jsoup.artifactId>org.jsoup_1.21.2</org.jsoup.artifactId>
             </properties>
         </profile>
     </profiles>
@@ -165,12 +165,6 @@
             <artifactId>awaitility</artifactId>
             <version>${awaitility.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.polarion.thirdparty</groupId>
-            <artifactId>net.htmlparser.jericho_3.1.0</artifactId>
-            <version>${polarion.version}</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 

@@ -4,9 +4,9 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.conversion.PrintOrientatio
 import ch.sbb.polarion.extension.diff_tool.rest.model.conversion.PrintPaperSize;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 
-import javax.inject.Singleton;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Singleton;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Response;
 
 @Singleton
 @Secured

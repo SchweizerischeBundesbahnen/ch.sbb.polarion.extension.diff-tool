@@ -4,8 +4,8 @@ import ch.sbb.polarion.extension.diff_tool.service.queue.QueueFullException;
 import ch.sbb.polarion.extension.generic.rest.model.ErrorEntity;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.concurrent.RejectedExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

@@ -18,8 +18,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ForbiddenException;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ForbiddenException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
