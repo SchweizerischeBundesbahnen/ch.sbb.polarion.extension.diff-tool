@@ -20,7 +20,7 @@ public enum PrintPaperSize {
             return (name != null) ? valueOf(name.toUpperCase()) : null;
         } catch (IllegalArgumentException e) {
             // Necessary to return correct HTTP error code by query parameters conversion
-            throw new WebApplicationException(jakarta.ws.rs.core.Response
+            throw new WebApplicationException(Response
                     .status(Response.Status.BAD_REQUEST)
                     .entity("Unsupported value for paperSize parameter: " + name)
                     .build());
