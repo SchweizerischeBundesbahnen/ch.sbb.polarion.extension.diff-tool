@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>14.1.6</version>
+        <version>15.0.1</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
@@ -44,7 +44,7 @@
     </issueManagement>
 
     <properties>
-        <node.version>v20.11.0</node.version>
+        <node.version>v24.16.0</node.version>
         <frontend-maven-plugin.version>2.0.0</frontend-maven-plugin.version>
 
         <maven-jar-plugin.Extension-Context>diff-tool</maven-jar-plugin.Extension-Context>
@@ -86,14 +86,14 @@
 
     <profiles>
         <profile>
-            <id>polarion2512</id>
+            <id>polarion2606</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
                 <commons-collections4.artifactId>org.apache.commons.commons-collections4_4.4.0</commons-collections4.artifactId>
                 <commons-lang3.artifactId>org.apache.commons.lang3_3.12.0</commons-lang3.artifactId>
-                <org.jsoup.artifactId>org.jsoup_1.15.2</org.jsoup.artifactId>
+                <org.jsoup.artifactId>org.jsoup_1.21.2</org.jsoup.artifactId>
             </properties>
         </profile>
     </profiles>
@@ -166,12 +166,6 @@
             <version>${awaitility.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.polarion.thirdparty</groupId>
-            <artifactId>net.htmlparser.jericho_3.1.0</artifactId>
-            <version>${polarion.version}</version>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -233,7 +227,7 @@
 
             <plugin>
                 <groupId>io.swagger.core.v3</groupId>
-                <artifactId>swagger-maven-plugin</artifactId>
+                <artifactId>swagger-maven-plugin-jakarta</artifactId>
                 <configuration>
                     <outputFormat>JSON</outputFormat>
                     <resourcePackages>

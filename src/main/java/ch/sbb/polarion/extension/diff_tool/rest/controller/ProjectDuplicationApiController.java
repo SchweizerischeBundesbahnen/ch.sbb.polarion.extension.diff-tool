@@ -5,8 +5,8 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.duplication.DuplicationReq
 import ch.sbb.polarion.extension.diff_tool.rest.model.duplication.ProjectInfo;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 
-import javax.inject.Singleton;
-import javax.ws.rs.Path;
+import jakarta.inject.Singleton;
+import jakarta.ws.rs.Path;
 import java.util.List;
 
 @Singleton

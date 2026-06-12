@@ -5,7 +5,7 @@ import lombok.experimental.UtilityClass;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import javax.security.auth.Subject;
 
 @UtilityClass

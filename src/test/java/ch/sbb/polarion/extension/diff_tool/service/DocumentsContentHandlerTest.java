@@ -200,14 +200,18 @@ class DocumentsContentHandlerTest {
 
     @Test
     void testRemoveComments() {
+        // Note: <span/> and <div/> are NOT self-closing in HTML5. jsoup 1.21.x
+        // (Polarion 2606) parses them strictly per spec — the trailing "/" is
+        // ignored and everything following nests inside. Use explicit closing
+        // tags so the test fixture matches the intended tree shape.
         Document document = Jsoup.parse("""
             <h2 id="polarion_wiki macro name=module-workitem;params=id=AA-1"></h2>
             <h3 id="polarion_wiki macro name=module-workitem;params=id=AA-2"></h3>
             <p>Paragraph above</p>
-            <span id="polarion-comment:1"/>
-            <span id="some-span"/>
+            <span id="polarion-comment:1"></span>
+            <span id="some-span"></span>
             <div id="polarion_wiki macro name=module-workitem;params=id=AA-3"></div>
-            <span id="polarion-comment:42"/>
+            <span id="polarion-comment:42"></span>
             <div id="polarion_wiki macro name=module-workitem;params=id=AA-4"></div>
             <p>Paragraph below the last</p>
         """);

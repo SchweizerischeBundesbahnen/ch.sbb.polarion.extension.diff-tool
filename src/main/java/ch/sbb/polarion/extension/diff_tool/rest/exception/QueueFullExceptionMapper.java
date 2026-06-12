@@ -4,9 +4,9 @@ import ch.sbb.polarion.extension.diff_tool.service.queue.QueueFullException;
 import ch.sbb.polarion.extension.generic.rest.model.ErrorEntity;
 import com.polarion.core.util.logging.Logger;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
 
 public class QueueFullExceptionMapper implements ExceptionMapper<QueueFullException> {
     private static final Logger logger = Logger.getLogger(QueueFullExceptionMapper.class);

@@ -7,8 +7,8 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeP
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 
-import javax.inject.Singleton;
-import javax.ws.rs.Path;
+import jakarta.inject.Singleton;
+import jakarta.ws.rs.Path;
 
 @Singleton
 @Secured

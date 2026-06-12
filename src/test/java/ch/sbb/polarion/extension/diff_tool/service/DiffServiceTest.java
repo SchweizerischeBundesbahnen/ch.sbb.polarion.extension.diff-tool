@@ -979,7 +979,7 @@ class DiffServiceTest {
 
         org.springframework.web.context.request.ServletRequestAttributes attrs =
                 mock(org.springframework.web.context.request.ServletRequestAttributes.class);
-        when(attrs.getRequest()).thenReturn(mock(javax.servlet.http.HttpServletRequest.class));
+        when(attrs.getRequest()).thenReturn(mock(jakarta.servlet.http.HttpServletRequest.class));
         org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(attrs);
         try (org.mockito.MockedStatic<ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource> mockedDiffModel =
                      mockStatic(ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.class)) {
