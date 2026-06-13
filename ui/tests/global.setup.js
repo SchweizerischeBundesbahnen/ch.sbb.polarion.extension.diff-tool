@@ -18,6 +18,9 @@ const routesToWarmUp = ['/documents', '/collections', '/workitems'];
 
 for (const route of routesToWarmUp) {
   setup(`warm up ${route}`, async ({ page }) => {
+    // Override the suite's per-test timeout (60s CI / 30s local) so the warmup
+    // can actually absorb a slow cold route compile up to the goto budget below.
+    setup.setTimeout(120_000);
     try {
       // `load` ensures the client bundle is fetched (and thus compiled), not just the HTML shell.
       await page.goto(route, { waitUntil: 'load', timeout: 120_000 });
