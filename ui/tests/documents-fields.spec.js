@@ -18,7 +18,7 @@ test.describe("diffing and merging of documents' fields", () => {
 
     const versionFieldDiff = page.getByTestId('version-field-diff');
 
-    await expect(versionFieldDiff.locator(".merge-ticker .form-check input[type='checkbox']")).toBeVisible();
+    await expect(versionFieldDiff.locator(".merge-ticker .form-check input[type='checkbox']").first()).toBeVisible();
 
     const header = versionFieldDiff.locator(".diff-header");
     await expect(header).toBeVisible();
@@ -57,7 +57,7 @@ test.describe("diffing and merging of documents' fields", () => {
 
     const docDocTypeFieldDiff = page.getByTestId('docRevision-field-diff');
 
-    await expect(docDocTypeFieldDiff.locator(".merge-ticker .form-check input[type='checkbox']")).toBeVisible();
+    await expect(docDocTypeFieldDiff.locator(".merge-ticker .form-check input[type='checkbox']").first()).toBeVisible();
 
     const header = docDocTypeFieldDiff.locator(".diff-header");
     await expect(header).toBeVisible();
@@ -86,7 +86,7 @@ test.describe("diffing and merging of documents' fields", () => {
 
     const docDocTypeFieldDiff = page.getByTestId('docLanguage-field-diff');
 
-    await expect(docDocTypeFieldDiff.locator(".merge-ticker .form-check input[type='checkbox']")).toBeVisible();
+    await expect(docDocTypeFieldDiff.locator(".merge-ticker .form-check input[type='checkbox']").first()).toBeVisible();
 
     const header = docDocTypeFieldDiff.locator(".diff-header");
     await expect(header).toBeVisible();
@@ -153,7 +153,7 @@ test.describe("diffing and merging of documents' fields", () => {
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
 
-    const selectionCheckbox = page.getByTestId('version-field-diff').locator('.merge-ticker input[type="checkbox"]');
+    const selectionCheckbox = page.getByTestId('version-field-diff').locator('.merge-ticker input[type="checkbox"]').first();
     await selectionCheckbox.isVisible();
     await selectionCheckbox.click();
 
@@ -188,7 +188,7 @@ test.describe("diffing and merging of documents' fields", () => {
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
     await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
 
-    const selectionCheckbox = page.getByTestId('version-field-diff').locator('.merge-ticker input[type="checkbox"]');
+    const selectionCheckbox = page.getByTestId('version-field-diff').locator('.merge-ticker input[type="checkbox"]').first();
     await selectionCheckbox.isVisible();
     await selectionCheckbox.click();
 
@@ -275,7 +275,7 @@ test.describe("diffing and merging of documents' fields", () => {
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
     await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
 
-    const selectionCheckbox = page.getByTestId('docRevision-field-diff').locator('.merge-ticker input[type="checkbox"]');
+    const selectionCheckbox = page.getByTestId('docRevision-field-diff').locator('.merge-ticker input[type="checkbox"]').first();
     await selectionCheckbox.isVisible();
     await selectionCheckbox.click();
 
@@ -346,7 +346,7 @@ test.describe("diffing and merging of documents' fields", () => {
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
     await expect(page.getByTestId("merge-result-modal")).toBeVisible({ visible: false });
 
-    const selectionCheckbox = page.getByTestId('docLanguage-field-diff').locator('.merge-ticker input[type="checkbox"]');
+    const selectionCheckbox = page.getByTestId('docLanguage-field-diff').locator('.merge-ticker input[type="checkbox"]').first();
     await selectionCheckbox.isVisible();
     await selectionCheckbox.click();
 
