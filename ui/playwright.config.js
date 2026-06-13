@@ -22,6 +22,14 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 1,
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 2 : undefined,
+  /* Per-test timeout. Give CI extra headroom for Next.js dev-mode route
+     compilation under parallel load (default is 30s). */
+  timeout: process.env.CI ? 60_000 : 30_000,
+  /* Assertion timeout. Default is 5s; raise on CI so auto-waiting assertions
+     tolerate dev-server latency. */
+  expect: {
+    timeout: process.env.CI ? 10_000 : 5_000,
+  },
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -35,19 +43,29 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
+    /* Warms up Next.js dev-server routes before the browser projects run, so no
+       test pays the on-demand route-compilation cost. */
+    {
+      name: 'setup',
+      testMatch: /global\.setup\.js/,
+    },
+
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
     },
 
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
+      dependencies: ['setup'],
     },
 
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
+      dependencies: ['setup'],
     },
 
     /* Test against mobile viewports. */
@@ -76,6 +94,8 @@ export default defineConfig({
     command: 'npm run dev',
     port: 3000,
     reuseExistingServer: !process.env.CI,
+    /* Generous startup window for cold `npm run dev` boot on CI. */
+    timeout: 180_000,
     env: {
       PLAYWRIGHT_TESTS: 'true'
     },
