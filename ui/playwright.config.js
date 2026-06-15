@@ -18,10 +18,18 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* DIAGNOSTIC (temporary): retries 0 + huge timeout to distinguish a slow
-     merge-pane (would pass given time) from a stuck one (real bug). Revert. */
-  retries: process.env.CI ? 0 : 1,
-  timeout: process.env.CI ? 120_000 : 30_000,
+  /* Retry on CI only */
+  retries: process.env.CI ? 2 : 1,
+  /* CI runs the Next.js dev server, which compiles each route on first hit; the
+     first test to touch a heavy route can need well over the 30s default while it
+     compiles. Give CI headroom (diagnosed via traces: the merge pane does render,
+     just slowly). Local keeps the tighter default. */
+  timeout: process.env.CI ? 60_000 : 30_000,
+  /* Raise the assertion timeout on CI too so auto-waiting expects (e.g. the URL
+     change after a swap, which triggers a slow reload) tolerate dev-server latency. */
+  expect: {
+    timeout: process.env.CI ? 10_000 : 5_000,
+  },
   /* On CI each browser runs in its own sharded job (one browser per runner, its
      own dev server - see the `e2e` job in maven-build.yml), so parallelism comes
      from the shards. Run a single worker within each shard so tests don't compete

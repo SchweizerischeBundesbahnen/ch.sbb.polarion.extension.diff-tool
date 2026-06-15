@@ -70,7 +70,7 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
 
   return (
       <div className={`container-fluid g-0 diff-wrapper ${selected ? "selected" : ""} ${display ? "d-block" : "d-none"}`} data-testid={fieldName}>
-        {context.state.individualFieldsSelection && <FieldMergeTicker selected={selected} changeSelectionCallback={changeSelected} />}
+        {workItemsPair && context.state.individualFieldsSelection && <FieldMergeTicker selected={selected} changeSelectionCallback={changeSelected} />}
         <div className={`diff-header ${issues && issues.length > 0 ? "diff-issues" : ""}`} ref={refs.setReference} {...getReferenceProps()} >
           {fieldName}
         </div>
