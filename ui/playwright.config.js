@@ -20,8 +20,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 2 : undefined,
+  /* On CI each browser runs in its own sharded job (one browser per runner, its
+     own dev server - see the `e2e` job in maven-build.yml), so parallelism comes
+     from the shards. Run a single worker within each shard so tests don't compete
+     for the dev server's CPU - that contention is what made WebKit flaky. */
+  workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
