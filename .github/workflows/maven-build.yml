@@ -71,7 +71,8 @@ jobs:
               SONAR_ARGS+=("-Dsonar.branch.name=${BRANCH_NAME}")
             fi
           fi
-          mvn --batch-mode -s "${SETTINGS_XML}" clean verify "${SONAR_ARGS[@]}"
+          # JS E2E (Playwright) tests run in the dedicated, per-browser sharded `e2e` job below
+          mvn --batch-mode -s "${SETTINGS_XML}" clean verify -DskipJsTests=true "${SONAR_ARGS[@]}"
       - name: 📦 Build with Maven for PRs
         if: github.event_name == 'pull_request'
         env:
@@ -85,7 +86,8 @@ jobs:
           if [ "${IS_PUBLIC}" = "true" ] && [ "${IS_TEMPLATE}" != "true" ]; then
             SONAR_ARGS+=(sonar:sonar "-Dsonar.pullrequest.base=${GITHUB_BASE_REF}" "-Dsonar.pullrequest.branch=${GITHUB_HEAD_REF}" "-Dsonar.pullrequest.key=${GITHUB_PR_NUMBER_REF}" "-Dsonar.exclusions=.github/**")
           fi
-          mvn --batch-mode -s "${SETTINGS_XML}" clean verify "${SONAR_ARGS[@]}"
+          # JS E2E (Playwright) tests run in the dedicated, per-browser sharded `e2e` job below
+          mvn --batch-mode -s "${SETTINGS_XML}" clean verify -DskipJsTests=true "${SONAR_ARGS[@]}"
       - name: 📋 Analyze dependencies
         run: mvn --batch-mode -s "${SETTINGS_XML}" dependency:analyze
         continue-on-error: false
@@ -99,10 +101,56 @@ jobs:
             target/*.pom
           retention-days: 1
           if-no-files-found: error
+  # Playwright E2E tests, sharded one browser per job.
+  #
+  # Each matrix leg runs on its own runner and starts its own `npm run dev` server
+  # (via playwright.config.js `webServer`), so the browsers no longer compete for a
+  # single dev server's CPU. That contention - 2 workers x 3 browsers against one
+  # server - was the root cause of the load-induced WebKit flakiness (the merge pane
+  # never reaching diffsLoadingProgress === 100 within the timeout). fail-fast is off
+  # so one browser's failure still lets the others report.
+  e2e:
+    name: E2E (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - name: 📄 Checkout the repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: 🧱 Set up Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903  # v6.0.0
+        with:
+          node-version: 24.16.0
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: 📥 Install dependencies
+        run: npm ci
+      - name: 🌐 Install Playwright browser
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: 🧪 Run Playwright E2E tests
+        run: npx playwright test --project=${{ matrix.browser }} --reporter=list
+      - name: 📤 Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: ui/playwright-report/
+          retention-days: 3
+          if-no-files-found: ignore
   # Deploy releases to Maven Central from main and LTS branches (release-v*)
   # See RELEASE.md for LTS branch documentation
   deploy-maven-central:
-    needs: build
+    needs: [build, e2e]
     if: ${{ needs.build.outputs.is_release == 'true' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release-v')) }}
     runs-on: ubuntu-latest
     permissions:
@@ -142,7 +190,7 @@ jobs:
   # Deploy to GitHub Packages (snapshots from main only) and upload release assets to GitHub Release
   # LTS branches (release-v*) only upload release assets, no snapshot deployment
   deploy-github-packages:
-    needs: build
+    needs: [build, e2e]
     if: ${{ github.ref == 'refs/heads/main' || (needs.build.outputs.is_release == 'true' && startsWith(github.ref, 'refs/heads/release-v')) }}
     runs-on: ubuntu-latest
     permissions:
