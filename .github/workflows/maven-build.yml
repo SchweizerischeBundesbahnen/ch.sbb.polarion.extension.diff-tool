@@ -150,13 +150,17 @@ jobs:
       - name: 🌐 Install Playwright browser
         run: npx playwright install --with-deps ${{ matrix.browser }}
       - name: 🧪 Run Playwright E2E tests
-        run: npx playwright test --project=${{ matrix.browser }} --reporter=list
-      - name: 📤 Upload Playwright report
+        run: npx playwright test --project=${{ matrix.browser }} --reporter=list,html
+      - name: 📤 Upload Playwright report and traces
+        # test-results/ holds the per-test traces (trace: retain-on-failure) needed
+        # to diagnose failures; playwright-report/ is the browsable HTML report.
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: playwright-report-${{ matrix.browser }}
-          path: ui/playwright-report/
+          path: |
+            ui/playwright-report/
+            ui/test-results/
           retention-days: 3
           if-no-files-found: ignore
   # Deploy releases to Maven Central from main and LTS branches (release-v*)
