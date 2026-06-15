@@ -18,8 +18,10 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 1,
+  /* DIAGNOSTIC (temporary): retries 0 + huge timeout to distinguish a slow
+     merge-pane (would pass given time) from a stuck one (real bug). Revert. */
+  retries: process.env.CI ? 0 : 1,
+  timeout: process.env.CI ? 120_000 : 30_000,
   /* On CI each browser runs in its own sharded job (one browser per runner, its
      own dev server - see the `e2e` job in maven-build.yml), so parallelism comes
      from the shards. Run a single worker within each shard so tests don't compete
