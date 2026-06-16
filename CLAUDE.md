@@ -195,7 +195,7 @@ When merging rich text fields containing work item links:
 
 - Unit tests use mocked Polarion services (ITrackerService, IProjectService, etc.)
 - Integration tests require Polarion dependencies extracted via [polarion-artifacts-deployer](https://github.com/SchweizerischeBundesbahnen/polarion-artifacts-deployer)
-- Frontend uses Playwright for E2E testing (browsers auto-installed during build)
+- Frontend uses Playwright for E2E testing
 
 ### Deployment and Installation
 
