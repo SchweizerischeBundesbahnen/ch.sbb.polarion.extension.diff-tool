@@ -20,8 +20,21 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 2 : undefined,
+  /* CI runs the Next.js dev server, which compiles each route on first hit; the
+     first test to touch a heavy route can need well over the 30s default while it
+     compiles. Give CI headroom (diagnosed via traces: the merge pane does render,
+     just slowly). Local keeps the tighter default. */
+  timeout: process.env.CI ? 60_000 : 30_000,
+  /* Raise the assertion timeout on CI too so auto-waiting expects (e.g. the URL
+     change after a swap, which triggers a slow reload) tolerate dev-server latency. */
+  expect: {
+    timeout: process.env.CI ? 10_000 : 5_000,
+  },
+  /* On CI each browser runs in its own sharded job (one browser per runner, its
+     own dev server - see the `e2e` job in maven-build.yml), so parallelism comes
+     from the shards. Run a single worker within each shard so tests don't compete
+     for the dev server's CPU - that contention is what made WebKit flaky. */
+  workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -29,8 +42,10 @@ export default defineConfig({
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: 'http://localhost:3000',
 
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    /* Collect a trace for every failing attempt on CI (not just retries) so the
+       failing run is always diagnosable; locally keep the lighter on-first-retry.
+       See https://playwright.dev/docs/trace-viewer */
+    trace: process.env.CI ? 'retain-on-failure' : 'on-first-retry',
   },
 
   /* Configure projects for major browsers */
