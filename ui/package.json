@@ -41,8 +41,8 @@
   },
   "version": "2.1.0",
   "allowScripts": {
-    "sharp": true,
-    "unrs-resolver": true,
-    "fsevents": true
+    "fsevents@2.3.2": true,
+    "sharp@0.34.5": true,
+    "unrs-resolver@1.12.2": true
   }
 }
