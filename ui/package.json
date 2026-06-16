@@ -1,18 +1,18 @@
 {
   "dependencies": {
-    "@babel/runtime": "^7.28.4",
-    "@floating-ui/react": "^0.27.16",
-    "@fortawesome/fontawesome-svg-core": "^7.1.0",
-    "@fortawesome/free-solid-svg-icons": "^7.1.0",
-    "@fortawesome/react-fontawesome": "^3.1.1",
+    "@babel/runtime": "^7.29.7",
+    "@floating-ui/react": "^0.27.19",
+    "@fortawesome/fontawesome-svg-core": "^7.2.0",
+    "@fortawesome/free-solid-svg-icons": "^7.2.0",
+    "@fortawesome/react-fontawesome": "^3.3.1",
     "bootstrap": "^5.3.8",
     "next": "16.2.9",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "uuid": "^14.0.0"
   },
   "devDependencies": {
-    "@playwright/test": "1.60.0",
+    "@playwright/test": "1.61.0",
     "@types/node": "25.9.3",
     "cross-spawn": "7.0.6",
     "eslint": "10.5.0",
@@ -20,7 +20,15 @@
     "istanbul-lib-coverage": "3.2.2",
     "nyc": "18.0.0"
   },
+  "engines": {
+    "node": ">=20.9.0",
+    "npm": ">=11"
+  },
   "name": "objects-diff",
+  "overrides": {
+    "postcss": ">=8.5.10"
+  },
+  "packageManager": "npm@11.17.0",
   "private": true,
   "scripts": {
     "build": "next build",
@@ -31,5 +39,10 @@
     "playwright:test": "npx playwright test",
     "playwright:test:headless": "npx playwright test --reporter=list"
   },
-  "version": "2.1.0"
+  "version": "2.1.0",
+  "allowScripts": {
+    "fsevents@2.3.2": true,
+    "sharp@0.34.5": true,
+    "unrs-resolver@1.12.2": true
+  }
 }
