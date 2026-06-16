@@ -24,6 +24,8 @@ public class CalculatePairsContext {
     @Getter
     private final IModule rightDocument;
     @Getter
+    private final boolean branchedDocuments;
+    @Getter
     private final List<IWorkItem> leftDocumentWorkItems;
     @Getter
     private final List<IWorkItem> rightDocumentWorkItems;
@@ -33,8 +35,13 @@ public class CalculatePairsContext {
     private final Map<IWorkItem, String> outlineNumbersCache = new HashMap<>();
 
     public CalculatePairsContext(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @Nullable ILinkRoleOpt linkedByRole, @NotNull List<String> statusesToIgnore) {
+        this(leftDocument, rightDocument, false, linkedByRole, statusesToIgnore);
+    }
+
+    public CalculatePairsContext(@NotNull IModule leftDocument, @NotNull IModule rightDocument, boolean branchedDocuments, @Nullable ILinkRoleOpt linkedByRole, @NotNull List<String> statusesToIgnore) {
         this.leftDocument = leftDocument;
         this.rightDocument = rightDocument;
+        this.branchedDocuments = branchedDocuments;
         this.linkedByRole = linkedByRole;
         this.statusesToIgnore = statusesToIgnore;
         this.leftDocumentWorkItems = leftDocument.getAllWorkItems();

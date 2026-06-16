@@ -1,4 +1,4 @@
-import {useContext, useEffect, useState} from "react";
+import {useContext, useEffect, useMemo, useState} from "react";
 import {useSearchParams} from "next/navigation";
 import AppContext from "../AppContext";
 import AppAlert from "@/components/AppAlert";
@@ -59,8 +59,10 @@ export default function DocumentsDiff({ enclosingCollections }) {
   const [mergeReportModalVisible, setMergeReportModalVisible] = useState(false);
   const [swapConfirmModalVisible, setSwapConfirmModalVisible] = useState(false);
 
+  const branchedDocuments = useMemo(() => searchParams.get('branched') === "true", [searchParams]);
+
   useEffect(() => {
-    const requiredParams = isSameDocument(searchParams) ? REQUIRED_PARAMS : [...REQUIRED_PARAMS, 'linkRole'];
+    const requiredParams = isSameDocument(searchParams) || branchedDocuments ? REQUIRED_PARAMS : [...REQUIRED_PARAMS, 'linkRole'];
     const missingParams = requiredParams.filter(param => !searchParams.get(param));
     if (missingParams.length > 0) {
       loadingContext.pairsLoadingFinishedWithError(`Following parameters are missing: [${missingParams.join(", ")}]`);

@@ -23,6 +23,7 @@ export default class DiffTool extends GenericMixin {
     this.sourceRevision = sourceRevision;
 
     this.ctx.onClick('compare-with-same-checkbox', () => this.toggleCompareSameDocument());
+    this.ctx.onClick('compare-as-branched-checkbox', () => this.toggleCompareAsBranched());
     this.ctx.onClick('revision-enter-manually', () => this.toggleManualRevision());
     this.ctx.onClick('revision-select-from-list', () => this.toggleListRevision());
     this.ctx.onClick('baseline-checkbox', () => this.baselineSelected());
@@ -205,13 +206,13 @@ export default class DiffTool extends GenericMixin {
     const targetSpace = sameDoc ? this.sourceSpace : this.ctx.getValue("comparison-space-selector");
     const targetDocument = sameDoc ? this.sourceDocument : this.ctx.getValue("document-selector");
     const targetRevision = this.ctx.getValue(this.manualRevision() ? "select-revision-manual-input" : "revision-selector");
-    const linkRole = sameDoc ? "" : this.ctx.getValue("comparison-link-role-selector");
+    const linkRole = (sameDoc || this.compareAsBranched()) ? "" : this.ctx.getValue("comparison-link-role-selector");
     const config = this.ctx.getValue("comparison-config-selector");
 
     let path = `/polarion/diff-tool-app/ui/app/documents.html`
         + `?sourceProjectId=${this.sourceProjectId}&sourceSpaceId=${this.sourceSpace}&sourceDocument=${this.sourceDocument}`
         + `&targetProjectId=${targetProjectId}&targetSpaceId=${targetSpace}&targetDocument=${targetDocument}`
-        + `&config=${config}&compareAs=Workitems`;
+        + `&config=${config}&compareAs=Workitems&branched=${this.compareAsBranched()}`;
     if (linkRole) {
         path += `&linkRole=${linkRole}`;
     }
@@ -269,7 +270,29 @@ export default class DiffTool extends GenericMixin {
         elements[i].classList.remove("hide");
       }
     }
+    // Mutually exclusive with "Compare as branched documents": hide the other checkbox while this one is ticked
+    if (this.compareSameDocument()) {
+      this.ctx.getElementById("compare-as-branched-wrapper").classList.add("hide");
+    } else {
+      this.ctx.getElementById("compare-as-branched-wrapper").classList.remove("hide");
+    }
     this.documentChanged();
+  }
+
+  compareAsBranched() {
+    return document.querySelector('#compare-as-branched-checkbox').checked;
+  }
+
+  toggleCompareAsBranched() {
+    // Link role is irrelevant when comparing branched documents (they are paired via the 'branched_from' link role)
+    // Mutually exclusive with "Compare with another revision of the same document": hide the other checkbox while this one is ticked
+    if (this.compareAsBranched()) {
+      this.ctx.getElementById("comparison-link-role-wrapper").classList.add("hide");
+      this.ctx.getElementById("compare-with-same-wrapper").classList.add("hide");
+    } else {
+      this.ctx.getElementById("comparison-link-role-wrapper").classList.remove("hide");
+      this.ctx.getElementById("compare-with-same-wrapper").classList.remove("hide");
+    }
   }
 
   manualRevision() {

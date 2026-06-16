@@ -11,9 +11,13 @@
         Please select <strong>target</strong> document and its revision below preliminary selecting its project and space, to compare current document in selected revision with it.
         Additionally select which link role should be taken into account when determining counterpart work items as well as diffing configuration.
     </p>
-    <div class='property-wrapper'>
+    <div class='property-wrapper' id='compare-with-same-wrapper'>
         <input type='checkbox' id='compare-with-same-checkbox' />
         <label for='compare-with-same-checkbox'>Compare with another revision of the same document</label>
+    </div>
+    <div class='property-wrapper' id='compare-as-branched-wrapper'>
+        <input type='checkbox' id='compare-as-branched-checkbox' />
+        <label for='compare-as-branched-checkbox'>Compare as branched documents</label>
     </div>
 
     <div class='property-wrapper hide-when-comparing-same'>
@@ -55,7 +59,7 @@
             </div>
         </div>
     </div>
-    <div class='property-wrapper hide-when-comparing-same'>
+    <div class='property-wrapper hide-when-comparing-same' id='comparison-link-role-wrapper'>
         <label for='comparison-link-role-selector' class="fixed-width w-1">Link role:</label>
         <select id='comparison-link-role-selector'>
             {LINK_ROLE_OPTIONS}

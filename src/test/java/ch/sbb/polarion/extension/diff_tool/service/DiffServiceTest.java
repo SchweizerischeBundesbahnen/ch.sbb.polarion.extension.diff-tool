@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CollectionsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor;
@@ -943,7 +944,7 @@ class DiffServiceTest {
         DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").revision("rev1").build();
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                diffService.getDocumentsDiff(leftDocumentIdentifier, rightDocumentIdentifier, "invalid-role", null, null));
+                diffService.getDocumentsDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, "invalid-role", null, null)));
 
         assertTrue(exception.getMessage().contains("invalid-role"));
     }
@@ -959,9 +960,9 @@ class DiffServiceTest {
         DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").revision("rev1").build();
 
         assertThrows(IllegalArgumentException.class, () ->
-                diffService.getDocumentsDiff(leftDocumentIdentifier, rightDocumentIdentifier, null, null, null));
+                diffService.getDocumentsDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, null, null, null)));
         assertThrows(IllegalArgumentException.class, () ->
-                diffService.getDocumentsDiff(leftDocumentIdentifier, rightDocumentIdentifier, "", null, null));
+                diffService.getDocumentsDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, "", null, null)));
         verify(polarionService, never()).getLinkRoleById(anyString(), any());
     }
 
@@ -985,8 +986,8 @@ class DiffServiceTest {
                      mockStatic(ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.class)) {
             mockedDiffModel.when(() -> ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.get(any(), any(), any()))
                     .thenReturn(ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel.builder().build());
-            assertNotNull(diffService.getDocumentsDiff(leftDocumentIdentifier, rightDocumentIdentifier, null, null, null));
-            assertNotNull(diffService.getDocumentsDiff(leftDocumentIdentifier, rightDocumentIdentifier, "", null, null));
+            assertNotNull(diffService.getDocumentsDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, null, null, null)));
+            assertNotNull(diffService.getDocumentsDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, "", null, null)));
         } finally {
             org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
         }
@@ -1004,7 +1005,7 @@ class DiffServiceTest {
         DocumentIdentifier left = DocumentIdentifier.builder().projectId("projectA").spaceId("space1").name("doc").build();
         DocumentIdentifier right = DocumentIdentifier.builder().projectId("projectB").spaceId("space1").name("doc").build();
 
-        assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(left, right, null, null, null));
+        assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(new DocumentsDiffParams(left, right, false, null, null, null)));
     }
 
     @Test
@@ -1018,7 +1019,7 @@ class DiffServiceTest {
         DocumentIdentifier right = DocumentIdentifier.builder().projectId("project1").spaceId("space2").name("doc").build();
 
         // Same project + name, but different space ⇒ documents differ ⇒ linkRole still required.
-        assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(left, right, null, null, null));
+        assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(new DocumentsDiffParams(left, right, false, null, null, null)));
     }
 
     @Test
@@ -1032,7 +1033,7 @@ class DiffServiceTest {
         DocumentIdentifier right = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").build();
 
         // Same project + space, but different name ⇒ documents differ ⇒ linkRole still required.
-        assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(left, right, null, null, null));
+        assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(new DocumentsDiffParams(left, right, false, null, null, null)));
     }
 
     @Test

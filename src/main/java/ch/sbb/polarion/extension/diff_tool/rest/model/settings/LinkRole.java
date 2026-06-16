@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LinkRole {
 
+    public static final String BRANCHED_FROM = "branched_from";
+
     @EqualsAndHashCode.Include
     private String id;
 

@@ -345,6 +345,45 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         return pairs.stream().map(pair -> WorkItemsPair.of(pair, context)).toList();
     }
 
+    public List<WorkItemsPair> getBranchedDocumentsPairedWorkItems(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @Nullable ILinkRoleOpt linkRole, @NotNull List<String> statusesToIgnore) {
+        CalculatePairsContext context = new CalculatePairsContext(leftDocument, rightDocument, true, linkRole, statusesToIgnore);
+
+        Set<Pair<IWorkItem, IWorkItem>> pairsSet = leftDocument.getAllWorkItems().stream()
+                .map(workItem -> selectOutlinePairedWorkItems(workItem, false, context))
+                .flatMap(Set::stream)
+                .collect(Collectors.toSet());
+
+        Set<Pair<IWorkItem, IWorkItem>> inversePairsSet = rightDocument.getAllWorkItems().stream()
+                .map(workItem -> selectOutlinePairedWorkItems(workItem, true, context))
+                .flatMap(Set::stream)
+                .collect(Collectors.toSet());
+
+        // Then we put those pairs from inverse set which have not empty left part to direct set
+        inversePairsSet.stream().filter(pair -> pair.getLeft() != null).forEach(pairsSet::add);
+
+        // When we have full collections of all pairs which left WorkItem is not empty - sort it by outline number of left WorkItem
+        List<Pair<IWorkItem, IWorkItem>> pairs = new ArrayList<>(pairsSet);
+        pairs.sort(Comparator.comparing(o -> context.getOutlineNumber(o.getLeft(), true), context.getOutlineNumberComparator()));
+
+        // Then iterate over reversed pairs which left WorkItem is null and insert it into right position according to right WorkItems sequence
+        inversePairsSet.stream().filter(pair -> pair.getLeft() == null).forEach(pair -> pairs.add(getIndex(pair, pairs, context), pair));
+
+        // Sometimes extra 'orphan' pairs (who has empty left/right part) may occur
+        // (e.g. the resulting set may contain pair {EL-1,null} even though {EL-1,EL-2} exists too),
+        // so we have to check & remove that kind of data.
+        List<Pair<IWorkItem, IWorkItem>> orphansToRemove = new ArrayList<>();
+        for (Pair<IWorkItem, IWorkItem> pair : pairs) {
+            if ((pair.getLeft() == null && pairs.stream().anyMatch(p -> p.getLeft() != null && Objects.equals(p.getRight(), pair.getRight()))) ||
+                    (pair.getRight() == null && pairs.stream().anyMatch(p -> p.getRight() != null && Objects.equals(p.getLeft(), pair.getLeft())))) {
+                orphansToRemove.add(pair);
+            }
+        }
+
+        orphansToRemove.forEach(pairs::remove);
+
+        return pairs.stream().map(pair -> WorkItemsPair.of(pair, context)).toList();
+    }
+
     public String renderField(@NotNull String projectId, @NotNull String workItemId, @NotNull String revision, @NotNull String fieldId, ModelObjectReference mainObjectReference) {
         return TransactionalExecutor.executeSafelyInReadOnlyTransaction(trx -> {
             RichTextRenderTarget renderTarget = RichTextRenderTarget.PDF_EXPORT;
@@ -414,6 +453,16 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
     private Set<Pair<IWorkItem, IWorkItem>> selectOutlinePairedWorkItems(@NotNull IWorkItem workItem, boolean inversePair, @NotNull CalculatePairsContext context) {
         if (notDiffRelated(workItem, inversePair, context)) {
             return new HashSet<>();
+        }
+        if (context.isBranchedDocuments()) {
+            String outlineNumber = context.getOutlineNumber(workItem, inversePair);
+            if (!outlineNumber.contains("-")) { // Special handling of headers in case of diffing branched documents
+                if (inversePair) {
+                    return Set.of(); // Ignore headers from right document
+                } else {
+                    return Set.of(pair(workItem, null, false));
+                }
+            }
         }
 
         List<IWorkItem> oppositeWorkItems = inversePair ? context.getLeftDocumentWorkItems() : context.getRightDocumentWorkItems();

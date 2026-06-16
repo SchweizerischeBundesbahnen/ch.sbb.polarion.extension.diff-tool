@@ -1,5 +1,5 @@
 import DiffContent from "@/components/diff/DiffContent";
-import {useContext, useEffect, useState} from "react";
+import {useContext, useEffect, useMemo, useState} from "react";
 import {WorkItemHeader, LEFT, RIGHT} from "@/components/WorkItemHeader";
 import FloatingButton from "@/components/FloatingButton";
 import {faChevronDown, faChevronUp, faEquals, faQuestion} from "@fortawesome/free-solid-svg-icons";
@@ -37,6 +37,8 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
   const [selected, setSelected] = useState(mergingContext.isIndexSelected(currentIndex));
   const [pairSelectionTrigger, setPairSelectionTrigger] = useState(0);
   const [childrenSelectionModalVisible, setChildrenSelectionModalVisible] = useState(false);
+
+  const branchedDocuments = useMemo(() => searchParams.get('branched') === "true", [searchParams]);
 
   useEffect(() => {
     if (onHold && loadingContext.pairLoadingAllowed(currentIndex)) {
@@ -274,17 +276,17 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
             backgroundColor: asHeaderInDocument ? "#eeeeee" : "#f6f6f6",
             display: isChapterVisible(leftChapter, true) || isChapterVisible(rightChapter, false) || !context.state.hideChaptersIfNoDifference || error ? 'flex' : 'none'
           }} className="header row g-0">
-            <PairMergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />
+            {!(branchedDocuments && asHeaderInDocument) && <PairMergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />}
 
             <WorkItemHeader workItem={workItemsPair.leftWorkItem} asHeaderInDocument={asHeaderInDocument}
                             movedOutlineNumber={workItemsPair.rightWorkItem?.movedOutlineNumber}
                             moveDirection={workItemsPair.rightWorkItem?.moveDirection} side={LEFT} />
 
-            {diffs && diffs.length > 0
+            {!(branchedDocuments && asHeaderInDocument) && diffs && diffs.length > 0
                 && (!workItemsPair.rightWorkItem || !workItemsPair.rightWorkItem.movedOutlineNumber)
                 && <FloatingButton fontAwesomeIcon={expanded ? faChevronDown : faChevronUp} clickHandler={expandHandler}/>}
             {(!diffs || diffs.length === 0) && !error && <FloatingButton fontAwesomeIcon={faEquals} disabled={true}/>}
-            {(!diffs || diffs.length === 0) && error && <FloatingButton fontAwesomeIcon={faQuestion} disabled={true}/>}
+            {((branchedDocuments && asHeaderInDocument) || ((!diffs || diffs.length === 0) && error)) && <FloatingButton fontAwesomeIcon={faQuestion} disabled={true}/>}
 
             <WorkItemHeader workItem={workItemsPair.rightWorkItem} asHeaderInDocument={asHeaderInDocument}
                             movedOutlineNumber={workItemsPair.leftWorkItem?.movedOutlineNumber}
@@ -292,7 +294,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
           </div>
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
           {loading && <div className="loader wi-loader"></div>}
-          {!loading && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber)
+          {!loading && !(branchedDocuments && asHeaderInDocument) && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber)
               && !(workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.externalProjectWorkItem)
               && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.externalProjectWorkItem)
               && <DiffContent workItemsPair={workItemsPair} pairSelected={selected} pairSelectionTrigger={pairSelectionTrigger} pairSelectedCallback={pairSelected} diffs={diffs} expanded={expanded}/>}

@@ -31,7 +31,7 @@ class DocumentsDiffParamsTest {
                 .name("rightDoc")
                 .build();
 
-        DocumentsDiffParams params = new DocumentsDiffParams(leftDoc, rightDoc, "linkRole", "customConfig", "bucketId");
+        DocumentsDiffParams params = new DocumentsDiffParams(leftDoc, rightDoc, false, "linkRole", "customConfig", "bucketId");
 
         assertEquals(leftDoc, params.getLeftDocument());
         assertEquals(rightDoc, params.getRightDocument());
