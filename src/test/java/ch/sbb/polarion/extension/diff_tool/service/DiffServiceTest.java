@@ -23,6 +23,7 @@ import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import ch.sbb.polarion.extension.diff_tool.util.OutlineNumberComparator;
 import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
 import ch.sbb.polarion.extension.generic.fields.model.FieldMetadata;
+import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
@@ -354,7 +355,7 @@ class DiffServiceTest {
         pairedWorkItems.add(createWorkItemsPair("AA-2", "AA-6"));
         pairedWorkItems.add(createWorkItemsPair("AA-3", "AA-7"));
         pairedWorkItems.add(createWorkItemsPair("AA-4", "AA-8"));
-        when(polarionService.getPairedWorkItems(leftDocument, rightDocument, linkRoleObjectMock, Collections.emptyList())).thenReturn(pairedWorkItems);
+        when(polarionService.getPairedWorkItems(leftDocument, rightDocument, false, linkRoleObjectMock, Collections.emptyList())).thenReturn(pairedWorkItems);
 
         when(polarionService.renderDocumentContentBlock(leftDocument, "<p>Paragraph above</p>")).thenReturn("<p>Paragraph above</p>");
         when(polarionService.renderDocumentContentBlock(rightDocument, "<p>Paragraph below</p>")).thenReturn("<p>Paragraph below</p>");
@@ -362,7 +363,7 @@ class DiffServiceTest {
         DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").revision("rev1").build();
         DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").revision("rev1").build();
 
-        DocumentsContentDiff result = diffService.getDocumentsContentDiff(leftDocumentIdentifier, rightDocumentIdentifier, linkRole);
+        DocumentsContentDiff result = diffService.getDocumentsContentDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, linkRole, NamedSettings.DEFAULT_NAME, null));
         assertNotNull(result);
         assertEquals(4, result.getPairedContentAnchors().size());
 
@@ -972,7 +973,7 @@ class DiffServiceTest {
 
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev1")).thenReturn(document);
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev2")).thenReturn(document);
-        when(polarionService.getPairedWorkItems(eq(document), eq(document), isNull(), anyList())).thenReturn(Collections.emptyList());
+        when(polarionService.getPairedWorkItems(eq(document), eq(document), eq(false), isNull(), anyList())).thenReturn(Collections.emptyList());
         when(polarionService.getDocumentWorkItemsCache()).thenReturn(mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class));
 
         DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev1").build();
@@ -1043,12 +1044,12 @@ class DiffServiceTest {
 
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev1")).thenReturn(document);
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev2")).thenReturn(document);
-        when(polarionService.getPairedWorkItems(eq(document), eq(document), isNull(), anyList())).thenReturn(Collections.emptyList());
+        when(polarionService.getPairedWorkItems(eq(document), eq(document), eq(false), isNull(), anyList())).thenReturn(Collections.emptyList());
 
         DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev1").build();
         DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev2").build();
 
-        assertNotNull(diffService.getDocumentsContentDiff(leftDocumentIdentifier, rightDocumentIdentifier, null));
+        assertNotNull(diffService.getDocumentsContentDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, null, NamedSettings.DEFAULT_NAME, null)));
         verify(polarionService, never()).getLinkRoleById(anyString(), any());
     }
 

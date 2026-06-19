@@ -9,6 +9,7 @@ import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.springframework.util.DigestUtils;
 
@@ -46,7 +47,11 @@ public class ImageHandler implements DiffLifecycleHandler {
     }
 
     @VisibleForTesting
-    String calculateHash(String html, WorkItem workItem) {
+    String calculateHash(@Nullable String html, @Nullable WorkItem workItem) {
+        if (html == null) {
+            return null;
+        }
+
         // Replace encoded underscore symbol in 'src' attribute of images
         Matcher encodedUnderscoreMatcher = Pattern.compile("(src=\".*?%5F[^\"]*+\")").matcher(html);
         StringBuilder buf = new StringBuilder();
@@ -80,7 +85,11 @@ public class ImageHandler implements DiffLifecycleHandler {
     }
 
     @VisibleForTesting
-    String fixImagePath(String url, WorkItem workItem) {
+    String fixImagePath(@NotNull String url, @Nullable WorkItem workItem) {
+        if (workItem == null) {
+            return url;
+        }
+
         if (url.startsWith(IWorkItem.ATTACHMENT_IMG_PREFIX)) {
             return url.replace(IWorkItem.ATTACHMENT_IMG_PREFIX, "/polarion/wi-attachment/" + workItem.getProjectId() + "/" + workItem.getId() + "/");
         }

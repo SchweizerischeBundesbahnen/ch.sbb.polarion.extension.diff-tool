@@ -110,14 +110,18 @@ public class DiffService {
         this.polarionService = polarionService;
     }
 
-    public DocumentsContentDiff getDocumentsContentDiff(DocumentIdentifier leftDocumentIdentifier, DocumentIdentifier rightDocumentIdentifier, String linkRoleId) {
+    public DocumentsContentDiff getDocumentsContentDiff(DocumentsDiffParams documentsDiffParams) {
+        DocumentIdentifier leftDocumentIdentifier = documentsDiffParams.getLeftDocument();
+        DocumentIdentifier rightDocumentIdentifier = documentsDiffParams.getRightDocument();
         IModule leftDocument = polarionService.getDocumentWithFilledRevision(leftDocumentIdentifier.getProjectId(), leftDocumentIdentifier.getSpaceId(),
                 leftDocumentIdentifier.getName(), leftDocumentIdentifier.getRevision());
         IModule rightDocument = polarionService.getDocumentWithFilledRevision(rightDocumentIdentifier.getProjectId(), rightDocumentIdentifier.getSpaceId(),
                 rightDocumentIdentifier.getName(), rightDocumentIdentifier.getRevision());
-        ILinkRoleOpt linkRole = resolveLinkRole(linkRoleId, leftDocument, leftDocumentIdentifier, rightDocumentIdentifier);
+        ILinkRoleOpt linkRole = documentsDiffParams.isBranchedDocuments()
+                ? polarionService.getLinkRoleById(LinkRole.BRANCHED_FROM, leftDocument.getProject())
+                : resolveLinkRole(documentsDiffParams.getLinkRole(), leftDocument, leftDocumentIdentifier, rightDocumentIdentifier);
 
-        List<WorkItemsPair> pairedWorkItems = polarionService.getPairedWorkItems(leftDocument, rightDocument, linkRole, Collections.emptyList());
+        List<WorkItemsPair> pairedWorkItems = polarionService.getPairedWorkItems(leftDocument, rightDocument, documentsDiffParams.isBranchedDocuments(), linkRole, Collections.emptyList());
         List<DocumentContentAnchorsPair> pairedDocumentContentAnchors = getPairedDocumentContentAnchors(leftDocument, rightDocument, pairedWorkItems);
 
         return DocumentsContentDiff.builder()
@@ -180,8 +184,8 @@ public class DiffService {
         DiffModel diffModel = DiffModelCachedResource.get(leftDocumentIdentifier.getProjectId(), documentsDiffParams.getConfigName(), documentsDiffParams.getConfigCacheBucketId());
 
         List<WorkItemsPair> pairedWorkItems = documentsDiffParams.isBranchedDocuments()
-                ? polarionService.getBranchedDocumentsPairedWorkItems(leftDocument, rightDocument, linkRole, diffModel.getStatusesToIgnore())
-                : handleMovedItems(polarionService.getPairedWorkItems(leftDocument, rightDocument, linkRole, diffModel.getStatusesToIgnore()));
+                ? polarionService.getPairedWorkItems(leftDocument, rightDocument, true, linkRole, diffModel.getStatusesToIgnore())
+                : handleMovedItems(polarionService.getPairedWorkItems(leftDocument, rightDocument, false, linkRole, diffModel.getStatusesToIgnore()));
 
         // Refresh workItems cache for both documents
         Subject userSubject = RequestContextUtil.getUserSubject();

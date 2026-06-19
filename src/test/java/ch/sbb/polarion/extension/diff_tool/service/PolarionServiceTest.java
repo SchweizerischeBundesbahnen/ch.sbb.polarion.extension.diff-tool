@@ -302,7 +302,7 @@ class PolarionServiceTest {
 
         ILinkRoleOpt role = mock(ILinkRoleOpt.class);
         lenient().when(role.getId()).thenReturn(LINK_ROLE_ID_1);
-        List<WorkItemsPair> resultList = polarionService.getPairedWorkItems(document1, document2, role, Collections.singletonList("draft"));
+        List<WorkItemsPair> resultList = polarionService.getPairedWorkItems(document1, document2, false, role, Collections.singletonList("draft"));
 
         assertEquals(6, resultList.size());
         Set<Pair<String, String>> idsPairSet = resultList.stream().map(

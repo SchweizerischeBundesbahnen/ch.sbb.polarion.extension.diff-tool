@@ -87,6 +87,7 @@ export default function useDiffService() {
         body: JSON.stringify({
           leftDocument: leftDocument,
           rightDocument: rightDocument,
+          branchedDocuments: searchParams.get('branched'),
           linkRole: searchParams.get('linkRole'),
           configName: searchParams.get('config'),
           configCacheBucketId: configCacheId
@@ -253,7 +254,7 @@ export default function useDiffService() {
           leftDocument: leftDocument,
           rightDocument: rightDocument,
           mergeDirection: mergeDirection,
-          linkRole: searchParams.get('linkRole'),
+          linkRole: searchParams.get('branched') === "true" ? "branched_from" : searchParams.get('linkRole'),
           linkRoleDirection: linkRoleDirection,
           configName: searchParams.get('config'),
           configCacheBucketId: configCacheId,
