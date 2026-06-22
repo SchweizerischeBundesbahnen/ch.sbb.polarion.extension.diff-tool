@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@playwright/test": "1.61.0",
-    "@types/node": "25.9.3",
+    "@types/node": "25.9.4",
     "cross-spawn": "7.0.6",
     "eslint": "10.5.0",
     "eslint-config-next": "16.2.9",
