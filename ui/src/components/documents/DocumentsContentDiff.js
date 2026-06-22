@@ -40,6 +40,7 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
   const [mergeReport, setMergeReport] = useState({});
   const [mergeDeniedWarning, setMergeDeniedWarning] = useState(false);  // means that merge operation was denied because displayed state of documents is not last one
   const [mergeNotAuthorizedWarning, setMergeNotAuthorizedWarning] = useState(false);  // means that merge to target document is not authorized for current user
+  const [mergingContentNotPossible, setMergingContentNotPossible] = useState(false);  // when there are no single pair for which both left and right anchors are defined
   const [mergeReportModalVisible, setMergeReportModalVisible] = useState(false);
 
   useEffect(() => {
@@ -90,6 +91,7 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
           setMergeReport(data.mergeReport);
           setMergeDeniedWarning(!data.success && data.targetModuleHasStructuralChanges);
           setMergeNotAuthorizedWarning(!data.success && data.mergeNotAuthorized);
+          setMergingContentNotPossible(!data.success && data.mergingContentNotPossible);
           setMergeReportModalVisible(true);
         })
         .catch((error) => {
@@ -151,7 +153,8 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
     </Modal>
 
     <MergeResultModal visible={mergeReportModalVisible} visibilityCallback={setMergeReportModalVisibleAndReloadIfNeeded}
-                      mergeDeniedWarning={mergeDeniedWarning} mergeNotAuthorizedWarning={mergeNotAuthorizedWarning} mergeReport={mergeReport} />
+                      mergeDeniedWarning={mergeDeniedWarning} mergeNotAuthorizedWarning={mergeNotAuthorizedWarning}
+                      mergingContentNotPossible={mergingContentNotPossible} mergeReport={mergeReport} />
 
     {docsData.pairedContentAnchors.map((pair, index) => {
       return <ContentAnchorsDiff key={index} anchorsPair={pair} currentIndex={index} mergingContext={mergingContext} />

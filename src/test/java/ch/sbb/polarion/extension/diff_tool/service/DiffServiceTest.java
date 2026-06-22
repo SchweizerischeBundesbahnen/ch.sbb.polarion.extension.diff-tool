@@ -402,6 +402,43 @@ class DiffServiceTest {
     }
 
     @Test
+    void testPairBranchedParagraphs() {
+        IModule leftDocument = mock(IModule.class);
+        IModule rightDocument = mock(IModule.class);
+
+        // What getPairedParagraphs returns: H1 matched to RH1, H2 unmatched, RH3 added in the branch
+        WorkItem matchedRight = WorkItem.builder().id("RH1").outlineNumber("1").title("Header").build();
+        WorkItem addedRight = WorkItem.builder().id("RH3").outlineNumber("3").title("New header").build();
+        List<WorkItemsPair> paragraphPairs = List.of(
+                WorkItemsPair.builder().leftWorkItem(WorkItem.builder().id("H1").outlineNumber("1").title("Header").build()).rightWorkItem(matchedRight).build(),
+                WorkItemsPair.builder().leftWorkItem(WorkItem.builder().id("H2").outlineNumber("2").title("Header").build()).rightWorkItem(null).build(),
+                WorkItemsPair.builder().leftWorkItem(null).rightWorkItem(addedRight).build()
+        );
+        when(polarionService.getPairedParagraphs(leftDocument, rightDocument)).thenReturn(paragraphPairs);
+
+        // What getPairedWorkItems(branched) produced: left paragraphs unpaired, non-paragraph items paired by link
+        WorkItemsPair leftParagraph1 = WorkItemsPair.builder().leftWorkItem(WorkItem.builder().id("H1").outlineNumber("1").build()).rightWorkItem(null).build();
+        WorkItemsPair pairedItem = WorkItemsPair.builder().leftWorkItem(WorkItem.builder().id("WI-1").outlineNumber("1-1").build()).rightWorkItem(WorkItem.builder().id("WI-2").outlineNumber("1-1").build()).build();
+        WorkItemsPair leftParagraph2 = WorkItemsPair.builder().leftWorkItem(WorkItem.builder().id("H2").outlineNumber("2").build()).rightWorkItem(null).build();
+        WorkItemsPair leftOnlyItem = WorkItemsPair.builder().leftWorkItem(WorkItem.builder().id("WI-3").outlineNumber("2-1").build()).rightWorkItem(null).build();
+        List<WorkItemsPair> pairedWorkItems = new ArrayList<>(List.of(leftParagraph1, pairedItem, leftParagraph2, leftOnlyItem));
+
+        List<WorkItemsPair> result = diffService.pairBranchedParagraphs(leftDocument, rightDocument, pairedWorkItems);
+
+        // Left paragraph H1 got its matched right counterpart, ordering preserved
+        assertEquals("RH1", result.get(0).getRightWorkItem().getId());
+        // Paired non-paragraph item untouched
+        assertEquals("WI-2", result.get(1).getRightWorkItem().getId());
+        // Left paragraph H2 has no title match - stays unpaired
+        assertNull(result.get(2).getRightWorkItem());
+        // Non-structural left-only item is not a paragraph - stays unpaired
+        assertNull(result.get(3).getRightWorkItem());
+        // Right paragraph added in the branch is inserted as {null, right}
+        assertEquals(5, result.size());
+        assertTrue(result.stream().anyMatch(pair -> pair.getLeftWorkItem() == null && pair.getRightWorkItem() != null && "RH3".equals(pair.getRightWorkItem().getId())));
+    }
+
+    @Test
     void testGetFieldsDiff() {
         IModule left = mock(IModule.class);
         IModule right = mock(IModule.class);

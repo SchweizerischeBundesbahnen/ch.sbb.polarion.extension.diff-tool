@@ -66,6 +66,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 import javax.security.auth.Subject;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -343,6 +344,48 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         orphansToRemove.forEach(pairs::remove);
 
         return pairs.stream().map(pair -> WorkItemsPair.of(pair, context)).toList();
+    }
+
+    /**
+     * Matches paragraphs (headers - work items whose outline number contains no "-") of two branched documents by their title.
+     * Branched documents have no explicit link between their paragraphs, so {@link #getPairedWorkItems} leaves them unpaired;
+     * this method is used additionally (e.g. for content diffing) to pair them up.
+     * Matching is done sequentially in outline number order: each left paragraph claims the first still-unmatched right paragraph
+     * with an equal title. Right paragraphs which match nothing (sections added in the branch) are returned as {@code {null, right}}.
+     */
+    @VisibleForTesting
+    List<WorkItemsPair> getPairedParagraphs(@NotNull IModule leftDocument, @NotNull IModule rightDocument) {
+        CalculatePairsContext context = new CalculatePairsContext(leftDocument, rightDocument, null, Collections.emptyList());
+
+        List<IWorkItem> leftParagraphs = collectParagraphs(leftDocument, true, context);
+        List<IWorkItem> rightParagraphs = collectParagraphs(rightDocument, false, context);
+
+        List<WorkItemsPair> result = new ArrayList<>();
+        Set<IWorkItem> consumedRightParagraphs = new HashSet<>();
+        for (IWorkItem leftParagraph : leftParagraphs) {
+            IWorkItem match = rightParagraphs.stream()
+                    .filter(right -> !consumedRightParagraphs.contains(right) && Objects.equals(right.getTitle(), leftParagraph.getTitle()))
+                    .findFirst().orElse(null);
+            if (match != null) {
+                consumedRightParagraphs.add(match);
+            }
+            result.add(WorkItemsPair.of(pair(leftParagraph, match, false), context));
+        }
+        rightParagraphs.stream()
+                .filter(right -> !consumedRightParagraphs.contains(right))
+                .forEach(right -> result.add(WorkItemsPair.of(pair(right, null, true), context)));
+        return result;
+    }
+
+    private List<IWorkItem> collectParagraphs(@NotNull IModule document, boolean leftDocumentScope, @NotNull CalculatePairsContext context) {
+        return document.getAllWorkItems().stream()
+                .filter(workItem -> !workItem.isUnresolvable())
+                .filter(workItem -> {
+                    String outlineNumber = context.getOutlineNumber(workItem, leftDocumentScope);
+                    return outlineNumber != null && !outlineNumber.contains("-"); // "-" means the item is not a header (e.g. "2.1-1.1")
+                })
+                .sorted(Comparator.comparing(workItem -> context.getOutlineNumber(workItem, leftDocumentScope), context.getOutlineNumberComparator()))
+                .toList();
     }
 
     public String renderField(@NotNull String projectId, @NotNull String workItemId, @NotNull String revision, @NotNull String fieldId, ModelObjectReference mainObjectReference) {

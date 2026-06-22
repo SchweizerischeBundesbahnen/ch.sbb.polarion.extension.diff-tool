@@ -327,6 +327,14 @@ export default function useDiffService() {
       }
     }
 
+    if (pairs.length === 0) {
+      return Promise.resolve({
+        mergeReport: {},
+        success: false,
+        mergingContentNotPossible: true
+      });
+    }
+
     return new Promise((resolve, reject) => {
       remote.sendRequest({
         method: "POST",

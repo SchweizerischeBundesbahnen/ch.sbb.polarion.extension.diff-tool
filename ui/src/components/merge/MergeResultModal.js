@@ -1,7 +1,7 @@
 import Modal from "@/components/Modal";
 import {useState} from "react";
 
-export default function MergeResultModal({visible, visibilityCallback, mergeDeniedWarning, structuralChangesWarning, mergeNotAuthorizedWarning, mergeReport}) {
+export default function MergeResultModal({visible, visibilityCallback, mergeDeniedWarning, structuralChangesWarning, mergeNotAuthorizedWarning, mergingContentNotPossible, mergeReport}) {
 
   const [mergeLogsVisible, setMergeLogsVisible] = useState(false);
 
@@ -17,7 +17,8 @@ export default function MergeResultModal({visible, visibilityCallback, mergeDeni
         }}>
           {mergeDeniedWarning && <p data-testid="merge-aborted">Merge was aborted because some structural changes were done in target document meanwhile.</p>}
           {mergeNotAuthorizedWarning && <p data-testid="merge-not-authorized">You are not authorized to execute such merge request.</p>}
-          {!mergeNotAuthorizedWarning && !mergeDeniedWarning && mergeReport &&
+          {mergingContentNotPossible && <p data-testid="merge-not-possible">We couldn't match paragraphs to or from which merge should be done. Please bring into the line documents structure before merging the content.</p>}
+          {!mergeNotAuthorizedWarning && !mergeDeniedWarning && !mergingContentNotPossible && mergeReport &&
               <>
                 <p data-testid="merge-completed-with-result">
                   Merge operation completed with following result:

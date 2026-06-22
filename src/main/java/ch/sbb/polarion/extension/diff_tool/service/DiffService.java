@@ -122,6 +122,11 @@ public class DiffService {
                 : resolveLinkRole(documentsDiffParams.getLinkRole(), leftDocument, leftDocumentIdentifier, rightDocumentIdentifier);
 
         List<WorkItemsPair> pairedWorkItems = polarionService.getPairedWorkItems(leftDocument, rightDocument, documentsDiffParams.isBranchedDocuments(), linkRole, Collections.emptyList());
+        if (documentsDiffParams.isBranchedDocuments()) {
+            // Paragraphs (headers) of branched documents have no explicit link, so getPairedWorkItems leaves them unpaired.
+            // For content diffing we still need them paired to diff the content blocks around them, so match paragraphs by title.
+            pairedWorkItems = pairBranchedParagraphs(leftDocument, rightDocument, pairedWorkItems);
+        }
         List<DocumentContentAnchorsPair> pairedDocumentContentAnchors = getPairedDocumentContentAnchors(leftDocument, rightDocument, pairedWorkItems);
 
         return DocumentsContentDiff.builder()
@@ -153,6 +158,31 @@ public class DiffService {
             pairedAnchors.add(anchorsPair);
         }
         return pairedAnchors;
+    }
+
+    @VisibleForTesting
+    List<WorkItemsPair> pairBranchedParagraphs(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @NotNull List<WorkItemsPair> pairedWorkItems) {
+        List<WorkItemsPair> paragraphPairs = polarionService.getPairedParagraphs(leftDocument, rightDocument);
+
+        // Right counterpart (matched by title) for each left paragraph which has one
+        Map<String, WorkItem> matchedRightByLeftId = paragraphPairs.stream()
+                .filter(pair -> pair.getLeftWorkItem() != null && pair.getRightWorkItem() != null)
+                .collect(Collectors.toMap(pair -> pair.getLeftWorkItem().getId(), WorkItemsPair::getRightWorkItem, (first, second) -> first));
+
+        // Enrich left paragraphs (left present, right still null) with their matched right counterpart, preserving existing ordering
+        for (WorkItemsPair pair : pairedWorkItems) {
+            if (pair.getLeftWorkItem() != null && pair.getRightWorkItem() == null && isStructuralItem(pair.getLeftWorkItem())) {
+                pair.setRightWorkItem(matchedRightByLeftId.get(pair.getLeftWorkItem().getId()));
+            }
+        }
+
+        // Insert right paragraphs added in the branch (no left counterpart) at the position dictated by their outline number
+        List<WorkItemsPair> result = new ArrayList<>(pairedWorkItems);
+        OutlineNumberComparator outlineNumberComparator = new OutlineNumberComparator();
+        paragraphPairs.stream()
+                .filter(pair -> pair.getLeftWorkItem() == null)
+                .forEach(pair -> result.add(getIndex(pair, result, outlineNumberComparator), pair));
+        return result;
     }
 
     private DocumentContentAnchor convertWorkItemIntoAnchor(WorkItem workItem, Map<String, DocumentContentAnchor> documentAnchors) {

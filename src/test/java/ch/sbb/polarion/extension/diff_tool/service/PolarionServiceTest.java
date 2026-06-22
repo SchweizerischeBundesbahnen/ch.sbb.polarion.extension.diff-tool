@@ -243,6 +243,49 @@ class PolarionServiceTest {
     }
 
     @Test
+    void testGetPairedParagraphs() {
+        IModule leftDocument = mockDocument("left", new Date());
+        IModule rightDocument = mockDocument("right", new Date());
+
+        IWorkItem l1 = mockParagraph(leftDocument, "L1", "1", "Intro");
+        IWorkItem l2 = mockParagraph(leftDocument, "L2", "2", "Scope");
+        IWorkItem l3 = mockParagraph(leftDocument, "L3", "3", "Scope"); // duplicate title - resolved sequentially
+        IWorkItem l4 = mockParagraph(leftDocument, "L4", "4", "Removed"); // no title match on the right
+        IWorkItem l5 = mockParagraph(leftDocument, "L5", "2-1", "Detail"); // not a paragraph (outline contains "-") - excluded
+        when(leftDocument.getAllWorkItems()).thenReturn(List.of(l1, l2, l3, l4, l5));
+
+        IWorkItem r1 = mockParagraph(rightDocument, "R1", "1", "Intro");
+        IWorkItem r2 = mockParagraph(rightDocument, "R2", "2", "Scope");
+        IWorkItem r3 = mockParagraph(rightDocument, "R3", "3", "Scope");
+        IWorkItem r4 = mockParagraph(rightDocument, "R4", "4", "Added"); // no title match on the left - added in the branch
+        IWorkItem r5 = mockParagraph(rightDocument, "R5", "1-1", "Detail"); // not a paragraph - excluded
+        when(rightDocument.getAllWorkItems()).thenReturn(List.of(r1, r2, r3, r4, r5));
+
+        List<WorkItemsPair> result = polarionService.getPairedParagraphs(leftDocument, rightDocument);
+
+        List<Pair<String, String>> idPairs = result.stream().map(pair -> Pair.of(
+                pair.getLeftWorkItem() == null ? null : pair.getLeftWorkItem().getId(),
+                pair.getRightWorkItem() == null ? null : pair.getRightWorkItem().getId())).toList();
+
+        assertEquals(List.of(
+                Pair.of("L1", "R1"),
+                Pair.of("L2", "R2"),
+                Pair.of("L3", "R3"),
+                Pair.of("L4", null),
+                Pair.of(null, "R4")
+        ), idPairs);
+    }
+
+    private IWorkItem mockParagraph(IModule document, String id, String outlineNumber, String title) {
+        IWorkItem workItem = mock(IWorkItem.class);
+        lenient().when(workItem.getId()).thenReturn(id);
+        lenient().when(workItem.getTitle()).thenReturn(title);
+        lenient().when(workItem.getProjectId()).thenReturn(PROJECT_ID);
+        lenient().when(document.getOutlineNumberOfWorkitem(workItem)).thenReturn(outlineNumber);
+        return workItem;
+    }
+
+    @Test
     void testGetPairedWorkItems() {
 
         IProject project = mock(IProject.class);
