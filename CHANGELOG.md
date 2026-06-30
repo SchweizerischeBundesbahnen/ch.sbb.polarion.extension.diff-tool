@@ -1,5 +1,19 @@
 # Changelog
 
+## [9.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.0.0...v9.1.0) (2026-06-30)
+
+
+### Features
+
+* align web UI with Polarion 2606 theme ([#515](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/515)) ([fd15f1b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/fd15f1bd109133b742869b6a6ab63d5f1dfa7f93)), closes [#514](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/514)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @babel/runtime to v8 ([#496](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/496)) ([7b4cf1e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/7b4cf1e07376cf7eb411994d558325cd8cd6be04))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.1.0 ([#502](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/502)) ([967e07a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/967e07a088b1ece121f2975b335ed405a236d744))
+* use Polarion 2606 spinner (progressWheel) ([#517](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/517)) ([b313bd8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/b313bd828455e41723350d76915ee108161f18cc)), closes [#516](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/516)
+
 ## [9.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.3.4...v9.0.0) (2026-06-16)
 
 
