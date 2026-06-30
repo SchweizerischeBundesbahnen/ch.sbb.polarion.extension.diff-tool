@@ -1,6 +1,6 @@
 export default function Loading({message}) {
   return <div className="in-progress-overlay">
-    <div className="loader"></div>
+    <img className="loader" src="/polarion/ria/images/progressWheel48.svg" alt=""/>
     <span id="in-progress-message">{message}</span>
   </div>;
 }

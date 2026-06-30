@@ -319,7 +319,7 @@ export default function ControlPane({diff_type}) {
             </div>
             <div className="text-end">
               <button className="btn btn-secondary btn-sm form-button" onClick={exportToPDF} disabled={exportInProgress} data-testid="export-button">
-                Export {exportInProgress && <span className="loader" style={{display: "inline-block", width: "16px", verticalAlign: "text-top", marginLeft: "5px"}}></span>}
+                Export {exportInProgress && <img className="loader" src="/polarion/ria/images/progressWheel48.svg" alt="" style={{display: "inline-block", width: "16px", verticalAlign: "text-top", marginLeft: "5px"}}/>}
               </button>
             </div>
           </div>

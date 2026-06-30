@@ -291,7 +291,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
                             moveDirection={workItemsPair.leftWorkItem?.moveDirection} side={RIGHT} />
           </div>
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
-          {loading && <div className="loader wi-loader"></div>}
+          {loading && <img className="loader wi-loader" src="/polarion/ria/images/progressWheel48.svg" alt=""/>}
           {!loading && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber)
               && !(workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.externalProjectWorkItem)
               && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.externalProjectWorkItem)
