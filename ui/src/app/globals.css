@@ -8,7 +8,7 @@
   --foreground-rgb: 56, 56, 56;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
-  --polarion-blue: #0077a1;
+  --polarion-blue: #007993;
   --control-pane-collapsed-width: 40px;
   --control-pane-expanded-width: 300px;
 
@@ -46,7 +46,7 @@ body {
 }
 
 a {
-  color: #197FA2;
+  color: #007993;
   text-decoration: none;
 }
 
@@ -124,7 +124,7 @@ a:hover {
   height: 4rem;
   justify-content: center;
   padding: 1rem;
-  background-color: #22272E;
+  background-color: #23233C;
   color: #ffffff;
   font-size: 1.2em;
   box-shadow: 0 2px 4px rgba(0,0,0,0.5);
@@ -237,7 +237,7 @@ a:hover {
 
 .link-role-direction-select:focus {
   border-color: var(--polarion-blue);
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+  box-shadow: 0 0 0 2px rgba(0, 121, 147, 0.15);
   outline: none;
 }
 
@@ -265,7 +265,7 @@ a:hover {
   left: -260px;
   height: 100vh;
   width: var(--control-pane-expanded-width);
-  background-color: #22272E;
+  background-color: #23233C;
   color: white;
   border-right: 1px solid rgba(200, 200, 200, 0.1);
   padding: 10px 40px 20px 20px;
@@ -401,7 +401,7 @@ a:hover {
 }
 
 .swap-button:hover {
-    background-color: #0289b9;
+    background-color: #0095b3;
     color: #fff;
     border-color: rgba(255, 255, 255, .5);
     box-shadow: 0 0 8px rgba(255, 255, 255, .2);
@@ -433,7 +433,7 @@ a:hover {
 
 .wi-header {
   padding-bottom: .8rem;
-  color: #004D73;
+  color: #000028;
   line-height: 1em;
   max-width: 50%;
 }
