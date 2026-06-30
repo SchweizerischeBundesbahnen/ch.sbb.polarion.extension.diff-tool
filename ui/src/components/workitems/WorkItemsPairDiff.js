@@ -213,7 +213,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
             <WorkItemHeader workItem={workItemsPair.rightWorkItem} side={RIGHT} />
           </div>
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
-          {loading && <img className="loader wi-loader" src="/polarion/ria/images/progressWheel48.svg" alt=""/>}
+          {loading && <div className="loader wi-loader"></div>}
           {!loading && <DiffContent workItemsPair={workItemsPair} pairSelected={selected} pairSelectionTrigger={pairSelectionTrigger} pairSelectedCallback={pairSelected} diffs={diffs} expanded={expanded}/>}
         </div>
       </>

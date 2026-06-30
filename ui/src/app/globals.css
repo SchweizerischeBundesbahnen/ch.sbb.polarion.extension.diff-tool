@@ -510,7 +510,8 @@ a.wi-badge:hover {
 
 .loader {
   width: 50px;
-  height: auto;
+  aspect-ratio: 1;
+  background: url("/polarion/ria/images/progressWheel48.svg") center / contain no-repeat;
 }
 
 .wi-loader {
