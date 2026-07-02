@@ -75,6 +75,24 @@ a, td, div, li, ul, input, button {
 
 .property-wrapper #select-revision-radios {
     display: flex;
+    align-items: center;
+}
+
+.property-wrapper #select-revision-radios br {
+    display: none;
+}
+
+/* space between the two radio groups (radio→label spacing comes from radios.css) */
+.property-wrapper #select-revision-radios label {
+    margin-right: 16px;
+}
+
+/* diff-tool comboboxes are wider than the generic default. !important so the width always wins,
+   even if the element-mode container inherited an inline width from the wrapped <select>. */
+.comparison .searchable-dropdown,
+.copy .searchable-dropdown {
+    width: 220px !important;
+    flex-shrink: 0;
 }
 
 .property-wrapper #select-revision-manual-input {

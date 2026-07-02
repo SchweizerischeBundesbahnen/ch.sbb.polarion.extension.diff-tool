@@ -29,7 +29,8 @@ export default class CopyTool extends GenericMixin {
     // First generate dropdown with data, remove selection and only then assign event listener
     this.projectDropdown = new SearchableDropdown({
       element: '#copy-project-selector',
-      placeholder: 'Select Project...'
+      placeholder: 'Select Project...',
+      allowEmpty: true
     });
     this.ctx.onChange('copy-project-selector', () => this.projectChanged());
     this.projectDropdown.restoreSelection();
@@ -37,20 +38,23 @@ export default class CopyTool extends GenericMixin {
     // First generate dropdown with data, remove selection and only then assign event listener
     this.spaceDropdown = new SearchableDropdown({
       element: '#copy-space-selector',
-      placeholder: 'Select Space...'
+      placeholder: 'Select Space...',
+      allowEmpty: true
     });
     this.ctx.onChange('copy-space-selector', () => this.spaceChanged());
 
     this.linkRoleDropdown = new SearchableDropdown({
       element: '#copy-link-role-selector',
-      placeholder: 'Select Link Role...'
+      placeholder: 'Select Link Role...',
+      allowEmpty: true
     });
     this.ctx.onChange('copy-link-role-selector', () => this.updateCreateButtonState());
     this.linkRoleDropdown.restoreSelection();
 
     this.configDropdown = new SearchableDropdown({
       element: '#copy-config-selector',
-      placeholder: 'Select Configuration...'
+      placeholder: 'Select Configuration...',
+      allowEmpty: true
     });
     this.ctx.onChange('copy-config-selector', () => this.updateCreateButtonState());
     this.configDropdown.restoreSelection();
@@ -58,7 +62,7 @@ export default class CopyTool extends GenericMixin {
     this.handleRefsDropdown = new SearchableDropdown({
       element: '#handle-refs-selector',
       placeholder: 'Select Behaviour...',
-      searchable: false
+      allowEmpty: true
     });
     this.ctx.onChange('handle-refs-selector', () => this.updateCreateButtonState());
     this.handleRefsDropdown.restoreSelection();
