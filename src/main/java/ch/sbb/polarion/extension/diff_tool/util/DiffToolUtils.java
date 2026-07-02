@@ -85,7 +85,9 @@ public class DiffToolUtils {
             parser.parse(newSource, newHandler);
             TextNodeComparator rightComparator = new TextNodeComparator(newHandler, locale);
 
+            handler.startDocument();
             new HTMLDiffer(new ModifiedHtmlSaxDiffOutput(handler, "diff")).diff(leftComparator, rightComparator);
+            handler.endDocument();
 
             return finalResult.toString();
         } catch (Exception ex) {
