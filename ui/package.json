@@ -28,7 +28,7 @@
   "overrides": {
     "postcss": ">=8.5.10"
   },
-  "packageManager": "npm@11.17.0",
+  "packageManager": "npm@11.18.0",
   "private": true,
   "scripts": {
     "build": "next build",
