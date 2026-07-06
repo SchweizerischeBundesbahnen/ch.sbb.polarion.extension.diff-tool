@@ -6,7 +6,6 @@
 <head>
     <title>Diff Configurations</title>
     <link rel="stylesheet" href="../ui/generic/css/common.css?bundle=<%= bundleTimestamp %>">
-    <link rel="stylesheet" href="../ui/generic/css/custom-select.css?bundle=<%= bundleTimestamp %>">
     <link rel="stylesheet" href="../ui/generic/css/configurations.css?bundle=<%= bundleTimestamp %>">
     <script type="module" src="../js/modules/diff.js?bundle=<%= bundleTimestamp %>"></script>
     <style type="text/css">

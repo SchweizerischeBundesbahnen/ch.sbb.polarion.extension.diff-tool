@@ -39,6 +39,13 @@
             background-color: #fff;
         }
 
+        /* The source-project <select> is upgraded to a SearchableDropdown in JS;
+           keep it the same width as the other form fields. */
+        .duplication-form .searchable-dropdown {
+            width: 360px;
+            display: inline-block;
+        }
+
         .duplication-form .field-hint {
             display: block;
             margin-left: 200px;

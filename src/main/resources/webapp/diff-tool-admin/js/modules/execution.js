@@ -1,4 +1,5 @@
 import ExtensionContext from '../../ui/generic/js/modules/ExtensionContext.js';
+import SearchableDropdown from '../../ui/generic/js/modules/SearchableDropdown.js';
 
 const ctx = new ExtensionContext({
   extension: 'diff-tool',
@@ -45,6 +46,20 @@ function parseAndSetSettings(jsonResponse) {
       for (const item of options) {
         item.style.display = item.value === currentWorker ? 'none' : 'block';
       }
+      // Upgrade to the shared Polarion-styled dropdown. Rebuild after the options'
+      // visibility/selection is set above so the dropdown reflects the current state.
+      // "Choose new worker..." is a placeholder hint, not a selectable list item.
+      if (selector._searchableDropdown) {
+        selector._searchableDropdown.destroy();
+      }
+      new SearchableDropdown({
+        element: selector,
+        searchable: true,
+        allowEmpty: true,
+        clearable: true,
+        rememberSelection: false,
+        placeholder: 'Choose new worker...'
+      });
     }
   }
 
