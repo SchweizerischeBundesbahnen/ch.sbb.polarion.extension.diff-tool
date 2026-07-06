@@ -15,7 +15,7 @@ class MultipleWorkItemsNodeTest {
         MultipleWorkItemsNode multipleWorkItemsNode = new MultipleWorkItemsNode();
         assertEquals("compare-work-items", multipleWorkItemsNode.getId());
         assertEquals("Multiple Work Items", multipleWorkItemsNode.getLabel());
-        assertEquals("/polarion/icons/default/topicIcons/documentsAndWiki.svg", multipleWorkItemsNode.getIconUrl());
+        assertEquals("/polarion/ria/images/topicIconsSmall/workItems.svg", multipleWorkItemsNode.getIconUrl());
         when(contextId.getContextName()).thenReturn("context");
         assertEquals("/polarion/diff-tool/pages/multiple-work-items.jsp?sourceProjectId=context&buildId=null", multipleWorkItemsNode.getPageUrl(contextId));
         when(contextId.getContextName()).thenReturn(null);
