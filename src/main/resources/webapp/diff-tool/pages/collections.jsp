@@ -14,6 +14,29 @@
     <link rel="stylesheet" type="text/css" href="../ui/generic/css/inputs.css?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>">
     <link rel="stylesheet" type="text/css" href="../ui/generic/css/searchable-dropdown.css?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>">
     <script type="text/javascript" src="../js/diff-tool-widget-utils.js?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>"></script>
+    <script type="text/javascript">
+        // Breadcrumb: "Diff Tool › Collections" via the shared generic BreadcrumbBridge.
+        (function () {
+            try {
+                var shell = window.top;
+                var cfg = { marker: 'diff-tool', title: 'Collections', parent: 'Diff Tool', icon: '/polarion/ria/images/topicIconsSmall/collectionsTopic.svg' };
+                if (shell.SbbBreadcrumbBridge) { shell.SbbBreadcrumbBridge.install(cfg); return; }
+                var doc = shell.document;
+                if (!doc || !doc.head) { return; }
+                var old = doc.getElementById('sbb-breadcrumb-bridge-loader');
+                if (old) { old.parentNode.removeChild(old); }
+                var s = doc.createElement('script');
+                s.id = 'sbb-breadcrumb-bridge-loader';
+                s.type = 'text/javascript';
+                s.src = window.location.pathname.replace(/\/pages\/[^/]*$/, '/ui/generic/js/modules/') + 'BreadcrumbBridge.js';
+                s.setAttribute('data-marker', cfg.marker);
+                s.setAttribute('data-title', cfg.title);
+                if (cfg.parent) { s.setAttribute('data-parent', cfg.parent); }
+                if (cfg.icon) { s.setAttribute('data-icon', cfg.icon); }
+                doc.head.appendChild(s);
+            } catch (e) { /* no accessible shell window */ }
+        })();
+    </script>
 </head>
 <body onload="
 document.getElementById('source-query-input').addEventListener('keydown', (event) => {

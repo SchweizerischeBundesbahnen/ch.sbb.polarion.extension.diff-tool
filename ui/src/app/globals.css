@@ -305,15 +305,27 @@ a:hover {
   margin-top: 50px;
 }
 
-.control-pane .controls .form-check-input:checked {
-  background-color: white;
-  border-color: white;
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/></svg>");
+/* Polarion 2606 checkbox — override Bootstrap's blue default with Polarion's own images,
+   sourced from generic's control tokens (control-tokens.css, linked in layout.js). */
+.app .form-check-input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: var(--sbb-toggle-size, 15px);
+  height: var(--sbb-toggle-size, 15px);
+  border: none;
+  border-radius: 0;
+  background: var(--sbb-checkbox-unchecked, url('/polarion/ria/images/checkbox/unchecked.png')) no-repeat center;
+  background-size: var(--sbb-toggle-size, 15px) var(--sbb-toggle-size, 15px);
 }
 
-.control-pane .controls .form-check-input:checked:focus {
-  border-color: #86b7fe;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+.app .form-check-input:checked {
+  background-image: var(--sbb-checkbox-checked, url('/polarion/ria/images/checkbox/checked.png'));
+}
+
+.app .form-check-input:focus {
+  border-color: transparent;
+  box-shadow: none;
+  outline: none;
 }
 
 .control-pane .export-controls {
@@ -338,6 +350,28 @@ a:hover {
   width: 60%;
   font-size: 12px;
   padding: 0.2rem 2.2rem 0.2rem 0.5rem;
+  /* Polarion 2606 combobox look via generic tokens (overrides Bootstrap's chevron/blue focus). */
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--sbb-control-border, #c9c9c9);
+  border-radius: var(--sbb-control-radius, 0);
+  background-image: var(--sbb-combo-chevron, url('/polarion/ria/images/combo_box_old.png'));
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 16px 16px;
+}
+
+.control-pane .select-set .form-select:focus {
+  border-color: var(--sbb-control-border-focus, #1491eb);
+  box-shadow: none;
+  outline: none;
+}
+
+/* The native <select>s are wrapped by the shared SearchableDropdown (see SearchableSelect); give
+   the resulting combobox the same width the native select had (60% of the row). */
+.control-pane .select-set .searchable-dropdown {
+  width: 60%;
+  flex-shrink: 0;
 }
 
 .control-pane .controls .form-button {
@@ -511,7 +545,7 @@ a.wi-badge:hover {
 .loader {
   width: 50px;
   aspect-ratio: 1;
-  background: url("/polarion/ria/images/progressWheel48.svg") center / contain no-repeat;
+  background: var(--sbb-spinner, url("/polarion/ria/images/progressWheel48.svg")) center / contain no-repeat;
 }
 
 .wi-loader {
