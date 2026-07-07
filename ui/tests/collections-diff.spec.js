@@ -19,6 +19,9 @@ test.describe("page of diffing Collections c", () => {
     const diffPostRequestPromise = page.waitForRequest(request => {
       return request.url().includes('/diff/collections') && request.method() === "POST";
     });
+    // Reload after registering the listener so the request can't fire before we start waiting
+    // (the beforeEach navigation may already have sent it on slower browsers, e.g. firefox).
+    await page.reload();
 
     const diffPostRequest = await diffPostRequestPromise;
     const postData = JSON.parse(diffPostRequest.postData() || '{}');
