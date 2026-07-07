@@ -91,7 +91,7 @@ a, td, div, li, ul, input, button {
    even if the element-mode container inherited an inline width from the wrapped <select>. */
 .comparison .searchable-dropdown,
 .copy .searchable-dropdown {
-    width: 220px !important;
+    width: 240px !important;
     flex-shrink: 0;
 }
 
@@ -230,11 +230,12 @@ a, td, div, li, ul, input, button {
     padding: 5px 2rem 5px 10px;
 }
 
-.polarion-DiffTool input:hover, .polarion-DiffTool select:hover {
+.polarion-DiffTool input:not([type='checkbox']):not([type='radio']):hover,
+.polarion-DiffTool select:hover {
     box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.3);
 }
 
-.polarion-DiffTool input:focus {
+.polarion-DiffTool input:not([type='checkbox']):not([type='radio']):focus {
     border-color: #40abc0;
 }
 
@@ -306,4 +307,19 @@ a, td, div, li, ul, input, button {
 
 .polarion-DiffTool .polarion-TestsExecutionButton-buttons-defaultCursor .polarion-TestsExecutionButton-labelTextNew {
     color: gray;
+}
+
+/* Row-selection checkboxes/radios live inside a Polarion data-set table whose CSS stretches native
+   inputs to the cell width (checkbox → wide rectangle, radio → oval). The shared checkboxes.css /
+   radios.css already apply the Polarion look (appearance:none + image / drawn circle); we only need
+   to pin the geometry back to a 15x15 square so they render correctly. */
+.polarion-DiffTool input[type="checkbox"],
+.polarion-DiffTool input[type="radio"] {
+    width: 15px !important;
+    min-width: 15px !important;
+    max-width: 15px !important;
+    height: 15px !important;
+    box-sizing: border-box !important;
+    flex: none !important;
+    padding: 0 !important;
 }

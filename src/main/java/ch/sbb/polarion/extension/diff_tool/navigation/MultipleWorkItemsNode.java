@@ -25,7 +25,7 @@ public class MultipleWorkItemsNode extends NavigationExtenderNode {
     @Nullable
     @Override
     public String getIconUrl() {
-        return "/polarion/icons/default/topicIcons/documentsAndWiki.svg";
+        return "/polarion/ria/images/topicIconsSmall/workItems.svg";
     }
 
     @Nullable

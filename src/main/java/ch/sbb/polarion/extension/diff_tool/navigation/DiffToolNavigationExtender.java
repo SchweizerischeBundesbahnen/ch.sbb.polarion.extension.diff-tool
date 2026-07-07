@@ -26,7 +26,7 @@ public class DiffToolNavigationExtender extends NavigationExtender {
     @Nullable
     @Override
     public String getIconUrl() {
-        return "/polarion/icons/default/topicIcons/documentsAndWiki.svg";
+        return "/polarion/diff-tool-admin/ui/images/menu/30x30/_parent.svg";
     }
 
     @Nullable
