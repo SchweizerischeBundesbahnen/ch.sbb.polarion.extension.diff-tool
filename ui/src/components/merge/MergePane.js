@@ -77,7 +77,9 @@ export default function MergePane({leftContext, rightContext, diff_type, merging
               <label className="select-all" style={{
                 display: selectAllVisible ? "inline-block" : "none"
               }}>
-                <input className="form-check-input" type="checkbox" checked={mergingContext.selectAll} onChange={() => {
+                <input className="form-check-input" type="checkbox"
+                       ref={(el) => { if (el) { el.indeterminate = mergingContext.selectionCount > 0 && !mergingContext.selectAll; } }}
+                       checked={mergingContext.selectAll} onChange={() => {
                   mergingContext.setAndApplySelectAll(!mergingContext.selectAll);
                 }}/>
                 select all

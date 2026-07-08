@@ -322,6 +322,13 @@ a:hover {
   background-image: var(--sbb-checkbox-checked, url('/polarion/ria/images/checkbox/checked.png'));
 }
 
+/* Indeterminate (partial select-all): Polarion ships no such image, generic hosts it. Reference it
+   absolutely — the --sbb-checkbox-indeterminate token is a path relative to control-tokens.css that
+   resolves against this bundled stylesheet and 404s, and Next.js would try to bundle a relative url(). */
+.app .form-check-input:indeterminate {
+  background-image: url('/polarion/diff-tool-app/ui/generic/images/checkbox-indeterminate.png');
+}
+
 .app .form-check-input:focus {
   border-color: transparent;
   box-shadow: none;
@@ -346,6 +353,10 @@ a:hover {
 
 .app .form-check-input:focus-visible:checked {
   background-image: var(--sbb-checkbox-checked-focus, url('/polarion/ria/images/checkbox/checked_focus.png'));
+}
+
+.app .form-check-input:focus-visible:indeterminate {
+  background-image: url('/polarion/diff-tool-app/ui/generic/images/checkbox-indeterminate-focus.png');
 }
 
 .control-pane .export-controls {
