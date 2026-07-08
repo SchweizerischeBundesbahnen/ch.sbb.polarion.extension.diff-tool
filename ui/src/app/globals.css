@@ -328,6 +328,26 @@ a:hover {
   outline: none;
 }
 
+/* Disabled: Polarion's greyed read-only images so a non-selectable checkbox reads as disabled. */
+.app .form-check-input:disabled {
+  cursor: default;
+  background-image: var(--sbb-checkbox-unchecked-readonly, url('/polarion/ria/images/checkbox/unchecked_readonly.png'));
+}
+
+.app .form-check-input:disabled:checked {
+  background-image: var(--sbb-checkbox-checked-readonly, url('/polarion/ria/images/checkbox/checked_readonly.png'));
+}
+
+/* Keyboard focus: show Polarion's focus-ring image on keyboard navigation (the :focus rule above
+   already strips Bootstrap's own ring). */
+.app .form-check-input:focus-visible {
+  background-image: var(--sbb-checkbox-unchecked-focus, url('/polarion/ria/images/checkbox/unchecked_focus.png'));
+}
+
+.app .form-check-input:focus-visible:checked {
+  background-image: var(--sbb-checkbox-checked-focus, url('/polarion/ria/images/checkbox/checked_focus.png'));
+}
+
 .control-pane .export-controls {
   margin-top: 1em;
   border-top: thin solid grey;
