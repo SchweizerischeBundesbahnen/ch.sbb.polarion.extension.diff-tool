@@ -90,7 +90,7 @@ export default function MergePane({leftContext, rightContext, diff_type, merging
             {rightContext && !rightContext.authorizedForMerge && <span>You are not authorized to merge into target project</span>}
             {!mergeDisabled && (diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.WORK_ITEMS_DIFF) && <label className="link-role-direction-label">
               <span className="link-role-direction-text">Link role direction for created WorkItems:</span>
-              <SearchableSelect className="form-select" value={linkRoleDirection}
+              <SearchableSelect className="form-select link-role-direction-select" value={linkRoleDirection}
                                 onChange={(e) => setLinkRoleDirection(e.target.value)} searchable={false}>
                 <option value={LINK_ROLE_DIRECTION_DIRECT}>Direct</option>
                 <option value={LINK_ROLE_DIRECTION_REVERSE}>Reverse</option>

@@ -8,6 +8,7 @@ import AppAlert from "@/components/AppAlert";
 import useDiffService from "@/services/useDiffService";
 import DocumentsDiff from "@/components/documents/DocumentsDiff";
 import DocumentHeader from "@/components/documents/DocumentHeader";
+import SearchableSelect from "@/components/SearchableSelect";
 import CollectionHeader from "@/components/collections/CollectionHeader";
 import useRemote from "@/services/useRemote";
 import Modal from "@/components/Modal";
@@ -146,12 +147,12 @@ export default function CollectionsDiff() {
           <label htmlFor="target-configuration">
             Available configurations:
           </label>
-          <select id="target-configuration" className="form-select" style={{ width: "auto"}} value={selectedTargetConfiguration}
-                  onChange={event => setSelectedTargetConfiguration(event.target.value)}>
+          <SearchableSelect id="target-configuration" className="form-select" value={selectedTargetConfiguration}
+                            onChange={event => setSelectedTargetConfiguration(event.target.value)} searchable={false}>
             {targetConfigurations.map((configuration, index) => {
               return <option key={index} value={configuration}>{configuration}</option>
             })}
-          </select>
+          </SearchableSelect>
         </div>
       </Modal>
       {documentCreationInProgress && <Loading message="Creating target document"/>}
