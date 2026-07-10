@@ -108,24 +108,10 @@ a, td, div, li, ul, input, button {
     margin: 10px 0;
 }
 
-.buttons-wrapper button {
-    background-color: transparent;
-    border: 1px solid #DEDEDE;
-    color: #555;
-    padding: 4px 8px;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
+/* Button chrome (transparent action button) comes from the shared system (generic buttons.css
+   aliases `.buttons-wrapper button`). Only the wrapper layout / icon / disabled bits stay local. */
 .buttons-wrapper button:not(:first-child) {
     margin-left: 5px;
-}
-
-.buttons-wrapper button:disabled {
-    text-shadow: white 1px 1px 0.01em;
-    color: #C9D1D7;
-    cursor: default;
 }
 
 .buttons-wrapper .divider {
@@ -138,10 +124,6 @@ a, td, div, li, ul, input, button {
 .buttons-wrapper button img {
     margin-right: 6px;
     vertical-align: bottom;
-}
-
-.buttons-wrapper button:disabled img {
-    opacity: 0.3;
 }
 
 .alert {
@@ -225,7 +207,7 @@ a, td, div, li, ul, input, button {
     appearance: none !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
-    background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAOUlEQVR4nGNgwAOKGRgY/qNhkBgDCwMDw0UkwasMDAysMF22DAwM/6ASjuhGLmVgYFiCzS5JKAYDACJtDIY1VpdwAAAAAElFTkSuQmCC) no-repeat;
+    background: transparent var(--sbb-combo-chevron) no-repeat;
     background-position: calc(100% - 1rem) 55% !important;
     padding: 5px 2rem 5px 10px;
 }
