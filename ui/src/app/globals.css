@@ -221,25 +221,9 @@ a:hover {
   }
 }
 
-.link-role-direction-select {
-  display: inline-block;
-  width: auto;
-  font-size: 1em;
-  padding: 0.2rem 2rem 0.2rem 0.5rem;
-  height: auto;
-  line-height: 1.4;
-  border: 1px solid #adb5bd;
-  border-radius: 4px;
-  color: #495057;
-  background-color: #fff;
-  cursor: pointer;
-}
-
-.link-role-direction-select:focus {
-  border-color: var(--polarion-blue);
-  box-shadow: 0 0 0 2px rgba(0, 121, 147, 0.15);
-  outline: none;
-}
+/* The link-role picker renders as the shared SearchableDropdown (see MergePane), which brings its
+   own combobox styling from searchable-dropdown.css — no native-<select> border/focus rules here,
+   which used to stack on top of the SD and left a stray dark frame after selection. */
 
 .sticky-top {
   transition: all .1s linear;
@@ -310,22 +294,55 @@ a:hover {
 .app .form-check-input {
   appearance: none;
   -webkit-appearance: none;
-  width: var(--sbb-toggle-size, 15px);
-  height: var(--sbb-toggle-size, 15px);
+  width: var(--sbb-toggle-size);
+  height: var(--sbb-toggle-size);
   border: none;
   border-radius: 0;
-  background: var(--sbb-checkbox-unchecked, url('/polarion/ria/images/checkbox/unchecked.png')) no-repeat center;
-  background-size: var(--sbb-toggle-size, 15px) var(--sbb-toggle-size, 15px);
+  background: var(--sbb-checkbox-unchecked) no-repeat center;
+  background-size: var(--sbb-toggle-size) var(--sbb-toggle-size);
 }
 
 .app .form-check-input:checked {
-  background-image: var(--sbb-checkbox-checked, url('/polarion/ria/images/checkbox/checked.png'));
+  background-image: var(--sbb-checkbox-checked);
+}
+
+/* Indeterminate (partial select-all): the --sbb-checkbox-indeterminate token is a self-contained
+   data-URI (inlined from images/checkbox/indeterminate.svg at build, issue #528), so it resolves in
+   this bundled stylesheet without a 404. Use the full background shorthand so it also resets
+   Bootstrap's solid-blue :indeterminate background-color. */
+.app .form-check-input:indeterminate {
+  background: var(--sbb-checkbox-indeterminate) no-repeat center;
+  background-size: var(--sbb-toggle-size) var(--sbb-toggle-size);
 }
 
 .app .form-check-input:focus {
   border-color: transparent;
   box-shadow: none;
   outline: none;
+}
+
+/* Disabled: Polarion's greyed read-only images so a non-selectable checkbox reads as disabled. */
+.app .form-check-input:disabled {
+  cursor: default;
+  background-image: var(--sbb-checkbox-unchecked-readonly);
+}
+
+.app .form-check-input:disabled:checked {
+  background-image: var(--sbb-checkbox-checked-readonly);
+}
+
+/* Keyboard focus: show Polarion's focus-ring image on keyboard navigation (the :focus rule above
+   already strips Bootstrap's own ring). */
+.app .form-check-input:focus-visible {
+  background-image: var(--sbb-checkbox-unchecked-focus);
+}
+
+.app .form-check-input:focus-visible:checked {
+  background-image: var(--sbb-checkbox-checked-focus);
+}
+
+.app .form-check-input:focus-visible:indeterminate {
+  background-image: url('/polarion/diff-tool-app/ui/generic/images/checkbox-indeterminate-focus.png');
 }
 
 .control-pane .export-controls {
@@ -353,16 +370,16 @@ a:hover {
   /* Polarion 2606 combobox look via generic tokens (overrides Bootstrap's chevron/blue focus). */
   appearance: none;
   -webkit-appearance: none;
-  border: 1px solid var(--sbb-control-border, #c9c9c9);
-  border-radius: var(--sbb-control-radius, 0);
-  background-image: var(--sbb-combo-chevron, url('/polarion/ria/images/combo_box_old.png'));
+  border: 1px solid var(--sbb-control-border);
+  border-radius: var(--sbb-control-radius);
+  background-image: var(--sbb-combo-chevron);
   background-repeat: no-repeat;
   background-position: right 0.6rem center;
   background-size: 16px 16px;
 }
 
 .control-pane .select-set .form-select:focus {
-  border-color: var(--sbb-control-border-focus, #1491eb);
+  border-color: var(--sbb-control-border-focus);
   box-shadow: none;
   outline: none;
 }
@@ -545,7 +562,7 @@ a.wi-badge:hover {
 .loader {
   width: 50px;
   aspect-ratio: 1;
-  background: var(--sbb-spinner, url("/polarion/ria/images/progressWheel48.svg")) center / contain no-repeat;
+  background: var(--sbb-spinner) center / contain no-repeat;
 }
 
 .wi-loader {

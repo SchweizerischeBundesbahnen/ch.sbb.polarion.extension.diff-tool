@@ -224,9 +224,11 @@ test.describe("page of diffing documents' WorkItems", () => {
       }
     }
 
-    // When single checkbox is un-ticked check that "select all" is also automatically un-ticked
+    // When single checkbox is un-ticked check that "select all" is also automatically un-ticked;
+    // with other items still selected it shows the indeterminate (partial) state, otherwise plain unchecked.
     await mergeTickers.nth(0).click();
     await expect(selectAllCheckbox).toBeChecked({ checked: false });
+    await expect(selectAllCheckbox).toHaveJSProperty('indeterminate', mergeTickersCount > 1);
   });
 
   test('select single', async ({ page }) => {

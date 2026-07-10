@@ -1,5 +1,6 @@
 import ExtensionContext from "../../generic/js/modules/ExtensionContext.js";
 import SearchableDropdown from "../../generic/js/modules/SearchableDropdown.js";
+import { initNumericSpinners } from "../../generic/js/modules/NumericSpinner.js";
 import GenericMixin from "./GenericMixin.js";
 
 export default class DiffTool extends GenericMixin {
@@ -76,6 +77,9 @@ export default class DiffTool extends GenericMixin {
       allowEmpty: true
     });
     this.configDropdown.restoreSelection();
+
+    // Replace the native number spinner (revision input) with the 2606 caret spinner.
+    initNumericSpinners(document);
   }
 
   projectChanged() {
