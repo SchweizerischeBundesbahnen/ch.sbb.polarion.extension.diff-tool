@@ -11,6 +11,31 @@
 <head>
     <link rel="stylesheet" type="text/css" href="/polarion/gwt/gwt/polarion/polarion.css?buildId=<%= product.buildNumber() %>">
     <link rel="stylesheet" type="text/css" href="../css/common.css?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>">
+    <script type="text/javascript">
+        // Show this topic in the Polarion app-header breadcrumb via the shared generic
+        // BreadcrumbBridge (injected into the shell window). Re-runs on every topic page load so
+        // sub-topics re-label; it stays out of the Administration area on its own.
+        (function () {
+            try {
+                var shell = window.top;
+                var cfg = { marker: 'diff-tool', title: 'Diff Tool', icon: '/polarion/diff-tool-admin/ui/images/menu/30x30/_parent.svg' };
+                if (shell.SbbBreadcrumbBridge) { shell.SbbBreadcrumbBridge.install(cfg); return; }
+                var doc = shell.document;
+                if (!doc || !doc.head) { return; }
+                var old = doc.getElementById('sbb-breadcrumb-bridge-loader');
+                if (old) { old.parentNode.removeChild(old); }
+                var s = doc.createElement('script');
+                s.id = 'sbb-breadcrumb-bridge-loader';
+                s.type = 'text/javascript';
+                s.src = window.location.pathname.replace(/\/pages\/[^/]*$/, '/ui/generic/js/modules/') + 'BreadcrumbBridge.js';
+                s.setAttribute('data-marker', cfg.marker);
+                s.setAttribute('data-title', cfg.title);
+                if (cfg.parent) { s.setAttribute('data-parent', cfg.parent); }
+                if (cfg.icon) { s.setAttribute('data-icon', cfg.icon); }
+                doc.head.appendChild(s);
+            } catch (e) { /* no accessible shell window */ }
+        })();
+    </script>
 </head>
 <body>
 <div class="polarion-rpe-content">

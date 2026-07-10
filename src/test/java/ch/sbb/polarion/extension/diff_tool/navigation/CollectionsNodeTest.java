@@ -15,7 +15,7 @@ class CollectionsNodeTest {
         CollectionsNode collectionsNode = new CollectionsNode();
         assertEquals("compare-collections", collectionsNode.getId());
         assertEquals("Collections", collectionsNode.getLabel());
-        assertEquals("/polarion/icons/default/topicIcons/documentsAndWiki.svg", collectionsNode.getIconUrl());
+        assertEquals("/polarion/ria/images/topicIconsSmall/collectionsTopic.svg", collectionsNode.getIconUrl());
         when(contextId.getContextName()).thenReturn("context");
         assertEquals("/polarion/diff-tool/pages/collections.jsp?sourceProjectId=context&buildId=null", collectionsNode.getPageUrl(contextId));
         when(contextId.getContextName()).thenReturn(null);

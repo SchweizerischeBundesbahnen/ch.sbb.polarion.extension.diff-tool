@@ -1,5 +1,6 @@
-import ExtensionContext from "/polarion/diff-tool/ui/generic/js/modules/ExtensionContext.js";
-import SearchableDropdown from "/polarion/diff-tool/ui/generic/js/modules/SearchableDropdown.js";
+import ExtensionContext from "../../generic/js/modules/ExtensionContext.js";
+import SearchableDropdown from "../../generic/js/modules/SearchableDropdown.js";
+import { initNumericSpinners } from "../../generic/js/modules/NumericSpinner.js";
 import GenericMixin from "./GenericMixin.js";
 
 export default class DiffTool extends GenericMixin {
@@ -36,7 +37,8 @@ export default class DiffTool extends GenericMixin {
     // First generate dropdown with data, remove selection and only then assign event listener
     this.projectDropdown = new SearchableDropdown({
       element: '#comparison-project-selector',
-      placeholder: 'Select Project...'
+      placeholder: 'Select Project...',
+      allowEmpty: true
     });
     this.ctx.onChange('comparison-project-selector', () => this.projectChanged());
     this.projectDropdown.restoreSelection();
@@ -44,33 +46,41 @@ export default class DiffTool extends GenericMixin {
     // First generate dropdown with data, remove selection and only then assign event listener
     this.spaceDropdown = new SearchableDropdown({
       element: '#comparison-space-selector',
-      placeholder: 'Select Space...'
+      placeholder: 'Select Space...',
+      allowEmpty: true
     });
     this.ctx.onChange('comparison-space-selector', () => this.spaceChanged());
 
     // First generate dropdown with data, remove selection and only then assign event listener
     this.documentDropdown = new SearchableDropdown({
       element: '#document-selector',
-      placeholder: 'Select Document...'
+      placeholder: 'Select Document...',
+      allowEmpty: true
     });
     this.ctx.onChange('document-selector', () => this.documentChanged());
 
     this.revisionDropdown = new SearchableDropdown({
       element: '#revision-selector',
-      placeholder: 'Select Revision...'
+      placeholder: 'Select Revision...',
+      allowEmpty: true
     });
 
     this.linkRoleDropdown = new SearchableDropdown({
       element: '#comparison-link-role-selector',
-      placeholder: 'Select Link Role...'
+      placeholder: 'Select Link Role...',
+      allowEmpty: true
     });
     this.linkRoleDropdown.restoreSelection();
 
     this.configDropdown = new SearchableDropdown({
       element: '#comparison-config-selector',
-      placeholder: 'Select Configuration...'
+      placeholder: 'Select Configuration...',
+      allowEmpty: true
     });
     this.configDropdown.restoreSelection();
+
+    // Replace the native number spinner (revision input) with the 2606 caret spinner.
+    initNumericSpinners(document);
   }
 
   projectChanged() {

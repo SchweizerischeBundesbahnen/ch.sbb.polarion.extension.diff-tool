@@ -50,6 +50,13 @@
             padding: 10px;
         }
 
+        /* The "Assign new" worker <select>s are upgraded to SearchableDropdown in JS;
+           keep them wide enough for the "--- Choose a new worker ---" placeholder. */
+        .workers-configuration-table .searchable-dropdown {
+            width: 230px;
+            display: inline-block;
+        }
+
         .workers-configuration-table table td .number-input {
             -webkit-appearance: none; margin: 0;
             appearance: textfield;
@@ -88,7 +95,7 @@
         }
 
         .more-info {
-            background: url(/polarion/ria/images/msginfo.png) no-repeat;
+            background: var(--sbb-info-icon) no-repeat;
             display: inline-block;
             width: 17px;
             height: 17px;
@@ -172,7 +179,6 @@
                                     "  <td id='current-worker-" + feature.name() + "' class='center-column-value'> - </td>" +
                                     "  <td>" +
                                     "<select id='new-worker-" + feature.name() + "'>" +
-                                    "<option value=''>--- Choose a new worker ---</option>" +
                                     "<option value='0'>Skip Queue</option>" +
                                     IntStream.rangeClosed(1, Feature.workerFeatures().size())
                                             .boxed()

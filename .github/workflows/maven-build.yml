@@ -27,12 +27,12 @@ jobs:
       GITHUB_TOKEN: ${{ github.token }}  # Providing this prevents reaching the GitHub request limits
     steps:
       - name: 📄 Checkout the repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7
         with:
           fetch-depth: 0  # Sonar needs full history
           persist-credentials: false
       - name: 🧱 Set up JDK and Maven
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654  # v5.2.0
+        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520  # v5.4.0
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
@@ -52,7 +52,7 @@ jobs:
             echo "is_release=${IS_RELEASE}"
           } >> "$GITHUB_OUTPUT"
       - name: 🔍 Cache SonarQube packages
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
@@ -123,14 +123,14 @@ jobs:
         working-directory: ui
     steps:
       - name: 📄 Checkout the repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7
         with:
           fetch-depth: 1
           persist-credentials: false
       - name: 🧱 Set up Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
         with:
-          node-version: 24.16.0
+          node-version: 24.18.0
           cache: npm
           cache-dependency-path: ui/package-lock.json
       - name: 🔢 Resolve Playwright version
@@ -141,7 +141,7 @@ jobs:
         # binaries under ~/.cache/ms-playwright. Cache them keyed on the Playwright
         # version so warm runs skip the ~100-200 MB per-browser download. System deps
         # (apt) aren't cached, so `install --with-deps` below still runs every time.
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ matrix.browser }}-${{ steps.playwright-version.outputs.version }}
@@ -179,12 +179,12 @@ jobs:
       GITHUB_TOKEN: ${{ github.token }}  # Providing this prevents reaching the GitHub request limits
     steps:
       - name: 📄 Checkout the repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7
         with:
           fetch-depth: 1
           persist-credentials: false
       - name: 🧱 Set up JDK and Maven with cache
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654  # v5.2.0
+        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520  # v5.4.0
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
@@ -197,6 +197,7 @@ jobs:
         run: |
           mvn --batch-mode -s "${SETTINGS_XML}" clean deploy \
             -Dmaven.test.skip=true \
+            -DskipJsTests=true \
             -P gpg-sign \
             -P central-publishing \
             -Dcentral.timeout=3600 \
@@ -218,7 +219,7 @@ jobs:
       PROJECT_VERSION: ${{ needs.build.outputs.project_version }}
     steps:
       - name: 📄 Checkout the repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -229,7 +230,7 @@ jobs:
           name: maven-artifacts
           path: target/
       - name: 🧱 Set up JDK and Maven
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654  # v5.2.0
+        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520  # v5.4.0
         with:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
@@ -241,6 +242,7 @@ jobs:
         run: |
           mvn --batch-mode -s "${SETTINGS_XML}" deploy \
             -Dmaven.test.skip=true \
+            -DskipJsTests=true \
             -Dmaven.javadoc.skip=true \
             -Dmaven.source.skip=true \
             -P deploy-github-packages

@@ -5,11 +5,11 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>15.0.1</version>
+        <version>15.3.1</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
-    <version>8.3.5-SNAPSHOT</version>
+    <version>9.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Polarion ALM extension to diff/merge Documents/WorkItems</name>
@@ -69,7 +69,7 @@
         <html5diff.version>1.4.5</html5diff.version>
         <ehcache.version>3.8.0</ehcache.version>
 
-        <pdf-exporter.version>12.5.0</pdf-exporter.version>
+        <pdf-exporter.version>13.1.0</pdf-exporter.version>
 
         <awaitility.version>4.3.0</awaitility.version>
 

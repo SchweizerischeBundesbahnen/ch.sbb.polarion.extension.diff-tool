@@ -7,6 +7,7 @@ import useRemote from "@/services/useRemote";
 import usePdf from "@/services/usePdf";
 import * as DiffTypes from "@/DiffTypes";
 import Modal from "@/components/Modal";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export default function ControlPane({diff_type}) {
   const context = useContext(AppContext);
@@ -172,11 +173,11 @@ export default function ControlPane({diff_type}) {
                 <label htmlFor="source-document">
                   Source documents:
                 </label>
-                <select id="source-document" className="form-select" value={selectedDocumentLocationPath} onChange={changeSelectedDocument}>
+                <SearchableSelect id="source-document" className="form-select" value={selectedDocumentLocationPath} onChange={changeSelectedDocument}>
                   {context.state.pairedDocuments.map((documentsPair, index) => {
                     return <option key={index} value={documentsPair.leftDocument.locationPath}>{documentsPair.leftDocument.spaceId === "_default" ? "Default Space" : documentsPair.leftDocument.spaceId} / {documentsPair.leftDocument.title}</option>
                   })}
-                </select>
+                </SearchableSelect>
               </div>
           }
           {diff_type !== DiffTypes.WORK_ITEMS_DIFF &&
@@ -186,11 +187,11 @@ export default function ControlPane({diff_type}) {
                 <label htmlFor="target-type">
                   Compare as:
                 </label>
-                <select id="target-type" className="form-select" value={selectedCompareAs} onChange={(event) => setSelectedCompareAs(event.target.value)}>
+                <SearchableSelect id="target-type" className="form-select" value={selectedCompareAs} onChange={(event) => setSelectedCompareAs(event.target.value)}>
                   {["Workitems", "Fields", "Content"].map((compareAs, index) => {
                     return <option key={index} value={compareAs}>{compareAs}</option>
                   })}
-                </select>
+                </SearchableSelect>
               </div>
           }
           {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF && diff_type !== DiffTypes.DOCUMENTS_CONTENT_DIFF &&
@@ -200,11 +201,11 @@ export default function ControlPane({diff_type}) {
                 <label htmlFor="configuration">
                   Configuration:
                 </label>
-                <select id="configuration" className="form-select" value={selectedConfiguration} onChange={(event) => setSelectedConfiguration(event.target.value)}>
+                <SearchableSelect id="configuration" className="form-select" value={selectedConfiguration} onChange={(event) => setSelectedConfiguration(event.target.value)}>
                   {configurations.map((configuration, index) => {
                     return <option key={index} value={configuration}>{configuration}</option>
                   })}
-                </select>
+                </SearchableSelect>
               </div>
           }
           {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.COLLECTIONS_DIFF) &&
@@ -303,19 +304,19 @@ export default function ControlPane({diff_type}) {
               <label htmlFor="paper-size">
                 Paper size:
               </label>
-              <select id="paper-size" className="form-select" value={paperSize} onChange={(event) => setPaperSize(event.target.value)}>
+              <SearchableSelect id="paper-size" className="form-select" value={paperSize} onChange={(event) => setPaperSize(event.target.value)}>
                 <option value="A4">A4</option>
                 <option value="A3">A3</option>
-              </select>
+              </SearchableSelect>
             </div>
             <div className="select-set">
               <label htmlFor="orientation">
                 Orientation:
               </label>
-              <select id="orientation" className="form-select" value={orientation} onChange={(event) => setOrientation(event.target.value)}>
+              <SearchableSelect id="orientation" className="form-select" value={orientation} onChange={(event) => setOrientation(event.target.value)}>
                 <option value="landscape">Landscape</option>
                 <option value="portrait">Portrait</option>
-              </select>
+              </SearchableSelect>
             </div>
             <div className="text-end">
               <button className="btn btn-secondary btn-sm form-button" onClick={exportToPDF} disabled={exportInProgress} data-testid="export-button">

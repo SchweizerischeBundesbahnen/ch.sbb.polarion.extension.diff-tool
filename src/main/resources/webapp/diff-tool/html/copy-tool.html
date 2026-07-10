@@ -1,11 +1,15 @@
 <link href='/polarion/diff-tool/ui/css/common.css' rel='stylesheet'>
+<link href='/polarion/diff-tool/ui/generic/css/control-tokens.css' rel='stylesheet'>
+<link href='/polarion/diff-tool/ui/generic/css/radios.css' rel='stylesheet'>
+<link href='/polarion/diff-tool/ui/generic/css/inputs.css' rel='stylesheet'>
+<link href='/polarion/diff-tool/ui/generic/css/buttons.css' rel='stylesheet'>
 <link href='/polarion/diff-tool/ui/generic/css/searchable-dropdown.css' rel='stylesheet'
       onload='import("/polarion/diff-tool/ui/js/modules/CopyTool.js")
                 .then(module => new module.default({SOURCE_DOC_PARAMS}))
                 .catch(console.error);'>
 
 <div class="copy form-wrapper">
-    <div class="in-progress-overlay"><img src='/polarion/ria/images/progress.gif' alt=""/><span id="copy-in-progress-message"></span></div>
+    <div class="in-progress-overlay"><span class="sbb-spinner" role="img" aria-label="Loading" style="width:48px;height:48px;"></span><span id="copy-in-progress-message"></span></div>
 
     <p>
         Please select <strong>target</strong> project and space.
@@ -51,7 +55,7 @@
 
     <div class='buttons-wrapper'>
         <button type='button' id="create-document" disabled>
-            <img src='/polarion/ria/images/control/tablePlus.png' alt=""/>Create Document
+            <span class="sbb-icon-table-plus" role="img" aria-label="Add" style="margin-right:6px"></span>Create Document
         </button>
     </div>
     <div id='creation-success' class="alert">

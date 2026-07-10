@@ -8,7 +8,7 @@
   --foreground-rgb: 56, 56, 56;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
-  --polarion-blue: #0077a1;
+  --polarion-blue: #007993;
   --control-pane-collapsed-width: 40px;
   --control-pane-expanded-width: 300px;
 
@@ -46,7 +46,7 @@ body {
 }
 
 a {
-  color: #197FA2;
+  color: #007993;
   text-decoration: none;
 }
 
@@ -124,7 +124,7 @@ a:hover {
   height: 4rem;
   justify-content: center;
   padding: 1rem;
-  background-color: #22272E;
+  background-color: #23233C;
   color: #ffffff;
   font-size: 1.2em;
   box-shadow: 0 2px 4px rgba(0,0,0,0.5);
@@ -221,25 +221,9 @@ a:hover {
   }
 }
 
-.link-role-direction-select {
-  display: inline-block;
-  width: auto;
-  font-size: 1em;
-  padding: 0.2rem 2rem 0.2rem 0.5rem;
-  height: auto;
-  line-height: 1.4;
-  border: 1px solid #adb5bd;
-  border-radius: 4px;
-  color: #495057;
-  background-color: #fff;
-  cursor: pointer;
-}
-
-.link-role-direction-select:focus {
-  border-color: var(--polarion-blue);
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
-  outline: none;
-}
+/* The link-role picker renders as the shared SearchableDropdown (see MergePane), which brings its
+   own combobox styling from searchable-dropdown.css — no native-<select> border/focus rules here,
+   which used to stack on top of the SD and left a stray dark frame after selection. */
 
 .sticky-top {
   transition: all .1s linear;
@@ -265,7 +249,7 @@ a:hover {
   left: -260px;
   height: 100vh;
   width: var(--control-pane-expanded-width);
-  background-color: #22272E;
+  background-color: #23233C;
   color: white;
   border-right: 1px solid rgba(200, 200, 200, 0.1);
   padding: 10px 40px 20px 20px;
@@ -305,15 +289,64 @@ a:hover {
   margin-top: 50px;
 }
 
-.control-pane .controls .form-check-input:checked {
-  background-color: white;
-  border-color: white;
-  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/></svg>");
+/* Polarion 2606 checkbox — override Bootstrap's blue default with Polarion's own images,
+   sourced from generic's control tokens (control-tokens.css, linked in layout.js). */
+.app .form-check-input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: var(--sbb-toggle-size);
+  height: var(--sbb-toggle-size);
+  border: none;
+  border-radius: 0;
+  background: var(--sbb-checkbox-unchecked) no-repeat center;
+  background-size: var(--sbb-toggle-size) var(--sbb-toggle-size);
 }
 
-.control-pane .controls .form-check-input:checked:focus {
-  border-color: #86b7fe;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+.app .form-check-input:checked {
+  background-image: var(--sbb-checkbox-checked);
+}
+
+/* Indeterminate (partial select-all): the --sbb-checkbox-indeterminate token is a self-contained
+   data-URI (inlined from images/checkbox/indeterminate.svg at build, issue #528), so it resolves in
+   this bundled stylesheet without a 404. Use the full background shorthand so it also resets
+   Bootstrap's solid-blue :indeterminate background-color. */
+.app .form-check-input:indeterminate {
+  background: var(--sbb-checkbox-indeterminate) no-repeat center;
+  background-size: var(--sbb-toggle-size) var(--sbb-toggle-size);
+}
+
+.app .form-check-input:focus {
+  border-color: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+/* Disabled: Polarion's greyed read-only images so a non-selectable checkbox reads as disabled. */
+.app .form-check-input:disabled {
+  cursor: default;
+  background-image: var(--sbb-checkbox-unchecked-readonly);
+}
+
+.app .form-check-input:disabled:checked {
+  background-image: var(--sbb-checkbox-checked-readonly);
+}
+
+.app .form-check-input:disabled:indeterminate {
+  background-image: var(--sbb-checkbox-indeterminate-readonly);
+}
+
+/* Keyboard focus: show Polarion's focus-ring image on keyboard navigation (the :focus rule above
+   already strips Bootstrap's own ring). */
+.app .form-check-input:focus-visible {
+  background-image: var(--sbb-checkbox-unchecked-focus);
+}
+
+.app .form-check-input:focus-visible:checked {
+  background-image: var(--sbb-checkbox-checked-focus);
+}
+
+.app .form-check-input:focus-visible:indeterminate {
+  background-image: var(--sbb-checkbox-indeterminate-focus);
 }
 
 .control-pane .export-controls {
@@ -338,6 +371,28 @@ a:hover {
   width: 60%;
   font-size: 12px;
   padding: 0.2rem 2.2rem 0.2rem 0.5rem;
+  /* Polarion 2606 combobox look via generic tokens (overrides Bootstrap's chevron/blue focus). */
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--sbb-control-border);
+  border-radius: var(--sbb-control-radius);
+  background-image: var(--sbb-combo-chevron);
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 16px 16px;
+}
+
+.control-pane .select-set .form-select:focus {
+  border-color: var(--sbb-control-border-focus);
+  box-shadow: none;
+  outline: none;
+}
+
+/* The native <select>s are wrapped by the shared SearchableDropdown (see SearchableSelect); give
+   the resulting combobox the same width the native select had (60% of the row). */
+.control-pane .select-set .searchable-dropdown {
+  width: 60%;
+  flex-shrink: 0;
 }
 
 .control-pane .controls .form-button {
@@ -401,7 +456,7 @@ a:hover {
 }
 
 .swap-button:hover {
-    background-color: #0289b9;
+    background-color: #0095b3;
     color: #fff;
     border-color: rgba(255, 255, 255, .5);
     box-shadow: 0 0 8px rgba(255, 255, 255, .2);
@@ -433,7 +488,7 @@ a:hover {
 
 .wi-header {
   padding-bottom: .8rem;
-  color: #004D73;
+  color: #000028;
   line-height: 1em;
   max-width: 50%;
 }
@@ -510,19 +565,9 @@ a.wi-badge:hover {
 
 .loader {
   width: 50px;
-  --b: 8px;
   aspect-ratio: 1;
-  border-radius: 50%;
-  padding: 1px;
-  background: conic-gradient(#0000 10%, #61cef8) content-box;
-  -webkit-mask:
-          repeating-conic-gradient(#0000 0deg,#000 1deg 20deg,#0000 21deg 36deg),
-          radial-gradient(farthest-side,#0000 calc(100% - var(--b) - 1px),#000 calc(100% - var(--b)));
-  -webkit-mask-composite: destination-in;
-  mask-composite: intersect;
-  animation:l4 1s infinite steps(10);
+  background: var(--sbb-spinner) center / contain no-repeat;
 }
-@keyframes l4 {to{transform: rotate(1turn)}}
 
 .wi-loader {
   margin: 10px auto;

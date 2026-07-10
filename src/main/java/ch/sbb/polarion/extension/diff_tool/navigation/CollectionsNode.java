@@ -25,7 +25,7 @@ public class CollectionsNode extends NavigationExtenderNode {
     @Nullable
     @Override
     public String getIconUrl() {
-        return "/polarion/icons/default/topicIcons/documentsAndWiki.svg";
+        return "/polarion/ria/images/topicIconsSmall/collectionsTopic.svg";
     }
 
     @Nullable

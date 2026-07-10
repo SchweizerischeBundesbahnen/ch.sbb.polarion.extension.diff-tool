@@ -1,3 +1,5 @@
+import SearchableDropdown from '../../ui/generic/js/modules/SearchableDropdown.js';
+
 const REST_BASE = '/polarion/diff-tool/rest/internal';
 const POLL_ACTIVE_MS = 3000;
 const POLL_IDLE_MS = 30000;
@@ -35,15 +37,24 @@ async function loadProjects() {
     if (!response.ok) throw new Error(`Failed to load projects (HTTP ${response.status})`);
     const projects = await response.json();
     sourceSelect.innerHTML = '';
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = '-- Select source project --';
-    sourceSelect.appendChild(placeholder);
     projects.forEach((project) => {
       const option = document.createElement('option');
       option.value = project.id;
       option.textContent = project.name ? `${project.name} (${project.id})` : project.id;
       sourceSelect.appendChild(option);
+    });
+    // Upgrade the native <select> to the shared Polarion-styled searchable dropdown. The
+    // "Select source project..." text is a placeholder hint, not a selectable list item.
+    if (sourceSelect._searchableDropdown) {
+      sourceSelect._searchableDropdown.destroy();
+    }
+    new SearchableDropdown({
+      element: sourceSelect,
+      searchable: true,
+      allowEmpty: true,
+      clearable: true,
+      rememberSelection: false,
+      placeholder: 'Select source project...'
     });
   } catch (err) {
     sourceSelect.innerHTML = '<option value="">(failed to load)</option>';

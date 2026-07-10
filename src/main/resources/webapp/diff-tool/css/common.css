@@ -75,6 +75,24 @@ a, td, div, li, ul, input, button {
 
 .property-wrapper #select-revision-radios {
     display: flex;
+    align-items: center;
+}
+
+.property-wrapper #select-revision-radios br {
+    display: none;
+}
+
+/* space between the two radio groups (radio→label spacing comes from radios.css) */
+.property-wrapper #select-revision-radios label {
+    margin-right: 16px;
+}
+
+/* diff-tool comboboxes are wider than the generic default. !important so the width always wins,
+   even if the element-mode container inherited an inline width from the wrapped <select>. */
+.comparison .searchable-dropdown,
+.copy .searchable-dropdown {
+    width: 240px !important;
+    flex-shrink: 0;
 }
 
 .property-wrapper #select-revision-manual-input {
@@ -90,24 +108,10 @@ a, td, div, li, ul, input, button {
     margin: 10px 0;
 }
 
-.buttons-wrapper button {
-    background-color: transparent;
-    border: 1px solid #DEDEDE;
-    color: #555;
-    padding: 4px 8px;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
+/* Button chrome (transparent action button) comes from the shared system (generic buttons.css
+   aliases `.buttons-wrapper button`). Only the wrapper layout / icon / disabled bits stay local. */
 .buttons-wrapper button:not(:first-child) {
     margin-left: 5px;
-}
-
-.buttons-wrapper button:disabled {
-    text-shadow: white 1px 1px 0.01em;
-    color: #C9D1D7;
-    cursor: default;
 }
 
 .buttons-wrapper .divider {
@@ -120,10 +124,6 @@ a, td, div, li, ul, input, button {
 .buttons-wrapper button img {
     margin-right: 6px;
     vertical-align: bottom;
-}
-
-.buttons-wrapper button:disabled img {
-    opacity: 0.3;
 }
 
 .alert {
@@ -207,16 +207,17 @@ a, td, div, li, ul, input, button {
     appearance: none !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
-    background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAOUlEQVR4nGNgwAOKGRgY/qNhkBgDCwMDw0UkwasMDAysMF22DAwM/6ASjuhGLmVgYFiCzS5JKAYDACJtDIY1VpdwAAAAAElFTkSuQmCC) no-repeat;
+    background: transparent var(--sbb-combo-chevron) no-repeat;
     background-position: calc(100% - 1rem) 55% !important;
     padding: 5px 2rem 5px 10px;
 }
 
-.polarion-DiffTool input:hover, .polarion-DiffTool select:hover {
+.polarion-DiffTool input:not([type='checkbox']):not([type='radio']):hover,
+.polarion-DiffTool select:hover {
     box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.3);
 }
 
-.polarion-DiffTool input:focus {
+.polarion-DiffTool input:not([type='checkbox']):not([type='radio']):focus {
     border-color: #40abc0;
 }
 
@@ -288,4 +289,19 @@ a, td, div, li, ul, input, button {
 
 .polarion-DiffTool .polarion-TestsExecutionButton-buttons-defaultCursor .polarion-TestsExecutionButton-labelTextNew {
     color: gray;
+}
+
+/* Row-selection checkboxes/radios live inside a Polarion data-set table whose CSS stretches native
+   inputs to the cell width (checkbox → wide rectangle, radio → oval). The shared checkboxes.css /
+   radios.css already apply the Polarion look (appearance:none + image / drawn circle); we only need
+   to pin the geometry back to a 15x15 square so they render correctly. */
+.polarion-DiffTool input[type="checkbox"],
+.polarion-DiffTool input[type="radio"] {
+    width: 15px !important;
+    min-width: 15px !important;
+    max-width: 15px !important;
+    height: 15px !important;
+    box-sizing: border-box !important;
+    flex: none !important;
+    padding: 0 !important;
 }
