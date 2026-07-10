@@ -331,6 +331,10 @@ a:hover {
   background-image: var(--sbb-checkbox-checked-readonly);
 }
 
+.app .form-check-input:disabled:indeterminate {
+  background-image: var(--sbb-checkbox-indeterminate-readonly);
+}
+
 /* Keyboard focus: show Polarion's focus-ring image on keyboard navigation (the :focus rule above
    already strips Bootstrap's own ring). */
 .app .form-check-input:focus-visible {
@@ -342,7 +346,7 @@ a:hover {
 }
 
 .app .form-check-input:focus-visible:indeterminate {
-  background-image: url('/polarion/diff-tool-app/ui/generic/images/checkbox-indeterminate-focus.png');
+  background-image: var(--sbb-checkbox-indeterminate-focus);
 }
 
 .control-pane .export-controls {
