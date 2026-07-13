@@ -15,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,6 +31,20 @@ class ImageHandlerTest {
         doReturn("test".getBytes()).when(imageHandler).loadImage("/polarion/wi-attachment/testProjectId/testId/test.png");
 
         assertEquals("<test><img src=\"workitemimg:test.png\" md5=\"098f6bcd4621d373cade4e832627b4f6\"\"/></test>", imageHandler.calculateHash("<test><img src=\"workitemimg:test.png\"/></test>", workItem));
+    }
+
+    @Test
+    void testCalculateHashReturnsNullForNullHtml() {
+        // Branched documents can produce header/unpaired items with no rendered content - html comes in as null
+        assertNull(new ImageHandler().calculateHash(null, mock(WorkItem.class)));
+        assertNull(new ImageHandler().calculateHash(null, null));
+    }
+
+    @Test
+    void testFixImagePathReturnsUrlUnchangedForNullWorkItem() {
+        // Unpaired items (e.g. right paragraphs added in a branch) have no work item to resolve the attachment path against
+        String url = "workitemimg:test.png";
+        assertSame(url, new ImageHandler().fixImagePath(url, null));
     }
 
     @Test

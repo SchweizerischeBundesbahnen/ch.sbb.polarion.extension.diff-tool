@@ -98,6 +98,19 @@ class DiffInternalControllerTest {
     }
 
     @Test
+    void getDocumentsDiffAllowsMissingLinkRoleWhenBranchedDocuments() {
+        // Branched documents are paired via the fixed 'branched_from' role, so no explicit linkRole is required
+        DocumentIdentifier left = DocumentIdentifier.builder().projectId("pA").spaceId("s").name("a").build();
+        DocumentIdentifier right = DocumentIdentifier.builder().projectId("pB").spaceId("s").name("b").build();
+        DocumentsDiffParams params = new DocumentsDiffParams(left, right, true, null, null, null);
+
+        DocumentsDiff expected = DocumentsDiff.builder().build();
+        when(diffService.getDocumentsDiff(any())).thenReturn(expected);
+
+        assertNotNull(controller.getDocumentsDiff(params));
+    }
+
+    @Test
     void getDocumentsDiffPassesValidLinkRoleThrough() {
         DocumentIdentifier left = DocumentIdentifier.builder().projectId("pA").spaceId("s").name("doc").build();
         DocumentIdentifier right = DocumentIdentifier.builder().projectId("pB").spaceId("s").name("doc").build();

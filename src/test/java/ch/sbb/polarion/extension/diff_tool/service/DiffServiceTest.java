@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchorsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsCollection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeMoveDirection;
@@ -1034,6 +1035,48 @@ class DiffServiceTest {
     }
 
     @Test
+    void testGetDocumentsDiffForBranchedDocumentsUsesBranchedFromRoleAndSkipsMovedItemsHandling() {
+        IModule leftDocument = mockSameDocumentForDiff();
+        IModule rightDocument = mockSameDocumentForDiff();
+
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "left", null)).thenReturn(leftDocument);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "right", null)).thenReturn(rightDocument);
+        when(polarionService.getDocumentWorkItemsCache()).thenReturn(mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class));
+
+        ILinkRoleOpt branchedRole = mock(ILinkRoleOpt.class);
+        when(polarionService.getLinkRoleById(ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole.BRANCHED_FROM, leftDocument.getProject())).thenReturn(branchedRole);
+
+        List<WorkItemsPair> pairedWorkItems = List.of(createWorkItemsPair("AA-1", "AA-2"));
+        when(polarionService.getPairedWorkItems(eq(leftDocument), eq(rightDocument), eq(true), eq(branchedRole), anyList())).thenReturn(pairedWorkItems);
+
+        DocumentIdentifier left = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").build();
+        DocumentIdentifier right = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").build();
+
+        org.springframework.web.context.request.ServletRequestAttributes attrs =
+                mock(org.springframework.web.context.request.ServletRequestAttributes.class);
+        when(attrs.getRequest()).thenReturn(mock(jakarta.servlet.http.HttpServletRequest.class));
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(attrs);
+        try (org.mockito.MockedStatic<ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource> mockedDiffModel =
+                     mockStatic(ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.class)) {
+            mockedDiffModel.when(() -> ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.get(any(), any(), any()))
+                    .thenReturn(ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel.builder().build());
+
+            DocumentsDiff result = diffService.getDocumentsDiff(new DocumentsDiffParams(left, right, true, null, null, null));
+
+            assertNotNull(result);
+            // Branched diff passes the paired work items through as-is (moved-items surrogate handling must be skipped)
+            assertEquals(pairedWorkItems, result.getPairedWorkItems());
+        } finally {
+            org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
+        }
+
+        // Branched documents are paired via the fixed 'branched_from' role and through the branched pairing path only
+        verify(polarionService).getLinkRoleById(ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole.BRANCHED_FROM, leftDocument.getProject());
+        verify(polarionService).getPairedWorkItems(eq(leftDocument), eq(rightDocument), eq(true), eq(branchedRole), anyList());
+        verify(polarionService, never()).getPairedWorkItems(any(), any(), eq(false), any(), anyList());
+    }
+
+    @Test
     void testGetDocumentsDiffRequiresLinkRoleWhenProjectDiffers() {
         IModule leftDocument = mock(IModule.class);
         IModule rightDocument = mock(IModule.class);
@@ -1088,6 +1131,33 @@ class DiffServiceTest {
 
         assertNotNull(diffService.getDocumentsContentDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, null, NamedSettings.DEFAULT_NAME, null)));
         verify(polarionService, never()).getLinkRoleById(anyString(), any());
+    }
+
+    @Test
+    void testGetDocumentsContentDiffForBranchedDocumentsUsesBranchedFromRoleAndPairsParagraphs() {
+        IModule leftDocument = mockSameDocumentForDiff();
+        when(leftDocument.getHomePageContent()).thenReturn(Text.html(""));
+        IModule rightDocument = mockSameDocumentForDiff();
+        when(rightDocument.getHomePageContent()).thenReturn(Text.html(""));
+
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "left", null)).thenReturn(leftDocument);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "right", null)).thenReturn(rightDocument);
+
+        ILinkRoleOpt branchedRole = mock(ILinkRoleOpt.class);
+        when(polarionService.getLinkRoleById(ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole.BRANCHED_FROM, leftDocument.getProject())).thenReturn(branchedRole);
+        when(polarionService.getPairedWorkItems(eq(leftDocument), eq(rightDocument), eq(true), eq(branchedRole), anyList())).thenReturn(new ArrayList<>());
+        when(polarionService.getPairedParagraphs(leftDocument, rightDocument)).thenReturn(new ArrayList<>());
+
+        DocumentIdentifier left = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").build();
+        DocumentIdentifier right = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").build();
+
+        DocumentsContentDiff result = diffService.getDocumentsContentDiff(new DocumentsDiffParams(left, right, true, null, NamedSettings.DEFAULT_NAME, null));
+
+        assertNotNull(result);
+        // Branched content diff resolves the fixed 'branched_from' role and additionally pairs paragraphs by title
+        verify(polarionService).getLinkRoleById(ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole.BRANCHED_FROM, leftDocument.getProject());
+        verify(polarionService).getPairedWorkItems(eq(leftDocument), eq(rightDocument), eq(true), eq(branchedRole), anyList());
+        verify(polarionService).getPairedParagraphs(leftDocument, rightDocument);
     }
 
     private IModule mockSameDocumentForDiff() {

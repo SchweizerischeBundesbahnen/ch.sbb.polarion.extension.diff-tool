@@ -362,6 +362,59 @@ class PolarionServiceTest {
     }
 
     @Test
+    void testGetPairedWorkItemsForBranchedDocuments() {
+        IProject project = mock(IProject.class);
+        lenient().when(projectService.getProject(anyString())).thenReturn(project);
+
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        lenient().when(trackerService.getTrackerProject((IProject) any())).thenReturn(trackerProject);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.HOUR_OF_DAY, -1);
+        IModule leftDocument = mockDocument("left", calendar.getTime());
+        calendar.add(Calendar.HOUR_OF_DAY, -1);
+        IModule rightDocument = mockDocument("right", calendar.getTime()); // different 'created' ⇒ documents are not equal
+
+        // Outline numbers without "-" are headers (paragraphs), with "-" are regular content work items
+        IWorkItem leftHeader = mockBranchedWorkItem(leftDocument, "LH", "1");
+        IWorkItem leftContent = mockBranchedWorkItem(leftDocument, "LC", "1-1");
+        when(leftDocument.getAllWorkItems()).thenReturn(List.of(leftHeader, leftContent));
+
+        IWorkItem rightHeader = mockBranchedWorkItem(rightDocument, "RH", "1");
+        IWorkItem rightContent = mockBranchedWorkItem(rightDocument, "RC", "1-1");
+        when(rightDocument.getAllWorkItems()).thenReturn(List.of(rightHeader, rightContent));
+
+        // Content items are paired via the 'branched_from' link, headers have no such link
+        mockLinks(leftContent, List.of(mockLink(rightContent, LinkRole.BRANCHED_FROM)), List.of());
+        mockLinks(rightContent, List.of(), List.of(mockLink(leftContent, LinkRole.BRANCHED_FROM)));
+
+        ILinkRoleOpt branchedRole = mock(ILinkRoleOpt.class);
+        lenient().when(branchedRole.getId()).thenReturn(LinkRole.BRANCHED_FROM);
+
+        List<WorkItemsPair> result = polarionService.getPairedWorkItems(leftDocument, rightDocument, true, branchedRole, Collections.emptyList());
+
+        Set<Pair<String, String>> idPairs = result.stream().map(pair -> Pair.of(
+                pair.getLeftWorkItem() == null ? null : pair.getLeftWorkItem().getId(),
+                pair.getRightWorkItem() == null ? null : pair.getRightWorkItem().getId())).collect(Collectors.toSet());
+
+        // Left header is kept as {left, null}, right header is ignored, content items are paired via the branch link
+        assertEquals(Set.of(
+                Pair.of("LH", null),
+                Pair.of("LC", "RC")
+        ), idPairs);
+    }
+
+    private IWorkItem mockBranchedWorkItem(IModule module, String id, String outlineNumber) {
+        IWorkItem workItem = mock(IWorkItem.class);
+        lenient().when(workItem.getProjectId()).thenReturn(PROJECT_ID);
+        lenient().when(workItem.getModule()).thenReturn(module);
+        lenient().when(workItem.getId()).thenReturn(id);
+        lenient().when(workItem.getTitle()).thenReturn("Title " + id);
+        lenient().when(module.getOutlineNumberOfWorkitem(workItem)).thenReturn(outlineNumber);
+        return workItem;
+    }
+
+    @Test
     void testGetDeletableFields() {
         List<WorkItemField> standardFieldsDeletable = List.of(WorkItemField.builder().key("field_0").build());
 
