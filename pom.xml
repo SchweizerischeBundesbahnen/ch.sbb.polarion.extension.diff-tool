@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>15.3.3</version>
+        <version>15.4.0</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
@@ -173,21 +173,53 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>${markdown2html-maven-plugin.extensionContextAdminHtml}</directory>
-                            <includes>
-                                <include>${markdown2html-maven-plugin.outputFileName}</include>
-                            </includes>
-                            <followSymlinks>false</followSymlinks>
-                        </fileset>
-                        <fileset>
-                            <directory>${nextjs.destination.root}/app</directory>
-                            <followSymlinks>false</followSymlinks>
-                        </fileset>
-                    </filesets>
-                </configuration>
+                <executions>
+                    <!-- Next.js writes hash-named bundles into the gitignored webapp/diff-tool-app/app
+                         dir. copy-resources only overwrites, never deletes, so stale bundles from
+                         previous builds pile up there. Purge the dir both on `mvn clean` and right
+                         before the copy in every build, so it never accumulates regardless of whether
+                         `clean` was requested. excludeDefaultDirectories keeps these executions from
+                         also wiping target/ (the default-clean execution owns that). -->
+                    <execution>
+                        <id>clean-generated-webapp</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${markdown2html-maven-plugin.extensionContextAdminHtml}</directory>
+                                    <includes>
+                                        <include>${markdown2html-maven-plugin.outputFileName}</include>
+                                    </includes>
+                                    <followSymlinks>false</followSymlinks>
+                                </fileset>
+                                <fileset>
+                                    <directory>${nextjs.destination.root}/app</directory>
+                                    <followSymlinks>false</followSymlinks>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>purge-nextjs-output-before-copy</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${nextjs.destination.root}/app</directory>
+                                    <followSymlinks>false</followSymlinks>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
