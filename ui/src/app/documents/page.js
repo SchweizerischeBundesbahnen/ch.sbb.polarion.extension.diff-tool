@@ -7,7 +7,7 @@ import DocumentsFieldsDiff from "@/components/documents/DocumentsFieldsDiff";
 import DocumentsContentDiff from "@/components/documents/DocumentsContentDiff";
 import ExtensionInfo from "@/components/ExtensionInfo";
 import * as DiffTypes from "@/DiffTypes";
-import {useMemo, useState} from "react";
+import {useMemo} from "react";
 
 export default function DocumentsPage() {
   const searchParams = useSearchParams();
