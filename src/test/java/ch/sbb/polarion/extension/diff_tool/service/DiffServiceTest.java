@@ -403,6 +403,7 @@ class DiffServiceTest {
     }
 
     @Test
+    @SuppressWarnings("java:S125") // false positive
     void testPairBranchedParagraphs() {
         IModule leftDocument = mock(IModule.class);
         IModule rightDocument = mock(IModule.class);
