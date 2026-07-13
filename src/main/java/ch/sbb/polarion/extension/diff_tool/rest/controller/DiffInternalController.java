@@ -82,13 +82,10 @@ public class DiffInternalController {
                 || documentsDiffParams.getLeftDocument() == null
                 || documentsDiffParams.getRightDocument() == null
                 || (documentsDiffParams.getLinkRole() == null
-                && !documentsDiffParams.getLeftDocument().pointsToSameDocumentAs(documentsDiffParams.getRightDocument()))) {
+                && !(documentsDiffParams.getLeftDocument().pointsToSameDocumentAs(documentsDiffParams.getRightDocument()) || documentsDiffParams.isBranchedDocuments()))) {
             throw new BadRequestException("Parameters 'leftDocument', 'rightDocument' and 'linkRole' should be provided");
         }
-        return schedule(DIFF_DOCUMENTS, () ->
-                diffService.getDocumentsDiff(documentsDiffParams.getLeftDocument(), documentsDiffParams.getRightDocument(), documentsDiffParams.getLinkRole(),
-                        documentsDiffParams.getConfigName(), documentsDiffParams.getConfigCacheBucketId())
-        );
+        return schedule(DIFF_DOCUMENTS, () -> diffService.getDocumentsDiff(documentsDiffParams));
     }
 
     @POST
@@ -272,7 +269,7 @@ public class DiffInternalController {
         if (params == null || params.getLeftDocument() == null || params.getRightDocument() == null) {
             throw new BadRequestException("Parameters 'leftDocument' and 'rightDocument' should be provided");
         }
-        return schedule(DIFF_DOCUMENTS_CONTENT, () -> diffService.getDocumentsContentDiff(params.getLeftDocument(), params.getRightDocument(), params.getLinkRole()));
+        return schedule(DIFF_DOCUMENTS_CONTENT, () -> diffService.getDocumentsContentDiff(params));
     }
 
     @POST

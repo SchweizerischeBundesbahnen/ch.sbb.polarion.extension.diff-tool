@@ -136,6 +136,24 @@ class DocumentsMergeContextTest {
     }
 
     @Test
+    void testConstructorAllowsMissingLinkRoleForSameDocument() {
+        // Comparing two revisions of the same document: work items are paired by ID, so no link role is required
+        DocumentIdentifier left = DocumentIdentifier.builder().projectId(LEFT_PROJECT_ID).spaceId(SPACE_ID).name(LEFT_DOC_NAME).revision("50").build();
+        DocumentIdentifier right = DocumentIdentifier.builder().projectId(LEFT_PROJECT_ID).spaceId(SPACE_ID).name(LEFT_DOC_NAME).revision("100").build();
+
+        lenient().when(polarionService.getModule(left)).thenReturn(leftModule);
+        lenient().when(polarionService.getModule(right)).thenReturn(rightModule);
+        when(rightModule.getProject()).thenReturn(trackerProject);
+        when(polarionService.getLinkRoleById(LINK_ROLE, trackerProject)).thenReturn(null);
+
+        DocumentsMergeContext context = new DocumentsMergeContext(
+                polarionService, left, right,
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, LinkRoleDirection.DIRECT, diffModel, false);
+
+        assertNotNull(context);
+    }
+
+    @Test
     void testGetSourceModuleLeftToRight() {
         setupLinkRole();
 

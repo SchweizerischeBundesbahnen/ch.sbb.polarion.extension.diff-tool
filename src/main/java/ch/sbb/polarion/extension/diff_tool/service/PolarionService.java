@@ -66,6 +66,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 import javax.security.auth.Subject;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -306,8 +307,8 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                 .map(e -> LinkRole.builder().id(e.getId()).name(e.getName()).build()).toList();
     }
 
-    public List<WorkItemsPair> getPairedWorkItems(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @Nullable ILinkRoleOpt linkRole, @NotNull List<String> statusesToIgnore) {
-        CalculatePairsContext context = new CalculatePairsContext(leftDocument, rightDocument, linkRole, statusesToIgnore);
+    public List<WorkItemsPair> getPairedWorkItems(@NotNull IModule leftDocument, @NotNull IModule rightDocument, boolean branchedDocuments, @Nullable ILinkRoleOpt linkRole, @NotNull List<String> statusesToIgnore) {
+        CalculatePairsContext context = new CalculatePairsContext(leftDocument, rightDocument, branchedDocuments, linkRole, statusesToIgnore);
 
         Set<Pair<IWorkItem, IWorkItem>> pairsSet = leftDocument.getAllWorkItems().stream()
                 .map(workItem -> selectOutlinePairedWorkItems(workItem, false, context))
@@ -343,6 +344,47 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         orphansToRemove.forEach(pairs::remove);
 
         return pairs.stream().map(pair -> WorkItemsPair.of(pair, context)).toList();
+    }
+
+    /**
+     * Matches paragraphs (headers - work items whose outline number contains no "-") of two branched documents by their title.
+     * Branched documents have no explicit link between their paragraphs, so {@link #getPairedWorkItems} leaves them unpaired;
+     * this method is used additionally (e.g. for content diffing) to pair them up.
+     * Matching is done sequentially in outline number order: each left paragraph claims the first still-unmatched right paragraph
+     * with an equal title. Right paragraphs which match nothing (sections added in the branch) are returned as {@code {null, right}}.
+     */
+    List<WorkItemsPair> getPairedParagraphs(@NotNull IModule leftDocument, @NotNull IModule rightDocument) {
+        CalculatePairsContext context = new CalculatePairsContext(leftDocument, rightDocument, null, Collections.emptyList());
+
+        List<IWorkItem> leftParagraphs = collectParagraphs(leftDocument, true, context);
+        List<IWorkItem> rightParagraphs = collectParagraphs(rightDocument, false, context);
+
+        List<WorkItemsPair> result = new ArrayList<>();
+        Set<IWorkItem> consumedRightParagraphs = new HashSet<>();
+        for (IWorkItem leftParagraph : leftParagraphs) {
+            IWorkItem match = rightParagraphs.stream()
+                    .filter(right -> !consumedRightParagraphs.contains(right) && Objects.equals(right.getTitle(), leftParagraph.getTitle()))
+                    .findFirst().orElse(null);
+            if (match != null) {
+                consumedRightParagraphs.add(match);
+            }
+            result.add(WorkItemsPair.of(pair(leftParagraph, match, false), context));
+        }
+        rightParagraphs.stream()
+                .filter(right -> !consumedRightParagraphs.contains(right))
+                .forEach(right -> result.add(WorkItemsPair.of(pair(right, null, true), context)));
+        return result;
+    }
+
+    private List<IWorkItem> collectParagraphs(@NotNull IModule document, boolean leftDocumentScope, @NotNull CalculatePairsContext context) {
+        return document.getAllWorkItems().stream()
+                .filter(workItem -> !workItem.isUnresolvable())
+                .filter(workItem -> {
+                    String outlineNumber = context.getOutlineNumber(workItem, leftDocumentScope);
+                    return outlineNumber != null && !outlineNumber.contains("-"); // "-" means the item is not a header (e.g. "2.1-1.1")
+                })
+                .sorted(Comparator.comparing(workItem -> context.getOutlineNumber(workItem, leftDocumentScope), context.getOutlineNumberComparator()))
+                .toList();
     }
 
     public String renderField(@NotNull String projectId, @NotNull String workItemId, @NotNull String revision, @NotNull String fieldId, ModelObjectReference mainObjectReference) {
@@ -416,20 +458,50 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             return new HashSet<>();
         }
 
+        Set<Pair<IWorkItem, IWorkItem>> branchedHeaderPair = resolveBranchedHeaderPair(workItem, inversePair, context);
+        if (branchedHeaderPair != null) {
+            return branchedHeaderPair;
+        }
+
         List<IWorkItem> oppositeWorkItems = inversePair ? context.getLeftDocumentWorkItems() : context.getRightDocumentWorkItems();
 
-        IWorkItem oppositeSameWorkItem = oppositeWorkItems.stream().filter(w ->
-                !w.isUnresolvable() &&
-                        w.getId().equals(workItem.getId()) &&
-                        w.getProjectId().equals(workItem.getProjectId()) &&
-                        context.getOutlineNumber(w, inversePair) != null).findFirst().orElse(null);
-
-        // If we found same work item in the opposite document - use it
+        // If we found same work item in the opposite document - use it.
         // In case if we found nothing while comparing same document with different revision - use null as opposite item
+        IWorkItem oppositeSameWorkItem = findSameWorkItemInOppositeDocument(workItem, oppositeWorkItems, inversePair, context);
         if (oppositeSameWorkItem != null || areEqual(context.getLeftDocument(), context.getRightDocument())) {
             return Set.of(pair(workItem, oppositeSameWorkItem, inversePair));
         }
 
+        return pairByModuleLinks(workItem, oppositeWorkItems, inversePair, context);
+    }
+
+    /**
+     * Handles the special case of headers (work items whose outline number contains no "-") when diffing branched documents:
+     * a left header is kept unpaired ({@code {left, null}}), a right header is ignored altogether. Returns {@code null} when
+     * the item isn't a branched-documents header, meaning the regular pairing logic should apply.
+     */
+    @Nullable
+    private Set<Pair<IWorkItem, IWorkItem>> resolveBranchedHeaderPair(@NotNull IWorkItem workItem, boolean inversePair, @NotNull CalculatePairsContext context) {
+        if (!context.isBranchedDocuments()) {
+            return null;
+        }
+        String outlineNumber = context.getOutlineNumber(workItem, !inversePair);
+        if (outlineNumber == null || outlineNumber.contains("-")) {
+            return null;
+        }
+        return inversePair ? Set.of() : Set.of(pair(workItem, null, false));
+    }
+
+    @Nullable
+    private IWorkItem findSameWorkItemInOppositeDocument(@NotNull IWorkItem workItem, @NotNull List<IWorkItem> oppositeWorkItems, boolean inversePair, @NotNull CalculatePairsContext context) {
+        return oppositeWorkItems.stream().filter(w ->
+                !w.isUnresolvable() &&
+                        w.getId().equals(workItem.getId()) &&
+                        w.getProjectId().equals(workItem.getProjectId()) &&
+                        context.getOutlineNumber(w, inversePair) != null).findFirst().orElse(null);
+    }
+
+    private Set<Pair<IWorkItem, IWorkItem>> pairByModuleLinks(@NotNull IWorkItem workItem, @NotNull List<IWorkItem> oppositeWorkItems, boolean inversePair, @NotNull CalculatePairsContext context) {
         Set<Pair<IWorkItem, IWorkItem>> pairs = new HashSet<>();
         AtomicBoolean moduleLinksExist = new AtomicBoolean(false);
         Stream.concat(workItem.getLinkedWorkItemsStructsDirect().stream(), workItem.getLinkedWorkItemsStructsBack().stream()).forEach(linkedWorkItemStruct -> {

@@ -17,6 +17,7 @@ export default function useDiffService() {
         body: JSON.stringify({
           leftDocument: leftDocument,
           rightDocument: rightDocument,
+          branchedDocuments: searchParams.get('branched'),
           linkRole: searchParams.get('linkRole'),
           configName: searchParams.get('config'),
           configCacheBucketId: configCacheId
@@ -86,6 +87,7 @@ export default function useDiffService() {
         body: JSON.stringify({
           leftDocument: leftDocument,
           rightDocument: rightDocument,
+          branchedDocuments: searchParams.get('branched'),
           linkRole: searchParams.get('linkRole'),
           configName: searchParams.get('config'),
           configCacheBucketId: configCacheId
@@ -252,7 +254,7 @@ export default function useDiffService() {
           leftDocument: leftDocument,
           rightDocument: rightDocument,
           mergeDirection: mergeDirection,
-          linkRole: searchParams.get('linkRole'),
+          linkRole: searchParams.get('branched') === "true" ? "branched_from" : searchParams.get('linkRole'),
           linkRoleDirection: linkRoleDirection,
           configName: searchParams.get('config'),
           configCacheBucketId: configCacheId,
@@ -323,6 +325,14 @@ export default function useDiffService() {
           contentPosition: (index.includes(CONTENT_ABOVE) ? CONTENT_ABOVE : CONTENT_BELOW)
         });
       }
+    }
+
+    if (pairs.length === 0) {
+      return Promise.resolve({
+        mergeReport: {},
+        success: false,
+        mergingContentNotPossible: true
+      });
     }
 
     return new Promise((resolve, reject) => {
@@ -422,16 +432,16 @@ export default function useDiffService() {
     };
   };
 
-  const diffsExist = (workItemsPair, diffs) => {
+  const diffsExist = (workItemsPair, diffs, branchedDocuments) => {
     if (diffs && (diffs.length > 1 || (diffs.length === 1 && diffs[0].id !== 'outlineNumber'))) {
       return true; // Content differs. Outline number difference shouldn't be taken into account, cause this means moved item, not content difference
-    } else if (workItemsPair.leftWorkItem?.movedOutlineNumber || workItemsPair.rightWorkItem?.movedOutlineNumber) {
-      return true; // Work item was moved, so there's a difference
+    } else if ((workItemsPair.leftWorkItem?.movedOutlineNumber || workItemsPair.rightWorkItem?.movedOutlineNumber) && !branchedDocuments) {
+      return true; // Work item was moved, so there's a difference. Not related to branched documents
     } else if (!workItemsPair.leftWorkItem || !workItemsPair.rightWorkItem) {
       return true; // Work item was deleted/created, so there's a difference
-    } else if ((workItemsPair.leftWorkItem?.referenced && !workItemsPair.rightWorkItem?.referenced) ||
-        (!workItemsPair.leftWorkItem?.referenced && workItemsPair.rightWorkItem?.referenced)) {
-      return true; // Work items have a referenced mismatch: one is referenced while the other is not
+    } else if (((workItemsPair.leftWorkItem?.referenced && !workItemsPair.rightWorkItem?.referenced) ||
+        (!workItemsPair.leftWorkItem?.referenced && workItemsPair.rightWorkItem?.referenced)) && !branchedDocuments) {
+      return true; // Work items have a referenced mismatch: one is referenced while the other is not. Not related to branched documents
     } else {
       return false; // If no conditions above were met - no difference
     }

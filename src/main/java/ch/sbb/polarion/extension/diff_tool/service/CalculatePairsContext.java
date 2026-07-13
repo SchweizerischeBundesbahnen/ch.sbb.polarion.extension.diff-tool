@@ -24,17 +24,25 @@ public class CalculatePairsContext {
     @Getter
     private final IModule rightDocument;
     @Getter
+    private final boolean branchedDocuments;
+    @Getter
     private final List<IWorkItem> leftDocumentWorkItems;
     @Getter
     private final List<IWorkItem> rightDocumentWorkItems;
     @Nullable
     private final ILinkRoleOpt linkedByRole;
     private final List<String> statusesToIgnore;
-    private final Map<IWorkItem, String> outlineNumbersCache = new HashMap<>();
+    private final Map<IWorkItem, String> leftOutlineNumbersCache = new HashMap<>();
+    private final Map<IWorkItem, String> rightOutlineNumbersCache = new HashMap<>();
 
     public CalculatePairsContext(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @Nullable ILinkRoleOpt linkedByRole, @NotNull List<String> statusesToIgnore) {
+        this(leftDocument, rightDocument, false, linkedByRole, statusesToIgnore);
+    }
+
+    public CalculatePairsContext(@NotNull IModule leftDocument, @NotNull IModule rightDocument, boolean branchedDocuments, @Nullable ILinkRoleOpt linkedByRole, @NotNull List<String> statusesToIgnore) {
         this.leftDocument = leftDocument;
         this.rightDocument = rightDocument;
+        this.branchedDocuments = branchedDocuments;
         this.linkedByRole = linkedByRole;
         this.statusesToIgnore = statusesToIgnore;
         this.leftDocumentWorkItems = leftDocument.getAllWorkItems();
@@ -42,7 +50,8 @@ public class CalculatePairsContext {
     }
 
     public synchronized String getOutlineNumber(IWorkItem workItem, boolean leftDocumentScope) {
-        return outlineNumbersCache.computeIfAbsent(workItem, (leftDocumentScope ? leftDocument : rightDocument)::getOutlineNumberOfWorkitem);
+        Map<IWorkItem, String> cache = leftDocumentScope ? leftOutlineNumbersCache : rightOutlineNumbersCache;
+        return cache.computeIfAbsent(workItem, (leftDocumentScope ? leftDocument : rightDocument)::getOutlineNumberOfWorkitem);
     }
 
     public boolean isReferenced(IWorkItem workItem, boolean leftDocumentScope) {

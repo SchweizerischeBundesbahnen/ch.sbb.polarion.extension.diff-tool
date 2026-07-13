@@ -243,6 +243,49 @@ class PolarionServiceTest {
     }
 
     @Test
+    void testGetPairedParagraphs() {
+        IModule leftDocument = mockDocument("left", new Date());
+        IModule rightDocument = mockDocument("right", new Date());
+
+        IWorkItem l1 = mockParagraph(leftDocument, "L1", "1", "Intro");
+        IWorkItem l2 = mockParagraph(leftDocument, "L2", "2", "Scope");
+        IWorkItem l3 = mockParagraph(leftDocument, "L3", "3", "Scope"); // duplicate title - resolved sequentially
+        IWorkItem l4 = mockParagraph(leftDocument, "L4", "4", "Removed"); // no title match on the right
+        IWorkItem l5 = mockParagraph(leftDocument, "L5", "2-1", "Detail"); // not a paragraph (outline contains "-") - excluded
+        when(leftDocument.getAllWorkItems()).thenReturn(List.of(l1, l2, l3, l4, l5));
+
+        IWorkItem r1 = mockParagraph(rightDocument, "R1", "1", "Intro");
+        IWorkItem r2 = mockParagraph(rightDocument, "R2", "2", "Scope");
+        IWorkItem r3 = mockParagraph(rightDocument, "R3", "3", "Scope");
+        IWorkItem r4 = mockParagraph(rightDocument, "R4", "4", "Added"); // no title match on the left - added in the branch
+        IWorkItem r5 = mockParagraph(rightDocument, "R5", "1-1", "Detail"); // not a paragraph - excluded
+        when(rightDocument.getAllWorkItems()).thenReturn(List.of(r1, r2, r3, r4, r5));
+
+        List<WorkItemsPair> result = polarionService.getPairedParagraphs(leftDocument, rightDocument);
+
+        List<Pair<String, String>> idPairs = result.stream().map(pair -> Pair.of(
+                pair.getLeftWorkItem() == null ? null : pair.getLeftWorkItem().getId(),
+                pair.getRightWorkItem() == null ? null : pair.getRightWorkItem().getId())).toList();
+
+        assertEquals(List.of(
+                Pair.of("L1", "R1"),
+                Pair.of("L2", "R2"),
+                Pair.of("L3", "R3"),
+                Pair.of("L4", null),
+                Pair.of(null, "R4")
+        ), idPairs);
+    }
+
+    private IWorkItem mockParagraph(IModule document, String id, String outlineNumber, String title) {
+        IWorkItem workItem = mock(IWorkItem.class);
+        lenient().when(workItem.getId()).thenReturn(id);
+        lenient().when(workItem.getTitle()).thenReturn(title);
+        lenient().when(workItem.getProjectId()).thenReturn(PROJECT_ID);
+        lenient().when(document.getOutlineNumberOfWorkitem(workItem)).thenReturn(outlineNumber);
+        return workItem;
+    }
+
+    @Test
     void testGetPairedWorkItems() {
 
         IProject project = mock(IProject.class);
@@ -302,7 +345,7 @@ class PolarionServiceTest {
 
         ILinkRoleOpt role = mock(ILinkRoleOpt.class);
         lenient().when(role.getId()).thenReturn(LINK_ROLE_ID_1);
-        List<WorkItemsPair> resultList = polarionService.getPairedWorkItems(document1, document2, role, Collections.singletonList("draft"));
+        List<WorkItemsPair> resultList = polarionService.getPairedWorkItems(document1, document2, false, role, Collections.singletonList("draft"));
 
         assertEquals(6, resultList.size());
         Set<Pair<String, String>> idsPairSet = resultList.stream().map(
@@ -316,6 +359,59 @@ class PolarionServiceTest {
                 Pair.of("ID-16", null),
                 Pair.of(null, "ID-23")
         )));
+    }
+
+    @Test
+    void testGetPairedWorkItemsForBranchedDocuments() {
+        IProject project = mock(IProject.class);
+        lenient().when(projectService.getProject(anyString())).thenReturn(project);
+
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        lenient().when(trackerService.getTrackerProject((IProject) any())).thenReturn(trackerProject);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.HOUR_OF_DAY, -1);
+        IModule leftDocument = mockDocument("left", calendar.getTime());
+        calendar.add(Calendar.HOUR_OF_DAY, -1);
+        IModule rightDocument = mockDocument("right", calendar.getTime()); // different 'created' ⇒ documents are not equal
+
+        // Outline numbers without "-" are headers (paragraphs), with "-" are regular content work items
+        IWorkItem leftHeader = mockBranchedWorkItem(leftDocument, "LH", "1");
+        IWorkItem leftContent = mockBranchedWorkItem(leftDocument, "LC", "1-1");
+        when(leftDocument.getAllWorkItems()).thenReturn(List.of(leftHeader, leftContent));
+
+        IWorkItem rightHeader = mockBranchedWorkItem(rightDocument, "RH", "1");
+        IWorkItem rightContent = mockBranchedWorkItem(rightDocument, "RC", "1-1");
+        when(rightDocument.getAllWorkItems()).thenReturn(List.of(rightHeader, rightContent));
+
+        // Content items are paired via the 'branched_from' link, headers have no such link
+        mockLinks(leftContent, List.of(mockLink(rightContent, LinkRole.BRANCHED_FROM)), List.of());
+        mockLinks(rightContent, List.of(), List.of(mockLink(leftContent, LinkRole.BRANCHED_FROM)));
+
+        ILinkRoleOpt branchedRole = mock(ILinkRoleOpt.class);
+        lenient().when(branchedRole.getId()).thenReturn(LinkRole.BRANCHED_FROM);
+
+        List<WorkItemsPair> result = polarionService.getPairedWorkItems(leftDocument, rightDocument, true, branchedRole, Collections.emptyList());
+
+        Set<Pair<String, String>> idPairs = result.stream().map(pair -> Pair.of(
+                pair.getLeftWorkItem() == null ? null : pair.getLeftWorkItem().getId(),
+                pair.getRightWorkItem() == null ? null : pair.getRightWorkItem().getId())).collect(Collectors.toSet());
+
+        // Left header is kept as {left, null}, right header is ignored, content items are paired via the branch link
+        assertEquals(Set.of(
+                Pair.of("LH", null),
+                Pair.of("LC", "RC")
+        ), idPairs);
+    }
+
+    private IWorkItem mockBranchedWorkItem(IModule module, String id, String outlineNumber) {
+        IWorkItem workItem = mock(IWorkItem.class);
+        lenient().when(workItem.getProjectId()).thenReturn(PROJECT_ID);
+        lenient().when(workItem.getModule()).thenReturn(module);
+        lenient().when(workItem.getId()).thenReturn(id);
+        lenient().when(workItem.getTitle()).thenReturn("Title " + id);
+        lenient().when(module.getOutlineNumberOfWorkitem(workItem)).thenReturn(outlineNumber);
+        return workItem;
     }
 
     @Test

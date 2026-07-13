@@ -55,7 +55,8 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext imple
         rightModule = polarionService.getModule(rightDocumentIdentifier);
 
         linkRoleObject = polarionService.getLinkRoleById(linkRole, getTargetModule().getProject());
-        if (linkRoleObject == null) {
+        // Link role isn't required when comparing different revisions of the same document, but in other cases it's required, and we throw an exception here if it's missed
+        if (linkRoleObject == null && !leftDocumentIdentifier.pointsToSameDocumentAs(rightDocumentIdentifier)) {
             throw new IllegalArgumentException(String.format("No link role could be found by ID '%s'", linkRole));
         }
 

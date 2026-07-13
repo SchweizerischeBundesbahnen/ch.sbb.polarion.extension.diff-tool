@@ -18,6 +18,9 @@ public class DocumentsDiffParams {
     @Schema(description = "Identifier for the right document in the comparison", implementation = DocumentIdentifier.class)
     private DocumentIdentifier rightDocument;
 
+    @Schema(description = "Boolean value which specifies if documents to be compared are a branched documents")
+    private boolean branchedDocuments;
+
     @Schema(description = "The role of the link connecting the two documents")
     private String linkRole;
 

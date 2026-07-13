@@ -13,6 +13,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPair
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsCollection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsPair;
@@ -26,6 +27,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairDiffPara
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairs;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPairsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffContext;
 import ch.sbb.polarion.extension.diff_tool.service.handler.DiffLifecycleHandler;
 import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
@@ -108,14 +110,23 @@ public class DiffService {
         this.polarionService = polarionService;
     }
 
-    public DocumentsContentDiff getDocumentsContentDiff(DocumentIdentifier leftDocumentIdentifier, DocumentIdentifier rightDocumentIdentifier, String linkRoleId) {
+    public DocumentsContentDiff getDocumentsContentDiff(DocumentsDiffParams documentsDiffParams) {
+        DocumentIdentifier leftDocumentIdentifier = documentsDiffParams.getLeftDocument();
+        DocumentIdentifier rightDocumentIdentifier = documentsDiffParams.getRightDocument();
         IModule leftDocument = polarionService.getDocumentWithFilledRevision(leftDocumentIdentifier.getProjectId(), leftDocumentIdentifier.getSpaceId(),
                 leftDocumentIdentifier.getName(), leftDocumentIdentifier.getRevision());
         IModule rightDocument = polarionService.getDocumentWithFilledRevision(rightDocumentIdentifier.getProjectId(), rightDocumentIdentifier.getSpaceId(),
                 rightDocumentIdentifier.getName(), rightDocumentIdentifier.getRevision());
-        ILinkRoleOpt linkRole = resolveLinkRole(linkRoleId, leftDocument, leftDocumentIdentifier, rightDocumentIdentifier);
+        ILinkRoleOpt linkRole = documentsDiffParams.isBranchedDocuments()
+                ? polarionService.getLinkRoleById(LinkRole.BRANCHED_FROM, leftDocument.getProject())
+                : resolveLinkRole(documentsDiffParams.getLinkRole(), leftDocument, leftDocumentIdentifier, rightDocumentIdentifier);
 
-        List<WorkItemsPair> pairedWorkItems = polarionService.getPairedWorkItems(leftDocument, rightDocument, linkRole, Collections.emptyList());
+        List<WorkItemsPair> pairedWorkItems = polarionService.getPairedWorkItems(leftDocument, rightDocument, documentsDiffParams.isBranchedDocuments(), linkRole, Collections.emptyList());
+        if (documentsDiffParams.isBranchedDocuments()) {
+            // Paragraphs (headers) of branched documents have no explicit link, so getPairedWorkItems leaves them unpaired.
+            // For content diffing we still need them paired to diff the content blocks around them, so match paragraphs by title.
+            pairedWorkItems = pairBranchedParagraphs(leftDocument, rightDocument, pairedWorkItems);
+        }
         List<DocumentContentAnchorsPair> pairedDocumentContentAnchors = getPairedDocumentContentAnchors(leftDocument, rightDocument, pairedWorkItems);
 
         return DocumentsContentDiff.builder()
@@ -149,6 +160,31 @@ public class DiffService {
         return pairedAnchors;
     }
 
+    @VisibleForTesting
+    List<WorkItemsPair> pairBranchedParagraphs(@NotNull IModule leftDocument, @NotNull IModule rightDocument, @NotNull List<WorkItemsPair> pairedWorkItems) {
+        List<WorkItemsPair> paragraphPairs = polarionService.getPairedParagraphs(leftDocument, rightDocument);
+
+        // Right counterpart (matched by title) for each left paragraph which has one
+        Map<String, WorkItem> matchedRightByLeftId = paragraphPairs.stream()
+                .filter(pair -> pair.getLeftWorkItem() != null && pair.getRightWorkItem() != null)
+                .collect(Collectors.toMap(pair -> pair.getLeftWorkItem().getId(), WorkItemsPair::getRightWorkItem, (first, second) -> first));
+
+        // Enrich left paragraphs (left present, right still null) with their matched right counterpart, preserving existing ordering
+        for (WorkItemsPair pair : pairedWorkItems) {
+            if (pair.getLeftWorkItem() != null && pair.getRightWorkItem() == null && isStructuralItem(pair.getLeftWorkItem())) {
+                pair.setRightWorkItem(matchedRightByLeftId.get(pair.getLeftWorkItem().getId()));
+            }
+        }
+
+        // Insert right paragraphs added in the branch (no left counterpart) at the position dictated by their outline number
+        List<WorkItemsPair> result = new ArrayList<>(pairedWorkItems);
+        OutlineNumberComparator outlineNumberComparator = new OutlineNumberComparator();
+        paragraphPairs.stream()
+                .filter(pair -> pair.getLeftWorkItem() == null)
+                .forEach(pair -> result.add(getIndex(pair, result, outlineNumberComparator), pair));
+        return result;
+    }
+
     private DocumentContentAnchor convertWorkItemIntoAnchor(WorkItem workItem, Map<String, DocumentContentAnchor> documentAnchors) {
         if (workItem != null) {
             DocumentContentAnchor anchor = documentAnchors.get(workItem.getId());
@@ -163,16 +199,23 @@ public class DiffService {
         }
     }
 
-    public DocumentsDiff getDocumentsDiff(DocumentIdentifier leftDocumentIdentifier, DocumentIdentifier rightDocumentIdentifier, String linkRoleId, String configName, String configCacheBucketId) {
+    public DocumentsDiff getDocumentsDiff(DocumentsDiffParams documentsDiffParams) {
+        DocumentIdentifier leftDocumentIdentifier = documentsDiffParams.getLeftDocument();
+        DocumentIdentifier rightDocumentIdentifier = documentsDiffParams.getRightDocument();
         IModule leftDocument = polarionService.getDocumentWithFilledRevision(leftDocumentIdentifier.getProjectId(), leftDocumentIdentifier.getSpaceId(),
                 leftDocumentIdentifier.getName(), leftDocumentIdentifier.getRevision());
         IModule rightDocument = polarionService.getDocumentWithFilledRevision(rightDocumentIdentifier.getProjectId(), rightDocumentIdentifier.getSpaceId(),
                 rightDocumentIdentifier.getName(), rightDocumentIdentifier.getRevision());
-        ILinkRoleOpt linkRole = resolveLinkRole(linkRoleId, leftDocument, leftDocumentIdentifier, rightDocumentIdentifier);
 
-        DiffModel diffModel = DiffModelCachedResource.get(leftDocumentIdentifier.getProjectId(), configName, configCacheBucketId);
+        ILinkRoleOpt linkRole = documentsDiffParams.isBranchedDocuments()
+                ? polarionService.getLinkRoleById(LinkRole.BRANCHED_FROM, leftDocument.getProject())
+                : resolveLinkRole(documentsDiffParams.getLinkRole(), leftDocument, leftDocumentIdentifier, rightDocumentIdentifier);
 
-        List<WorkItemsPair> pairedWorkItems = handleMovedItems(polarionService.getPairedWorkItems(leftDocument, rightDocument, linkRole, diffModel.getStatusesToIgnore()));
+        DiffModel diffModel = DiffModelCachedResource.get(leftDocumentIdentifier.getProjectId(), documentsDiffParams.getConfigName(), documentsDiffParams.getConfigCacheBucketId());
+
+        List<WorkItemsPair> pairedWorkItems = documentsDiffParams.isBranchedDocuments()
+                ? polarionService.getPairedWorkItems(leftDocument, rightDocument, true, linkRole, diffModel.getStatusesToIgnore())
+                : handleMovedItems(polarionService.getPairedWorkItems(leftDocument, rightDocument, false, linkRole, diffModel.getStatusesToIgnore()));
 
         // Refresh workItems cache for both documents
         Subject userSubject = RequestContextUtil.getUserSubject();

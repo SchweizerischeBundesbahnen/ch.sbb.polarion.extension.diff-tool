@@ -16,6 +16,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.FieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.ListFieldCleaner;
 import ch.sbb.polarion.extension.diff_tool.service.cleaners.NonListFieldCleaner;
@@ -547,7 +548,7 @@ public class MergeService {
             IStructType structType = (IStructType) listType.getItemType();
             String roleEnumId = ((IEnumType) structType.getKeyType("role")).getEnumerationId();
             IWorkItem createdWorkItem = polarionService.getWorkItem(createdWorkItemReference.projectId(), createdWorkItemReference.id());
-            createdWorkItem.removeLinkedItem(sourceWorkItem, new EnumOption(roleEnumId, "branched_from"));
+            createdWorkItem.removeLinkedItem(sourceWorkItem, new EnumOption(roleEnumId, LinkRole.BRANCHED_FROM));
             // Link is added either to source or target item depending on link role direction
             if (context.getLinkRoleDirection() == LinkRoleDirection.DIRECT) {
                 createdWorkItem.addLinkedItem(sourceWorkItem, new LinkRoleOpt(new EnumOption(roleEnumId, context.linkRole)), null, false);
