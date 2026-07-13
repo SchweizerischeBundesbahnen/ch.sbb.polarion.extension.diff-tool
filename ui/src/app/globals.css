@@ -8,7 +8,7 @@
   --foreground-rgb: 56, 56, 56;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
-  --polarion-blue: #007993;
+  --polarion-blue: var(--sbb-accent);
   --control-pane-collapsed-width: 40px;
   --control-pane-expanded-width: 300px;
 
@@ -46,7 +46,7 @@ body {
 }
 
 a {
-  color: #007993;
+  color: var(--sbb-accent);
   text-decoration: none;
 }
 
