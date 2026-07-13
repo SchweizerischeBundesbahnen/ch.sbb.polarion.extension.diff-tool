@@ -460,7 +460,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         }
         if (context.isBranchedDocuments()) {
             String outlineNumber = context.getOutlineNumber(workItem, !inversePair);
-            if (!outlineNumber.contains("-")) { // Special handling of headers in case of diffing branched documents
+            if (outlineNumber != null && !outlineNumber.contains("-")) { // Special handling of headers in case of diffing branched documents
                 if (inversePair) {
                     return Set.of(); // Ignore headers from right document
                 } else {
