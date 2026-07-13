@@ -353,7 +353,6 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
      * Matching is done sequentially in outline number order: each left paragraph claims the first still-unmatched right paragraph
      * with an equal title. Right paragraphs which match nothing (sections added in the branch) are returned as {@code {null, right}}.
      */
-    @VisibleForTesting
     List<WorkItemsPair> getPairedParagraphs(@NotNull IModule leftDocument, @NotNull IModule rightDocument) {
         CalculatePairsContext context = new CalculatePairsContext(leftDocument, rightDocument, null, Collections.emptyList());
 
@@ -458,31 +457,51 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         if (notDiffRelated(workItem, inversePair, context)) {
             return new HashSet<>();
         }
-        if (context.isBranchedDocuments()) {
-            String outlineNumber = context.getOutlineNumber(workItem, !inversePair);
-            if (outlineNumber != null && !outlineNumber.contains("-")) { // Special handling of headers in case of diffing branched documents
-                if (inversePair) {
-                    return Set.of(); // Ignore headers from right document
-                } else {
-                    return Set.of(pair(workItem, null, false));
-                }
-            }
+
+        Set<Pair<IWorkItem, IWorkItem>> branchedHeaderPair = resolveBranchedHeaderPair(workItem, inversePair, context);
+        if (branchedHeaderPair != null) {
+            return branchedHeaderPair;
         }
 
         List<IWorkItem> oppositeWorkItems = inversePair ? context.getLeftDocumentWorkItems() : context.getRightDocumentWorkItems();
 
-        IWorkItem oppositeSameWorkItem = oppositeWorkItems.stream().filter(w ->
-                !w.isUnresolvable() &&
-                        w.getId().equals(workItem.getId()) &&
-                        w.getProjectId().equals(workItem.getProjectId()) &&
-                        context.getOutlineNumber(w, inversePair) != null).findFirst().orElse(null);
-
-        // If we found same work item in the opposite document - use it
+        // If we found same work item in the opposite document - use it.
         // In case if we found nothing while comparing same document with different revision - use null as opposite item
+        IWorkItem oppositeSameWorkItem = findSameWorkItemInOppositeDocument(workItem, oppositeWorkItems, inversePair, context);
         if (oppositeSameWorkItem != null || areEqual(context.getLeftDocument(), context.getRightDocument())) {
             return Set.of(pair(workItem, oppositeSameWorkItem, inversePair));
         }
 
+        return pairByModuleLinks(workItem, oppositeWorkItems, inversePair, context);
+    }
+
+    /**
+     * Handles the special case of headers (work items whose outline number contains no "-") when diffing branched documents:
+     * a left header is kept unpaired ({@code {left, null}}), a right header is ignored altogether. Returns {@code null} when
+     * the item isn't a branched-documents header, meaning the regular pairing logic should apply.
+     */
+    @Nullable
+    private Set<Pair<IWorkItem, IWorkItem>> resolveBranchedHeaderPair(@NotNull IWorkItem workItem, boolean inversePair, @NotNull CalculatePairsContext context) {
+        if (!context.isBranchedDocuments()) {
+            return null;
+        }
+        String outlineNumber = context.getOutlineNumber(workItem, !inversePair);
+        if (outlineNumber == null || outlineNumber.contains("-")) {
+            return null;
+        }
+        return inversePair ? Set.of() : Set.of(pair(workItem, null, false));
+    }
+
+    @Nullable
+    private IWorkItem findSameWorkItemInOppositeDocument(@NotNull IWorkItem workItem, @NotNull List<IWorkItem> oppositeWorkItems, boolean inversePair, @NotNull CalculatePairsContext context) {
+        return oppositeWorkItems.stream().filter(w ->
+                !w.isUnresolvable() &&
+                        w.getId().equals(workItem.getId()) &&
+                        w.getProjectId().equals(workItem.getProjectId()) &&
+                        context.getOutlineNumber(w, inversePair) != null).findFirst().orElse(null);
+    }
+
+    private Set<Pair<IWorkItem, IWorkItem>> pairByModuleLinks(@NotNull IWorkItem workItem, @NotNull List<IWorkItem> oppositeWorkItems, boolean inversePair, @NotNull CalculatePairsContext context) {
         Set<Pair<IWorkItem, IWorkItem>> pairs = new HashSet<>();
         AtomicBoolean moduleLinksExist = new AtomicBoolean(false);
         Stream.concat(workItem.getLinkedWorkItemsStructsDirect().stream(), workItem.getLinkedWorkItemsStructsBack().stream()).forEach(linkedWorkItemStruct -> {

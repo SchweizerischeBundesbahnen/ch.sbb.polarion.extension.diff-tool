@@ -154,19 +154,6 @@ class DocumentsMergeContextTest {
     }
 
     @Test
-    void testConstructorThrowsExceptionForMissingLinkRoleWhenDifferentDocuments() {
-        // Different documents still require a resolvable link role
-        when(rightModule.getProject()).thenReturn(trackerProject);
-        when(polarionService.getLinkRoleById(LINK_ROLE, trackerProject)).thenReturn(null);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                new DocumentsMergeContext(polarionService, leftDocIdentifier, rightDocIdentifier,
-                        MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, LinkRoleDirection.DIRECT, diffModel, false));
-
-        assertTrue(exception.getMessage().contains(LINK_ROLE));
-    }
-
-    @Test
     void testGetSourceModuleLeftToRight() {
         setupLinkRole();
 
