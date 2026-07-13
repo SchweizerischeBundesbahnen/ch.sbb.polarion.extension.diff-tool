@@ -46,21 +46,23 @@
             display: inline-block;
         }
 
+        /* Fields start at 204px (200px label column + the ~4px inline gap after the label); hints are
+           indented a further 2px so they begin just inside the field's left edge. */
         .duplication-form .field-hint {
             display: block;
-            margin-left: 200px;
+            margin-left: 206px;
             color: #666;
             font-size: 0.9em;
         }
 
         .duplication-form .actions {
             margin-top: 20px;
-            margin-left: 200px;
+            margin-left: 204px;
         }
 
         .duplication-form .status-message {
             margin-top: 16px;
-            margin-left: 200px;
+            margin-left: 204px;
             padding: 8px;
             border: 1px solid transparent;
         }
@@ -160,7 +162,7 @@
             <span class="field-hint">Prefix for new work item IDs (trailing dash added automatically).</span>
         </div>
         <div class="actions">
-            <button type="button" id="start-duplication">Start duplication</button>
+            <button type="button" id="start-duplication" class="toolbar-button">Start duplication</button>
         </div>
         <div class="status-message" id="status-message" style="display:none"></div>
     </div>
