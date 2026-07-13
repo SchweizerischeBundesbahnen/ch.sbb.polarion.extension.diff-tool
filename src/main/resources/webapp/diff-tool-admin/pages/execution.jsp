@@ -203,7 +203,7 @@
                                     "  <td>Worker-" + i + "</td>" +
                                     "  <td id='current-threads-" + i + "' class='center-column-value'> - </td>" +
                                     "  <td>" +
-                                    "<input type='number' class='number-input' id='new-threads-" + i + "' placeholder='A new value' min='1' max='" + maxThreadsCount + "' title='Max threads count: " + maxThreadsCount + "'/>" +
+                                    "<input type='number' class='number-input' id='new-threads-" + i + "' placeholder='New value' min='1' max='" + maxThreadsCount + "' title='Max threads count: " + maxThreadsCount + "'/>" +
                                     "</td>" +
                                     "</tr>");
                         }
