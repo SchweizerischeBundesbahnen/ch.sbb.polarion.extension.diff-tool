@@ -236,8 +236,11 @@ export const swapDocuments = async (page, expectedUrl) => {
     }
     if (expectedUrl.test(page.url())) return;
     // The button on this page load never responded — reload for a fresh mount.
-    await page.reload();
-    await page.waitForSelector('.header .merge-pane', { state: 'visible' });
+    // Skip on the final round: there would be no clicks left to benefit from it.
+    if (round < 2) {
+      await page.reload();
+      await page.waitForSelector('.header .merge-pane', { state: 'visible' });
+    }
   }
   await expect(page).toHaveURL(expectedUrl);
 };
