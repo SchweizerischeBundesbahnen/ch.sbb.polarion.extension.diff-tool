@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test, normalizeHtml } from './test-utils';
+import { test, normalizeHtml, swapDocuments } from './test-utils';
 
 test.describe("diffing of documents' contents", () => {
 
@@ -85,13 +85,8 @@ test.describe("diffing of documents' contents", () => {
     await expect(page.getByTestId('LEFT-doc-title')).toContainText("Building Specification v2");
     await expect(page.getByTestId('RIGHT-doc-title')).toContainText("Building Specification v3");
 
-    // Click swap button and wait for URL to change
-    const swapButton = page.locator('.swap-button');
-    await expect(swapButton).toBeVisible();
-    await swapButton.click();
-
-    // Wait for client-side navigation to complete
-    await expect(page).toHaveURL(/sourceProjectId=drivepilot/);
+    // Swap documents and wait for client-side navigation to complete
+    await swapDocuments(page, /sourceProjectId=drivepilot/);
 
     // Verify URL params are swapped
     const url = new URL(page.url());

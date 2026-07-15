@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test, normalizeHtml } from './test-utils';
+import { test, normalizeHtml, swapDocuments } from './test-utils';
 
 test.describe("page of diffing documents' WorkItems", () => {
 
@@ -273,13 +273,8 @@ test.describe("page of diffing documents' WorkItems", () => {
     await mockApi.mockEndpoint({ url: '**/settings/diff/names?scope=project/drivepilot/', fixtureFile: 'configs.json' });
     await mockApi.mockEndpoint({ url: '**/diff/documents', fixtureFile: 'reversed-documents-diff.json' });
 
-    // Click swap button and wait for URL to change
-    const swapButton = page.locator('.swap-button');
-    await expect(swapButton).toBeVisible();
-    await swapButton.click();
-
-    // Wait for client-side navigation to complete
-    await expect(page).toHaveURL(/sourceProjectId=drivepilot/);
+    // Swap documents and wait for client-side navigation to complete
+    await swapDocuments(page, /sourceProjectId=drivepilot/);
 
     // Wait for the diff data to reload after swap
     await expect(page.getByTestId('LEFT-project').locator(".path-value")).toHaveText("Drive Pilot");
