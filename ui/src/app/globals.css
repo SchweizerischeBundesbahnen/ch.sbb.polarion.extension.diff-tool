@@ -8,7 +8,6 @@
   --foreground-rgb: 56, 56, 56;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
-  --polarion-blue: var(--sbb-accent);
   --control-pane-collapsed-width: 40px;
   --control-pane-expanded-width: 300px;
 
@@ -112,6 +111,13 @@ a:hover {
 
 .modal-footer {
   border: none;
+}
+
+/* --polarion-blue derives from the --sbb-accent design token. That token lives on the .sbb-ui scope
+   (control-tokens.css), not :root, so derive it here too — a :root derivation would resolve against a
+   missing --sbb-accent and leave --polarion-blue invalid (teal headers/badges fall back to no fill). */
+.sbb-ui {
+  --polarion-blue: var(--sbb-accent);
 }
 
 .app {

@@ -84,7 +84,7 @@ public class BottomQueryLinksBuilder {
             div.attributes().className("polarion-rpw-table-open-in-table");
             HtmlTagBuilder a = div.append().tag().a();
             a.attributes().href(link).target("_blank");
-            a.append().tag().img().attributes().src(HtmlLinkFactory.fromEncodedRelativeUrl("/polarion/ria/images/portlet/portletOpenInTable.png"))
+            a.append().tag().img().attributes().src(HtmlLinkFactory.fromEncodedRelativeUrl("/polarion/diff-tool/ui/images/open_in_table.svg"))
                     .title(this.context.localization().getString("macro.general.openInTable"));
         }
     }
@@ -94,7 +94,7 @@ public class BottomQueryLinksBuilder {
             String uid = this.context.generateUniqueElementId();
             HtmlTagBuilder tag = builder.tag().div();
             tag.attributes().className("polarion-rpw-table-show-query");
-            tag.append().tag().img().attributes().src(HtmlLinkFactory.fromEncodedRelativeUrl("/polarion/ria/images/portlet/info.png"))
+            tag.append().tag().img().attributes().src(HtmlLinkFactory.fromEncodedRelativeUrl("/polarion/diff-tool/ui/generic/images/info.svg"))
                     .title(this.context.localization().getString("macro.general.showQuery"))
                     .onClick("var style = document.getElementById('" + uid + "').style; style.display = (style.display == 'block') ? 'none' : 'block';");
             HtmlTagBuilder div = builder.tag().div();
