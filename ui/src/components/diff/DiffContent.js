@@ -8,11 +8,14 @@ export default function DiffContent({workItemsPair, pairSelected, pairSelectionT
   const [height, setHeight] = useState(0);
 
   useEffect(() => {
-    setTimeout(() => setHeight(ref.current.height), 1000);
+    const timer = setTimeout(() => {
+      if (ref.current) setHeight(ref.current.height);
+    }, 1000);
+    return () => clearTimeout(timer);
   }, [ref, diffs]);
 
   useEffect(() => {
-    setHeight(ref.current.height);
+    if (ref.current) setHeight(ref.current.height);
   }, [context.state.showOutlineNumbersDiff]);
 
   return <div style={{

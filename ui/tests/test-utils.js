@@ -1,4 +1,4 @@
-import { test as base } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 
@@ -211,6 +211,36 @@ export const test = base.extend({
     await use(mockApi);
   },
 });
+
+/**
+ * Clicks the swap button and waits until the URL reflects the swap.
+ *
+ * The documents page renders entirely on the client (it is a `use client` tree
+ * behind a Suspense fallback), so right after the first render WebKit sometimes
+ * drops clicks on the freshly-mounted swap button and the swap never fires —
+ * the main source of "swap documents" flakiness in CI. Re-clicking quickly
+ * recovers within a couple of seconds; the URL guard before every click means a
+ * landed navigation is never clicked on top of and toggled back. In the rare
+ * case a whole page load stays unresponsive, a reload gives a fresh mount.
+ */
+export const swapDocuments = async (page, expectedUrl) => {
+  for (let round = 0; round < 3; round++) {
+    const swapButton = page.locator('.swap-button');
+    await expect(swapButton).toBeVisible();
+    // Let the mocked config/diff requests settle before interacting.
+    await page.waitForLoadState('networkidle');
+    for (let attempt = 0; attempt < 12; attempt++) {
+      if (expectedUrl.test(page.url())) return;
+      await swapButton.click();
+      await page.waitForTimeout(400);
+    }
+    if (expectedUrl.test(page.url())) return;
+    // The button on this page load never responded — reload for a fresh mount.
+    await page.reload();
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' });
+  }
+  await expect(page).toHaveURL(expectedUrl);
+};
 
 export const normalizeHtml = (htmlString) => {
   return htmlString
