@@ -1,5 +1,6 @@
 import ExtensionContext from '../../ui/generic/js/modules/ExtensionContext.js';
 import ConfigurationsPane from '../../ui/generic/js/modules/ConfigurationsPane.js';
+import SearchableDropdown from '../../ui/generic/js/modules/SearchableDropdown.js';
 
 const ctx = new ExtensionContext({
   extension: 'diff-tool',
@@ -22,13 +23,12 @@ ctx.onClick(
 const Fields = {
   fields: [],
   availableFields: ctx.getElementById("available-fields"),
+  availableFieldsFilter: ctx.getElementById("available-fields-filter"),
   selectedFields: ctx.getElementById("selected-fields"),
   addButton: ctx.getElementById("add-button"),
   removeButton: ctx.getElementById("remove-button"),
   hyperlinkSettingsContainer: ctx.getElementById("hyperlink-settings-container"),
-  hyperlinkRolesSearchInput: ctx.getElementById("search-hyperlink-roles-input"),
   linkedWorkitemSettingsContainer: ctx.getElementById("linked-workitem-settings-container"),
-  linkedWorkitemRolesSearchInput: ctx.getElementById("search-linked-workitem-roles-input"),
 
   init: function () {
     ctx.getElementById("fields-load-error").style.display = "none";
@@ -37,68 +37,7 @@ const Fields = {
     this.selectedFields.addEventListener("change", (event) => this.removeButton.disabled = event.target.selectedIndex === -1);
     this.addButton.addEventListener("click", () => this.addFieldClicked());
     this.removeButton.addEventListener("click", () => this.removeFieldClicked());
-
-    this.hyperlinkRolesSearchInput.addEventListener('input', function() {
-      const searchTerm = this.value.toLowerCase().trim();
-      const options = HyperlinkRoles.roles.options;
-
-      // Store currently selected values
-      const selectedValues = Array.from(HyperlinkRoles.roles.selectedOptions)
-          .map(option => option.value);
-
-      const searchParts = searchTerm.split(/\s+/).filter(part => part.length > 0);
-
-      // Filter options
-      for (let i = 0; i < options.length; i++) {
-        const option = options[i];
-        const isMatch = searchParts.length === 0 ||
-            searchParts.every(part =>
-                option.text.toLowerCase().includes(part)
-            );
-
-        // Toggle visibility based on search match
-        option.hidden = !isMatch;
-      }
-
-      // Re-select previously selected options
-      selectedValues.forEach(value => {
-        const option = HyperlinkRoles.roles.querySelector(`option[value="${value}"]`);
-        if (option) {
-          option.selected = true;
-        }
-      });
-    });
-
-    this.linkedWorkitemRolesSearchInput.addEventListener('input', function() {
-      const searchTerm = this.value.toLowerCase().trim();
-      const options = LinkedWorkItemRoles.roles.options;
-
-      // Store currently selected values
-      const selectedValues = Array.from(LinkedWorkItemRoles.roles.selectedOptions)
-          .map(option => option.value);
-
-      const searchParts = searchTerm.split(/\s+/).filter(part => part.length > 0);
-
-      // Filter options
-      for (let i = 0; i < options.length; i++) {
-        const option = options[i];
-        const isMatch = searchParts.length === 0 ||
-            searchParts.every(part =>
-                option.text.toLowerCase().includes(part)
-            );
-
-        // Toggle visibility based on search match
-        option.hidden = !isMatch;
-      }
-
-      // Re-select previously selected options
-      selectedValues.forEach(value => {
-        const option = LinkedWorkItemRoles.roles.querySelector(`option[value="${value}"]`);
-        if (option) {
-          option.selected = true;
-        }
-      });
-    });
+    this.availableFieldsFilter.addEventListener("input", () => this.applyAvailableFieldsFilter());
 
     return new Promise((resolve, reject) => {
       ctx.callAsync({
@@ -132,8 +71,25 @@ const Fields = {
     for (const field of selectedFields) {
       this.addOption(this.selectedFields, field.key, field.wiTypeId);
     }
+    this.applyAvailableFieldsFilter();
     this.checkHyperlinkSettingsVisibility();
     this.checkLinkedWorkitemSettingsVisibility();
+  },
+
+  // Hide options in the "Available fields" list whose label doesn't match every whitespace-separated
+  // part of the filter term. Re-applied whenever the list is rebuilt so the filter survives moves.
+  applyAvailableFieldsFilter: function () {
+    const searchParts = this.availableFieldsFilter.value.toLowerCase().trim().split(/\s+/).filter(part => part.length > 0);
+    for (const option of this.availableFields.options) {
+      const hidden = searchParts.length > 0 && !searchParts.every(part => option.text.toLowerCase().includes(part));
+      option.hidden = hidden;
+      // Deselect options the filter hides so they can't be moved while invisible.
+      if (hidden) {
+        option.selected = false;
+      }
+    }
+    // Setting option.selected programmatically doesn't fire 'change', so refresh the Add button state.
+    this.addButton.disabled = this.availableFields.selectedIndex === -1;
   },
 
   addFieldClicked: function () {
@@ -165,7 +121,9 @@ const Fields = {
     for (const field of newFieldsSorted) {
       this.addOption(toSelect, field.key, field.wiTypeId);
     }
+    this.applyAvailableFieldsFilter();
     this.checkHyperlinkSettingsVisibility();
+    this.checkLinkedWorkitemSettingsVisibility();
   },
 
   addOption: function (select, fieldKey, wiTypeId) {
@@ -209,6 +167,7 @@ const Fields = {
 
 const Statuses = {
   statusesToIgnore: ctx.getElementById("statuses-to-ignore"),
+  dropdown: null,
 
   load: function () {
     ctx.getElementById("statuses-load-error").style.display = "none";
@@ -222,9 +181,19 @@ const Statuses = {
           for (let status of JSON.parse(responseText)) {
             const opt = document.createElement('option');
             opt.value = status.id;
+            if (status.iconUrl) {
+              opt.setAttribute('data-icon', status.iconUrl);
+            }
             opt.innerHTML = status.wiTypeName ? `${status.name} [${status.id} - ${status.wiTypeName}]` : `${status.name} [${status.id}]`;
             this.statusesToIgnore.appendChild(opt);
           }
+          // Upgrade to the shared Polarion-styled multiselect (chips + built-in search). Instantiated
+          // after the options are populated so it reflects the loaded list.
+          this.dropdown = new SearchableDropdown({
+            element: this.statusesToIgnore,
+            multiselect: true,
+            placeholder: 'Select statuses to ignore...'
+          });
           resolve();
         },
         onError: () => {
@@ -239,6 +208,7 @@ const Statuses = {
 
 const HyperlinkRoles = {
   roles: ctx.getElementById("hyperlink-roles"),
+  dropdown: null,
 
   load: function () {
     ctx.getElementById("hyperlink-roles-load-error").style.display = "none";
@@ -255,6 +225,11 @@ const HyperlinkRoles = {
             opt.innerHTML = `[${role.workItemTypeName}] ${role.name}`;
             this.roles.appendChild(opt);
           }
+          this.dropdown = new SearchableDropdown({
+            element: this.roles,
+            multiselect: true,
+            placeholder: 'Select hyperlink roles...'
+          });
           resolve();
         },
         onError: () => {
@@ -268,6 +243,7 @@ const HyperlinkRoles = {
 
 const LinkedWorkItemRoles = {
   roles: ctx.getElementById("linked-workitem-roles"),
+  dropdown: null,
 
   load: function () {
     ctx.getElementById("linked-workitem-roles-load-error").style.display = "none";
@@ -284,6 +260,11 @@ const LinkedWorkItemRoles = {
             opt.innerHTML = `${role.name}`;
             this.roles.appendChild(opt);
           }
+          this.dropdown = new SearchableDropdown({
+            element: this.roles,
+            multiselect: true,
+            placeholder: 'Select linked WorkItem roles...'
+          });
           resolve();
         },
         onError: () => {
@@ -335,6 +316,17 @@ function setConfiguration(text) {
   Array.from(Statuses.statusesToIgnore.options).forEach(option => option.selected = diffModel.statusesToIgnore.includes(option.value));
   Array.from(HyperlinkRoles.roles.options).forEach(option => option.selected = diffModel.hyperlinkRoles.includes(option.value));
   Array.from(LinkedWorkItemRoles.roles.options).forEach(option => option.selected = diffModel.linkedWorkItemRoles.includes(option.value));
+  // Reflect the loaded selection in the wrapping dropdowns (setting option.selected above does not
+  // dispatch a change event, so the chips must be synced explicitly).
+  if (Statuses.dropdown) {
+    Statuses.dropdown.syncFromElement();
+  }
+  if (HyperlinkRoles.dropdown) {
+    HyperlinkRoles.dropdown.syncFromElement();
+  }
+  if (LinkedWorkItemRoles.dropdown) {
+    LinkedWorkItemRoles.dropdown.syncFromElement();
+  }
   if (diffModel.bundleTimestamp !== ctx.getValueById('bundle-timestamp')) {
     loadDefaultContent()
         .then((responseText) => {

@@ -2596,6 +2596,10 @@
       "WorkItemStatus": {
         "description": "WorkItem status data",
         "properties": {
+          "iconUrl": {
+            "description": "URL of the status icon, if defined",
+            "type": "string"
+          },
           "id": {
             "description": "Status ID",
             "type": "string"
