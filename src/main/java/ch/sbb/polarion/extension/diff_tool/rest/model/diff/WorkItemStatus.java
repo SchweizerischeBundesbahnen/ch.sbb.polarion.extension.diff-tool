@@ -23,4 +23,7 @@ public class WorkItemStatus {
 
     @Schema(description = "WorkItem type name")
     private String wiTypeName;
+
+    @Schema(description = "URL of the status icon, if defined")
+    private String iconUrl;
 }

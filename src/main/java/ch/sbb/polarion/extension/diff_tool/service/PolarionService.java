@@ -16,6 +16,7 @@ import ch.sbb.polarion.extension.diff_tool.util.RequestContextUtil;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import ch.sbb.polarion.extension.generic.settings.NamedSettingsRegistry;
 import ch.sbb.polarion.extension.generic.settings.SettingId;
+import ch.sbb.polarion.extension.generic.util.EnumUtils;
 import ch.sbb.polarion.extension.generic.util.ScopeUtils;
 import com.polarion.alm.projects.IProjectService;
 import com.polarion.alm.projects.model.IFolder;
@@ -284,6 +285,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                 .name(statusOpt.getName())
                 .wiTypeId(wiTypeOpt != null ? wiTypeOpt.getId() : null)
                 .wiTypeName(wiTypeOpt != null ? wiTypeOpt.getName() : null)
+                .iconUrl(EnumUtils.getIconUrl(statusOpt))
                 .build();
     }
 
