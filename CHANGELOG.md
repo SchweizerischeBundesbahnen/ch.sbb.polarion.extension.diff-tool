@@ -1,5 +1,15 @@
 # Changelog
 
+## [9.1.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.1.0...v9.1.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.5.0 ([#552](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/552)) ([fa7b354](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/fa7b354e04a8f6c5f0d759de8c06e0b68f3f2f37))
+* guard DiffContent height read against unmounted ref ([#551](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/551)) ([2a803b1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2a803b1b83e01848c43f76f7ffa9ee4b5ba0e21a))
+* replace native multi-select listboxes on Diff Configuration with multiselect chip comboboxes ([#547](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/547)) ([05cd590](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/05cd590accd266df43af744f307f7b8a6855de35))
+* update image sources and CSS variable for teal headers ([#550](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/550)) ([3b1aaab](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/3b1aaabc68983ccd89ed17238bf2a3e5e83f1148)), closes [#549](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/549)
+
 ## [9.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.0.0...v9.1.0) (2026-07-14)
 
 
