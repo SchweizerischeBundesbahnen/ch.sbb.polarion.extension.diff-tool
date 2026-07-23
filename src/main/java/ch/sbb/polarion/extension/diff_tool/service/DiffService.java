@@ -213,9 +213,19 @@ public class DiffService {
 
         DiffModel diffModel = DiffModelCachedResource.get(leftDocumentIdentifier.getProjectId(), documentsDiffParams.getConfigName(), documentsDiffParams.getConfigCacheBucketId());
 
-        List<WorkItemsPair> pairedWorkItems = documentsDiffParams.isBranchedDocuments()
-                ? polarionService.getPairedWorkItems(leftDocument, rightDocument, true, linkRole, diffModel.getStatusesToIgnore())
-                : handleMovedItems(polarionService.getPairedWorkItems(leftDocument, rightDocument, false, linkRole, diffModel.getStatusesToIgnore()));
+        List<WorkItemsPair> pairedWorkItems = polarionService.getPairedWorkItems(leftDocument, rightDocument,
+                documentsDiffParams.isBranchedDocuments(), linkRole, diffModel.getStatusesToIgnore());
+        if (documentsDiffParams.isSyncStructureEnabled()) {
+            // Moved-item surrogates are only relevant when structure is synced (and only for non-branched documents)
+            if (!documentsDiffParams.isBranchedDocuments()) {
+                pairedWorkItems = handleMovedItems(pairedWorkItems);
+            }
+        } else {
+            // Structure sync disabled: drop structural (added/deleted) pairs, keep only content changes of items present on both sides
+            pairedWorkItems = pairedWorkItems.stream()
+                    .filter(pair -> pair.getLeftWorkItem() != null && pair.getRightWorkItem() != null)
+                    .toList();
+        }
 
         // Refresh workItems cache for both documents
         Subject userSubject = RequestContextUtil.getUserSubject();

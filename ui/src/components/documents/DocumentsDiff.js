@@ -72,9 +72,9 @@ export default function DocumentsDiff({ enclosingCollections }) {
     const cacheId = uuidv4();
     setConfigCacheId(cacheId);
 
-    diffService.sendDocumentsDiffRequest(searchParams, cacheId, loadingContext)
+    diffService.sendDocumentsDiffRequest(searchParams, cacheId, loadingContext, context.state.syncStructure)
         .then((data) => setDocsData(data));
-  }, [searchParams]);
+  }, [searchParams, context.state.syncStructure]);
 
   useEffect(() => {
     if (docsData && docsData.pairedWorkItems && docsData.pairedWorkItems.length > 0) {

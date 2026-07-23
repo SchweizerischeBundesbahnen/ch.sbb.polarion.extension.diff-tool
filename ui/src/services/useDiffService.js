@@ -4,7 +4,7 @@ import {CONTENT_ABOVE, CONTENT_BELOW} from "@/components/documents/ContentAnchor
 export default function useDiffService() {
   const remote = useRemote();
 
-  const sendDocumentsDiffRequest = (searchParams, configCacheId, loadingContext) => {
+  const sendDocumentsDiffRequest = (searchParams, configCacheId, loadingContext, syncStructure) => {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
 
@@ -20,7 +20,8 @@ export default function useDiffService() {
           branchedDocuments: searchParams.get('branched'),
           linkRole: searchParams.get('linkRole'),
           configName: searchParams.get('config'),
-          configCacheBucketId: configCacheId
+          configCacheBucketId: configCacheId,
+          syncStructure: syncStructure
         }),
         contentType: "application/json"
       })
