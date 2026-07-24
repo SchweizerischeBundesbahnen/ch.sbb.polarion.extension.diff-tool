@@ -50,8 +50,16 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
       return;
     }
 
+    let ignore = false; // guard against a superseded request overwriting docsData with stale results
     diffService.sendDocumentsContentDiffRequest(searchParams, uuidv4(), loadingContext)
-        .then((data) => setDocsData(data));
+        .then((data) => {
+          if (!ignore) {
+            setDocsData(data);
+          }
+        });
+    return () => {
+      ignore = true;
+    };
   }, [searchParams]);
 
   useEffect(() => {

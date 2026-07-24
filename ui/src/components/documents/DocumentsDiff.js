@@ -72,8 +72,16 @@ export default function DocumentsDiff({ enclosingCollections }) {
     const cacheId = uuidv4();
     setConfigCacheId(cacheId);
 
+    let ignore = false; // guard against a superseded request overwriting docsData with stale results
     diffService.sendDocumentsDiffRequest(searchParams, cacheId, loadingContext, context.state.syncStructure)
-        .then((data) => setDocsData(data));
+        .then((data) => {
+          if (!ignore) {
+            setDocsData(data);
+          }
+        });
+    return () => {
+      ignore = true;
+    };
   }, [searchParams, context.state.syncStructure]);
 
   useEffect(() => {
