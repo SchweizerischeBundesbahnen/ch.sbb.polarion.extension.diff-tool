@@ -217,6 +217,15 @@ export default function ControlPane({diff_type}) {
                 </label>
               </div>
           }
+          {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.COLLECTIONS_DIFF) &&
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" checked={context.state.syncStructure} id="sync-structure"
+                       onChange={() => context.state.setSyncStructure(!context.state.syncStructure)}/>
+                <label className="form-check-label" htmlFor="sync-structure" title="When unchecked, moved, added and removed items are hidden and only content changes of items present in both documents are compared and merged.">
+                  Sync structure
+                </label>
+              </div>
+          }
           {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF && diff_type !== DiffTypes.DOCUMENTS_CONTENT_DIFF &&
               <div className="form-check">
                 <input className="form-check-input" type="checkbox" value="" id="counterparts-differ"

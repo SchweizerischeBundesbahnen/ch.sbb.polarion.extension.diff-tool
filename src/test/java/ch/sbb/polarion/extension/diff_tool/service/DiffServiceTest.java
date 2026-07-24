@@ -364,7 +364,7 @@ class DiffServiceTest {
         DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").revision("rev1").build();
         DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").revision("rev1").build();
 
-        DocumentsContentDiff result = diffService.getDocumentsContentDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, linkRole, NamedSettings.DEFAULT_NAME, null));
+        DocumentsContentDiff result = diffService.getDocumentsContentDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, linkRole, NamedSettings.DEFAULT_NAME, null, null));
         assertNotNull(result);
         assertEquals(4, result.getPairedContentAnchors().size());
 
@@ -984,7 +984,7 @@ class DiffServiceTest {
         DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").revision("rev1").build();
         DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").revision("rev1").build();
 
-        DocumentsDiffParams params = new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, "invalid-role", null, null);
+        DocumentsDiffParams params = new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, "invalid-role", null, null, null);
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(params));
 
         assertTrue(exception.getMessage().contains("invalid-role"));
@@ -1000,8 +1000,8 @@ class DiffServiceTest {
         DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").revision("rev1").build();
         DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").revision("rev1").build();
 
-        DocumentsDiffParams nullRoleParams = new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, null, null, null);
-        DocumentsDiffParams emptyRoleParams = new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, "", null, null);
+        DocumentsDiffParams nullRoleParams = new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, null, null, null, null);
+        DocumentsDiffParams emptyRoleParams = new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, "", null, null, null);
         assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(nullRoleParams));
         assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(emptyRoleParams));
         verify(polarionService, never()).getLinkRoleById(anyString(), any());
@@ -1027,8 +1027,8 @@ class DiffServiceTest {
                      mockStatic(ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.class)) {
             mockedDiffModel.when(() -> ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.get(any(), any(), any()))
                     .thenReturn(ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel.builder().build());
-            assertNotNull(diffService.getDocumentsDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, null, null, null)));
-            assertNotNull(diffService.getDocumentsDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, "", null, null)));
+            assertNotNull(diffService.getDocumentsDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, null, null, null, null)));
+            assertNotNull(diffService.getDocumentsDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, "", null, null, null)));
         } finally {
             org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
         }
@@ -1063,7 +1063,7 @@ class DiffServiceTest {
             mockedDiffModel.when(() -> ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.get(any(), any(), any()))
                     .thenReturn(ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel.builder().build());
 
-            DocumentsDiff result = diffService.getDocumentsDiff(new DocumentsDiffParams(left, right, true, null, null, null));
+            DocumentsDiff result = diffService.getDocumentsDiff(new DocumentsDiffParams(left, right, true, null, null, null, null));
 
             assertNotNull(result);
             // Branched diff passes the paired work items through as-is (moved-items surrogate handling must be skipped)
@@ -1079,6 +1079,99 @@ class DiffServiceTest {
     }
 
     @Test
+    void testGetDocumentsDiffOmitsStructuralPairsWhenSyncStructureDisabled() {
+        IModule document = mockSameDocumentForDiff();
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev1")).thenReturn(document);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev2")).thenReturn(document);
+        when(polarionService.getDocumentWorkItemsCache()).thenReturn(mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class));
+
+        WorkItemsPair fullPair = WorkItemsPair.builder()
+                .leftWorkItem(WorkItem.builder().id("AA-1").outlineNumber("1-1").build())
+                .rightWorkItem(WorkItem.builder().id("AA-2").outlineNumber("1-1").build())
+                .build();
+        WorkItemsPair addedPair = WorkItemsPair.builder()
+                .leftWorkItem(null)
+                .rightWorkItem(WorkItem.builder().id("AA-3").outlineNumber("2-1").build())
+                .build();
+        WorkItemsPair deletedPair = WorkItemsPair.builder()
+                .leftWorkItem(WorkItem.builder().id("AA-4").outlineNumber("3-1").build())
+                .rightWorkItem(null)
+                .build();
+        when(polarionService.getPairedWorkItems(eq(document), eq(document), eq(false), isNull(), anyList()))
+                .thenReturn(new ArrayList<>(List.of(fullPair, addedPair, deletedPair)));
+
+        DocumentIdentifier left = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev1").build();
+        DocumentIdentifier right = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev2").build();
+
+        org.springframework.web.context.request.ServletRequestAttributes attrs =
+                mock(org.springframework.web.context.request.ServletRequestAttributes.class);
+        when(attrs.getRequest()).thenReturn(mock(jakarta.servlet.http.HttpServletRequest.class));
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(attrs);
+        try (org.mockito.MockedStatic<ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource> mockedDiffModel =
+                     mockStatic(ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.class)) {
+            mockedDiffModel.when(() -> ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.get(any(), any(), any()))
+                    .thenReturn(ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel.builder().build());
+
+            DocumentsDiffParams params = new DocumentsDiffParams(left, right, false, null, null, null, false);
+            DocumentsDiff result = diffService.getDocumentsDiff(params);
+
+            assertNotNull(result);
+            // With structure sync disabled only pairs present on both sides are kept (added/deleted are dropped)
+            assertEquals(1, result.getPairedWorkItems().size());
+            WorkItemsPair remaining = result.getPairedWorkItems().iterator().next();
+            assertEquals("AA-1", remaining.getLeftWorkItem().getId());
+            assertEquals("AA-2", remaining.getRightWorkItem().getId());
+            // Moved-items handling is skipped, so no pair carries a move marker
+            assertNull(remaining.getLeftWorkItem().getMovedOutlineNumber());
+            assertNull(remaining.getLeftWorkItem().getMoveDirection());
+        } finally {
+            org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
+        }
+    }
+
+    @Test
+    void testGetDocumentsDiffKeepsStructuralPairsWhenSyncStructureDefaultsTrue() {
+        IModule document = mockSameDocumentForDiff();
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev1")).thenReturn(document);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev2")).thenReturn(document);
+        when(polarionService.getDocumentWorkItemsCache()).thenReturn(mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class));
+
+        // Root outline numbers that are equal ⇒ handleMovedItems detects no move (no surrogate creation)
+        WorkItemsPair fullPair = WorkItemsPair.builder()
+                .leftWorkItem(WorkItem.builder().id("AA-1").outlineNumber("1").build())
+                .rightWorkItem(WorkItem.builder().id("AA-2").outlineNumber("1").build())
+                .build();
+        WorkItemsPair addedPair = WorkItemsPair.builder()
+                .leftWorkItem(null)
+                .rightWorkItem(WorkItem.builder().id("AA-3").outlineNumber("2").build())
+                .build();
+        when(polarionService.getPairedWorkItems(eq(document), eq(document), eq(false), isNull(), anyList()))
+                .thenReturn(new ArrayList<>(List.of(fullPair, addedPair)));
+
+        DocumentIdentifier left = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev1").build();
+        DocumentIdentifier right = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev2").build();
+
+        org.springframework.web.context.request.ServletRequestAttributes attrs =
+                mock(org.springframework.web.context.request.ServletRequestAttributes.class);
+        when(attrs.getRequest()).thenReturn(mock(jakarta.servlet.http.HttpServletRequest.class));
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(attrs);
+        try (org.mockito.MockedStatic<ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource> mockedDiffModel =
+                     mockStatic(ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.class)) {
+            mockedDiffModel.when(() -> ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.get(any(), any(), any()))
+                    .thenReturn(ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel.builder().build());
+
+            // syncStructure omitted (6-arg constructor) ⇒ defaults to true ⇒ structural (added) pair retained
+            DocumentsDiffParams params = new DocumentsDiffParams(left, right, false, null, null, null, null);
+            DocumentsDiff result = diffService.getDocumentsDiff(params);
+
+            assertNotNull(result);
+            assertEquals(2, result.getPairedWorkItems().size());
+        } finally {
+            org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
+        }
+    }
+
+    @Test
     void testGetDocumentsDiffRequiresLinkRoleWhenProjectDiffers() {
         IModule leftDocument = mock(IModule.class);
         IModule rightDocument = mock(IModule.class);
@@ -1088,7 +1181,7 @@ class DiffServiceTest {
         DocumentIdentifier left = DocumentIdentifier.builder().projectId("projectA").spaceId("space1").name("doc").build();
         DocumentIdentifier right = DocumentIdentifier.builder().projectId("projectB").spaceId("space1").name("doc").build();
 
-        DocumentsDiffParams params = new DocumentsDiffParams(left, right, false, null, null, null);
+        DocumentsDiffParams params = new DocumentsDiffParams(left, right, false, null, null, null, null);
         assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(params));
     }
 
@@ -1103,7 +1196,7 @@ class DiffServiceTest {
         DocumentIdentifier right = DocumentIdentifier.builder().projectId("project1").spaceId("space2").name("doc").build();
 
         // Same project + name, but different space ⇒ documents differ ⇒ linkRole still required.
-        DocumentsDiffParams params = new DocumentsDiffParams(left, right, false, null, null, null);
+        DocumentsDiffParams params = new DocumentsDiffParams(left, right, false, null, null, null, null);
         assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(params));
     }
 
@@ -1118,7 +1211,7 @@ class DiffServiceTest {
         DocumentIdentifier right = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").build();
 
         // Same project + space, but different name ⇒ documents differ ⇒ linkRole still required.
-        DocumentsDiffParams params = new DocumentsDiffParams(left, right, false, null, null, null);
+        DocumentsDiffParams params = new DocumentsDiffParams(left, right, false, null, null, null, null);
         assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(params));
     }
 
@@ -1134,7 +1227,7 @@ class DiffServiceTest {
         DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev1").build();
         DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev2").build();
 
-        assertNotNull(diffService.getDocumentsContentDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, null, NamedSettings.DEFAULT_NAME, null)));
+        assertNotNull(diffService.getDocumentsContentDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, false, null, NamedSettings.DEFAULT_NAME, null, null)));
         verify(polarionService, never()).getLinkRoleById(anyString(), any());
     }
 
@@ -1156,7 +1249,7 @@ class DiffServiceTest {
         DocumentIdentifier left = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").build();
         DocumentIdentifier right = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").build();
 
-        DocumentsContentDiff result = diffService.getDocumentsContentDiff(new DocumentsDiffParams(left, right, true, null, NamedSettings.DEFAULT_NAME, null));
+        DocumentsContentDiff result = diffService.getDocumentsContentDiff(new DocumentsDiffParams(left, right, true, null, NamedSettings.DEFAULT_NAME, null, null));
 
         assertNotNull(result);
         // Branched content diff resolves the fixed 'branched_from' role and additionally pairs paragraphs by title
