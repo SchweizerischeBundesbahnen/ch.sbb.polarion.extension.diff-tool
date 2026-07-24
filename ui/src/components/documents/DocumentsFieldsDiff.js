@@ -1,4 +1,4 @@
-import {useContext, useEffect, useState} from "react";
+import {useContext, useEffect, useRef, useState} from "react";
 import {useSearchParams} from "next/navigation";
 import AppContext from "../AppContext";
 import AppAlert from "@/components/AppAlert";
@@ -42,6 +42,7 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
   const [mergeDeniedWarning, setMergeDeniedWarning] = useState(false);  // means that merge operation was denied because displayed state of documents is not last one
   const [mergeNotAuthorizedWarning, setMergeNotAuthorizedWarning] = useState(false);  // means that merge to target document is not authorized for current user
   const [mergeReportModalVisible, setMergeReportModalVisible] = useState(false);
+  const latestRequestRef = useRef(0);
 
   useEffect(() => {
     const missingParams = REQUIRED_PARAMS.filter(param => !searchParams.get(param));
@@ -55,9 +56,14 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
   }, [searchParams]);
 
   const loadDiff = () => {
+    // Guard against a superseded request overwriting state with stale results (deps/settings can change while in flight)
+    const requestId = ++latestRequestRef.current;
     mergingContext.resetRegistry();
     diffService.sendDocumentsFieldsDiffRequest(searchParams, context.state.compareEnumsById, context.state.compareOnlyMutualFields, loadingContext)
         .then((data)=> {
+              if (requestId !== latestRequestRef.current) {
+                return;
+              }
               setFieldsData(data);
               let diffs = data.pairedFields.filter(fieldDiff => fieldDiff.leftField.htmlDiff && fieldDiff.rightField.htmlDiff).map((fieldDiff, index) => {
                 mergingContext.setPairSelected(index, fieldDiff.leftField.id, false);

@@ -66,11 +66,18 @@ export default function WorkItemsDiff() {
 
     setConfigCacheId(uuidv4());
 
+    let ignore = false; // guard against a superseded request overwriting workItemsData with stale results
     diffService.sendFindWorkItemsPairsRequest(searchParams, loadingContext)
         .then((data) => {
+          if (ignore) {
+            return;
+          }
           setWorkItemsData(data);
           setRedundancyModalVisible(data.leftWorkItemIdsWithRedundancy && data.leftWorkItemIdsWithRedundancy.length > 0);
         });
+    return () => {
+      ignore = true;
+    };
   }, [searchParams]);
 
   useEffect(() => {

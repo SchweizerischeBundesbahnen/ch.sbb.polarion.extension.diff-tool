@@ -72,9 +72,17 @@ export default function DocumentsDiff({ enclosingCollections }) {
     const cacheId = uuidv4();
     setConfigCacheId(cacheId);
 
-    diffService.sendDocumentsDiffRequest(searchParams, cacheId, loadingContext)
-        .then((data) => setDocsData(data));
-  }, [searchParams]);
+    let ignore = false; // guard against a superseded request overwriting docsData with stale results
+    diffService.sendDocumentsDiffRequest(searchParams, cacheId, loadingContext, context.state.syncStructure)
+        .then((data) => {
+          if (!ignore) {
+            setDocsData(data);
+          }
+        });
+    return () => {
+      ignore = true;
+    };
+  }, [searchParams, context.state.syncStructure]);
 
   useEffect(() => {
     if (docsData && docsData.pairedWorkItems && docsData.pairedWorkItems.length > 0) {
