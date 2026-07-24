@@ -13,6 +13,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentWorkItemsPair
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsCollection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiff;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsDiffParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsDiff;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsPair;
@@ -163,16 +164,28 @@ public class DiffService {
         }
     }
 
-    public DocumentsDiff getDocumentsDiff(DocumentIdentifier leftDocumentIdentifier, DocumentIdentifier rightDocumentIdentifier, String linkRoleId, String configName, String configCacheBucketId) {
+    public DocumentsDiff getDocumentsDiff(DocumentsDiffParams documentsDiffParams) {
+        DocumentIdentifier leftDocumentIdentifier = documentsDiffParams.getLeftDocument();
+        DocumentIdentifier rightDocumentIdentifier = documentsDiffParams.getRightDocument();
         IModule leftDocument = polarionService.getDocumentWithFilledRevision(leftDocumentIdentifier.getProjectId(), leftDocumentIdentifier.getSpaceId(),
                 leftDocumentIdentifier.getName(), leftDocumentIdentifier.getRevision());
         IModule rightDocument = polarionService.getDocumentWithFilledRevision(rightDocumentIdentifier.getProjectId(), rightDocumentIdentifier.getSpaceId(),
                 rightDocumentIdentifier.getName(), rightDocumentIdentifier.getRevision());
-        ILinkRoleOpt linkRole = resolveLinkRole(linkRoleId, leftDocument, leftDocumentIdentifier, rightDocumentIdentifier);
 
-        DiffModel diffModel = DiffModelCachedResource.get(leftDocumentIdentifier.getProjectId(), configName, configCacheBucketId);
+        ILinkRoleOpt linkRole = resolveLinkRole(documentsDiffParams.getLinkRole(), leftDocument, leftDocumentIdentifier, rightDocumentIdentifier);
 
-        List<WorkItemsPair> pairedWorkItems = handleMovedItems(polarionService.getPairedWorkItems(leftDocument, rightDocument, linkRole, diffModel.getStatusesToIgnore()));
+        DiffModel diffModel = DiffModelCachedResource.get(leftDocumentIdentifier.getProjectId(), documentsDiffParams.getConfigName(), documentsDiffParams.getConfigCacheBucketId());
+
+        List<WorkItemsPair> pairedWorkItems = polarionService.getPairedWorkItems(leftDocument, rightDocument, linkRole, diffModel.getStatusesToIgnore());
+        if (documentsDiffParams.isSyncStructureEnabled()) {
+            // Moved-item surrogates are only relevant when structure is synced
+            pairedWorkItems = handleMovedItems(pairedWorkItems);
+        } else {
+            // Structure sync disabled: drop structural (added/deleted) pairs, keep only content changes of items present on both sides
+            pairedWorkItems = pairedWorkItems.stream()
+                    .filter(pair -> pair.getLeftWorkItem() != null && pair.getRightWorkItem() != null)
+                    .toList();
+        }
 
         // Refresh workItems cache for both documents
         Subject userSubject = RequestContextUtil.getUserSubject();

@@ -1,6 +1,6 @@
 import PairMergeTicker from "@/components/merge/PairMergeTicker";
 import {LEFT, RIGHT, WorkItemHeader} from "@/components/WorkItemHeader";
-import {useContext, useEffect, useState} from "react";
+import {useContext, useEffect, useRef, useState} from "react";
 import useImageUtils from "@/utils/useImageUtils";
 import DiffContent from "@/components/diff/DiffContent";
 import useRemote from "@/services/useRemote";
@@ -28,6 +28,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
   const [dataLoadedFired, setDataLoadedFired] = useState(false);
   const [selected, setSelected] = useState(mergingContext.isIndexSelected(currentIndex));
   const [pairSelectionTrigger, setPairSelectionTrigger] = useState(0);
+  const latestRequestRef = useRef(0); // guards against a superseded (or retried) request overwriting diffData with stale results
 
   useEffect(() => {
     if (onHold && loadingContext.pairLoadingAllowed(currentIndex)) {
@@ -84,7 +85,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
         }
       }
     }
-    requestDiff(body, 0);
+    requestDiff(body, 0, ++latestRequestRef.current);
   }, [onHold]);
 
   useEffect(() => {
@@ -150,7 +151,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
     setExpanded(!expanded);
   };
 
-  const requestDiff = (body, triesCount) => {
+  const requestDiff = (body, triesCount, requestId) => {
     setLoading(true);
     setDataLoadedFired(false);
     remote.sendRequest({
@@ -164,7 +165,9 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
       } else {
         if (CODES_TO_RETRY.includes(response.status) && triesCount < 3) {
           setTimeout(() => {
-            requestDiff(body, triesCount + 1);
+            if (requestId === latestRequestRef.current) { // do not retry a superseded request
+              requestDiff(body, triesCount + 1, requestId);
+            }
           }, triesCount * 2000 + 1000);
           throw Promise.resolve(RETRY_MARKER); // Marker for later code that we are still trying to obtain diff from server
         } else {
@@ -172,6 +175,9 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
         }
       }
     }).then(data =>  {
+      if (requestId !== latestRequestRef.current) {
+        return; // a newer request has superseded this one, ignore its (stale) result
+      }
       // ----- We need to reload title/outlineNumber information in case if they were modified by merge
       if (data.leftWorkItem) {
         workItemsPair.leftWorkItem.title = data.leftWorkItem.title;
@@ -184,6 +190,9 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
       setLoading(false);
     }).catch(errorResponse => {
       Promise.resolve(errorResponse).then((error) => {
+        if (requestId !== latestRequestRef.current) {
+          return; // superseded request, ignore its error too
+        }
         if (RETRY_MARKER !== error) {
           setError(error && error.message ? error.message : "Error occurred loading diff data");
           setLoading(false);

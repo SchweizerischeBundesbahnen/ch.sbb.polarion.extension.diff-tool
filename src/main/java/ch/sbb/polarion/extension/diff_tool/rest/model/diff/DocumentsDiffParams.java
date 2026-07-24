@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,7 +28,15 @@ public class DocumentsDiffParams {
     @Schema(description = "The ID of the configuration cache bucket")
     private String configCacheBucketId;
 
+    @Schema(description = "Indicates whether structural changes (moved / added / deleted items) are included; when false only content changes of items present on both sides are returned. Defaults to true.")
+    private Boolean syncStructure;
+
     public String getConfigName() {
         return configName != null ? configName : NamedSettings.DEFAULT_NAME;
+    }
+
+    @JsonIgnore
+    public boolean isSyncStructureEnabled() {
+        return !Boolean.FALSE.equals(syncStructure); // default true when null
     }
 }

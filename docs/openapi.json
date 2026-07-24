@@ -1793,6 +1793,10 @@
           },
           "rightDocument": {
             "$ref": "#/components/schemas/DocumentIdentifier"
+          },
+          "syncStructure": {
+            "description": "Indicates whether structural changes (moved / added / deleted items) are included; when false only content changes of items present on both sides are returned. Defaults to true.",
+            "type": "boolean"
           }
         },
         "type": "object"

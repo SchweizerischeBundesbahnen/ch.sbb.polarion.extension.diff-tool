@@ -85,10 +85,7 @@ public class DiffInternalController {
                 && !documentsDiffParams.getLeftDocument().pointsToSameDocumentAs(documentsDiffParams.getRightDocument()))) {
             throw new BadRequestException("Parameters 'leftDocument', 'rightDocument' and 'linkRole' should be provided");
         }
-        return schedule(DIFF_DOCUMENTS, () ->
-                diffService.getDocumentsDiff(documentsDiffParams.getLeftDocument(), documentsDiffParams.getRightDocument(), documentsDiffParams.getLinkRole(),
-                        documentsDiffParams.getConfigName(), documentsDiffParams.getConfigCacheBucketId())
-        );
+        return schedule(DIFF_DOCUMENTS, () -> diffService.getDocumentsDiff(documentsDiffParams));
     }
 
     @POST
