@@ -57,6 +57,12 @@ public class Document {
         return this;
     }
 
+    @Nullable
+    public static Document from(@Nullable IModule module, boolean authorizedForMerge) {
+        Document document = from(module);
+        return document == null ? null : document.authorizedForMerge(authorizedForMerge);
+    }
+
     public static Document from(@Nullable IModule module) {
         if (module == null) {
             return null;

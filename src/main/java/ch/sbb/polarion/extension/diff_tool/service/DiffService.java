@@ -120,8 +120,8 @@ public class DiffService {
         List<DocumentContentAnchorsPair> pairedDocumentContentAnchors = getPairedDocumentContentAnchors(leftDocument, rightDocument, pairedWorkItems);
 
         return DocumentsContentDiff.builder()
-                .leftDocument(Document.from(leftDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(leftDocumentIdentifier.getProjectId())))
-                .rightDocument(Document.from(rightDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(rightDocumentIdentifier.getProjectId())))
+                .leftDocument(Document.from(leftDocument, polarionService.userAuthorizedForMerge(leftDocumentIdentifier.getProjectId())))
+                .rightDocument(Document.from(rightDocument, polarionService.userAuthorizedForMerge(rightDocumentIdentifier.getProjectId())))
                 .pairedContentAnchors(pairedDocumentContentAnchors)
                 .build();
     }
@@ -193,8 +193,8 @@ public class DiffService {
         polarionService.getDocumentWorkItemsCache().cacheWorkItemsFromDocument(rightDocument, userSubject);
 
         return DocumentsDiff.builder()
-                .leftDocument(Document.from(leftDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(leftDocumentIdentifier.getProjectId())))
-                .rightDocument(Document.from(rightDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(rightDocumentIdentifier.getProjectId())))
+                .leftDocument(Document.from(leftDocument, polarionService.userAuthorizedForMerge(leftDocumentIdentifier.getProjectId())))
+                .rightDocument(Document.from(rightDocument, polarionService.userAuthorizedForMerge(rightDocumentIdentifier.getProjectId())))
                 .pairedWorkItems(pairedWorkItems)
                 .build();
     }
@@ -592,8 +592,8 @@ public class DiffService {
                 rightDocumentIdentifier.getName(), rightDocumentIdentifier.getRevision());
 
         return DocumentsFieldsDiff.builder()
-                .leftDocument(Document.from(leftDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(leftDocumentIdentifier.getProjectId())))
-                .rightDocument(Document.from(rightDocument).authorizedForMerge(polarionService.userAuthorizedForMerge(rightDocumentIdentifier.getProjectId())))
+                .leftDocument(Document.from(leftDocument, polarionService.userAuthorizedForMerge(leftDocumentIdentifier.getProjectId())))
+                .rightDocument(Document.from(rightDocument, polarionService.userAuthorizedForMerge(rightDocumentIdentifier.getProjectId())))
                 .pairedFields(getFieldsDiff(leftDocument, rightDocument, compareEnumsById, compareOnlyMutualFields))
                 .build();
     }

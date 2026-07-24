@@ -942,9 +942,9 @@ class DiffServiceTest {
 
         DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("left").revision("rev1").build();
         DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("right").revision("rev1").build();
+        DocumentsDiffParams params = new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, "invalid-role", null, null, null);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                diffService.getDocumentsDiff(new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, "invalid-role", null, null, null)));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> diffService.getDocumentsDiff(params));
 
         assertTrue(exception.getMessage().contains("invalid-role"));
     }
@@ -993,6 +993,49 @@ class DiffServiceTest {
         }
         // No link role lookup must happen for same-document compare with empty linkRoleId.
         verify(polarionService, never()).getLinkRoleById(anyString(), any());
+    }
+
+    @Test
+    void testGetDocumentsDiffWithSyncStructureDisabledKeepsOnlyItemsPresentOnBothSides() {
+        IModule document = mockSameDocumentForDiff();
+
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev1")).thenReturn(document);
+        when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev2")).thenReturn(document);
+
+        // Mix of a content-only pair (present on both sides), a deleted item (left only) and an added item (right only).
+        WorkItemsPair contentPair = createWorkItemsPair("AA-1", "AA-2");
+        WorkItemsPair deletedPair = WorkItemsPair.builder().leftWorkItem(WorkItem.builder().id("AA-3").build()).build();
+        WorkItemsPair addedPair = WorkItemsPair.builder().rightWorkItem(WorkItem.builder().id("AA-4").build()).build();
+        when(polarionService.getPairedWorkItems(eq(document), eq(document), isNull(), anyList()))
+                .thenReturn(new ArrayList<>(List.of(contentPair, deletedPair, addedPair)));
+        when(polarionService.getDocumentWorkItemsCache()).thenReturn(mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class));
+
+        DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev1").build();
+        DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev2").build();
+
+        org.springframework.web.context.request.ServletRequestAttributes attrs =
+                mock(org.springframework.web.context.request.ServletRequestAttributes.class);
+        when(attrs.getRequest()).thenReturn(mock(javax.servlet.http.HttpServletRequest.class));
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(attrs);
+        try (org.mockito.MockedStatic<ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource> mockedDiffModel =
+                     mockStatic(ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.class)) {
+            mockedDiffModel.when(() -> ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.get(any(), any(), any()))
+                    .thenReturn(ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel.builder().build());
+
+            DocumentsDiffParams params = new DocumentsDiffParams(leftDocumentIdentifier, rightDocumentIdentifier, null, null, null, false);
+            var result = diffService.getDocumentsDiff(params);
+
+            assertNotNull(result);
+            // Structural (added / deleted) pairs are dropped, only the pair present on both sides remains.
+            assertEquals(1, result.getPairedWorkItems().size());
+            WorkItemsPair survivingPair = new ArrayList<>(result.getPairedWorkItems()).get(0);
+            assertNotNull(survivingPair.getLeftWorkItem());
+            assertNotNull(survivingPair.getRightWorkItem());
+            assertEquals("AA-1", survivingPair.getLeftWorkItem().getId());
+            assertEquals("AA-2", survivingPair.getRightWorkItem().getId());
+        } finally {
+            org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
+        }
     }
 
     @Test
