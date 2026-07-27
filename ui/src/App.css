@@ -1,0 +1,65 @@
+/* App-specific styling for the admin pages only.
+ *
+ * Deliberately does NOT declare: body { margin }, .app { padding }, .app { font-family } or .page > h1
+ * - react-sbb-polarion owns page spacing, the unified Selawik typography and the admin heading. A local
+ * font-family here would be a regression, not a customization. */
+
+.app {
+  font-size: 13px;
+  color: #1a1a1a;
+}
+
+/* The dev-only Landing overview (never opened inside Polarion, which always passes ?feature=). */
+.landing-features {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.8;
+}
+
+/* Merge Authorization: the two role groups side by side, each a column of checkbox rows.
+ *
+ * The flex column lives on the container, never on the labels: control-tokens.css styles the admin
+ * checkbox through `.standard-admin-page label:has(input[type='checkbox']) { display: inline-flex }`
+ * (specificity 0,2,2), which would win against a `.role-group label { display: flex }` (0,2,0). */
+.role-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+
+.role-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.role-group h2 {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 0 0 8px;
+}
+
+.role-group .no-roles {
+  color: #666;
+  font-style: italic;
+}
+
+.quick-help {
+  margin-top: 32px;
+}
+
+.quick-help h2 {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0 0 8px;
+}
+
+.quick-help h3 {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 16px 0 4px;
+}
+
+.quick-help p {
+  margin: 0 0 6px;
+}

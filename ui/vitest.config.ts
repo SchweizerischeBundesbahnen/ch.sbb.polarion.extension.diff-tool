@@ -19,7 +19,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: { '@': new URL('./src', import.meta.url).pathname },
-    dedupe: ['react', 'react-dom'],
+    dedupe: ['react', 'react-dom', 'sonner'],
   },
   // Pre-bundle these so Vite does not discover a new dependency mid-run and reload the browser page
   // (which intermittently fails a test file with "Vitest failed to find the runner"). Matters most on
@@ -32,6 +32,8 @@ export default defineConfig({
       'react/jsx-runtime',
       'react/jsx-dev-runtime',
       'vitest-browser-react',
+      '@grigoriev/react-sbb-polarion',
+      'sonner',
     ],
   },
   test: {
@@ -86,16 +88,25 @@ export default defineConfig({
         'src/components/AppShell.jsx',
         'src/components/PublicShell.jsx',
         'src/components/ErrorBoundary.jsx',
-        // Landing as the react-sbb-polarion admin pages are ported:
         'src/App.tsx',
         'src/features.tsx',
         'src/admin/**',
-        'src/formext/**',
         'src/services/useSettings.ts',
+        // Landing as the remaining surfaces are ported:
+        'src/formext/**',
       ],
       // src/entries/** is the per-page bootstrap (the equivalent of main.tsx in the sibling
       // extensions): it only calls createRoot and nests the shells, all of which are covered directly.
-      exclude: ['src/**/*.d.ts', 'src/**/*.css', 'src/entries/**'],
+      exclude: [
+        'src/**/*.d.ts',
+        'src/**/*.css',
+        // Per-page bootstrap (the equivalent of main.tsx in the sibling extensions): createRoot plus
+        // nesting the shells, all of which are covered directly.
+        'src/entries/**',
+        'src/main.tsx',
+        // Dev-only scaffolding, never opened inside Polarion (which always passes ?feature=).
+        'src/admin/dev/**',
+      ],
       thresholds: {
         statements: 80,
         functions: 80,

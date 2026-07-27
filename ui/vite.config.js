@@ -42,12 +42,15 @@ export default defineConfig(({ command, mode }) => {
       // React instance, otherwise hooks fail with the dual-React "invalid hook call".
       dedupe: ['react', 'react-dom'],
     },
-    // Multi-page: one HTML entry per Polarion entry point. These filenames are a public contract -
-    // webapp/diff-tool/js/modules/DiffTool.js and js/diff-tool-widget-utils.js open them by literal
-    // URL, and so do the Java widget renderers' inline handlers. Do not rename them.
+    // Multi-page: one HTML entry per Polarion entry point. The three viewer filenames are a public
+    // contract - webapp/diff-tool/js/modules/DiffTool.js and js/diff-tool-widget-utils.js open them by
+    // literal URL, and so do the Java widget renderers' inline handlers. Do not rename them.
+    // index.html is the admin feature router, opened by the extenders in META-INF/hivemodule.xml with
+    // ?feature=<id>.
     build: {
       rollupOptions: {
         input: {
+          index: resolvePath('./index.html'),
           documents: resolvePath('./documents.html'),
           collections: resolvePath('./collections.html'),
           workitems: resolvePath('./workitems.html'),

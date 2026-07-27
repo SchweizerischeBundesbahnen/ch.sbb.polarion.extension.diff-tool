@@ -61,10 +61,18 @@ npm run e2e
 npm run e2e:headless
 ```
 
-The UI is a **Vite** multi-page app (not Next.js). Each Polarion entry point is its own HTML entry -
-`documents.html`, `collections.html`, `workitems.html` - and those filenames are a public contract:
+The UI is a **Vite** multi-page app (not Next.js). Each Polarion entry point is its own HTML entry:
+`index.html` (the admin pages, chosen by `?feature=<id>`), plus `documents.html`, `collections.html`
+and `workitems.html` for the diff/merge viewer. The three viewer filenames are a public contract:
 `webapp/diff-tool/js/modules/DiffTool.js` and `js/diff-tool-widget-utils.js` open them by literal URL,
 as do the Java widget renderers' inline handlers. Do not rename them.
+
+The admin pages are built on the shared **react-sbb-polarion** library (RSP), like the other migrated
+SBB Polarion extensions; the viewer predates it and does not use it. Admin migration is in progress -
+`META-INF/hivemodule.xml` is the source of truth for which extenders point at the React app
+(`.../ui/app/index.html?feature=<id>`) and which still point at a legacy JSP under
+`webapp/diff-tool-admin/pages/`. See `ui/README.md` for the details, including why the viewer's page
+shell is `.diff-app` rather than `.app`.
 
 Playwright browser binaries are not installed by the Maven build; run `npx playwright install` in
 `ui/` once, or build with `-DskipJsTests=true` (which is what CI does - it runs E2E in its own job).

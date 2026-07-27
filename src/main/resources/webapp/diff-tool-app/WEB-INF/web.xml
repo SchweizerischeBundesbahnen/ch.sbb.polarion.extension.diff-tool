@@ -41,13 +41,16 @@
         <mime-type>text/plain</mime-type>
     </mime-mapping>
 
-    <!-- Static, non-sensitive bundle assets served without authentication (vite emits them under
-         assets/; this was /ui/app/_next/static/* while the app was built by Next.js). Exempting them
-         lets the hashed JS/CSS load same-origin without a session round-trip. -->
+    <!-- Static, non-sensitive assets served without authentication: the app's own bundle (vite emits it
+         under assets/; this was /ui/app/_next/static/* while the app was built by Next.js) and the
+         shared generic UI toolkit that react-sbb-polarion lazy-loads at runtime (see
+         configureGenericModules in src/main.tsx). Exempting /ui/generic/* lets those load same-origin in
+         Polarion and lets the vite dev proxy fetch them without a Polarion session. -->
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>All</web-resource-name>
             <url-pattern>/ui/app/assets/*</url-pattern>
+            <url-pattern>/ui/generic/*</url-pattern>
         </web-resource-collection>
     </security-constraint>
 

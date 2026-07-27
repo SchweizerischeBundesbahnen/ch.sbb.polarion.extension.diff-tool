@@ -5,13 +5,28 @@ app, one HTML entry per Polarion entry point.
 
 | Entry | Served at | Opened by |
 |---|---|---|
+| `index.html` | `/polarion/diff-tool-app/ui/app/index.html?feature=<id>` | the admin extenders in `META-INF/hivemodule.xml` |
 | `documents.html` | `/polarion/diff-tool-app/ui/app/documents.html` | `webapp/diff-tool/js/modules/DiffTool.js` |
 | `collections.html` | `/polarion/diff-tool-app/ui/app/collections.html` | `webapp/diff-tool/js/diff-tool-widget-utils.js` |
 | `workitems.html` | `/polarion/diff-tool-app/ui/app/workitems.html` | `webapp/diff-tool/js/diff-tool-widget-utils.js` |
 
-Those three filenames are a **public contract** - the vanilla-JS callers above and the Java widget
+The three viewer filenames are a **public contract** - the vanilla-JS callers above and the Java widget
 renderers' inline handlers open them by literal URL, and pass extra state through `localStorage`. Do
 not rename them.
+
+## Two surfaces, one bundle
+
+**Admin pages** (`index.html`) are built on the shared
+[`react-sbb-polarion`](https://github.com/grigoriev/react-sbb-polarion) library (RSP), like every other
+migrated SBB Polarion extension: `PageLayout`, `About`, `ConfigurationButtons`, `RevisionsTable`,
+`Toaster` and the generic control CSS all come from it. The page is chosen by `?feature=<id>`, where the
+ids match the extender ids in `META-INF/hivemodule.xml` - see `src/features.tsx`. Root classes are
+`<body class="sbb-ui">` plus `<div class="app standard-admin-page">`; both are a cross-extension
+contract, not a local choice.
+
+**The diff/merge viewer** (the other three entries) predates RSP and does not use it. Its page shell is
+`.diff-app`, deliberately not `.app`, because RSP claims `.app` for the admin shell. Vite emits CSS per
+entry, so the two never share a stylesheet at runtime - but they do share the document under Vitest.
 
 ## Getting started
 
@@ -62,7 +77,7 @@ Two layers, deliberately:
 
 | Script | |
 |---|---|
-| `npm run test` | Vitest, host browser |
+| `npm run test` | Vitest, host browser. **The visual tests only pixel-match on Linux**, so on macOS/Windows use `test:coverage` (behaviour only) or `test:docker` |
 | `npm run test:watch` | Vitest in watch mode |
 | `npm run test:docker` | Vitest in the pinned Playwright image (authoritative for visuals) |
 | `npm run test:update:docker` | regenerate visual references (Docker only) |
@@ -95,6 +110,8 @@ src/pages/       the page component behind each entry
 src/components/  the diff/merge UI
 src/services/    REST access (useRemote), diff/merge orchestration, PDF export
 src/router/      navigation.ts - the useSearchParams/usePathname/useRouter shim
+src/admin/       the RSP admin pages (pages/, components/, dev/ scaffolding)
+src/features.tsx the ?feature=<id> registry, ids matching hivemodule.xml
 src/styles/      globals.css
 test/            Vitest component + visual tests
 e2e/             Playwright specs + JSON fixtures

@@ -41,9 +41,10 @@ describe('PublicShell', () => {
     );
 
     const main = host.querySelector('main')!;
-    // Both classes matter: `.app` carries the full-viewport layout, `.sbb-ui` scopes generic's --sbb-*
-    // design tokens to this app's subtree (issue #515).
-    expect(main.className).toBe('app sbb-ui');
+    // Both classes matter: `.diff-app` carries the full-viewport layout, `.sbb-ui` scopes generic's
+    // --sbb-* design tokens to this app's subtree (issue #515). The name is `.diff-app` rather than
+    // `.app` because react-sbb-polarion claims `.app` for the admin page shell - see PublicShell.
+    expect(main.className).toBe('diff-app sbb-ui');
     expect(main.querySelector('[data-testid="child"]')!.textContent).toBe('content');
   });
 });
@@ -161,6 +162,32 @@ describe('AppShell', () => {
     flushSync(() => document.body.dispatchEvent(new Event('scroll')));
 
     expect(seen!.headerPinned).toBe(false);
+  });
+
+  it('would pin the header if the body actually scrolled', () => {
+    // Covers the other side of the scrollTop > 60 comparison. document.body.scrollTop cannot be moved
+    // in standards mode (see the note in AppShell), so it is forced here - which is also the clearest
+    // statement of why the handler is inert in production.
+    installFetchMock([{ match: /./, json: {} }]);
+    let seen: Record<string, unknown> | undefined;
+
+    function Consumer() {
+      seen = (useContext(AppContext) as unknown as { state: Record<string, unknown> }).state;
+      return null;
+    }
+    render(
+      <AppShell>
+        <Consumer />
+      </AppShell>,
+    );
+
+    Object.defineProperty(document.body, 'scrollTop', { value: 120, configurable: true });
+    try {
+      flushSync(() => document.body.dispatchEvent(new Event('scroll')));
+      expect(seen!.headerPinned).toBe(true);
+    } finally {
+      Reflect.deleteProperty(document.body, 'scrollTop');
+    }
   });
 
   it('detaches its scroll listener on unmount', () => {

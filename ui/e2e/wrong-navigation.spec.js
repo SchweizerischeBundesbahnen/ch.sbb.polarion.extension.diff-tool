@@ -8,17 +8,16 @@ test.describe("wrong navigation", () => {
   // 404.html was never registered as an <error-page> in webapp/diff-tool-app/WEB-INF/web.xml, so
   // Polarion never served it.
   //
-  // What is worth asserting is that an unknown path does not resolve to one of the real pages - i.e.
-  // that the dev server stays a multi-page app (appType: 'mpa') and never falls back to serving an
-  // index.html for arbitrary paths. Checked at the HTTP level with page.request rather than
-  // page.goto: vite answers an unknown path with an empty body, which Firefox rejects outright as
+  // What is worth asserting is that the dev server stays a multi-page app (appType: 'mpa'): the root
+  // serves the admin feature router, and an unknown path resolves to nothing rather than falling back
+  // to some index.html. The unknown path is checked at the HTTP level with page.request rather than
+  // page.goto, because vite answers it with an empty body, which Firefox rejects outright as
   // NS_ERROR_NET_EMPTY_RESPONSE during navigation. Production 404s are the servlet's concern.
-  test('handles root route', async ({ page }) => {
-    // NOTE: root starts serving the admin feature router (index.html) once the RSP admin pages land;
-    // this expectation has to change to assert that page then.
-    const response = await page.request.get('/');
+  test('serves the admin feature router at the root', async ({ page }) => {
+    await page.goto('/');
 
-    expect(response.status()).toBe(404);
+    await expect(page.locator('.app.standard-admin-page')).toBeVisible();
+    await expect(page.locator('.page > h1')).toHaveText('Diff Tool Administration');
   });
 
   test('handles wrong route', async ({ page }) => {

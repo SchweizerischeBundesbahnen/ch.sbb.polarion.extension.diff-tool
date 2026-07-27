@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Diff Tool Administration</title>
+    <link rel="icon" href="favicon.ico" />
+    <!-- Polarion's own admin chrome, and the markdown styling the About page's README article needs.
+         Both are served at runtime (the wiki skin by Polarion, the markdown stylesheet by
+         GenericUiServlet out of the embedded generic.app). The generic *control* CSS is deliberately
+         NOT linked here - react-sbb-polarion bundles it into its own stylesheet, which main.tsx
+         imports, with the icons inlined. -->
+    <link rel="stylesheet" href="/polarion/wiki/skins/sidecar/presentation.css" />
+    <link rel="stylesheet" href="/polarion/diff-tool-app/ui/generic/css/github-markdown-light.css" />
+  </head>
+  <body class="sbb-ui">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

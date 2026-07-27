@@ -120,7 +120,7 @@ a:hover {
   --polarion-blue: var(--sbb-accent);
 }
 
-.app {
+.diff-app {
   height: 100vh;
 }
 
@@ -297,7 +297,7 @@ a:hover {
 
 /* Polarion 2606 checkbox — override Bootstrap's blue default with Polarion's own images,
    sourced from generic's control tokens (control-tokens.css, linked in layout.js). */
-.app .form-check-input {
+.diff-app .form-check-input {
   appearance: none;
   -webkit-appearance: none;
   width: var(--sbb-toggle-size);
@@ -308,7 +308,7 @@ a:hover {
   background-size: var(--sbb-toggle-size) var(--sbb-toggle-size);
 }
 
-.app .form-check-input:checked {
+.diff-app .form-check-input:checked {
   background-image: var(--sbb-checkbox-checked);
 }
 
@@ -316,42 +316,42 @@ a:hover {
    data-URI (inlined from images/checkbox/indeterminate.svg at build, issue #528), so it resolves in
    this bundled stylesheet without a 404. Use the full background shorthand so it also resets
    Bootstrap's solid-blue :indeterminate background-color. */
-.app .form-check-input:indeterminate {
+.diff-app .form-check-input:indeterminate {
   background: var(--sbb-checkbox-indeterminate) no-repeat center;
   background-size: var(--sbb-toggle-size) var(--sbb-toggle-size);
 }
 
-.app .form-check-input:focus {
+.diff-app .form-check-input:focus {
   border-color: transparent;
   box-shadow: none;
   outline: none;
 }
 
 /* Disabled: Polarion's greyed read-only images so a non-selectable checkbox reads as disabled. */
-.app .form-check-input:disabled {
+.diff-app .form-check-input:disabled {
   cursor: default;
   background-image: var(--sbb-checkbox-unchecked-readonly);
 }
 
-.app .form-check-input:disabled:checked {
+.diff-app .form-check-input:disabled:checked {
   background-image: var(--sbb-checkbox-checked-readonly);
 }
 
-.app .form-check-input:disabled:indeterminate {
+.diff-app .form-check-input:disabled:indeterminate {
   background-image: var(--sbb-checkbox-indeterminate-readonly);
 }
 
 /* Keyboard focus: show Polarion's focus-ring image on keyboard navigation (the :focus rule above
    already strips Bootstrap's own ring). */
-.app .form-check-input:focus-visible {
+.diff-app .form-check-input:focus-visible {
   background-image: var(--sbb-checkbox-unchecked-focus);
 }
 
-.app .form-check-input:focus-visible:checked {
+.diff-app .form-check-input:focus-visible:checked {
   background-image: var(--sbb-checkbox-checked-focus);
 }
 
-.app .form-check-input:focus-visible:indeterminate {
+.diff-app .form-check-input:focus-visible:indeterminate {
   background-image: var(--sbb-checkbox-indeterminate-focus);
 }
 
