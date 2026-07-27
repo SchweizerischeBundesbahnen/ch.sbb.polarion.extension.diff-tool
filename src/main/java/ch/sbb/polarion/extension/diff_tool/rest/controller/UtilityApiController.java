@@ -9,6 +9,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemStatus;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.RolesModel;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 import ch.sbb.polarion.extension.generic.util.ExtensionInfo;
 
@@ -59,6 +60,11 @@ public class UtilityApiController extends UtilityInternalController {
     @Override
     public DocumentIdentifier createDocumentDuplicate(String projectId, String spaceId, String documentName, String revision, DocumentDuplicateParams documentDuplicateParams) {
         return polarionService.callPrivileged(() -> super.createDocumentDuplicate(projectId, spaceId, documentName, revision, documentDuplicateParams));
+    }
+
+    @Override
+    public RolesModel getRoles(String scope) {
+        return polarionService.callPrivileged(() -> super.getRoles(scope));
     }
 
     @Override

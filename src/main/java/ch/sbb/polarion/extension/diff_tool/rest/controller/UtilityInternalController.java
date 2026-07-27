@@ -10,9 +10,11 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemStatus;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.RolesModel;
 import ch.sbb.polarion.extension.diff_tool.service.DocumentCopyService;
 import ch.sbb.polarion.extension.diff_tool.service.MergeService;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
+import ch.sbb.polarion.extension.diff_tool.util.RolesUtils;
 import ch.sbb.polarion.extension.generic.util.ExtensionInfo;
 import com.polarion.alm.projects.model.IProject;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -229,6 +231,31 @@ public class UtilityInternalController {
             throw new BadRequestException(MISSING_PROJECT_ID_MESSAGE);
         }
         return polarionService.getLinkedWorkItemRoles(projectId);
+    }
+
+    @GET
+    @Path("/roles")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Gets the roles which can be authorized to merge, for the given scope",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Global roles, plus the project roles of the scope's project if it has one",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = RolesModel.class)
+                            )
+                    )
+            }
+    )
+    public RolesModel getRoles(@Parameter(description = "Scope to read the project roles for, e.g. 'project/elibrary/'") @QueryParam("scope") String scope) {
+        // Both lists in one response: the Merge Authorization page always needs both, and resolving a
+        // scope to its project is server-side knowledge (see RolesUtils.getProjectRoles, which yields an
+        // empty collection for a scope without a project).
+        return RolesModel.builder()
+                .globalRoles(List.copyOf(RolesUtils.getGlobalRoles()))
+                .projectRoles(List.copyOf(RolesUtils.getProjectRoles(scope)))
+                .build();
     }
 
     @GET

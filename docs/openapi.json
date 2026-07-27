@@ -981,6 +981,27 @@
         ]
       }
     },
+    "/api/queue/configuration-meta": {
+      "get": {
+        "operationId": "getConfigurationMeta",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueConfigurationMeta"
+                }
+              }
+            },
+            "description": "Assignable features with their labels, worker count, thread limit and queue capacity"
+          }
+        },
+        "summary": "Gets the static metadata needed to render the execution queue configuration",
+        "tags": [
+          "Queued Execution Management"
+        ]
+      }
+    },
     "/api/queueStatistics": {
       "delete": {
         "operationId": "clearStatistics",
@@ -1041,6 +1062,37 @@
         "summary": "Returns the build-generated README help article shown on the About page",
         "tags": [
           "Extension Information"
+        ]
+      }
+    },
+    "/api/roles": {
+      "get": {
+        "operationId": "getRoles",
+        "parameters": [
+          {
+            "description": "Scope to read the project roles for, e.g. 'project/elibrary/'",
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolesModel"
+                }
+              }
+            },
+            "description": "Global roles, plus the project roles of the scope's project if it has one"
+          }
+        },
+        "summary": "Gets the roles which can be authorized to merge, for the given scope",
+        "tags": [
+          "Utility API"
         ]
       }
     },
@@ -2217,6 +2269,24 @@
         },
         "type": "object"
       },
+      "FeatureInfo": {
+        "description": "A queueable feature, as the Execution Queue admin page needs to display it",
+        "properties": {
+          "description": {
+            "description": "Longer explanation shown as additional info next to the label",
+            "type": "string"
+          },
+          "id": {
+            "description": "Feature ID, matching the keys used in the execution queue settings",
+            "type": "string"
+          },
+          "label": {
+            "description": "Short label shown in the workers table",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Field": {
         "description": "Represents a field within a work item",
         "properties": {
@@ -2532,6 +2602,37 @@
         },
         "type": "object"
       },
+      "QueueConfigurationMeta": {
+        "description": "Metadata describing the execution queue configuration options",
+        "properties": {
+          "cpuLoad": {
+            "$ref": "#/components/schemas/FeatureInfo"
+          },
+          "features": {
+            "description": "Features that can be assigned to a worker, in declaration order",
+            "items": {
+              "$ref": "#/components/schemas/FeatureInfo"
+            },
+            "type": "array"
+          },
+          "maxRecommendedThreads": {
+            "description": "Maximum thread count recommended for this machine, used as the upper bound of the thread inputs",
+            "format": "int32",
+            "type": "integer"
+          },
+          "queueCapacity": {
+            "description": "Maximum number of entries a worker queue holds before rejecting further submissions",
+            "format": "int32",
+            "type": "integer"
+          },
+          "workerCount": {
+            "description": "Number of configurable workers",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Revision": {
         "description": "Revision details",
         "properties": {
@@ -2554,6 +2655,28 @@
           "name": {
             "description": "The name of the revision",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "RolesModel": {
+        "description": "Roles available for selection when authorizing merge operations",
+        "properties": {
+          "globalRoles": {
+            "description": "All global roles defined in this Polarion instance",
+            "items": {
+              "description": "All global roles defined in this Polarion instance",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "projectRoles": {
+            "description": "Roles defined for the project of the requested scope; empty for a global scope",
+            "items": {
+              "description": "Roles defined for the project of the requested scope; empty for a global scope",
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "type": "object"
