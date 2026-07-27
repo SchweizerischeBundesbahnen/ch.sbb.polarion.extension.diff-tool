@@ -5,8 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class WorkItemFieldTest {
     @Test
@@ -22,7 +21,7 @@ class WorkItemFieldTest {
         WorkItemField field1 = WorkItemField.builder().key("key1").name("Priority").wiTypeName("Requirement").build();
         WorkItemField field2 = WorkItemField.builder().key("key2").name("Priority").wiTypeName("Requirement").build();
 
-        assertTrue(field1.compareTo(field2) != 0);
+        assertNotEquals(0, field1.compareTo(field2));
         assertEquals("key1".compareTo("key2"), field1.compareTo(field2));
     }
 
@@ -33,7 +32,7 @@ class WorkItemFieldTest {
         WorkItemField typeCopy = WorkItemField.builder().key("custom").name("Custom Field").wiTypeName("Requirement").build();
 
         // wiTypeName still differentiates the two copies for ordering, but they remain distinct entries
-        assertTrue(globalCopy.compareTo(typeCopy) != 0);
+        assertNotEquals(0, globalCopy.compareTo(typeCopy));
     }
 
     @Test

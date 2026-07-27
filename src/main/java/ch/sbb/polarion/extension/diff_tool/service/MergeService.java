@@ -326,7 +326,7 @@ public class MergeService {
     @VisibleForTesting
     IWorkItem createItem(WorkItemsPair pair, ILinkRoleOpt linkRoleObj, WorkItemsMergeContext context) {
         if (context.getSourceWorkItem(pair) != null && context.getTargetWorkItem(pair) == null) {
-            IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
+            IWorkItem source = Objects.requireNonNull(getWorkItem(context.getSourceWorkItem(pair)));
             IWorkItem newWorkItem = polarionService.getTrackerProject(context.getTargetProject().getId()).createWorkItem(Objects.requireNonNull(source.getType()).getId());
             if (context.getLinkRoleDirection() == LinkRoleDirection.DIRECT) {
                 newWorkItem.addLinkedItem(source, linkRoleObj, null, false);
@@ -359,7 +359,7 @@ public class MergeService {
         // ignore cognitive complexity complaint
     void updateAndMoveItem(MergeWorkItemsPair pair, DocumentsMergeContext context) {
         IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
-        IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+        IWorkItem target = Objects.requireNonNull(getWorkItem(context.getTargetWorkItem(pair)));
         boolean moveRequested = pair.getLeftWorkItem().getMovedOutlineNumber() != null || pair.getRightWorkItem().getMovedOutlineNumber() != null;
 
         if (!context.getTargetModule().getExternalWorkItems().contains(target)) {

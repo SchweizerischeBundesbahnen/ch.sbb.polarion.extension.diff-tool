@@ -6,6 +6,7 @@ export function useAppContext(){
   const [controlPaneExpanded, setControlPaneExpanded] = useState(false);
   const [pairedDocuments, setPairedDocuments] = useState([]);
   const [showOutlineNumbersDiff, setShowOutlineNumbersDiff] = useState(false);
+  const [syncStructure, setSyncStructure] = useState(true);
   const [counterpartWorkItemsDiffer, setCounterpartWorkItemsDiffer] = useState(false);
   const [compareOnlyMutualFields, setCompareOnlyMutualFields] = useState(true);
   const [compareEnumsById, setCompareEnumsById] = useState(false);
@@ -73,6 +74,8 @@ export function useAppContext(){
     setPairedDocuments,
     showOutlineNumbersDiff,
     setShowOutlineNumbersDiff,
+    syncStructure,
+    setSyncStructure,
     counterpartWorkItemsDiffer,
     setCounterpartWorkItemsDiffer,
     compareOnlyMutualFields,

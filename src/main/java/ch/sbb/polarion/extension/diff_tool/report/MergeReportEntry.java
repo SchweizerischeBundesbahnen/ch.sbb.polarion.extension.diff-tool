@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Getter
 @EqualsAndHashCode
@@ -33,14 +34,14 @@ public class MergeReportEntry {
         this.operationResultType = operationResultType;
         this.workItemsPair = workItemsPair;
         this.description = description;
-        this.operationTime = LocalDateTime.now();
+        this.operationTime = LocalDateTime.now(ZoneId.systemDefault());
     }
 
     public MergeReportEntry(@NotNull MergeReport.OperationResultType operationResultType, @NotNull String fieldId, @NotNull String description) {
         this.operationResultType = operationResultType;
         this.fieldId = fieldId;
         this.description = description;
-        this.operationTime = LocalDateTime.now();
+        this.operationTime = LocalDateTime.now(ZoneId.systemDefault());
     }
 
     @VisibleForTesting
@@ -56,7 +57,7 @@ public class MergeReportEntry {
         this.operationResultType = operationResultType;
         this.documentsContentPair = documentsContentPair;
         this.description = description;
-        this.operationTime = LocalDateTime.now();
+        this.operationTime = LocalDateTime.now(ZoneId.systemDefault());
     }
 
 }

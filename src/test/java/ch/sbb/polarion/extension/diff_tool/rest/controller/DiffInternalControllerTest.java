@@ -67,13 +67,13 @@ class DiffInternalControllerTest {
 
     @Test
     void getDocumentsDiffThrowsWhenLeftDocumentMissing() {
-        DocumentsDiffParams params = new DocumentsDiffParams(null, mock(DocumentIdentifier.class), "role", null, null);
+        DocumentsDiffParams params = new DocumentsDiffParams(null, mock(DocumentIdentifier.class), "role", null, null, null);
         assertThrows(BadRequestException.class, () -> controller.getDocumentsDiff(params));
     }
 
     @Test
     void getDocumentsDiffThrowsWhenRightDocumentMissing() {
-        DocumentsDiffParams params = new DocumentsDiffParams(mock(DocumentIdentifier.class), null, "role", null, null);
+        DocumentsDiffParams params = new DocumentsDiffParams(mock(DocumentIdentifier.class), null, "role", null, null, null);
         assertThrows(BadRequestException.class, () -> controller.getDocumentsDiff(params));
     }
 
@@ -81,7 +81,7 @@ class DiffInternalControllerTest {
     void getDocumentsDiffThrowsWhenLinkRoleMissingForDifferentDocuments() {
         DocumentIdentifier left = DocumentIdentifier.builder().projectId("p").spaceId("s").name("a").build();
         DocumentIdentifier right = DocumentIdentifier.builder().projectId("p").spaceId("s").name("b").build();
-        DocumentsDiffParams params = new DocumentsDiffParams(left, right, null, null, null);
+        DocumentsDiffParams params = new DocumentsDiffParams(left, right, null, null, null, null);
         assertThrows(BadRequestException.class, () -> controller.getDocumentsDiff(params));
     }
 
@@ -89,10 +89,10 @@ class DiffInternalControllerTest {
     void getDocumentsDiffAllowsMissingLinkRoleWhenSameDocument() {
         DocumentIdentifier left = DocumentIdentifier.builder().projectId("p").spaceId("s").name("doc").revision("r1").build();
         DocumentIdentifier right = DocumentIdentifier.builder().projectId("p").spaceId("s").name("doc").revision("r2").build();
-        DocumentsDiffParams params = new DocumentsDiffParams(left, right, null, null, null);
+        DocumentsDiffParams params = new DocumentsDiffParams(left, right, null, null, null, null);
 
         DocumentsDiff expected = DocumentsDiff.builder().build();
-        when(diffService.getDocumentsDiff(any(), any(), any(), any(), any())).thenReturn(expected);
+        when(diffService.getDocumentsDiff(any())).thenReturn(expected);
 
         assertNotNull(controller.getDocumentsDiff(params));
     }
@@ -101,10 +101,10 @@ class DiffInternalControllerTest {
     void getDocumentsDiffPassesValidLinkRoleThrough() {
         DocumentIdentifier left = DocumentIdentifier.builder().projectId("pA").spaceId("s").name("doc").build();
         DocumentIdentifier right = DocumentIdentifier.builder().projectId("pB").spaceId("s").name("doc").build();
-        DocumentsDiffParams params = new DocumentsDiffParams(left, right, "relates-to", null, null);
+        DocumentsDiffParams params = new DocumentsDiffParams(left, right, "relates-to", null, null, null);
 
         DocumentsDiff expected = DocumentsDiff.builder().build();
-        when(diffService.getDocumentsDiff(any(), any(), any(), any(), any())).thenReturn(expected);
+        when(diffService.getDocumentsDiff(any())).thenReturn(expected);
 
         assertNotNull(controller.getDocumentsDiff(params));
     }
