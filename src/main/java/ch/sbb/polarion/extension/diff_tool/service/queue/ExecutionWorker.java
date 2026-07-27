@@ -136,9 +136,11 @@ public class ExecutionWorker {
             throw e;
         } catch (ExecutionException e) {
             throw new RejectedExecutionException("Task execution failed: " + e.getMessage(), e);
-        } finally {
-            countersRegistry.completeExecution(task.getFeature());
         }
+        // No completeExecution here: the task decrements its own execution counter in
+        // FeatureExecutionTask.call()'s finally block. Doing it from this thread was both racy (see the
+        // comment there) and wrong when the task never ran at all, in which case it decremented a
+        // counter that had never been incremented.
     }
 
     public long getQueuedCount(Feature feature) {
