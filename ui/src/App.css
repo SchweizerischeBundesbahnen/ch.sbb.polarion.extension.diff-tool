@@ -44,6 +44,81 @@
   font-style: italic;
 }
 
+/* Diff Configurations: the Available/Selected dual listbox with its move buttons between them. */
+.diff-settings {
+  border-top: 1px solid #ccc;
+  margin-top: 20px;
+  padding-top: 15px;
+}
+
+/* While the configurations pane has its name editor open the form below is not the thing being edited. */
+.diff-settings.dimmed {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.fields-transfer {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.fields-column {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.fields-column-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  min-height: 24px;
+}
+
+.fields-column-header .filter-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.fields-column select {
+  width: 100%;
+}
+
+.fields-buttons {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  /* Offset by the header row so the buttons sit against the middle of the lists, not the labels. */
+  padding-top: 28px;
+}
+
+.diff-role-settings {
+  display: flex;
+  gap: 24px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #ccc;
+}
+
+.diff-role-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Make the upgraded multiselect fill its column. SearchableDropdown sizes its wrapper from the original
+   select's *inline* style width only (and then shrinks the select itself to 1px), so without this the
+   control collapses to its content and truncates the selected chips to "Draft [draf...". */
+.diff-role-column .searchable-dropdown {
+  width: 100%;
+}
+
 .quick-help {
   margin-top: 32px;
 }

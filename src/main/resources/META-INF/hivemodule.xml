@@ -25,7 +25,7 @@
                   name="Diff Configurations"
                   parentNodeId="diff-tool"
                   iconUrl="/polarion/diff-tool-admin/ui/images/menu/16x16/settings.svg"
-                  pageUrl="/polarion/diff-tool-admin/pages/configuration.jsp?scope=$scope$"
+                  pageUrl="/polarion/diff-tool-app/ui/app/index.html?feature=diff-configurations&amp;embedded=true&amp;scope=$scope$"
                   projectScope="true"
                   projectGroupScope="false"
                   repositoryScope="false"/>

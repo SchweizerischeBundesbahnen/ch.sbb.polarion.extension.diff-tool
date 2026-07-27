@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import AboutPage from './admin/pages/AboutPage';
+import DiffConfigurationsPage from './admin/pages/DiffConfigurationsPage';
 import MergeAuthorizationPage from './admin/pages/MergeAuthorizationPage';
 
 export interface Feature {
@@ -18,6 +19,7 @@ export interface Feature {
  */
 export const FEATURES: Feature[] = [
   { id: 'about', label: 'About', component: AboutPage },
+  { id: 'diff-configurations', label: 'Diff Configurations', component: DiffConfigurationsPage },
   { id: 'merge-authorization', label: 'Merge Authorization', component: MergeAuthorizationPage },
 ];
 
