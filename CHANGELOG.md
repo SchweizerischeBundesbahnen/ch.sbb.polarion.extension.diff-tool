@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.4.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.3.4...v8.4.0) (2026-07-27)
+
+
+### Features
+
+* make structural diff optional - when switched off only content diff will be shown ([#570](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/570)) ([2e498e0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2e498e0c3b9bc7281fd515b2ea3f9a5a934299c1))
+
 ## [8.3.4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.3.3...v8.3.4) (2026-06-08)
 
 
