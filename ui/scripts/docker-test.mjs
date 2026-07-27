@@ -11,6 +11,15 @@ const uiDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // Which inner npm script to run in the container (default: test).
 const script = process.argv[2] || 'test';
 
+// Anything after the script name is forwarded to the inner npm run, so flags reach vitest inside the
+// container - e.g. `-- --exclude **/*.visual.test.tsx`, which the Maven -DskipVisualJsTests profile
+// appends. Single-quoted so globs are passed through literally instead of being expanded by the
+// container's shell against /work.
+const forwarded = process.argv
+  .slice(3)
+  .map((argument) => `'${argument.replaceAll("'", `'\\''`)}'`)
+  .join(' ');
+
 // Pin the image to the installed Playwright version so the container's browser + system deps match.
 let playwrightVersion;
 try {
@@ -35,7 +44,8 @@ const args = [
   image,
   'bash',
   '-c',
-  `npm ci && npm run ${script}`,
+  // `--` so npm forwards the flags to the script (vitest) instead of consuming them itself.
+  `npm ci && npm run ${script}${forwarded ? ` -- ${forwarded}` : ''}`,
 ];
 
 console.log(`> docker ${args.join(' ')}`);
