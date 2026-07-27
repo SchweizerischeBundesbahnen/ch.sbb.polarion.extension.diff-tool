@@ -5,7 +5,12 @@ import { test, expect } from '@playwright/test';
 test.describe('data fetch failing', () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.route('**/diff/**', async (route) => {
+    // Match only the REST diff endpoints (/polarion/diff-tool/rest/<internal|api>/diff/...). A bare
+    // '**/diff/**' also matches the dev server's own module URLs for src/components/diff/*, which vite
+    // serves at their real source paths - so it would abort the app's own JavaScript and the page
+    // would never render at all. (Under webpack/turbopack those modules were served as hashed chunks,
+    // which is why the broad glob used to be harmless.)
+    await page.route('**/rest/*/diff/**', async (route) => {
       // Emulate network error
       return route.abort();
     });

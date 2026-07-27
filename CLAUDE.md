@@ -36,24 +36,32 @@ mvn clean package -DskipJsTests=true
 # Install dependencies
 npm install
 
-# Development server
+# Development server (proxies REST/assets to VITE_BASE_URL - see .env.development.template)
 npm run dev
 
-# Development server with coverage
-npm run dev:coverage
+# Development server as the E2E suite runs it (loads .env.e2e, no Polarion proxy)
+npm run dev:e2e
 
-# Build for production
+# Build for production (vite, multi-page -> dist/app)
 npm run build
 
-# Run Playwright tests (interactive)
-npm run playwright:test
+# Type-check
+npm run typecheck
 
-# Run Playwright tests (headless)
-npm run playwright:test:headless
+# Run Playwright E2E tests (interactive)
+npm run e2e
 
-# Lint code
-npm run lint
+# Run Playwright E2E tests (headless)
+npm run e2e:headless
 ```
+
+The UI is a **Vite** multi-page app (not Next.js). Each Polarion entry point is its own HTML entry -
+`documents.html`, `collections.html`, `workitems.html` - and those filenames are a public contract:
+`webapp/diff-tool/js/modules/DiffTool.js` and `js/diff-tool-widget-utils.js` open them by literal URL,
+as do the Java widget renderers' inline handlers. Do not rename them.
+
+Playwright browser binaries are not installed by the Maven build; run `npx playwright install` in
+`ui/` once, or build with `-DskipJsTests=true` (which is what CI does - it runs E2E in its own job).
 
 ### Single Test Execution
 

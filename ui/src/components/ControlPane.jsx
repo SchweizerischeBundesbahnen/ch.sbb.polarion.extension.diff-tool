@@ -2,7 +2,7 @@ import {useContext, useEffect, useState} from "react";
 import {faAnglesLeft, faAnglesRight} from "@fortawesome/free-solid-svg-icons";
 import AppContext from "@/components/AppContext";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {usePathname, useRouter, useSearchParams} from "next/navigation";
+import {usePathname, useRouter, useSearchParams} from "@/router/navigation";
 import useRemote from "@/services/useRemote";
 import usePdf from "@/services/usePdf";
 import * as DiffTypes from "@/DiffTypes";

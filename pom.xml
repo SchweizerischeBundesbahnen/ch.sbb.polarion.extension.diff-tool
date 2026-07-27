@@ -78,8 +78,8 @@
         <!--suppress UnresolvedMavenProperty -->
         <markdown2html-maven-plugin.failOnError>${env.MARKDOWN2HTML_MAVEN_PLUGIN_FAIL_ON_ERROR}</markdown2html-maven-plugin.failOnError>
 
-        <nextjs.sources.root>${project.basedir}/ui</nextjs.sources.root>
-        <nextjs.destination.root>${project.basedir}/src/main/resources/webapp/diff-tool-app</nextjs.destination.root>
+        <vite.sources.root>${project.basedir}/ui</vite.sources.root>
+        <vite.destination.root>${project.basedir}/src/main/resources/webapp/diff-tool-app</vite.destination.root>
 
         <skipJsTests>false</skipJsTests>
     </properties>
@@ -174,7 +174,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
                 <executions>
-                    <!-- Next.js writes hash-named bundles into the gitignored webapp/diff-tool-app/app
+                    <!-- Vite writes hash-named bundles into the gitignored webapp/diff-tool-app/app
                          dir. copy-resources only overwrites, never deletes, so stale bundles from
                          previous builds pile up there. Purge the dir both on `mvn clean` and right
                          before the copy in every build, so it never accumulates regardless of whether
@@ -197,14 +197,14 @@
                                     <followSymlinks>false</followSymlinks>
                                 </fileset>
                                 <fileset>
-                                    <directory>${nextjs.destination.root}/app</directory>
+                                    <directory>${vite.destination.root}/app</directory>
                                     <followSymlinks>false</followSymlinks>
                                 </fileset>
                             </filesets>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>purge-nextjs-output-before-copy</id>
+                        <id>purge-vite-output-before-copy</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>clean</goal>
@@ -213,7 +213,7 @@
                             <excludeDefaultDirectories>true</excludeDefaultDirectories>
                             <filesets>
                                 <fileset>
-                                    <directory>${nextjs.destination.root}/app</directory>
+                                    <directory>${vite.destination.root}/app</directory>
                                     <followSymlinks>false</followSymlinks>
                                 </fileset>
                             </filesets>
@@ -296,16 +296,6 @@
                         <phase>generate-resources</phase>
                     </execution>
                     <execution>
-                        <id>install-playwright-browsers</id>
-                        <goals>
-                            <goal>npx</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <arguments>playwright install --with-deps</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>npm build</id>
                         <goals>
                             <goal>npm</goal>
@@ -315,6 +305,13 @@
                             <arguments>run build</arguments>
                         </configuration>
                     </execution>
+                    <!-- The browser binaries this needs are NOT installed by the build. The
+                         "install-playwright-browsers" execution that used to sit in
+                         generate-resources downloaded all three browsers plus their OS deps on every
+                         single build (roughly 400 MB per leg), even with skipJsTests set, which is how
+                         CI always builds. Install them once locally with "npx playwright install" in
+                         ui/, or build with skipJsTests; CI runs this suite in its own sharded e2e
+                         job. -->
                     <execution>
                         <id>npm test</id>
                         <goals>
@@ -322,7 +319,7 @@
                         </goals>
                         <phase>test</phase>
                         <configuration>
-                            <arguments>run playwright:test:headless</arguments>
+                            <arguments>run e2e:headless</arguments>
                             <skip>${skipJsTests}</skip>
                         </configuration>
                     </execution>
@@ -338,16 +335,16 @@
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-nextjs-build</id>
+                        <id>copy-vite-build</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${nextjs.destination.root}</outputDirectory>
+                            <outputDirectory>${vite.destination.root}</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${nextjs.sources.root}/dist</directory>
+                                    <directory>${vite.sources.root}/dist</directory>
                                     <filtering>false</filtering>
                                     <includes>
                                         <include>**/*</include>

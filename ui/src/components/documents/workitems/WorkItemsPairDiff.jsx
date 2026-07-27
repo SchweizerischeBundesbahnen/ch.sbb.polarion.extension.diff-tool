@@ -5,7 +5,7 @@ import FloatingButton from "@/components/FloatingButton";
 import {faChevronDown, faChevronUp, faEquals, faQuestion} from "@fortawesome/free-solid-svg-icons";
 import useRemote from "@/services/useRemote";
 import AppContext from "@/components/AppContext";
-import {useSearchParams} from "next/navigation";
+import {useSearchParams} from "@/router/navigation";
 import PairMergeTicker from "@/components/merge/PairMergeTicker";
 import Modal from "@/components/Modal";
 import useDiffService from "@/services/useDiffService";

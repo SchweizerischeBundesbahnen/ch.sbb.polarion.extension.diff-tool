@@ -1,6 +1,6 @@
 import {useContext, useEffect, useState} from "react";
 import AppContext from "@/components/AppContext";
-import {useSearchParams} from "next/navigation";
+import {useSearchParams} from "@/router/navigation";
 import useDiffService from "@/services/useDiffService";
 import useLoadingContext from "@/components/loading/useLoadingContext";
 import CollectionHeader from "@/components/collections/CollectionHeader";

@@ -1,5 +1,3 @@
-'use client'
-
 import ControlPane from "@/components/ControlPane";
 import ExtensionInfo from "@/components/ExtensionInfo";
 import * as DiffTypes from "@/DiffTypes";

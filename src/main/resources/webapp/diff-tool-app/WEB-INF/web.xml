@@ -41,10 +41,13 @@
         <mime-type>text/plain</mime-type>
     </mime-mapping>
 
+    <!-- Static, non-sensitive bundle assets served without authentication (vite emits them under
+         assets/; this was /ui/app/_next/static/* while the app was built by Next.js). Exempting them
+         lets the hashed JS/CSS load same-origin without a session round-trip. -->
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>All</web-resource-name>
-            <url-pattern>/ui/app/_next/static/*</url-pattern>
+            <url-pattern>/ui/app/assets/*</url-pattern>
         </web-resource-collection>
     </security-constraint>
 

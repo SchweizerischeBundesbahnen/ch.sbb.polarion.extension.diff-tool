@@ -7,13 +7,17 @@ export default function useRemote() {
     if (contentType) {
       headers["Content-Type"] = contentType;
     }
-    if (process.env.NEXT_PUBLIC_BEARER_TOKEN) {
-      headers["Authorization"] = `Bearer ${process.env.NEXT_PUBLIC_BEARER_TOKEN}`;
+    const bearerToken = import.meta.env.VITE_BEARER_TOKEN;
+    if (bearerToken) {
+      headers["Authorization"] = `Bearer ${bearerToken}`;
     }
 
-    const apiPath = process.env.NEXT_PUBLIC_BEARER_TOKEN ? "/api" : "/internal";
+    const apiPath = bearerToken ? "/api" : "/internal";
 
-    return fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}${REST_PATH}${apiPath}${url}`, {
+    // Always same-origin: inside Polarion the app is served from the same host, and in `vite dev` the
+    // dev-server proxy forwards /polarion/diff-tool/rest to VITE_BASE_URL. That replaces the old
+    // NEXT_PUBLIC_BASE_URL prefixing, which needed CORS.
+    return fetch(`${REST_PATH}${apiPath}${url}`, {
       method: method,
       mode: "cors", // no-cors, *cors, same-origin
       cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached

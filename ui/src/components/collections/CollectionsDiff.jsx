@@ -1,6 +1,6 @@
 import {useContext, useEffect, useState} from "react";
 import AppContext from "@/components/AppContext";
-import {usePathname, useRouter, useSearchParams} from "next/navigation";
+import {usePathname, useRouter, useSearchParams} from "@/router/navigation";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faSquarePlus} from "@fortawesome/free-solid-svg-icons";
 import Loading from "@/components/loading/Loading";

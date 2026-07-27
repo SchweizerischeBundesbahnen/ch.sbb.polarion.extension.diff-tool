@@ -1,6 +1,4 @@
-'use client'
-
-import {useSearchParams} from "next/navigation";
+import {useSearchParams} from "@/router/navigation";
 import ControlPane from "@/components/ControlPane";
 import DocumentsDiff from "@/components/documents/DocumentsDiff";
 import DocumentsFieldsDiff from "@/components/documents/DocumentsFieldsDiff";

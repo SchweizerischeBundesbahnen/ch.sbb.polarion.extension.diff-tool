@@ -1,5 +1,5 @@
 import {useContext, useEffect, useRef, useState} from "react";
-import {useSearchParams} from "next/navigation";
+import {useSearchParams} from "@/router/navigation";
 import AppContext from "../AppContext";
 import AppAlert from "@/components/AppAlert";
 import FieldsDiff from "@/components/diff/FieldsDiff";

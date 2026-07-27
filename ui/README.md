@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# diff-tool UI
 
-## Getting Started
+The React front end of the Polarion diff-tool extension: a [Vite](https://vite.dev/) **multi-page**
+app, one HTML entry per Polarion entry point.
 
-First, run the development server:
+| Entry | Served at | Opened by |
+|---|---|---|
+| `documents.html` | `/polarion/diff-tool-app/ui/app/documents.html` | `webapp/diff-tool/js/modules/DiffTool.js` |
+| `collections.html` | `/polarion/diff-tool-app/ui/app/collections.html` | `webapp/diff-tool/js/diff-tool-widget-utils.js` |
+| `workitems.html` | `/polarion/diff-tool-app/ui/app/workitems.html` | `webapp/diff-tool/js/diff-tool-widget-utils.js` |
+
+Those three filenames are a **public contract** - the vanilla-JS callers above and the Java widget
+renderers' inline handlers open them by literal URL, and pass extra state through `localStorage`. Do
+not rename them.
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+To drive the app against a real Polarion, copy `.env.development.template` to
+`.env.development.local` and fill in your user token. `VITE_BASE_URL` is only the dev-server proxy
+target (see `vite.config.js`) - the app itself always issues same-origin requests. With
+`VITE_BEARER_TOKEN` set, `useRemote` targets the token-authenticated `/rest/api` endpoints instead of
+the session-authenticated `/rest/internal` ones.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Then open one of the pages with the parameters it expects, e.g.
+<http://localhost:3000/documents?sourceProjectId=...>. Bare paths without the `.html` suffix work in
+dev too (see the `extensionlessHtml` plugin in `vite.config.js`).
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Scripts
 
-## Learn More
+| Script | |
+|---|---|
+| `npm run dev` | dev server on port 3000, Polarion requests proxied to `VITE_BASE_URL` |
+| `npm run dev:e2e` | dev server as the E2E suite runs it: loads `.env.e2e`, no proxy |
+| `npm run build` | production build to `dist/app` (copied into the extension jar by Maven) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run e2e` | Playwright E2E suite (interactive) |
+| `npm run e2e:headless` | Playwright E2E suite (list reporter) |
 
-To learn more about Next.js, take a look at the following resources:
+Playwright browser binaries are **not** installed by the Maven build - run
+`npx playwright install` once, or build with `-DskipJsTests=true`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```
+documents.html collections.html workitems.html   HTML entries
+src/entries/     one module per HTML entry: mounts the React tree
+src/pages/       the page component behind each entry
+src/components/  the diff/merge UI
+src/services/    REST access (useRemote), diff/merge orchestration, PDF export
+src/router/      navigation.ts - the useSearchParams/usePathname/useRouter shim
+src/styles/      globals.css
+e2e/             Playwright specs + JSON fixtures
+```
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+New code is written in TypeScript. The diff/merge viewer is still plain JS (`allowJs` is on,
+`checkJs` is off) and is covered end-to-end by the Playwright suite in `e2e/`; files come under type
+checking as they are converted.

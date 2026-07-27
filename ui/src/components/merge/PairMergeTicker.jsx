@@ -1,5 +1,5 @@
 import useDiffService from "@/services/useDiffService";
-import {useSearchParams} from "next/navigation";
+import {useSearchParams} from "@/router/navigation";
 import {useMemo} from "react";
 
 export default function PairMergeTicker({workItemsPair, diffs, selected, pairSelectedCallback}) {

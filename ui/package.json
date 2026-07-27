@@ -6,7 +6,6 @@
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
     "@fortawesome/react-fontawesome": "^3.3.1",
     "bootstrap": "^5.3.8",
-    "next": "16.2.11",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "uuid": "^14.0.0"
@@ -14,11 +13,12 @@
   "devDependencies": {
     "@playwright/test": "1.61.1",
     "@types/node": "25.9.5",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
     "cross-spawn": "7.0.6",
-    "eslint": "10.7.0",
-    "eslint-config-next": "16.2.11",
-    "istanbul-lib-coverage": "3.2.2",
-    "nyc": "18.0.0"
+    "typescript": "6.0.3",
+    "vite": "^8.1.5"
   },
   "engines": {
     "node": ">=20.9.0",
@@ -31,18 +31,18 @@
   "packageManager": "npm@12.0.1",
   "private": true,
   "scripts": {
-    "build": "next build",
-    "dev": "next dev",
-    "dev:coverage": "nyc next dev",
-    "lint": "next lint",
-    "start": "next start",
-    "playwright:test": "npx playwright test",
-    "playwright:test:headless": "npx playwright test --reporter=list"
+    "build": "vite build",
+    "dev": "vite",
+    "dev:e2e": "vite --mode e2e",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "e2e": "npx playwright test",
+    "e2e:headless": "npx playwright test --reporter=list"
   },
   "version": "2.1.0",
   "allowScripts": {
+    "esbuild": true,
     "fsevents@2.3.2": true,
-    "sharp@0.34.5": true,
     "unrs-resolver@1.12.2": true
   }
 }

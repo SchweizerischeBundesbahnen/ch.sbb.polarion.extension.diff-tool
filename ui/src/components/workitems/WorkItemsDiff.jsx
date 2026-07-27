@@ -1,6 +1,6 @@
 import {useContext, useEffect, useState} from "react";
 import AppContext from "@/components/AppContext";
-import {useSearchParams} from "next/navigation";
+import {useSearchParams} from "@/router/navigation";
 import {v4 as uuidv4} from "uuid";
 import ProjectHeader from "@/components/workitems/ProjectHeader";
 import Loading from "@/components/loading/Loading";

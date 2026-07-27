@@ -1,5 +1,5 @@
 import {useContext, useEffect, useMemo, useState} from "react";
-import {useSearchParams} from "next/navigation";
+import {useSearchParams} from "@/router/navigation";
 import AppContext from "../AppContext";
 import AppAlert from "@/components/AppAlert";
 import Loading from "@/components/loading/Loading";
