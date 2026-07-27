@@ -1,7 +1,11 @@
-import type { ComponentType } from 'react';
+import { type ComponentType, lazy } from 'react';
 import AboutPage from './admin/pages/AboutPage';
 import DiffConfigurationsPage from './admin/pages/DiffConfigurationsPage';
 import MergeAuthorizationPage from './admin/pages/MergeAuthorizationPage';
+
+// Lazy so Chart.js and its date adapter - by far the heaviest dependency here - land in their own chunk
+// and are never downloaded by the other admin pages.
+const ExecutionQueuePage = lazy(() => import('./admin/pages/ExecutionQueuePage'));
 
 export interface Feature {
   /** Must equal the extender id in META-INF/hivemodule.xml, which is what `?feature=` carries. */
@@ -20,6 +24,7 @@ export interface Feature {
 export const FEATURES: Feature[] = [
   { id: 'about', label: 'About', component: AboutPage },
   { id: 'diff-configurations', label: 'Diff Configurations', component: DiffConfigurationsPage },
+  { id: 'execution-queue', label: 'Execution Queue', component: ExecutionQueuePage },
   { id: 'merge-authorization', label: 'Merge Authorization', component: MergeAuthorizationPage },
 ];
 

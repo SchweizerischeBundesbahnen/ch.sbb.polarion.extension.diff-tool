@@ -44,6 +44,22 @@
   font-style: italic;
 }
 
+/* Section headings this app renders directly in a page body - react-sbb-polarion styles the page <h1>,
+   but an <h2> below it would fall back to the browser default, which is far larger than Polarion's admin
+   pages use.
+   Deliberately the direct-child selector: a descendant selector would also restyle the headings inside
+   RSP's own About and UserGuide components, which own their look. */
+.page-body > h2 {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 24px 0 8px;
+}
+
+/* Wide enough for the "New value" placeholder, which the browser default truncates to "Ne". */
+.number-input {
+  width: 90px;
+}
+
 /* Diff Configurations: the Available/Selected dual listbox with its move buttons between them. */
 .diff-settings {
   border-top: 1px solid #ccc;
@@ -117,6 +133,125 @@
    control collapses to its content and truncates the selected chips to "Draft [draf...". */
 .diff-role-column .searchable-dropdown {
   width: 100%;
+}
+
+/* Execution Queue: the grid of collapsible charts plus the two configuration tables. */
+.chart-containers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.chart-container {
+  flex: 1 1 480px;
+  min-width: 0;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 8px 12px 12px;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chart-header h3 {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.chart-expand-button {
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Chart.js needs a sized parent: it fills its container, and with maintainAspectRatio off a canvas in an
+   unconstrained flex item grows without bound on every resize. */
+.chart-canvas {
+  position: relative;
+  height: 220px;
+}
+
+.chart-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.chart-footer .footer-item {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* Rendered as a button for keyboard accessibility, styled as the link the legacy page used. */
+.chart-reset-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--sbb-color-accent, #0d5c9e);
+  text-decoration: none;
+}
+
+.chart-reset-button:hover {
+  text-decoration: underline;
+}
+
+.workers-configuration-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.workers-configuration-table table {
+  border-collapse: collapse;
+}
+
+.workers-configuration-table th,
+.workers-configuration-table td {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 4px 10px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.workers-configuration-table th {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.workers-configuration-table .center-column-value {
+  text-align: center;
+}
+
+.workers-configuration-table.has-delimiter {
+  border-left: 1px solid #ccc;
+  padding-left: 32px;
+}
+
+/* The tooltip carrier next to a feature name; the text itself lives in its title attribute. */
+.more-info {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: #e6e6e6;
+  cursor: help;
+  vertical-align: middle;
+}
+
+.page-loading {
+  padding: 10px 0;
+  color: #666;
 }
 
 .quick-help {

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Landing from './admin/dev/Landing';
 import { findFeature } from './features';
 
@@ -17,7 +18,10 @@ export default function App() {
 
   return (
     <div className="app standard-admin-page">
-      <Page />
+      {/* Execution Queue is lazily loaded so Chart.js stays out of the other pages' chunk. */}
+      <Suspense fallback={<div className="page-loading">Loading...</div>}>
+        <Page />
+      </Suspense>
     </div>
   );
 }

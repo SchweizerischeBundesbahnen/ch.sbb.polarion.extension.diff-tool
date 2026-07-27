@@ -34,6 +34,9 @@ export default defineConfig({
       'vitest-browser-react',
       '@grigoriev/react-sbb-polarion',
       'sonner',
+      'chart.js',
+      'chartjs-adapter-date-fns',
+      'chartjs-plugin-zoom',
     ],
   },
   test: {

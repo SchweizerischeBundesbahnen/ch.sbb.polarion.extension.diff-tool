@@ -43,7 +43,7 @@
                   name="Execution Queue"
                   parentNodeId="diff-tool"
                   iconUrl="/polarion/diff-tool-admin/ui/images/menu/16x16/authorization.svg"
-                  pageUrl="/polarion/diff-tool-admin/pages/execution.jsp?scope=$scope$"
+                  pageUrl="/polarion/diff-tool-app/ui/app/index.html?feature=execution-queue&amp;embedded=true&amp;scope=$scope$"
                   projectScope="false"
                   projectGroupScope="false"
                   repositoryScope="true"/>
