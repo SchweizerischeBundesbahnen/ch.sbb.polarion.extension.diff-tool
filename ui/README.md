@@ -38,11 +38,53 @@ dev too (see the `extensionlessHtml` plugin in `vite.config.js`).
 | `npm run dev:e2e` | dev server as the E2E suite runs it: loads `.env.e2e`, no proxy |
 | `npm run build` | production build to `dist/app` (copied into the extension jar by Maven) |
 | `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` / `lint:fix` | ESLint |
+| `npm run format` / `format:check` | Prettier (`**/*.{ts,tsx,css,html}`) |
 | `npm run e2e` | Playwright E2E suite (interactive) |
 | `npm run e2e:headless` | Playwright E2E suite (list reporter) |
 
 Playwright browser binaries are **not** installed by the Maven build - run
 `npx playwright install` once, or build with `-DskipJsTests=true`.
+
+## Testing
+
+Two layers, deliberately:
+
+- **`test/`** - Vitest in **browser mode** (real Chromium via Playwright), the same setup as
+  `react-sbb-polarion` and the other migrated extensions. Components render against real CSS and
+  layout; REST is mocked at the global `fetch` boundary (`test/mockFetch.ts`), so no Polarion is
+  needed. Visual references live in `test/expected/<Component>/` and **must** be generated inside the
+  pinned Playwright Docker image (`npm run test:update:docker`) so any dev machine and Linux CI
+  produce identical pixels.
+- **`e2e/`** - the Playwright end-to-end suite for the diff/merge viewer: 11 specs across
+  chromium/firefox/webkit, driving the real dev server with every REST call stubbed from
+  `e2e/fixtures/`.
+
+| Script | |
+|---|---|
+| `npm run test` | Vitest, host browser |
+| `npm run test:watch` | Vitest in watch mode |
+| `npm run test:docker` | Vitest in the pinned Playwright image (authoritative for visuals) |
+| `npm run test:update:docker` | regenerate visual references (Docker only) |
+| `npm run test:coverage` | behaviour-only coverage + the 80% gate |
+| `npm run test:coverage:full` | full suite coverage |
+| `npm run test:coverage:docker` | as above, in the image - what the pre-commit hook runs |
+
+**Coverage gate.** 80% on statements/branches/functions/lines, enforced over the code this React
+migration authored - see the annotated `coverage.include` list in `vitest.config.ts`. The diff/merge
+viewer is deliberately outside that list: it came over unchanged from the Next.js app and its
+regression net is `e2e/`. Files join the gate as they are converted to TypeScript, and **new authored
+code must be added to `coverage.include` explicitly** or it is silently ungated.
+
+Maven runs the Vitest suite (dockerized) in the `test` phase. Useful flags:
+
+| Flag | |
+|---|---|
+| `-DskipJsTests=true` | skip it entirely (what CI does; it runs both suites in dedicated jobs) |
+| `-DjsTestsNoDocker` | run Vitest directly instead of in the image |
+| `-DskipVisualJsTests` | keep behaviour tests, drop the pixel comparisons |
+| `-DinstallPlaywright` | download the browser binaries (and OS deps) |
+| `-DjsE2eTests` | additionally run the Playwright E2E suite in the `test` phase |
 
 ## Layout
 
@@ -54,6 +96,7 @@ src/components/  the diff/merge UI
 src/services/    REST access (useRemote), diff/merge orchestration, PDF export
 src/router/      navigation.ts - the useSearchParams/usePathname/useRouter shim
 src/styles/      globals.css
+test/            Vitest component + visual tests
 e2e/             Playwright specs + JSON fixtures
 ```
 

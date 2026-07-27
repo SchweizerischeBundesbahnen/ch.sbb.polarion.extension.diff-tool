@@ -9,6 +9,11 @@
 
 # testing
 /coverage
+# vitest browser mode: transient visual-diff output and attachments (the committed references live in
+# test/expected/ and are deliberately NOT ignored)
+/test/__diff__/
+/test/__screenshots__/
+/.vitest-attachments/
 
 # build output
 /build/

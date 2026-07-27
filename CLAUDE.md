@@ -6,14 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Polarion ALM extension providing document and work item comparison/merging capabilities. It consists of:
 - **Java backend**: JAX-RS REST API integrated into Polarion (Java 21, Maven)
-- **Next.js UI**: Standalone React application (Next.js 16.1.1, React 19)
+- **Vite UI** (`ui/`): standalone React application (Vite 8, React 19, TypeScript for new code)
 
 ## Common Commands
 
 ### Build and Test
 
 ```bash
-# Full build (includes Java backend + Next.js UI build + tests)
+# Full build (includes Java backend + the Vite UI build + tests)
 mvn clean package
 
 # Build and install to local Polarion instance
@@ -28,6 +28,12 @@ mvn verify
 
 # Skip JavaScript tests during build
 mvn clean package -DskipJsTests=true
+
+# The test phase runs the Vitest suite inside the pinned Playwright Docker image. Escape hatches:
+#   -DjsTestsNoDocker      run Vitest directly (no Docker on this host)
+#   -DskipVisualJsTests    behaviour tests only, no pixel comparisons
+#   -DinstallPlaywright    download the browser binaries (and OS deps)
+#   -DjsE2eTests           additionally run the Playwright E2E suite
 ```
 
 ### Frontend Development (in ui/ directory)

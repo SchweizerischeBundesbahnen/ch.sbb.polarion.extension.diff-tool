@@ -1,4 +1,4 @@
-import { normalizeHtml, test } from "./test-utils";
+import { test } from "./test-utils";
 import { expect } from "@playwright/test";
 
 

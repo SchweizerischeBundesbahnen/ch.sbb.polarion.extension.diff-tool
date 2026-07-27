@@ -1,6 +1,6 @@
 import {useContext, useEffect, useState} from "react";
 import AppContext from "@/components/AppContext";
-import {usePathname, useRouter, useSearchParams} from "@/router/navigation";
+import {useSearchParams} from "@/router/navigation";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faSquarePlus} from "@fortawesome/free-solid-svg-icons";
 import Loading from "@/components/loading/Loading";
@@ -26,7 +26,6 @@ export default function CollectionsDiff() {
 
   const [compareAsWorkItems] = useState(searchParams.get('compareAs') === 'Workitems');
   const [compareAsFields] = useState(searchParams.get('compareAs') === 'Fields');
-  const [compareAsContent] = useState(searchParams.get('compareAs') === 'Content');
   const [loading, setLoading] = useState(true);
   const [loadingError, setLoadingError] = useState(null);
   const [collectionsData, setCollectionsData] = useState({});

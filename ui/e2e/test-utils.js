@@ -1,9 +1,13 @@
 import { test as base, expect } from '@playwright/test';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// The package is ESM ("type": "module"), so __dirname does not exist here.
+const fixturesDir = fileURLToPath(new URL('./fixtures/', import.meta.url));
 
 const fixtureDataProvider = (fixtureFile) => {
-  const filePath = path.join(__dirname, 'fixtures', fixtureFile);
+  const filePath = path.join(fixturesDir, fixtureFile);
   const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   return JSON.stringify(fixtureData)
 };
@@ -14,7 +18,7 @@ const workItemsDiffFixtureDataProvider = (requestBody) => {
   const right = requestBody.rightWorkItem ? requestBody.rightWorkItem.id : 'NONE';
   const fixtureFile = `${left}_${right}.json`;
 
-  const filePath = path.join(__dirname, 'fixtures', fixtureFile);
+  const filePath = path.join(fixturesDir, fixtureFile);
   if (fs.existsSync(filePath)) {
     const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     return JSON.stringify(fixtureData)
@@ -52,7 +56,7 @@ const workItemsMergeFixtureDataProvider = (requestBody) => {
 
 
   if (fixtureFile) {
-    const filePath = path.join(__dirname, 'fixtures', fixtureFile);
+    const filePath = path.join(fixturesDir, fixtureFile);
     const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     return JSON.stringify(fixtureData)
   } else {
@@ -72,7 +76,7 @@ const fieldsMergeFixtureDataProvider = (requestBody) => {
   }
 
   if (fixtureFile) {
-    const filePath = path.join(__dirname, 'fixtures', fixtureFile);
+    const filePath = path.join(fixturesDir, fixtureFile);
     const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     return JSON.stringify(fixtureData)
   } else {
@@ -92,7 +96,7 @@ const contentMergeFixtureDataProvider = (requestBody) => {
   }
 
   if (fixtureFile) {
-    const filePath = path.join(__dirname, 'fixtures', fixtureFile);
+    const filePath = path.join(fixturesDir, fixtureFile);
     const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     return JSON.stringify(fixtureData)
   } else {
@@ -137,7 +141,7 @@ export const test = base.extend({
           let requestBody;
           try {
             requestBody = request.postDataJSON();
-          } catch (e) {
+          } catch {
             requestBody = {};
           }
 
@@ -155,7 +159,7 @@ export const test = base.extend({
           let requestBody;
           try {
             requestBody = request.postDataJSON();
-          } catch (e) {
+          } catch {
             requestBody = {};
           }
 
@@ -174,7 +178,7 @@ export const test = base.extend({
           let requestBody;
           try {
             requestBody = request.postDataJSON();
-          } catch (e) {
+          } catch {
             requestBody = {};
           }
 
@@ -193,7 +197,7 @@ export const test = base.extend({
           let requestBody;
           try {
             requestBody = request.postDataJSON();
-          } catch (e) {
+          } catch {
             requestBody = {};
           }
 

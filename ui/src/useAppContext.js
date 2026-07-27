@@ -30,7 +30,7 @@ export function useAppContext(){
     try {
       const parsed = JSON.parse(raw);
       return typeof parsed.individualFieldsSelection === "boolean" ? parsed.individualFieldsSelection : true;
-    } catch (e) {
+    } catch {
       return true;
     }
   });
@@ -56,7 +56,7 @@ export function useAppContext(){
           current = parsed;
         }
       }
-    } catch (e) {
+    } catch {
       current = {};
     }
     current.individualFieldsSelection = individualFieldsSelection;

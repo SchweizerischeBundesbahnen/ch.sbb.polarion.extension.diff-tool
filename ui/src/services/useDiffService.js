@@ -123,7 +123,7 @@ export default function useDiffService() {
     let parsed;
     try {
       parsed = JSON.parse(raw);
-    } catch (e) {
+    } catch {
       return pairs;
     }
     if (!parsed || !parsed.filter || typeof parsed.filter.value !== "string") {

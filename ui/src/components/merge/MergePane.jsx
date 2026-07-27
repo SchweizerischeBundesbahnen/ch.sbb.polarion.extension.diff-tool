@@ -10,7 +10,7 @@ import * as DiffTypes from "@/DiffTypes";
 export const LINK_ROLE_DIRECTION_DIRECT = "DIRECT";
 export const LINK_ROLE_DIRECTION_REVERSE = "REVERSE";
 
-export default function MergePane({leftContext, rightContext, diff_type, mergingContext, mergeCallback, loadingContext}) {
+export default function MergePane({rightContext, diff_type, mergingContext, mergeCallback, loadingContext}) {
   const appContext = useContext(AppContext);
 
   const [display, setDisplay] = useState('none');

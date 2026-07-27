@@ -1,9 +1,9 @@
 :root {
   --max-width: 2000px;
   --min-width: 800px;
-  --font-mono: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono",
-  "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro",
-  "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+  --font-mono:
+    ui-monospace, Menlo, Monaco, 'Cascadia Mono', 'Segoe UI Mono', 'Roboto Mono', 'Oxygen Mono', 'Ubuntu Monospace',
+    'Source Code Pro', 'Fira Mono', 'Droid Sans Mono', 'Courier New', monospace;
 
   --foreground-rgb: 56, 56, 56;
   --background-start-rgb: 214, 219, 220;
@@ -15,13 +15,13 @@
 }
 
 @font-face {
-  font-family: "Selawik";
-  src: url("/polarion/ria/fonts/selawik/selawk.ttf");
+  font-family: 'Selawik';
+  src: url('/polarion/ria/fonts/selawik/selawk.ttf');
 }
 
 @font-face {
-  font-family: "Selawik";
-  src: url("/polarion/ria/fonts/selawik/selawkb.ttf");
+  font-family: 'Selawik';
+  src: url('/polarion/ria/fonts/selawik/selawkb.ttf');
   font-weight: bold;
 }
 
@@ -50,7 +50,7 @@ a {
 }
 
 a:hover {
-  color: #E3700F;
+  color: #e3700f;
   text-decoration: none;
 }
 
@@ -68,7 +68,7 @@ a:hover {
   --bs-btn-padding-y: 0;
   --bs-btn-padding-x: 1rem;
   --bs-btn-font-size: 1rem;
-  --bs-btn-border-radius: .2rem;
+  --bs-btn-border-radius: 0.2rem;
 }
 
 .col {
@@ -81,7 +81,7 @@ a:hover {
 
 .modal {
   color: #333333;
-  font-size: .9em;
+  font-size: 0.9em;
 }
 
 .modal-sm .modal-dialog {
@@ -101,7 +101,7 @@ a:hover {
 }
 
 .modal-header {
-  background-color: #EEEEEE;
+  background-color: #eeeeee;
 }
 
 .modal.error .modal-header {
@@ -130,16 +130,16 @@ a:hover {
   height: 4rem;
   justify-content: center;
   padding: 1rem;
-  background-color: #23233C;
+  background-color: #23233c;
   color: #ffffff;
   font-size: 1.2em;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 10;
 }
 
 .app-title {
   position: absolute;
-  top: 1rem
+  top: 1rem;
 }
 
 .extension-info {
@@ -151,7 +151,7 @@ a:hover {
 }
 
 .merge-ticker {
-  background-color: rgba(0,0,0,0.1);
+  background-color: rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   position: absolute;
@@ -172,9 +172,9 @@ a:hover {
   top: 50%;
   left: calc(50% - 10px);
   transform: translate(0, -50%);
-  border: 1px solid rgba(0,0,0,.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 4px;
-  font-size: .66em;
+  font-size: 0.66em;
   width: 20px;
   height: 20px;
   background-color: #eee;
@@ -188,11 +188,11 @@ a:hover {
 
 .merge-pane label.select-all {
   margin-left: -7px;
-  font-size: .7em;
+  font-size: 0.7em;
   color: #666666;
 }
 
-.merge-pane label.select-all input[type="checkbox"] {
+.merge-pane label.select-all input[type='checkbox'] {
   font-size: 1.2em;
   margin-top: 0.1em;
   margin-right: 5px;
@@ -200,13 +200,13 @@ a:hover {
 
 .merge-button-container {
   display: flex;
-  padding: .6rem;
+  padding: 0.6rem;
   container-type: inline-size;
 }
 
 .merge-button-container > span {
   align-content: center;
-  font-size: .7em;
+  font-size: 0.7em;
   color: #666666;
   margin: 0 1em;
 }
@@ -214,7 +214,7 @@ a:hover {
 .link-role-direction-label {
   display: flex;
   align-items: center;
-  font-size: .7em;
+  font-size: 0.7em;
   color: #666666;
   white-space: nowrap;
   margin-right: 0.5rem;
@@ -232,7 +232,7 @@ a:hover {
    which used to stack on top of the SD and left a stray dark frame after selection. */
 
 .sticky-top {
-  transition: all .1s linear;
+  transition: all 0.1s linear;
   z-index: 5 !important;
 }
 
@@ -241,7 +241,7 @@ a:hover {
   color: #888;
   padding: 4px 10px;
   margin-left: 20px;
-  box-shadow: 2px 2px 12px rgba(0, 0, 0, .4);
+  box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.4);
 }
 
 .create-document-button:hover {
@@ -255,13 +255,13 @@ a:hover {
   left: -260px;
   height: 100vh;
   width: var(--control-pane-expanded-width);
-  background-color: #23233C;
+  background-color: #23233c;
   color: white;
   border-right: 1px solid rgba(200, 200, 200, 0.1);
   padding: 10px 40px 20px 20px;
   vertical-align: top;
   z-index: 6;
-  transition: all .1s linear;
+  transition: all 0.1s linear;
 }
 
 .control-pane.expanded {
@@ -282,7 +282,7 @@ a:hover {
 
 .control-pane .controls {
   margin-top: 80px;
-  font-size: .82em;
+  font-size: 0.82em;
 }
 
 .control-pane h1 {
@@ -407,7 +407,7 @@ a:hover {
 
 .doc-diff {
   padding-left: var(--control-pane-collapsed-width);
-  transition: all .1s linear;
+  transition: all 0.1s linear;
 }
 
 .doc-diff.control-pane-expanded {
@@ -418,7 +418,7 @@ a:hover {
   font-weight: 400;
   background-color: var(--polarion-blue);
   color: #eeeeee;
-  box-shadow: 0 3px 7px rgba(0,0,0,0.6);
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.6);
 }
 
 .path {
@@ -428,8 +428,8 @@ a:hover {
 
 .path .path-label {
   display: inline-block;
-  padding-right: .4em;
-  font-size: .8em;
+  padding-right: 0.4em;
+  font-size: 0.8em;
   font-weight: 300;
 }
 
@@ -442,36 +442,36 @@ a:hover {
 }
 
 .swap-button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 32px;
-    height: 32px;
-    font-size: .75em;
-    background-color: var(--polarion-blue);
-    box-shadow: 0 0 8px rgba(0, 0, 0, .2);
-    border: 1px solid rgba(255, 255, 255, .3);
-    border-radius: 50%;
-    color: rgba(255, 255, 255, .6);
-    transition: all 0.2s ease;
-    z-index: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  font-size: 0.75em;
+  background-color: var(--polarion-blue);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.2s ease;
+  z-index: 1;
 }
 
 .swap-button:hover {
-    background-color: #0095b3;
-    color: #fff;
-    border-color: rgba(255, 255, 255, .5);
-    box-shadow: 0 0 8px rgba(255, 255, 255, .2);
+  background-color: #0095b3;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
 }
 
 .wi-diff {
   overflow: hidden;
   font-family: 'Segoe UI', Selawik, 'Open Sans', Ubuntu, Helvetica, Arial, Verdana, sans-serif;
-  font-size: .9em;
+  font-size: 0.9em;
   font-weight: 300;
 }
 
@@ -481,10 +481,11 @@ a:hover {
 }
 
 .wi-diff > .content.row {
-    position: relative;
+  position: relative;
 }
 
-.wi-diff.referenced-left .diff-leaf.left, .wi-diff.referenced-right .diff-leaf.right  {
+.wi-diff.referenced-left .diff-leaf.left,
+.wi-diff.referenced-right .diff-leaf.right {
   border-left: 5px dotted #bbb;
 }
 
@@ -493,7 +494,7 @@ a:hover {
 }
 
 .wi-header {
-  padding-bottom: .8rem;
+  padding-bottom: 0.8rem;
   color: #000028;
   line-height: 1em;
   max-width: 50%;
@@ -530,30 +531,30 @@ a:hover {
 }
 
 a.wi-badge:hover {
-    text-decoration: none;
-    cursor: pointer;
-    color: #333;
-    background-color: #ccc;
+  text-decoration: none;
+  cursor: pointer;
+  color: #333;
+  background-color: #ccc;
 }
 
 .wi-header span.referenced-wi {
   vertical-align: super;
   font-weight: 600;
   color: #444;
-  font-size: .9em;
+  font-size: 0.9em;
   cursor: default;
-  margin-left: .3em;
+  margin-left: 0.3em;
 }
 
 .wi-header span.revision {
   color: #444;
-  font-size: .9em;
-  margin-left: .6em;
+  font-size: 0.9em;
+  margin-left: 0.6em;
 }
 
 .wi-header span.external-project-wi {
   color: red;
-  font-size: .9em;
+  font-size: 0.9em;
   font-weight: normal;
 }
 
@@ -584,24 +585,28 @@ a.wi-badge:hover {
   margin: 10px auto;
   text-align: center;
   color: red;
-  font-size: .9em;
+  font-size: 0.9em;
 }
 
 .wi-error .error-trace {
   margin-left: 10px;
   font-family: var(--font-mono);
-  font-size: .8em;
+  font-size: 0.8em;
   color: #dd6666;
 }
 
 .collapsed-border {
-  box-shadow: rgba(0, 0, 0, 0.1) 1px 0 0 0, rgba(0, 0, 0, 0.1) 0 1px 0 0, rgba(0, 0, 0, 0.1) 1px 0 0 0 inset, rgba(0, 0, 0, 0.1) 0 1px 0 0 inset;
+  box-shadow:
+    rgba(0, 0, 0, 0.1) 1px 0 0 0,
+    rgba(0, 0, 0, 0.1) 0 1px 0 0,
+    rgba(0, 0, 0, 0.1) 1px 0 0 0 inset,
+    rgba(0, 0, 0, 0.1) 0 1px 0 0 inset;
 }
 
 .diff-wrapper {
   position: relative;
   background-color: white;
-  border-top: 1px solid rgba(0,0,0,.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .diff-header {
@@ -612,11 +617,11 @@ a.wi-badge:hover {
   width: auto;
   min-width: 100px;
   padding: 0 20px 2px;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 0 0 8px 8px;
   background-color: #666666;
   color: #eeeeee;
-  font-size: .8em;
+  font-size: 0.8em;
   font-weight: 500;
   text-align: center;
 }
@@ -626,15 +631,15 @@ a.wi-badge:hover {
 }
 
 .tooltip-container {
-    background-color: #c61010;
-    color: #eee;
-    padding: 5px 10px;
-    border-radius: 4px;
+  background-color: #c61010;
+  color: #eee;
+  padding: 5px 10px;
+  border-radius: 4px;
 }
 
 .tooltip-container ul {
-    padding-left: 1rem;
-    margin-bottom: 0;
+  padding-left: 1rem;
+  margin-bottom: 0;
 }
 .diff-viewer {
   display: table;
@@ -645,7 +650,7 @@ a.wi-badge:hover {
 }
 
 .diff-wrapper.selected > .diff-viewer {
-    background-color: #96befa21;
+  background-color: #96befa21;
 }
 
 .diff-leaf {
@@ -658,16 +663,22 @@ a.wi-badge:hover {
   max-width: 100% !important;
 }
 .diff-html-changed {
-  background-color: #C6C6FD;
+  background-color: #c6c6fd;
 }
-.diff-leaf del, .diff-leaf ins, .diff-leaf .diff-html-changed, .diff-leaf .diff-html-added, .diff-leaf .diff-html-removed {
+.diff-leaf del,
+.diff-leaf ins,
+.diff-leaf .diff-html-changed,
+.diff-leaf .diff-html-added,
+.diff-leaf .diff-html-removed {
   text-decoration: none;
   padding: 2px;
 }
-.diff-leaf.left ins, .diff-leaf.left .diff-html-added {
+.diff-leaf.left ins,
+.diff-leaf.left .diff-html-added {
   display: none;
 }
-.diff-leaf.right del, .diff-leaf.right .diff-html-removed {
+.diff-leaf.right del,
+.diff-leaf.right .diff-html-removed {
   display: none;
 }
 
@@ -678,17 +689,23 @@ a.wi-badge:hover {
   padding: 2px;
   border-radius: 4px;
 }
-.word-diff.added, .diff-leaf.right ins, .diff-leaf.right .diff-html-added {
-  background: #CCFFCC;
+.word-diff.added,
+.diff-leaf.right ins,
+.diff-leaf.right .diff-html-added {
+  background: #ccffcc;
 }
-.word-diff.removed, .diff-leaf.left del, .diff-leaf.left .diff-html-removed {
-  background: #FDC6C6;
+.word-diff.removed,
+.diff-leaf.left del,
+.diff-leaf.left .diff-html-removed {
+  background: #fdc6c6;
 }
 
-.diff-lwi-container, .diff-hl-container {
+.diff-lwi-container,
+.diff-hl-container {
   display: flex;
 }
-.diff-lwi, .diff-hl {
+.diff-lwi,
+.diff-hl {
   display: inline;
   white-space: nowrap;
   overflow: hidden;
@@ -696,11 +713,15 @@ a.wi-badge:hover {
 }
 
 @page {
-    margin: 10mm;
+  margin: 10mm;
 }
 
 @media print {
-  .control-pane, .merge-pane, .merge-ticker, .floating-button, .swap-button {
+  .control-pane,
+  .merge-pane,
+  .merge-ticker,
+  .floating-button,
+  .swap-button {
     display: none !important;
   }
 
@@ -715,10 +736,11 @@ a.wi-badge:hover {
   }
 
   .header.row {
-    font-size: 8pt
+    font-size: 8pt;
   }
 
-  .diff-leaf img, .diff-leaf table {
+  .diff-leaf img,
+  .diff-leaf table {
     max-width: var(--pdf-elem-max-width) !important;
   }
 

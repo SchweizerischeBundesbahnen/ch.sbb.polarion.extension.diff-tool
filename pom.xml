@@ -81,7 +81,15 @@
         <vite.sources.root>${project.basedir}/ui</vite.sources.root>
         <vite.destination.root>${project.basedir}/src/main/resources/webapp/diff-tool-app</vite.destination.root>
 
+        <!-- JS test wiring. The `test` phase runs the Vitest component/visual suite inside the pinned
+             Playwright Docker image, which is what makes screenshot comparisons reproducible across
+             dev machines and CI. Override with the profiles below when Docker is unavailable, or use
+             -DskipJsTests=true to skip it entirely (what CI does - it runs the suites in dedicated
+             jobs). The Playwright end-to-end suite in ui/e2e is NOT bound to the build by default;
+             activate -DjsE2eTests to add it. -->
         <skipJsTests>false</skipJsTests>
+        <jsTestCommand>run test:docker</jsTestCommand>
+        <jsTestExtraArgs> </jsTestExtraArgs>
     </properties>
 
     <profiles>
@@ -95,6 +103,130 @@
                 <commons-lang3.artifactId>org.apache.commons.lang3_3.12.0</commons-lang3.artifactId>
                 <org.jsoup.artifactId>org.jsoup_1.21.2</org.jsoup.artifactId>
             </properties>
+        </profile>
+
+        <!-- Run the Vitest suite directly instead of inside the Docker image, for hosts without
+             Docker. Visual-regression comparisons are only reliable in the pinned image, so combine
+             this with -DskipVisualJsTests unless you are on Linux. -->
+        <profile>
+            <id>js-tests-no-docker</id>
+            <activation>
+                <property>
+                    <name>jsTestsNoDocker</name>
+                </property>
+            </activation>
+            <properties>
+                <jsTestCommand>run test</jsTestCommand>
+            </properties>
+        </profile>
+
+        <!-- Skip the pixel-comparing tests, keeping the behaviour ones. -->
+        <profile>
+            <id>skip-visual-js-tests</id>
+            <activation>
+                <property>
+                    <name>skipVisualJsTests</name>
+                </property>
+            </activation>
+            <properties>
+                <jsTestExtraArgs>-- --exclude **/*.visual.test.tsx</jsTestExtraArgs>
+            </properties>
+        </profile>
+
+        <!-- Download the Playwright browser binaries (and their OS dependencies). Opt-in on purpose:
+             this used to run unconditionally in generate-resources and cost roughly 400 MB per build
+             even when the tests were skipped. -->
+        <profile>
+            <id>playwright-install</id>
+            <activation>
+                <property>
+                    <name>installPlaywright</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>install-playwright-browsers</id>
+                                <goals>
+                                    <goal>npx</goal>
+                                </goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <arguments>playwright install --with-deps</arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- As above, without the OS dependencies (which need root). -->
+        <profile>
+            <id>playwright-install-no-deps</id>
+            <activation>
+                <property>
+                    <name>installPlaywrightNoDeps</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>install-playwright-browsers-no-deps</id>
+                                <goals>
+                                    <goal>npx</goal>
+                                </goals>
+                                <phase>process-test-resources</phase>
+                                <configuration>
+                                    <arguments>playwright install</arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Also run the Playwright end-to-end suite (ui/e2e) in the test phase. CI runs it in its own
+             per-browser sharded job, so it is not part of the default build; this restores the
+             pre-migration behaviour for anyone who wants it locally. Needs the browser binaries -
+             combine with -DinstallPlaywright on a clean checkout. -->
+        <profile>
+            <id>js-e2e-tests</id>
+            <activation>
+                <property>
+                    <name>jsE2eTests</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>npm e2e</id>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <phase>test</phase>
+                                <configuration>
+                                    <arguments>run e2e:headless</arguments>
+                                    <skip>${skipJsTests}</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 
@@ -305,13 +437,9 @@
                             <arguments>run build</arguments>
                         </configuration>
                     </execution>
-                    <!-- The browser binaries this needs are NOT installed by the build. The
-                         "install-playwright-browsers" execution that used to sit in
-                         generate-resources downloaded all three browsers plus their OS deps on every
-                         single build (roughly 400 MB per leg), even with skipJsTests set, which is how
-                         CI always builds. Install them once locally with "npx playwright install" in
-                         ui/, or build with skipJsTests; CI runs this suite in its own sharded e2e
-                         job. -->
+                    <!-- Vitest (component + visual regression) with the 80% coverage gate, in the
+                         pinned Playwright Docker image. Needs Docker running; see the
+                         js-tests-no-docker profile if it is not. -->
                     <execution>
                         <id>npm test</id>
                         <goals>
@@ -319,7 +447,7 @@
                         </goals>
                         <phase>test</phase>
                         <configuration>
-                            <arguments>run e2e:headless</arguments>
+                            <arguments>${jsTestCommand} ${jsTestExtraArgs}</arguments>
                             <skip>${skipJsTests}</skip>
                         </configuration>
                     </execution>
