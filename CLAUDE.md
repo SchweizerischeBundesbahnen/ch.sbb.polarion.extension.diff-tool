@@ -89,7 +89,8 @@ own `HtmlBuilder` and query engine), plus `js/diff-tool-widget-utils.js` and `cs
 serve exactly those pages.
 
 Playwright browser binaries are not installed by the Maven build; run `npx playwright install` in
-`ui/` once, or build with `-DskipJsTests=true` (which is what CI does - it runs E2E in its own job).
+`ui/` once, or build with `-DskipJsTests=true`. CI needs neither: its Maven build runs the Vitest
+suite in the pinned Docker image, and the E2E suite has its own per-browser job.
 
 ### Single Test Execution
 

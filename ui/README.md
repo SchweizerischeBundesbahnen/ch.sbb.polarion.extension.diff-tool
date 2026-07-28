@@ -86,8 +86,8 @@ dev too (see the `extensionlessHtml` plugin in `vite.config.js`).
 | `npm run e2e` | Playwright E2E suite (interactive) |
 | `npm run e2e:headless` | Playwright E2E suite (list reporter) |
 
-Playwright browser binaries are **not** installed by the Maven build - run
-`npx playwright install` once, or build with `-DskipJsTests=true`.
+Playwright browser binaries are **not** installed by the Maven build (the Vitest suite runs in the
+pinned Docker image, which ships them) - for `npm run e2e` run `npx playwright install` once.
 
 ## Testing
 
@@ -130,7 +130,7 @@ Maven runs the Vitest suite (dockerized) in the `test` phase. Useful flags:
 
 | Flag | |
 |---|---|
-| `-DskipJsTests=true` | skip it entirely (what CI does; it runs both suites in dedicated jobs) |
+| `-DskipJsTests=true` | skip it entirely. CI does NOT: it runs this suite in the Maven build, and only the Playwright suite in a separate job |
 | `-DjsTestsNoDocker` | run Vitest directly instead of in the image |
 | `-DskipVisualJsTests` | keep behaviour tests, drop the pixel comparisons |
 | `-DinstallPlaywright` | download the browser binaries (and OS deps) |
