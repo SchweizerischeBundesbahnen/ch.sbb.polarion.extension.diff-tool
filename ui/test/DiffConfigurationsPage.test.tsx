@@ -2,6 +2,7 @@ import { Toaster } from '@grigoriev/react-sbb-polarion';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import DiffConfigurationsPage from '../src/admin/pages/DiffConfigurationsPage';
+import { answerConfirm } from './confirmDialog';
 import { type FetchMock, type Route, installFetchMock, jsonResponse } from './mockFetch';
 
 // Behaviour of the port of diff.js: the four project lists feeding the controls, the named-configuration
@@ -169,9 +170,9 @@ describe('DiffConfigurationsPage', () => {
 
   it('loads the default values on Default without persisting them', async () => {
     const fetchMock = await renderPage();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     toolbarButton(2).click();
+    await answerConfirm('OK');
 
     await vi.waitFor(() =>
       expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/default-content'))).toBe(true),
@@ -185,18 +186,17 @@ describe('DiffConfigurationsPage', () => {
       fetchMock.mock.calls.filter(([url, init]) => String(url).includes('/content') && init?.method !== 'PUT').length;
     const before = contentReads();
 
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
     toolbarButton(1).click();
+    await answerConfirm('Cancel');
     expect(contentReads()).toBe(before);
 
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     toolbarButton(1).click();
+    await answerConfirm('OK');
     await vi.waitFor(() => expect(contentReads()).toBeGreaterThan(before));
   });
 
   it('surfaces a failure while re-reading on Cancel', async () => {
     await renderPage();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     // Re-point content reads at a failure only now, so the initial load succeeded.
     installFetchMock(
       routes([
@@ -209,6 +209,7 @@ describe('DiffConfigurationsPage', () => {
     );
 
     toolbarButton(1).click();
+    await answerConfirm('OK');
 
     await vi.waitFor(() => expect(document.querySelector('.alert-error')!.textContent).toContain('vanished'));
   });
@@ -257,18 +258,19 @@ describe('DiffConfigurationsPage', () => {
       ]),
     );
     await renderPage(fetchMock);
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     toolbarButton(2).click();
+    await answerConfirm('OK');
 
     await vi.waitFor(() => expect(document.body.textContent).toContain('no defaults'));
   });
 
   it('does not load the defaults when the Default confirmation is declined', async () => {
     const fetchMock = await renderPage();
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
 
+    // answerConfirm waits for the dialog, so reaching it at all proves the page asked first.
     toolbarButton(2).click();
+    await answerConfirm('Cancel');
 
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/default-content'))).toBe(false);
   });

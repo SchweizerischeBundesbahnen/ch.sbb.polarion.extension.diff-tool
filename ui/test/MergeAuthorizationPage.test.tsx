@@ -2,6 +2,7 @@ import { Toaster } from '@grigoriev/react-sbb-polarion';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import MergeAuthorizationPage from '../src/admin/pages/MergeAuthorizationPage';
+import { answerConfirm } from './confirmDialog';
 import { type FetchMock, installFetchMock, jsonResponse } from './mockFetch';
 
 // Behaviour of the port of authorization.js: load the available roles plus the granted ones, toggle,
@@ -136,20 +137,20 @@ describe('MergeAuthorizationPage', () => {
     const before = contentCalls();
     const cancel = Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[1];
 
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
     cancel.click();
+    await answerConfirm('Cancel');
     expect(contentCalls()).toBe(before);
 
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     cancel.click();
+    await answerConfirm('OK');
     await vi.waitFor(() => expect(contentCalls()).toBeGreaterThan(before));
   });
 
   it('loads the default values on Default without persisting them', async () => {
     const fetchMock = await renderPage();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[2].click();
+    await answerConfirm('OK');
 
     await vi.waitFor(() =>
       expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/default-content'))).toBe(true),
@@ -160,9 +161,10 @@ describe('MergeAuthorizationPage', () => {
 
   it('does not load the defaults when the Default confirmation is declined', async () => {
     const fetchMock = await renderPage();
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
 
+    // answerConfirm waits for the dialog, so reaching it at all proves the page asked first.
     Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[2].click();
+    await answerConfirm('Cancel');
 
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/default-content'))).toBe(false);
   });
@@ -215,16 +217,15 @@ describe('MergeAuthorizationPage', () => {
       ]),
     );
     await renderPage(fetchMock);
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[2].click();
+    await answerConfirm('OK');
 
     await vi.waitFor(() => expect(document.body.textContent).toContain('no defaults'));
   });
 
   it('reports a failure while re-reading on Cancel', async () => {
     const fetchMock = await renderPage();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     // Re-point content reads at a failure only now, so the initial load succeeded.
     installFetchMock(
       routes([
@@ -237,6 +238,7 @@ describe('MergeAuthorizationPage', () => {
     );
 
     Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[1].click();
+    await answerConfirm('OK');
 
     await vi.waitFor(() => expect(document.querySelector('.alert-error')!.textContent).toContain('vanished'));
     expect(fetchMock).toBeDefined();

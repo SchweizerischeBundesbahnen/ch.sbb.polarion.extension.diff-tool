@@ -5,6 +5,7 @@ import {
   type Revision,
   RevisionsTable,
   getScope,
+  useConfirm,
 } from '@grigoriev/react-sbb-polarion';
 import { toast } from 'sonner';
 import useRemote from '../../services/useRemote';
@@ -37,6 +38,10 @@ export default function ExecutionQueuePage() {
   const scope = getScope();
   const { sendRequest } = useRemote();
   const settings = useSettings<ExecutionQueueModel>('executionQueue');
+  // RSP's dialog rather than window.confirm: the browser's own is chrome-coloured, announces itself as
+  // "localhost says" and cannot be styled, so on an otherwise entirely-ours admin page it reads as
+  // though something broke rather than as though a question was asked.
+  const { confirm, confirmDialog } = useConfirm();
 
   const [meta, setMeta] = useState<QueueConfigurationMeta | null>(null);
   const [saved, setSaved] = useState<Settings>(EMPTY);
@@ -164,8 +169,14 @@ export default function ExecutionQueuePage() {
     }
   };
 
+  const cancel = async () => {
+    if (await confirm('Are you sure you want to cancel editing and revert all changes made?')) {
+      void reload();
+    }
+  };
+
   const revertToDefault = async () => {
-    if (!window.confirm('Are you sure you want to return the default values?')) {
+    if (!(await confirm('Are you sure you want to return the default values?'))) {
       return;
     }
     try {
@@ -291,15 +302,13 @@ export default function ExecutionQueuePage() {
 
       <ConfigurationButtons
         onSave={() => void save()}
-        onCancel={() => {
-          if (window.confirm('Are you sure you want to cancel editing and revert all changes made?')) {
-            void reload();
-          }
-        }}
+        onCancel={() => void cancel()}
         onRevertToDefault={() => void revertToDefault()}
         onToggleRevisions={() => setRevisionsShown((shown) => !shown)}
         revisionsShown={revisionsShown}
       />
+
+      {confirmDialog}
 
       {revisionsShown && (
         <RevisionsTable

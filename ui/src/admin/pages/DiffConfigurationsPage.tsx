@@ -8,6 +8,7 @@ import {
   RevisionsTable,
   getProjectIdFromScope,
   getScope,
+  useConfirm,
 } from '@grigoriev/react-sbb-polarion';
 import { toast } from 'sonner';
 import useRemote from '../../services/useRemote';
@@ -59,6 +60,10 @@ export default function DiffConfigurationsPage() {
   const projectId = getProjectIdFromScope(scope);
   const { sendRequest } = useRemote();
   const settings = useSettings<DiffModel>('diff');
+  // RSP's dialog rather than window.confirm: the browser's own is chrome-coloured, announces itself as
+  // "localhost says" and cannot be styled, so on an otherwise entirely-ours admin page it reads as
+  // though something broke rather than as though a question was asked.
+  const { confirm, confirmDialog } = useConfirm();
 
   const [data, setData] = useState<ProjectData | null>(null);
   const [model, setModel] = useState<DiffSettings>(EMPTY);
@@ -202,8 +207,14 @@ export default function DiffConfigurationsPage() {
     }
   };
 
+  const cancel = async () => {
+    if (await confirm('Are you sure you want to cancel editing and revert all changes made?')) {
+      void reload();
+    }
+  };
+
   const revertToDefault = async () => {
-    if (!window.confirm('Are you sure you want to return the default value?')) {
+    if (!(await confirm('Are you sure you want to return the default value?'))) {
       return;
     }
     try {
@@ -320,15 +331,13 @@ export default function DiffConfigurationsPage() {
 
       <ConfigurationButtons
         onSave={() => void save()}
-        onCancel={() => {
-          if (window.confirm('Are you sure you want to cancel editing and revert all changes made?')) {
-            void reload();
-          }
-        }}
+        onCancel={() => void cancel()}
         onRevertToDefault={() => void revertToDefault()}
         onToggleRevisions={() => setRevisionsShown((shown) => !shown)}
         revisionsShown={revisionsShown}
       />
+
+      {confirmDialog}
 
       {revisionsShown && selectedConfiguration && (
         <RevisionsTable

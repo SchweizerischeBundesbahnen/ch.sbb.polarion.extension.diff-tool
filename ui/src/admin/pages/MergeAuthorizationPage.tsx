@@ -5,6 +5,7 @@ import {
   type Revision,
   RevisionsTable,
   getScope,
+  useConfirm,
 } from '@grigoriev/react-sbb-polarion';
 import { toast } from 'sonner';
 import useRemote from '../../services/useRemote';
@@ -32,6 +33,10 @@ export default function MergeAuthorizationPage() {
   const scope = getScope();
   const { sendRequest } = useRemote();
   const settings = useSettings<AuthorizationModel>('authorization');
+  // RSP's dialog rather than window.confirm: the browser's own is chrome-coloured, announces itself as
+  // "localhost says" and cannot be styled, so on an otherwise entirely-ours admin page it reads as
+  // though something broke rather than as though a question was asked.
+  const { confirm, confirmDialog } = useConfirm();
 
   const [available, setAvailable] = useState<AvailableRoles>({ globalRoles: [], projectRoles: [] });
   const [granted, setGranted] = useState<AuthorizationModel>({ globalRoles: [], projectRoles: [] });
@@ -116,14 +121,14 @@ export default function MergeAuthorizationPage() {
     }
   };
 
-  const handleCancel = () => {
-    if (window.confirm('Are you sure you want to cancel editing and revert all changes made?')) {
+  const handleCancel = async () => {
+    if (await confirm('Are you sure you want to cancel editing and revert all changes made?')) {
       void reload();
     }
   };
 
   const handleRevertToDefault = async () => {
-    if (!window.confirm('Are you sure you want to return the default values?')) {
+    if (!(await confirm('Are you sure you want to return the default values?'))) {
       return;
     }
     try {
@@ -172,11 +177,13 @@ export default function MergeAuthorizationPage() {
 
       <ConfigurationButtons
         onSave={() => void handleSave()}
-        onCancel={handleCancel}
+        onCancel={() => void handleCancel()}
         onRevertToDefault={() => void handleRevertToDefault()}
         onToggleRevisions={() => setRevisionsShown((shown) => !shown)}
         revisionsShown={revisionsShown}
       />
+
+      {confirmDialog}
 
       {revisionsShown && (
         <RevisionsTable

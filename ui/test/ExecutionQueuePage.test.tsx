@@ -2,6 +2,7 @@ import { Toaster } from '@grigoriev/react-sbb-polarion';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import ExecutionQueuePage from '../src/admin/pages/ExecutionQueuePage';
+import { answerConfirm } from './confirmDialog';
 import { type FetchMock, type Route, installFetchMock, jsonResponse } from './mockFetch';
 
 // Behaviour of the port of execution.js: which charts exist, the two configuration tables, and
@@ -182,9 +183,9 @@ describe('ExecutionQueuePage', () => {
 
   it('loads the default values on Default without persisting them', async () => {
     const fetchMock = await renderPage();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     toolbarButton(2).click();
+    await answerConfirm('OK');
 
     await vi.waitFor(() =>
       expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/default-content'))).toBe(true),
@@ -200,12 +201,12 @@ describe('ExecutionQueuePage', () => {
       fetchMock.mock.calls.filter(([url, init]) => String(url).includes('/content') && init?.method !== 'PUT').length;
     const before = reads();
 
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
     toolbarButton(1).click();
+    await answerConfirm('Cancel');
     expect(reads()).toBe(before);
 
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     toolbarButton(1).click();
+    await answerConfirm('OK');
     await vi.waitFor(() => expect(reads()).toBeGreaterThan(before));
   });
 
