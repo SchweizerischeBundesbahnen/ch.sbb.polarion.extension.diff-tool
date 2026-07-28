@@ -52,7 +52,7 @@
   "packageManager": "npm@12.0.1",
   "private": true,
   "scripts": {
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.formext.config.js",
     "dev": "vite",
     "dev:e2e": "vite --mode e2e",
     "preview": "vite preview",

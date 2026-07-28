@@ -1,0 +1,129 @@
+/* Panel CSS for the two Document Properties side panels, injected INSIDE their shadow roots
+   (see shadowMount.ts) rather than linked from a Polarion-served URL. It is the subset of
+   webapp/diff-tool/css/common.css that the panels actually use - the rest of that file styles the
+   nav-topic pages and the Java-rendered widgets, which stay on the legacy stylesheet.
+
+   Deliberately absent from the copy: the global `a, td, div, li, ul, input, button { font-family }`
+   rule. Inside the shadow root the font comes from the `.sbb-ui` base rule shadowMount.ts injects,
+   which reads the shared --sbb-control-font-family token; re-declaring font-family here would pin the
+   panels to a hardcoded stack (SKILL.md rule 3). */
+
+.form-wrapper .in-progress-overlay {
+  z-index: 1000;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: white;
+  opacity: 80%;
+  display: none;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.form-wrapper .in-progress-overlay.show {
+  display: flex;
+}
+
+.property-wrapper {
+  margin-top: 8px;
+  padding-right: 10px;
+  display: flex;
+  align-items: center;
+  column-gap: 5px;
+}
+
+.property-wrapper.hide,
+.buttons-wrapper.hide {
+  display: none !important;
+}
+
+.property-wrapper label {
+  margin-top: 2px;
+  margin-bottom: 3px;
+}
+
+.property-wrapper label.fixed-width {
+  display: inline-block;
+}
+
+.property-wrapper label.fixed-width.w-1 {
+  width: 140px;
+}
+
+.property-wrapper select,
+.property-wrapper input {
+  font-weight: 600;
+  font-size: 13px;
+  border: 1px solid #cccccc;
+  border-radius: 2px;
+}
+
+.property-wrapper input {
+  padding: 2px 4px 4px 0.4rem;
+}
+
+.property-wrapper select {
+  padding: 2px 2rem 4px 0.4rem;
+}
+
+#select-revision-radios {
+  display: flex;
+  align-items: center;
+}
+
+/* space between the two radio groups (radio -> label spacing comes from the shared radios.css) */
+#select-revision-radios label,
+#work-items-filter-radios label {
+  margin-right: 16px;
+}
+
+/* The revision input is wrapped in the shared .sbb-number spinner, so the width has to be set on the
+   wrapper - the input itself is stretched to fill it. */
+#select-revision-panel .sbb-number {
+  display: block;
+  width: 100%;
+}
+
+#revision-enter-manually,
+#baseline-checkbox {
+  margin-left: 0;
+}
+
+/* diff-tool comboboxes are wider than the generic default. !important so the width always wins, even
+   though SearchableDropdown copies an inline width off the <select> it wraps. */
+.searchable-dropdown {
+  width: 240px !important;
+  flex-shrink: 0;
+}
+
+.buttons-wrapper {
+  margin: 10px 0;
+}
+
+/* Button chrome (transparent action button) comes from the shared system (generic buttons.css aliases
+   `.buttons-wrapper button`). Only the wrapper layout / icon bits stay local. */
+.buttons-wrapper button:not(:first-child) {
+  margin-left: 5px;
+}
+
+.buttons-wrapper button img {
+  margin-right: 6px;
+  vertical-align: bottom;
+}
+
+.alert {
+  font-weight: bold;
+}
+
+.alert-error {
+  color: red;
+}
+
+.alert-warning {
+  color: orange;
+}
+
+.alert-success {
+  color: green;
+}
