@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@babel/runtime": "^8.0.0",
     "@floating-ui/react": "^0.27.19",
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
