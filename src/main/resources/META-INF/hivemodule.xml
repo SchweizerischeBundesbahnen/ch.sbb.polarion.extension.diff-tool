@@ -52,7 +52,7 @@
                   name="Project Duplication"
                   parentNodeId="diff-tool"
                   iconUrl="/polarion/diff-tool-admin/ui/images/menu/16x16/duplication.svg"
-                  pageUrl="/polarion/diff-tool-admin/pages/project_duplication.jsp?scope=$scope$"
+                  pageUrl="/polarion/diff-tool-app/ui/app/index.html?feature=project-duplication&amp;embedded=true&amp;scope=$scope$"
                   projectScope="false"
                   projectGroupScope="false"
                   repositoryScope="true"/>

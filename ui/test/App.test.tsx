@@ -34,6 +34,7 @@ describe('findFeature', () => {
     expect(findFeature('about')?.id).toBe('about');
     expect(findFeature('diff-configurations')?.id).toBe('diff-configurations');
     expect(findFeature('execution-queue')?.id).toBe('execution-queue');
+    expect(findFeature('project-duplication')?.id).toBe('project-duplication');
     expect(findFeature('merge-authorization')?.id).toBe('merge-authorization');
     expect(findFeature('nope')).toBeUndefined();
     expect(findFeature(null)).toBeUndefined();

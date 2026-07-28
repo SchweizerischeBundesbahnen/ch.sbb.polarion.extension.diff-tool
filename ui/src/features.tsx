@@ -2,6 +2,7 @@ import { type ComponentType, lazy } from 'react';
 import AboutPage from './admin/pages/AboutPage';
 import DiffConfigurationsPage from './admin/pages/DiffConfigurationsPage';
 import MergeAuthorizationPage from './admin/pages/MergeAuthorizationPage';
+import ProjectDuplicationPage from './admin/pages/ProjectDuplicationPage';
 
 // Lazy so Chart.js and its date adapter - by far the heaviest dependency here - land in their own chunk
 // and are never downloaded by the other admin pages.
@@ -26,6 +27,7 @@ export const FEATURES: Feature[] = [
   { id: 'diff-configurations', label: 'Diff Configurations', component: DiffConfigurationsPage },
   { id: 'execution-queue', label: 'Execution Queue', component: ExecutionQueuePage },
   { id: 'merge-authorization', label: 'Merge Authorization', component: MergeAuthorizationPage },
+  { id: 'project-duplication', label: 'Project Duplication', component: ProjectDuplicationPage },
 ];
 
 export function findFeature(id: string | null): Feature | undefined {
