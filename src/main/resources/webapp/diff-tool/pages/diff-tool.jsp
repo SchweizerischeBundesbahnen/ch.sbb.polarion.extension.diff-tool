@@ -14,7 +14,7 @@
     <script type="text/javascript" src="../js/breadcrumb.js?bundle=<%= extensionVersion.getBundleBuildTimestampDigitsOnly() %>"
             data-marker="diff-tool"
             data-title="Diff Tool"
-            data-icon="/polarion/diff-tool-admin/ui/images/menu/30x30/_parent.svg"></script>
+            data-icon="/polarion/diff-tool-app/ui/images/menu/30x30/_parent.svg"></script>
 </head>
 <body>
 <div class="polarion-rpe-content">

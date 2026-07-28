@@ -17,7 +17,7 @@ class DiffToolNavigationExtenderTest {
         DiffToolNavigationExtender navigationExtender = new DiffToolNavigationExtender();
         assertEquals("diff-tool", navigationExtender.getId());
         assertEquals("Diff Tool", navigationExtender.getLabel());
-        assertEquals("/polarion/diff-tool-admin/ui/images/menu/30x30/_parent.svg", navigationExtender.getIconUrl());
+        assertEquals("/polarion/diff-tool-app/ui/images/menu/30x30/_parent.svg", navigationExtender.getIconUrl());
         assertEquals("/polarion/diff-tool/pages/diff-tool.jsp", navigationExtender.getPageUrl(contextId));
         List<NavigationExtenderNode> rootNodes = navigationExtender.getRootNodes(contextId);
         assertEquals(2, rootNodes.size());

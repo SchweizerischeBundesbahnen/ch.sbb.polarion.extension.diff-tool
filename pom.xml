@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>15.7.0</version>
+        <version>15.9.0</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
@@ -44,9 +44,6 @@
     </issueManagement>
 
     <properties>
-        <node.version>v24.16.0</node.version>
-        <frontend-maven-plugin.version>2.0.1</frontend-maven-plugin.version>
-
         <maven-jar-plugin.Extension-Context>diff-tool</maven-jar-plugin.Extension-Context>
         <maven-jar-plugin.Automatic-Module-Name>ch.sbb.polarion.extension.diff_tool</maven-jar-plugin.Automatic-Module-Name>
         <maven-jar-plugin.Discover-Base-Package>ch.sbb.polarion.extension.diff_tool</maven-jar-plugin.Discover-Base-Package>
@@ -78,22 +75,13 @@
         <!--suppress UnresolvedMavenProperty -->
         <markdown2html-maven-plugin.failOnError>${env.MARKDOWN2HTML_MAVEN_PLUGIN_FAIL_ON_ERROR}</markdown2html-maven-plugin.failOnError>
 
-        <vite.sources.root>${project.basedir}/ui</vite.sources.root>
-        <vite.destination.root>${project.basedir}/src/main/resources/webapp/diff-tool-app</vite.destination.root>
-
-        <!-- JS test wiring. The `test` phase runs the Vitest component/visual suite inside the pinned
-             Playwright Docker image, which is what makes screenshot comparisons reproducible across
-             dev machines and CI. Override with the profiles below when Docker is unavailable, or use
-             -DskipJsTests=true to skip it entirely (what CI does - it runs the suites in dedicated
-             jobs). The Playwright end-to-end suite in ui/e2e is NOT bound to the build by default;
-             activate -DjsE2eTests to add it.
-
-             `test:coverage:docker`, not the plain `test:docker` variant: the latter runs the suite but
-             never evaluates the istanbul thresholds, so the 80% gate existed only in the local
-             pre-commit hook, which is skippable and absent for anyone building elsewhere. -->
-        <skipJsTests>false</skipJsTests>
-        <jsTestCommand>run test:coverage:docker</jsTestCommand>
-        <jsTestExtraArgs> </jsTestExtraArgs>
+        <!-- The Playwright end-to-end suite in ui/e2e is diff-tool's own second JS layer and is NOT
+             bound to the build; activate -DjsE2eTests to add it. Everything else about the UI build -
+             node/npm, `npm ci`, `npm run build`, the dockerized Vitest run with its coverage gate in the
+             `test` phase, and the copy into webapp/diff-tool-app - is inherited from the generic
+             parent's `vite-ui` profile, which activates on the presence of ui/package.json. Its
+             defaults (vite.sources.root, vite.destination.root, skipJsTests, jsTestCommand,
+             jsTestExtraArgs) already match what this pom used to declare. -->
     </properties>
 
     <profiles>
@@ -109,104 +97,9 @@
             </properties>
         </profile>
 
-        <!-- Run the Vitest suite directly instead of inside the Docker image, for hosts without
-             Docker. The visual suites detect they are not in the reference image and skip themselves
-             (see PIXEL_REFERENCES in ui/vitest.config.ts), so no pixel assertion runs and there is
-             nothing to combine this with. Still runs the coverage gate. -->
-        <profile>
-            <id>js-tests-no-docker</id>
-            <activation>
-                <property>
-                    <name>jsTestsNoDocker</name>
-                </property>
-            </activation>
-            <properties>
-                <jsTestCommand>run test:coverage:full</jsTestCommand>
-            </properties>
-        </profile>
-
-        <!-- Drop the pixel-comparing tests explicitly. Rarely needed now that they skip themselves
-             outside the reference image; kept for a host where even loading them is unwanted. Only
-             takes effect together with -DjsTestsNoDocker - the test:docker wrapper forwards no extra
-             args. -->
-        <profile>
-            <id>skip-visual-js-tests</id>
-            <activation>
-                <property>
-                    <name>skipVisualJsTests</name>
-                </property>
-            </activation>
-            <properties>
-                <jsTestExtraArgs>-- --exclude **/*.visual.test.tsx</jsTestExtraArgs>
-            </properties>
-        </profile>
-
-        <!-- Download the Playwright browser binaries (and their OS dependencies). Opt-in on purpose:
-             this used to run unconditionally in generate-resources and cost roughly 400 MB per build
-             even when the tests were skipped. -->
-        <profile>
-            <id>playwright-install</id>
-            <activation>
-                <property>
-                    <name>installPlaywright</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>install-playwright-browsers</id>
-                                <goals>
-                                    <goal>npx</goal>
-                                </goals>
-                                <phase>process-test-resources</phase>
-                                <configuration>
-                                    <arguments>playwright install --with-deps</arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <!-- As above, without the OS dependencies (which need root). -->
-        <profile>
-            <id>playwright-install-no-deps</id>
-            <activation>
-                <property>
-                    <name>installPlaywrightNoDeps</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>install-playwright-browsers-no-deps</id>
-                                <goals>
-                                    <goal>npx</goal>
-                                </goals>
-                                <phase>process-test-resources</phase>
-                                <configuration>
-                                    <arguments>playwright install</arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <!-- Also run the Playwright end-to-end suite (ui/e2e) in the test phase. CI runs it in its own
-             per-browser sharded job, so it is not part of the default build; this restores the
-             pre-migration behaviour for anyone who wants it locally. Needs the browser binaries -
-             combine with -DinstallPlaywright on a clean checkout. -->
+        <!-- Run the Playwright end-to-end suite (ui/e2e) in the `test` phase as well. Opt-in: it drives
+             a real dev server across three browsers and is CI's own job, so it is not part of a normal
+             build. -->
         <profile>
             <id>js-e2e-tests</id>
             <activation>
@@ -416,92 +309,6 @@
                 <artifactId>pre-commit-run-maven-plugin</artifactId>
             </plugin>
 
-            <plugin>
-                <groupId>com.github.eirslett</groupId>
-                <artifactId>frontend-maven-plugin</artifactId>
-                <version>${frontend-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>install node and npm</id>
-                        <goals>
-                            <goal>install-node-and-npm</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                    </execution>
-                    <!-- `ci`, not the plugin's default `install`: the production bundle must come from
-                         the committed package-lock.json, which is the graph the dockerized tests
-                         exercise (they run `npm ci` too). With `install` the caret ranges could resolve
-                         differently here than in the tests, so we would ship something we never ran.
-                         It also turns a package.json/lock mismatch into a failed build instead of
-                         silently repairing it. -->
-                    <execution>
-                        <id>npm install</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <arguments>ci</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm build</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <arguments>run build</arguments>
-                        </configuration>
-                    </execution>
-                    <!-- Vitest (component + visual regression) with the 80% coverage gate, in the
-                         pinned Playwright Docker image. Needs Docker running; see the
-                         js-tests-no-docker profile if it is not. -->
-                    <execution>
-                        <id>npm test</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <phase>test</phase>
-                        <configuration>
-                            <arguments>${jsTestCommand} ${jsTestExtraArgs}</arguments>
-                            <skip>${skipJsTests}</skip>
-                        </configuration>
-                    </execution>
-                </executions>
-                <configuration>
-                    <nodeVersion>${node.version}</nodeVersion>
-                    <workingDirectory>ui</workingDirectory>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-vite-build</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${vite.destination.root}</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${vite.sources.root}/dist</directory>
-                                    <filtering>false</filtering>
-                                    <includes>
-                                        <include>**/*</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                            <overwrite>true</overwrite>
-                            <includeEmptyDirs>true</includeEmptyDirs>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 

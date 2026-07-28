@@ -116,6 +116,28 @@ Almost all of the port is 1:1. The exceptions, each commented at its site:
   counter in a `finally` on the thread that incremented it, instead of on the submitting thread
   (`8207cb3`). This was surfaced by a flaky `ExecutionQueueMonitorTest`, not by the migration itself.
 
+## Webapp contexts
+
+The extension declares **two** contexts in `plugin.xml`, down from three:
+
+- `webapp/diff-tool` - the REST API, the three nav-topic JSPs and the two Document Properties fragments.
+- `webapp/diff-tool-app` - the Vite bundle, the two form-extension panel modules, the generated
+  `about.html`, and the administration-menu icons.
+
+`webapp/diff-tool-admin` is gone. Once the admin pages became React its only remaining job was serving
+those icons, so they moved to the app context and every `iconUrl` in `hivemodule.xml`,
+`DiffToolNavigationExtender.getIconUrl()` and `diff-tool.jsp`'s breadcrumb bootstrap followed.
+`app-icon.svg` went with it - its only consumer was the deleted `about.jsp`, and RSP's `About` now gets
+the icon from `ui/src/assets/`. This needs the generic parent at **15.9.0 or later**: that is the version
+whose `ExtensionInfoInternalController` looks for `about.html` under `<ext>-app/html` before falling back
+to `<ext>-admin/html`.
+
+The whole UI build is inherited from the parent's `vite-ui` profile, which activates on the presence of
+`ui/package.json` - roughly 230 lines of node/npm, `npm ci`, `npm run build`, the dockerized Vitest run
+and the bundle copy that this pom used to repeat. What stays local is the `js-e2e-tests` profile (only
+diff-tool has a Playwright suite) and the purge of the copy target before each build, which the shared
+profile does not do.
+
 ## Contracts that must not drift
 
 - `documents.html`, `collections.html`, `workitems.html` - opened by literal URL from

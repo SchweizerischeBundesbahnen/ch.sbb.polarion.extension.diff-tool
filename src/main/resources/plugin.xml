@@ -1,28 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
 <plugin>
+    <!-- Two webapp contexts: the REST API plus the nav-topic pages and Document Properties fragments,
+         and the React app - which serves the Vite bundle, the form-extension panel modules and the
+         administration-menu icons. One extension element holds them, as Polarion's own
+         com.polarion.alm.ui does. The former diff-tool-admin context is gone: once the admin pages
+         became React its only job was serving those icons. -->
     <extension
             point="com.polarion.portal.tomcat.webapps">
         <webapp
                 name="polarion/diff-tool"
                 contextRoot="webapp/diff-tool">
         </webapp>
-    </extension>
-
-    <extension
-            point="com.polarion.portal.tomcat.webapps">
-        <webapp
-                name="polarion/diff-tool-admin"
-                contextRoot="webapp/diff-tool-admin">
-        </webapp>
-    </extension>
-
-    <extension
-            point="com.polarion.portal.tomcat.webapps">
         <webapp
                 name="polarion/diff-tool-app"
                 contextRoot="webapp/diff-tool-app">
         </webapp>
     </extension>
-
 </plugin>

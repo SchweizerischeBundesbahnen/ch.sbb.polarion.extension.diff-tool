@@ -279,7 +279,9 @@ Increase for faster processing, but may overload server.
 ## Related Extensions
 
 - **PDF-Exporter** (v9+): Used for HTML to PDF conversion in ConversionService
-- **Generic Extension Framework** (v15.7.0, from the parent POM): Provides base classes for settings, REST controllers, and servlet integration
+- **Generic Extension Framework** (v15.9.0, from the parent POM): Provides base classes for settings, REST
+  controllers, servlet integration, and - via its `vite-ui` profile, activated by the presence of
+  `ui/package.json` - the whole React/Vite build
 
 ## Important Notes
 
