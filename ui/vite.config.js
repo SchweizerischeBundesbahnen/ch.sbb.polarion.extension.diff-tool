@@ -93,6 +93,14 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     ...shared,
+    // Never let a developer's personal access token reach a shipped bundle. VITE_BEARER_TOKEN is a
+    // `vite dev` convenience (it switches useRemote to the token-authenticated /api endpoints so the app
+    // can talk to a real Polarion without a session); Vite inlines import.meta.env.VITE_* at build time,
+    // so a local .env.development.local would otherwise be baked into the bundle that
+    // `mvn -P install-to-local-polarion` deploys - readable by everyone the pages are served to.
+    // Forcing it undefined here keeps production on the session-authenticated /internal endpoints, which
+    // is what Polarion provides anyway. Only in this branch: `serve` must keep honouring it.
+    define: { 'import.meta.env.VITE_BEARER_TOKEN': 'undefined' },
     // Must match the URL space DiffToolAppUIServlet serves (webapp/diff-tool-app, servlet on /ui/*).
     base: '/polarion/diff-tool-app/ui/app/',
     build: {

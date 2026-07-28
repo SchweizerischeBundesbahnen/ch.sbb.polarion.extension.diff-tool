@@ -26,6 +26,9 @@ export default defineConfig({
   // this React's larger development build (with its runtime warnings) would ship to Polarion.
   define: {
     'process.env.NODE_ENV': JSON.stringify('production'),
+    // Same reason as in vite.config.js: these bundles ship to Polarion too, so a developer's
+    // VITE_BEARER_TOKEN must never be inlined into them.
+    'import.meta.env.VITE_BEARER_TOKEN': 'undefined',
   },
   build: {
     outDir: './dist/app/assets',
