@@ -54,7 +54,7 @@ async function snapshot(name: string) {
   await expect(page.elementLocator(app)).toMatchScreenshot(name);
 }
 
-describe('Merge Authorization page visual', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('Merge Authorization page visual', () => {
   it('loaded (both role groups, checked state, action toolbar, quick help)', async () => {
     await renderPage();
 

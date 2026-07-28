@@ -16,7 +16,7 @@ afterEach(() => {
   window.history.replaceState({}, '', origUrl);
 });
 
-describe('About page visual', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('About page visual', () => {
   it('loaded (info + properties + status tables, README article)', async () => {
     installFetchMock([
       {

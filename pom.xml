@@ -86,9 +86,13 @@
              dev machines and CI. Override with the profiles below when Docker is unavailable, or use
              -DskipJsTests=true to skip it entirely (what CI does - it runs the suites in dedicated
              jobs). The Playwright end-to-end suite in ui/e2e is NOT bound to the build by default;
-             activate -DjsE2eTests to add it. -->
+             activate -DjsE2eTests to add it.
+
+             `test:coverage:docker`, not the plain `test:docker` variant: the latter runs the suite but
+             never evaluates the istanbul thresholds, so the 80% gate existed only in the local
+             pre-commit hook, which is skippable and absent for anyone building elsewhere. -->
         <skipJsTests>false</skipJsTests>
-        <jsTestCommand>run test:docker</jsTestCommand>
+        <jsTestCommand>run test:coverage:docker</jsTestCommand>
         <jsTestExtraArgs> </jsTestExtraArgs>
     </properties>
 
@@ -106,8 +110,9 @@
         </profile>
 
         <!-- Run the Vitest suite directly instead of inside the Docker image, for hosts without
-             Docker. Visual-regression comparisons are only reliable in the pinned image, so combine
-             this with -DskipVisualJsTests unless you are on Linux. -->
+             Docker. The visual suites detect they are not in the reference image and skip themselves
+             (see PIXEL_REFERENCES in ui/vitest.config.ts), so no pixel assertion runs and there is
+             nothing to combine this with. Still runs the coverage gate. -->
         <profile>
             <id>js-tests-no-docker</id>
             <activation>
@@ -116,11 +121,14 @@
                 </property>
             </activation>
             <properties>
-                <jsTestCommand>run test</jsTestCommand>
+                <jsTestCommand>run test:coverage:full</jsTestCommand>
             </properties>
         </profile>
 
-        <!-- Skip the pixel-comparing tests, keeping the behaviour ones. -->
+        <!-- Drop the pixel-comparing tests explicitly. Rarely needed now that they skip themselves
+             outside the reference image; kept for a host where even loading them is unwanted. Only
+             takes effect together with -DjsTestsNoDocker - the test:docker wrapper forwards no extra
+             args. -->
         <profile>
             <id>skip-visual-js-tests</id>
             <activation>

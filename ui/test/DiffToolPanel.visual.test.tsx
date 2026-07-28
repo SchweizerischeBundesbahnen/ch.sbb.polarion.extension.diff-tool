@@ -46,7 +46,7 @@ async function capture(name: string) {
   await expect(page.elementLocator(host)).toMatchScreenshot(name);
 }
 
-describe('Documents Comparison panel visual', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('Documents Comparison panel visual', () => {
   it('loaded (manual revision entry)', async () => {
     await open();
 

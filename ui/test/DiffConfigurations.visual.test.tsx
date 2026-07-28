@@ -25,7 +25,7 @@ const FIELDS = [
   { key: 'severity', name: 'Severity', wiTypeId: 'defect', wiTypeName: 'Defect' },
 ];
 
-describe('Diff Configurations page visual', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('Diff Configurations page visual', () => {
   it('loaded (configurations pane, transfer list, role multiselects)', async () => {
     installFetchMock([
       { method: 'GET', match: /\/workitem-fields$/, json: FIELDS },

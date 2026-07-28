@@ -18,7 +18,7 @@ afterEach(() => {
   window.history.replaceState({}, '', origUrl);
 });
 
-describe('Project Duplication page visual', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('Project Duplication page visual', () => {
   it('loaded (form, jobs table)', async () => {
     installFetchMock([
       {

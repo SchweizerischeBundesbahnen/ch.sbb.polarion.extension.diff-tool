@@ -105,13 +105,20 @@ Two layers, deliberately:
 
 | Script | |
 |---|---|
-| `npm run test` | Vitest, host browser. **The visual tests only pixel-match on Linux**, so on macOS/Windows use `test:coverage` (behaviour only) or `test:docker` |
+| `npm run test` | Vitest, host browser; the visual suites skip themselves outside the reference image |
 | `npm run test:watch` | Vitest in watch mode |
 | `npm run test:docker` | Vitest in the pinned Playwright image (authoritative for visuals) |
 | `npm run test:update:docker` | regenerate visual references (Docker only) |
 | `npm run test:coverage` | behaviour-only coverage + the 80% gate |
 | `npm run test:coverage:full` | full suite coverage |
-| `npm run test:coverage:docker` | as above, in the image - what the pre-commit hook runs |
+| `npm run test:coverage:docker` | **the canonical run** - the full suite + the gate in the image, what Maven's `test` phase and the pre-commit hook invoke |
+
+**Pixel references are Docker-only.** The committed screenshots are locked to the pinned Playwright
+image, so `scripts/docker-test.mjs` marks that container with `PIXEL_REFERENCES=1`, `vitest.config.ts`
+turns it into the `__PIXEL_REFERENCES__` constant, and every visual suite is
+`describe.skipIf(!__PIXEL_REFERENCES__)`. Off Docker they skip instead of failing on the host's font
+metrics - which shift both the antialiasing and the rendered element height, i.e. a red run that says
+nothing about the code. Inside the image every screenshot is still enforced.
 
 **Coverage gate.** 80% on statements/branches/functions/lines, enforced over the code this React
 migration authored - see the annotated `coverage.include` list in `vitest.config.ts`. The diff/merge

@@ -39,7 +39,7 @@ const META = {
   queueCapacity: 1000,
 };
 
-describe('Execution Queue page visual', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('Execution Queue page visual', () => {
   it('loaded, charts collapsed (panel headers, workers and threads tables, quick help)', async () => {
     installFetchMock([
       { method: 'GET', match: /\/queue\/configuration-meta$/, json: META },

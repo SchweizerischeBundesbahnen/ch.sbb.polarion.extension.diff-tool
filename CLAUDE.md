@@ -30,8 +30,9 @@ mvn verify
 mvn clean package -DskipJsTests=true
 
 # The test phase runs the Vitest suite inside the pinned Playwright Docker image. Escape hatches:
-#   -DjsTestsNoDocker      run Vitest directly (no Docker on this host)
-#   -DskipVisualJsTests    behaviour tests only, no pixel comparisons
+#   -DjsTestsNoDocker      run Vitest directly (no Docker on this host); the visual suites skip
+#                          themselves outside the reference image, so pixels are simply not compared
+#   -DskipVisualJsTests    do not even load the visual suites (only with -DjsTestsNoDocker)
 #   -DinstallPlaywright    download the browser binaries (and OS deps)
 #   -DjsE2eTests           additionally run the Playwright E2E suite
 ```
