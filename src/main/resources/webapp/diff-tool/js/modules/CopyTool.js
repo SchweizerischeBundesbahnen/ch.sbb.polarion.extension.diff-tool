@@ -33,7 +33,6 @@ export default class CopyTool extends GenericMixin {
       allowEmpty: true
     });
     this.ctx.onChange('copy-project-selector', () => this.projectChanged());
-    this.projectDropdown.restoreSelection();
 
     // First generate dropdown with data, remove selection and only then assign event listener
     this.spaceDropdown = new SearchableDropdown({
@@ -67,13 +66,22 @@ export default class CopyTool extends GenericMixin {
     this.ctx.onChange('handle-refs-selector', () => this.updateCreateButtonState());
     this.handleRefsDropdown.restoreSelection();
 
+    // Restore the project selection last: it fires 'change' -> projectChanged(), which relies on
+    // spaceDropdown and configDropdown already existing.
+    this.projectDropdown.restoreSelection();
   }
 
   projectChanged() {
     this.ctx.disableIf("create-document", true);
     this.loadSpaces(false, () => {
       this.spaceDropdown.refresh();
-      this.reloadSettings(this.ctx.getValue("copy-project-selector"), false).then(() => {
+      const selectedProject = this.ctx.getValue("copy-project-selector");
+      if (!selectedProject) {
+        // No project selected: nothing to load, and requesting scope=project// would 404.
+        this.configDropdown.refresh();
+        return;
+      }
+      this.reloadSettings(selectedProject, false).then(() => {
         this.configDropdown.refresh();
       });
     });

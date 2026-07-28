@@ -34,14 +34,18 @@ export default class DiffTool extends GenericMixin {
     // This is to remove "overflow: hidden" from parent div (Polarion internal code) for custom dropdown popups not to be cut off by parent div box border
     this.resetParentsOverflowHidden(this.ctx.getElementById('comparison-project-selector'));
 
-    // First generate dropdown with data, remove selection and only then assign event listener
+    // Create ALL dropdowns and wire ALL change listeners before restoring the project selection.
+    // projectDropdown.restoreSelection() fires a synthetic 'change' that cascades transitively:
+    // projectChanged() -> spaceDropdown.refresh() -> spaceChanged() -> documentDropdown.refresh()
+    // -> documentChanged() -> revisionDropdown.refresh(). Every dropdown reached in that chain
+    // must already exist, otherwise it's undefined and .refresh() throws. So the project selection
+    // is restored last (see below).
     this.projectDropdown = new SearchableDropdown({
       element: '#comparison-project-selector',
       placeholder: 'Select Project...',
       allowEmpty: true
     });
     this.ctx.onChange('comparison-project-selector', () => this.projectChanged());
-    this.projectDropdown.restoreSelection();
 
     // First generate dropdown with data, remove selection and only then assign event listener
     this.spaceDropdown = new SearchableDropdown({
@@ -78,6 +82,10 @@ export default class DiffTool extends GenericMixin {
       allowEmpty: true
     });
     this.configDropdown.restoreSelection();
+
+    // Restore the project selection last: it fires 'change' -> projectChanged(), whose cascade
+    // reaches spaceDropdown, documentDropdown and revisionDropdown, all of which now exist.
+    this.projectDropdown.restoreSelection();
 
     // Replace the native number spinner (revision input) with the 2606 caret spinner.
     initNumericSpinners(document);
