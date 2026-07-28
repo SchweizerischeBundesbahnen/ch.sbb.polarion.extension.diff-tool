@@ -1,13 +1,10 @@
 /* App-specific styling for the admin pages only.
  *
- * Deliberately does NOT declare: body { margin }, .app { padding }, .app { font-family } or .page > h1
- * - react-sbb-polarion owns page spacing, the unified Selawik typography and the admin heading. A local
- * font-family here would be a regression, not a customization. */
-
-.app {
-  font-size: 13px;
-  color: #1a1a1a;
-}
+ * Deliberately does NOT declare: body { margin }, .app { padding | font-family | font-size | color } or
+ * .page > h1 - react-sbb-polarion owns page spacing, the unified Selawik typography, the 13px admin base
+ * size, the text colour and the admin heading. Re-declaring any of them here would be how the family
+ * drifts apart again, which is exactly why RSP 0.0.3 took size and colour over from the five apps that
+ * each repeated them. */
 
 /* The dev-only Landing overview (never opened inside Polarion, which always passes ?feature=). */
 .landing-features {
