@@ -298,10 +298,6 @@
                     <resourcePackages>
                         <package>ch.sbb.polarion.extension.generic.rest.controller.info</package>
                         <package>ch.sbb.polarion.extension.generic.rest.controller.settings</package>
-                        <!-- /roles: served because DiffToolRestApplication registers generic's controller
-                             for it (the Merge Authorization page reads it), so it belongs in this
-                             extension's spec like the other generic endpoints above. -->
-                        <package>ch.sbb.polarion.extension.generic.rest.controller.roles</package>
                         <package>ch.sbb.polarion.extension.generic.rest.model</package>
                         <package>ch.sbb.polarion.extension.diff_tool.rest.controller</package>
                         <package>ch.sbb.polarion.extension.diff_tool.rest.model</package>

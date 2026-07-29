@@ -207,6 +207,17 @@ The page lost its "saved by a different version of the extension" banner with th
 role setting is two lists of role names, so no schema can go stale, and because the timestamp is stamped
 at save time the banner appeared after every plugin upgrade and could only be dismissed by saving again.
 
+**`/api/roles` is undocumented in `docs/openapi.json`, and that is generic's to fix.** Every other
+generic endpoint the extension exposes (`/api/version`, `/api/readme`, ...) is in the spec because its
+package is scanned *and* its `/internal` twin carries swagger's `@Hidden` - which is how the spec stays
+public-surface-only, with none of diff-tool's own `@Hidden` internal controllers in it either. Generic
+15.10.0's `RolesInternalController` is the one internal controller in the framework without `@Hidden`
+(`ExtensionInfoInternalController` and `NamedSettingsInternalController` both have it), so scanning its
+package emits `/internal/roles` too - and, because `RolesApiController` overrides `getRoles`, gives the
+two operations the same default operationId, leaving one of them as `getRoles_1`. Not worth advertising a
+session-only endpoint in the public spec for, so the package is not scanned. Add it once generic annotates
+the controller.
+
 ## Verification
 
 Per stage: `mvn -s .mvn/settings.xml clean verify` (766 Java tests, 212 Vitest tests, both Vite builds)
