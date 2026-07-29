@@ -13,34 +13,6 @@
   line-height: 1.8;
 }
 
-/* Merge Authorization: the two role groups side by side, each a column of checkbox rows.
- *
- * The flex column lives on the container, never on the labels: control-tokens.css styles the admin
- * checkbox through `.standard-admin-page label:has(input[type='checkbox']) { display: inline-flex }`
- * (specificity 0,2,2), which would win against a `.role-group label { display: flex }` (0,2,0). */
-.role-groups {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 40px;
-}
-
-.role-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.role-group h2 {
-  font-size: 15px;
-  font-weight: bold;
-  margin: 0 0 8px;
-}
-
-.role-group .no-roles {
-  color: #666;
-  font-style: italic;
-}
-
 /* Section headings this app renders directly in a page body - react-sbb-polarion styles the page <h1>,
    but an <h2> below it would fall back to the browser default, which is far larger than Polarion's admin
    pages use.
@@ -50,6 +22,17 @@
   font-size: 20px;
   font-weight: bold;
   margin: 24px 0 8px;
+}
+
+/* The role-group labels on Merge Authorization. react-sbb-polarion's AuthorizationSettings renders these
+   <h2>s but deliberately leaves their size to the app (each consumer scopes a heading rule to its own
+   root class); here they nest inside .authorization-page, so the .page-body > h2 rule above - direct
+   child on purpose, to stay off the About/UserGuide article headings - does not reach them, and they
+   would fall back to the browser default. 15px keeps the size the local RoleCheckboxGroup had. */
+.authorization-page h2 {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 0 0 8px;
 }
 
 /* Wide enough for the "New value" placeholder, which the browser default truncates to "Ne". */

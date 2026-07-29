@@ -4,9 +4,10 @@ import { page } from 'vitest/browser';
 import App from '../src/App';
 import { installFetchMock } from './mockFetch';
 
-// Docker-only snapshot of the Merge Authorization page. This is the surface where the styled admin
-// checkbox matters most: it only renders correctly under the `.standard-admin-page` scope, with the
-// column layout on the group container rather than the labels (see App.css).
+// Docker-only snapshot of the Merge Authorization page, which is react-sbb-polarion's
+// AuthorizationSettings with this extension's title, setting and Quick Help. This is the surface where
+// the styled admin checkbox matters most: it only renders correctly under the `.standard-admin-page`
+// scope that App.tsx puts on the root.
 
 const origUrl = window.location.pathname + window.location.search;
 
@@ -25,11 +26,10 @@ const routes = [
       projectRoles: ['lead', 'reviewer'],
     },
   },
-  { method: 'GET', match: /\/extension\/info$/, json: { version: { bundleBuildTimestamp: '2026-07-01 10:00' } } },
   {
     method: 'GET',
     match: /\/names\/Default\/content/,
-    json: { globalRoles: ['admin'], projectRoles: ['lead'], bundleTimestamp: '2026-07-01 10:00' },
+    json: { globalRoles: ['admin'], projectRoles: ['lead'] },
   },
   {
     method: 'GET',
@@ -45,7 +45,7 @@ async function renderPage() {
   installFetchMock(routes);
   window.history.replaceState({}, '', '?feature=merge-authorization&embedded=true&scope=project/elibrary/');
   render(<App />);
-  await vi.waitFor(() => expect(document.querySelectorAll('.role-group input[type=checkbox]').length).toBe(6));
+  await vi.waitFor(() => expect(document.querySelectorAll('.roles-list input[type=checkbox]').length).toBe(6));
 }
 
 async function snapshot(name: string) {

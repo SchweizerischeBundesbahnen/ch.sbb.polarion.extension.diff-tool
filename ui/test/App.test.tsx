@@ -111,7 +111,7 @@ describe('App router', () => {
     window.history.replaceState({}, '', '?feature=merge-authorization&embedded=true&scope=project/elibrary/');
     render(<App />);
 
-    await vi.waitFor(() => expect(document.querySelector('.role-groups')).not.toBeNull());
+    await vi.waitFor(() => expect(document.querySelector('.authorization-page')).not.toBeNull());
     expect(document.querySelector('.page > h1')!.textContent).toBe('Merge Authorization');
   });
 });

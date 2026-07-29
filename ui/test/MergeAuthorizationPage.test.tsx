@@ -5,24 +5,27 @@ import MergeAuthorizationPage from '../src/admin/pages/MergeAuthorizationPage';
 import { answerConfirm } from './confirmDialog';
 import { type FetchMock, installFetchMock, jsonResponse } from './mockFetch';
 
-// Behaviour of the port of authorization.js: load the available roles plus the granted ones, toggle,
-// save, cancel-with-confirm, revert-to-default and the revisions list.
+// The page is react-sbb-polarion's AuthorizationSettings, which has its own suite there - toggling,
+// saving, the confirmations, the revision table. What is diff-tool's own, and therefore what is tested
+// here, is the wiring: the feature name the service reads and writes, that the roles come from generic's
+// /roles endpoint, the sorted checkbox order this page adds, and the Quick Help text.
 
 const origUrl = window.location.pathname + window.location.search;
+const SCOPE = 'project/elibrary/';
 
-const ROLES = { globalRoles: ['developer', 'admin'], projectRoles: ['project_admin'] };
-const GRANTED = { globalRoles: ['admin'], projectRoles: [], bundleTimestamp: '2026-07-01 10:00' };
-const INFO = { version: { bundleBuildTimestamp: '2026-07-01 10:00' } };
+// Deliberately unsorted, with a role in each list that sorts before the first: ISecurityService returns
+// unordered collections, so the page sorts them.
+const ROLES = { globalRoles: ['developer', 'admin', 'user'], projectRoles: ['reviewer', 'lead'] };
+const GRANTED = { globalRoles: ['admin'], projectRoles: [] };
 
 function routes(overrides: Parameters<typeof installFetchMock>[0] = []) {
   return [
     ...overrides,
     { method: 'GET', match: /\/roles\?/, json: ROLES },
-    { method: 'GET', match: /\/extension\/info$/, json: INFO },
-    { method: 'GET', match: /\/names\/Default\/content/, json: GRANTED },
-    { method: 'GET', match: /\/default-content$/, json: { globalRoles: ['admin'], projectRoles: [] } },
+    { method: 'GET', match: /\/settings\/authorization\/names\/Default\/content/, json: GRANTED },
+    { method: 'GET', match: /\/settings\/authorization\/default-content$/, json: { globalRoles: ['admin'] } },
     { method: 'GET', match: /\/revisions\?/, json: [{ name: '1234', date: '2026-07-01', author: 'me' }] },
-    { method: 'PUT', match: /\/names\/Default\/content/, json: {} },
+    { method: 'PUT', match: /\/settings\/authorization\/names\/Default\/content/, json: {} },
   ];
 }
 
@@ -39,20 +42,31 @@ function Page() {
 async function renderPage(fetchMock: FetchMock = installFetchMock(routes())) {
   render(<Page />);
   await vi.waitFor(() =>
-    expect(document.querySelectorAll('.role-group input[type=checkbox]').length).toBeGreaterThan(0),
+    expect(document.querySelectorAll('.roles-list input[type=checkbox]').length).toBeGreaterThan(0),
   );
   return fetchMock;
 }
 
-function checkboxFor(role: string): HTMLInputElement {
-  const label = Array.from(document.querySelectorAll('.role-group label')).find((element) =>
-    element.textContent?.trim().startsWith(role),
+const roleLabels = (groupIndex: number) =>
+  Array.from(document.querySelectorAll('.roles-group')[groupIndex].querySelectorAll('.roles-list li')).map((li) =>
+    li.textContent?.trim(),
   );
-  return label!.querySelector('input[type=checkbox]') as HTMLInputElement;
+
+function checkboxFor(role: string): HTMLInputElement {
+  const item = Array.from(document.querySelectorAll('.roles-list li')).find(
+    (element) => element.textContent?.trim() === role,
+  );
+  if (!item) {
+    throw new Error(`no checkbox for role "${role}"`);
+  }
+  return item.querySelector('input[type=checkbox]') as HTMLInputElement;
 }
 
+const toolbarButton = (index: number) =>
+  Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[index];
+
 beforeEach(() => {
-  window.history.replaceState({}, '', '?feature=merge-authorization&embedded=true&scope=project/elibrary/');
+  window.history.replaceState({}, '', `?feature=merge-authorization&embedded=true&scope=${encodeURIComponent(SCOPE)}`);
 });
 
 afterEach(() => {
@@ -63,222 +77,97 @@ afterEach(() => {
 });
 
 describe('MergeAuthorizationPage', () => {
-  it('lists every available role, sorted, with only the granted ones checked', async () => {
-    await renderPage();
-
-    // Sorted because the server reads project roles out of an unordered Set.
-    const globalLabels = Array.from(document.querySelectorAll('.role-group')[0].querySelectorAll('label')).map(
-      (label) => label.textContent?.trim(),
-    );
-    expect(globalLabels).toEqual(['admin', 'developer']);
-    expect(checkboxFor('admin').checked).toBe(true);
-    expect(checkboxFor('developer').checked).toBe(false);
-  });
-
-  it('requests the roles for the page scope', async () => {
+  it("reads the roles from generic's endpoint for the current scope", async () => {
     const fetchMock = await renderPage();
 
-    const rolesCall = fetchMock.mock.calls.find(([url]) => String(url).includes('/roles?'));
-    expect(String(rolesCall![0])).toContain('scope=project%2Felibrary%2F');
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).endsWith(`/roles?scope=${encodeURIComponent(SCOPE)}`)),
+    ).toBe(true);
   });
 
-  it('shows an empty-state message when the scope has no project roles', async () => {
-    await renderPage(
-      installFetchMock(
-        routes([{ method: 'GET', match: /\/roles\?/, json: { globalRoles: ['admin'], projectRoles: [] } }]),
-      ),
-    );
+  it('sorts both role groups, which arrive unordered', async () => {
+    await renderPage();
 
-    expect(document.querySelectorAll('.role-group')[1].textContent).toContain('No project roles in this scope');
+    expect(roleLabels(0)).toEqual(['admin', 'developer', 'user']);
+    expect(roleLabels(1)).toEqual(['lead', 'reviewer']);
   });
 
-  it('saves the checked roles', async () => {
+  it('shows which roles are granted', async () => {
+    await renderPage();
+
+    expect(checkboxFor('admin').checked).toBe(true);
+    expect(checkboxFor('developer').checked).toBe(false);
+    expect(checkboxFor('lead').checked).toBe(false);
+  });
+
+  it('saves the granted roles under the authorization setting', async () => {
     const fetchMock = await renderPage();
 
     checkboxFor('developer').click();
-    document.querySelector<HTMLButtonElement>('.actions-pane button')!.click();
+    checkboxFor('lead').click();
+    toolbarButton(0).click();
 
     await vi.waitFor(() => {
       const put = fetchMock.mock.calls.find(([, init]) => init?.method === 'PUT');
       expect(put).toBeDefined();
+      // The feature name is this extension's contribution; the payload shape is the component's.
+      expect(String(put![0])).toContain('/settings/authorization/names/Default/content');
       expect(JSON.parse(String(put![1]!.body))).toEqual({
         globalRoles: ['admin', 'developer'],
-        projectRoles: [],
+        projectRoles: ['lead'],
       });
     });
+    await vi.waitFor(() => expect(document.body.textContent).toContain('successfully saved'));
   });
 
-  it('unchecking removes a role from the saved set', async () => {
+  it('loads the defaults on Default without persisting them', async () => {
     const fetchMock = await renderPage();
+    checkboxFor('developer').click();
 
-    checkboxFor('admin').click();
-    document.querySelector<HTMLButtonElement>('.actions-pane button')!.click();
-
-    await vi.waitFor(() => {
-      const put = fetchMock.mock.calls.find(([, init]) => init?.method === 'PUT');
-      expect(JSON.parse(String(put![1]!.body)).globalRoles).toEqual([]);
-    });
-  });
-
-  it('reports a failed save instead of silently losing it', async () => {
-    const fetchMock = installFetchMock(
-      routes([{ method: 'PUT', match: /\/content/, respond: () => jsonResponse({ errorMessage: 'read only' }, 403) }]),
-    );
-    await renderPage(fetchMock);
-
-    document.querySelector<HTMLButtonElement>('.actions-pane button')!.click();
-
-    await vi.waitFor(() => expect(document.body.textContent).toContain('read only'));
-  });
-
-  it('re-reads the settings on Cancel, but only after confirmation', async () => {
-    const fetchMock = await renderPage();
-    const contentCalls = () => fetchMock.mock.calls.filter(([url]) => String(url).includes('/content')).length;
-    const before = contentCalls();
-    const cancel = Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[1];
-
-    cancel.click();
-    await answerConfirm('Cancel');
-    expect(contentCalls()).toBe(before);
-
-    cancel.click();
-    await answerConfirm('OK');
-    await vi.waitFor(() => expect(contentCalls()).toBeGreaterThan(before));
-  });
-
-  it('loads the default values on Default without persisting them', async () => {
-    const fetchMock = await renderPage();
-
-    Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[2].click();
+    toolbarButton(2).click();
     await answerConfirm('OK');
 
     await vi.waitFor(() =>
       expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/default-content'))).toBe(true),
     );
-    // Same contract as the legacy page: Default fills the form, Save persists it.
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'PUT')).toBe(false);
+    await vi.waitFor(() => expect(checkboxFor('developer').checked).toBe(false));
   });
 
-  it('does not load the defaults when the Default confirmation is declined', async () => {
-    const fetchMock = await renderPage();
-
-    // answerConfirm waits for the dialog, so reaching it at all proves the page asked first.
-    Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[2].click();
-    await answerConfirm('Cancel');
-
-    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/default-content'))).toBe(false);
-  });
-
-  it('toggles the revisions table', async () => {
-    await renderPage();
-    const revisions = Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[3];
-
-    revisions.click();
-    await vi.waitFor(() => expect(document.body.textContent).toContain('1 234'));
-
-    revisions.click();
-    await vi.waitFor(() => expect(document.body.textContent).not.toContain('1 234'));
-  });
-
-  it('loads a revision into the form when its revert arrow is pressed, without persisting it', async () => {
-    const fetchMock = await renderPage();
-    Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[3].click();
-    await vi.waitFor(() => expect(document.querySelector('.revert-to-revision-button')).not.toBeNull());
-
-    document.querySelector<HTMLButtonElement>('.revert-to-revision-button')!.click();
-
-    await vi.waitFor(() =>
-      expect(fetchMock.mock.calls.some(([url]) => String(url).includes('revision=1234'))).toBe(true),
-    );
-    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'PUT')).toBe(false);
-  });
-
-  it('reports a failure while loading a revision', async () => {
-    const fetchMock = installFetchMock(
-      routes([{ method: 'GET', match: /revision=1234/, respond: () => jsonResponse({ errorMessage: 'gone' }, 404) }]),
-    );
-    await renderPage(fetchMock);
-    Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[3].click();
-    await vi.waitFor(() => expect(document.querySelector('.revert-to-revision-button')).not.toBeNull());
-
-    document.querySelector<HTMLButtonElement>('.revert-to-revision-button')!.click();
-
-    await vi.waitFor(() => expect(document.body.textContent).toContain('gone'));
-  });
-
-  it('reports a failure while loading the default values', async () => {
-    const fetchMock = installFetchMock(
-      routes([
-        {
-          method: 'GET',
-          match: /\/default-content$/,
-          respond: () => jsonResponse({ errorMessage: 'no defaults' }, 500),
-        },
-      ]),
-    );
-    await renderPage(fetchMock);
-
-    Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[2].click();
-    await answerConfirm('OK');
-
-    await vi.waitFor(() => expect(document.body.textContent).toContain('no defaults'));
-  });
-
-  it('reports a failure while re-reading on Cancel', async () => {
-    const fetchMock = await renderPage();
-    // Re-point content reads at a failure only now, so the initial load succeeded.
-    installFetchMock(
-      routes([
-        {
-          method: 'GET',
-          match: /\/names\/Default\/content/,
-          respond: () => jsonResponse({ errorMessage: 'vanished' }, 404),
-        },
-      ]),
-    );
-
-    Array.from(document.querySelectorAll<HTMLButtonElement>('.actions-pane button'))[1].click();
-    await answerConfirm('OK');
-
-    await vi.waitFor(() => expect(document.querySelector('.alert-error')!.textContent).toContain('vanished'));
-    expect(fetchMock).toBeDefined();
-  });
-
-  it('treats a settings model with no role arrays as nothing granted', async () => {
-    await renderPage(installFetchMock(routes([{ method: 'GET', match: /\/names\/Default\/content/, json: {} }])));
-
-    expect(checkboxFor('admin').checked).toBe(false);
-    expect(checkboxFor('developer').checked).toBe(false);
-  });
-
-  it('surfaces a load failure', async () => {
-    installFetchMock([
-      { method: 'GET', match: /\/roles\?/, respond: () => jsonResponse({ errorMessage: 'no permission' }, 403) },
-      { method: 'GET', match: /\/extension\/info$/, json: INFO },
-    ]);
+  it('reports a failure to load', async () => {
+    // Rendered directly rather than through renderPage(): with the roles unavailable there are no
+    // checkboxes to wait for, which is the whole point of the case.
+    installFetchMock(routes([{ method: 'GET', match: /\/roles\?/, respond: () => jsonResponse({}, 500) }]));
     render(<Page />);
 
     await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
+    expect(document.querySelectorAll('.roles-list input[type=checkbox]')).toHaveLength(0);
   });
 
-  it('warns when the stored settings came from a different build of the extension', async () => {
-    installFetchMock(
-      routes([
-        {
-          method: 'GET',
-          match: /\/names\/Default\/content/,
-          json: { ...GRANTED, bundleTimestamp: '2020-01-01 00:00' },
-        },
-      ]),
-    );
-    render(<Page />);
-
-    await vi.waitFor(() => expect(document.querySelector('.alert-warning')).not.toBeNull());
-  });
-
-  it('does not warn when the stored settings match the deployed build', async () => {
+  it('renders the merge-specific Quick Help', async () => {
     await renderPage();
 
+    const quickHelp = document.querySelector('.quick-help')!.textContent ?? '';
+    expect(quickHelp).toContain('The diffing functionality is unrestricted');
+    expect(quickHelp).toContain('only users with the global admin role have permission to merge');
+  });
+
+  it('no longer warns that the setting was written by another bundle', async () => {
+    // Dropped on purpose: a role setting has no schema that can go stale, and the timestamp is stamped at
+    // save time, so the banner fired after every plugin upgrade. Nothing reads /extension/info now.
+    const fetchMock = await renderPage(
+      installFetchMock(
+        routes([
+          {
+            method: 'GET',
+            match: /\/settings\/authorization\/names\/Default\/content/,
+            json: { ...GRANTED, bundleTimestamp: '2020-01-01 00:00' },
+          },
+        ]),
+      ),
+    );
+
     expect(document.querySelector('.alert-warning')).toBeNull();
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/extension/info'))).toBe(false);
   });
 });

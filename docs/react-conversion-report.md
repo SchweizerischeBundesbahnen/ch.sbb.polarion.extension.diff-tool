@@ -182,10 +182,30 @@ migrate across.
 **The JS→TS sweep of the viewer** (~10 d). Do it file by file, keeping `e2e/` green, moving each file
 into `coverage.include` as it converts.
 
-**A `MultiSearchableSelect` for RSP.** `src/admin/components/MultiSearchableSelect.tsx` was built locally
-over RSP's `createSearchableSelect(el, { multiselect: true })` because RSP has no multiselect component
-and its `.d.ts` declares only `selectValue`/`destroy`. It is the archetypal promotion candidate: open an
-RSP issue, widen the typings, and swap the import.
+## What has since moved into the library
+
+Two things this conversion built locally have been promoted into react-sbb-polarion and are now imported
+rather than owned here. Both were predicted as promotion candidates; the entries are kept so the next
+extension does not rebuild them.
+
+**The multi-select combobox.** `src/admin/components/MultiSearchableSelect.tsx` wrapped
+`createSearchableSelect(el, { multiselect: true })` because RSP's `SearchableSelect` was single-select
+only. RSP 0.1.0 makes `multiple` a prop and gives `SelectOption` an `iconURL`, so the three Diff
+Configurations combos import it directly. No reference screenshot moved on the swap.
+
+**The whole Merge Authorization page.** RSP 0.0.11 added `AuthorizationSettings` - the roles of the
+current scope as checkboxes over one named setting, with the standard toolbar and the revision table -
+because three extensions had written it out. `MergeAuthorizationPage.tsx` is now a thin wrapper supplying
+the title, the setting name and the Quick Help; `RoleCheckboxGroup.tsx` and its CSS are gone. The roles
+come from generic's own `/roles` endpoint (15.10.0), which `DiffToolRestApplication` registers, replacing
+this extension's `RolesUtils`, `RolesModel` and `/roles` controller method - the generic implementation
+resolves the scope identically. Two things stay local: the sort that gives the checkboxes a stable order
+(`ISecurityService` returns unordered collections and neither the endpoint nor the component sorts), and
+`.authorization-page h2` in `App.css`, since RSP leaves those group headings for the app to size.
+
+The page lost its "saved by a different version of the extension" banner with the move, deliberately: a
+role setting is two lists of role names, so no schema can go stale, and because the timestamp is stamped
+at save time the banner appeared after every plugin upgrade and could only be dismissed by saving again.
 
 ## Verification
 

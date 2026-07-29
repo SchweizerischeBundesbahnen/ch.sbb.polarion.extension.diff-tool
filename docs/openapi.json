@@ -1067,10 +1067,10 @@
     },
     "/api/roles": {
       "get": {
-        "operationId": "getRoles",
+        "operationId": "getRoles_1",
         "parameters": [
           {
-            "description": "Scope to read the project roles for, e.g. 'project/elibrary/'",
+            "description": "Scope, e.g. project/<projectId>/ (empty for global scope)",
             "in": "query",
             "name": "scope",
             "schema": {
@@ -1083,16 +1083,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RolesModel"
+                  "$ref": "#/components/schemas/RolesInfo"
                 }
               }
             },
-            "description": "Global roles, plus the project roles of the scope's project if it has one"
+            "description": "Successfully retrieved the available roles"
           }
         },
-        "summary": "Gets the roles which can be authorized to merge, for the given scope",
+        "summary": "Get the global and project roles available in the specified scope",
         "tags": [
-          "Utility API"
+          "Roles"
         ]
       }
     },
@@ -1461,6 +1461,37 @@
         "summary": "Returns version of Polarion's extension",
         "tags": [
           "Extension Information"
+        ]
+      }
+    },
+    "/internal/roles": {
+      "get": {
+        "operationId": "getRoles",
+        "parameters": [
+          {
+            "description": "Scope, e.g. project/<projectId>/ (empty for global scope)",
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolesInfo"
+                }
+              }
+            },
+            "description": "Successfully retrieved the available roles"
+          }
+        },
+        "summary": "Get the global and project roles available in the specified scope",
+        "tags": [
+          "Roles"
         ]
       }
     }
@@ -2659,26 +2690,30 @@
         },
         "type": "object"
       },
-      "RolesModel": {
-        "description": "Roles available for selection when authorizing merge operations",
+      "RolesInfo": {
+        "description": "Roles available to grant in a given scope",
         "properties": {
           "globalRoles": {
-            "description": "All global roles defined in this Polarion instance",
+            "description": "Roles defined for the whole repository",
             "items": {
-              "description": "All global roles defined in this Polarion instance",
+              "description": "Roles defined for the whole repository",
               "type": "string"
             },
             "type": "array"
           },
           "projectRoles": {
-            "description": "Roles defined for the project of the requested scope; empty for a global scope",
+            "description": "Roles defined for the project of the scope; empty in global scope",
             "items": {
-              "description": "Roles defined for the project of the requested scope; empty for a global scope",
+              "description": "Roles defined for the project of the scope; empty in global scope",
               "type": "string"
             },
             "type": "array"
           }
         },
+        "required": [
+          "globalRoles",
+          "projectRoles"
+        ],
         "type": "object"
       },
       "SettingName": {
