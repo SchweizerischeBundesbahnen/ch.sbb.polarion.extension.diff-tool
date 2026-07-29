@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>15.10.0</version>
+        <version>15.10.1</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
@@ -298,6 +298,13 @@
                     <resourcePackages>
                         <package>ch.sbb.polarion.extension.generic.rest.controller.info</package>
                         <package>ch.sbb.polarion.extension.generic.rest.controller.settings</package>
+                        <!-- /roles is served because DiffToolRestApplication registers generic's
+                             controllers for it (the Merge Authorization page reads it), so it belongs in
+                             this extension's spec like the other generic endpoints above. Only the /api
+                             half is emitted: generic's RolesInternalController is @Hidden as of 15.10.1,
+                             like every other internal controller. Needs that version - on 15.10.0 this
+                             also published /internal/roles and split the operationId into getRoles_1. -->
+                        <package>ch.sbb.polarion.extension.generic.rest.controller.roles</package>
                         <package>ch.sbb.polarion.extension.generic.rest.model</package>
                         <package>ch.sbb.polarion.extension.diff_tool.rest.controller</package>
                         <package>ch.sbb.polarion.extension.diff_tool.rest.model</package>

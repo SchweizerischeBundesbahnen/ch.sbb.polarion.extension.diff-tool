@@ -207,16 +207,17 @@ The page lost its "saved by a different version of the extension" banner with th
 role setting is two lists of role names, so no schema can go stale, and because the timestamp is stamped
 at save time the banner appeared after every plugin upgrade and could only be dismissed by saving again.
 
-**`/api/roles` is undocumented in `docs/openapi.json`, and that is generic's to fix.** Every other
-generic endpoint the extension exposes (`/api/version`, `/api/readme`, ...) is in the spec because its
-package is scanned *and* its `/internal` twin carries swagger's `@Hidden` - which is how the spec stays
-public-surface-only, with none of diff-tool's own `@Hidden` internal controllers in it either. Generic
-15.10.0's `RolesInternalController` is the one internal controller in the framework without `@Hidden`
-(`ExtensionInfoInternalController` and `NamedSettingsInternalController` both have it), so scanning its
-package emits `/internal/roles` too - and, because `RolesApiController` overrides `getRoles`, gives the
-two operations the same default operationId, leaving one of them as `getRoles_1`. Not worth advertising a
-session-only endpoint in the public spec for, so the package is not scanned. Add it once generic annotates
-the controller.
+**`/api/roles` is documented, and that needs generic >= 15.10.1.** Like every other generic endpoint the
+extension exposes (`/api/version`, `/api/readme`, ...), it reaches `docs/openapi.json` because its package
+is listed in the swagger plugin's `resourcePackages` *and* its `/internal` twin carries swagger's
+`@Hidden` - which is how the spec stays public-surface-only, with none of diff-tool's own internal
+controllers in it either. Swagger inherits the `@GET`/`@Path`/`@Operation` method annotations and the
+class `@Tag` from that hidden superclass, so the `/api` half is fully described on its own.
+
+15.10.0 shipped `RolesInternalController` without the `@Hidden` its siblings have, which published
+`/internal/roles` alongside `/api/roles` and - since `RolesApiController` overrides `getRoles` - made
+swagger break the resulting operationId tie by renaming one to `getRoles_1`. Fixed in 15.10.1. Downgrading
+the parent below that would quietly bring both back.
 
 ## Verification
 
