@@ -5,6 +5,7 @@ import PanelShell from './PanelShell';
 import compareIcon from './compare.svg';
 import { openDocumentsDiff } from './openDocumentsDiff';
 import type { PanelProps } from './panelProps';
+import { rememberedIfOffered, useAdoptRemembered, useRemembering } from './rememberedSelection';
 import useRemoteList, { firstError, firstLoading } from './useRemoteList';
 
 interface SpaceInfo {
@@ -25,6 +26,15 @@ interface RevisionInfo {
 /** The HEAD entry the revision list always starts with; `""` means "latest" to the viewer. */
 const HEAD: RevisionInfo = { name: '', baselineName: null };
 
+// The ids of the legacy `<select>`s, which are also the cookie names the remembered selections are kept
+// under (see rememberedSelection.ts) - so they must keep matching the ids rendered below.
+const PROJECT_SELECT = 'comparison-project-selector';
+const SPACE_SELECT = 'comparison-space-selector';
+const DOCUMENT_SELECT = 'document-selector';
+const REVISION_SELECT = 'revision-selector';
+const LINK_ROLE_SELECT = 'comparison-link-role-selector';
+const CONFIG_SELECT = 'comparison-config-selector';
+
 const encode = (segment: string) => encodeURIComponent(segment);
 
 /**
@@ -34,15 +44,20 @@ const encode = (segment: string) => encodeURIComponent(segment);
  * The ids and classes of the legacy fragment are kept, so the panel CSS (diff-tool.css, injected into
  * the shadow root) applies unchanged and anyone who knew the old DOM still recognises this one.
  *
- * Three deliberate departures from the legacy behaviour, all noted at their site below: the Compare
- * button now requires a target document, the configuration select starts on the first configuration
- * instead of empty, and selections are no longer persisted across document opens.
+ * Dropdown choices are remembered across document opens, as they were before - see
+ * rememberedSelection.ts for why that needs code here now.
+ *
+ * Two deliberate departures from the legacy behaviour, both noted at their site below: the Compare button
+ * now requires a target document, and the configuration select falls back to the first configuration
+ * rather than to empty.
  */
 export default function DiffToolPanel({ props }: { props: PanelProps }) {
   const [compareWithSame, setCompareWithSame] = useState(false);
   const [compareAsBranched, setCompareAsBranched] = useState(false);
 
-  const [projectId, setProjectId] = useState('');
+  // Seeded from the cookie the legacy panel wrote, where the options are already known at mount.
+  const projectIds = useMemo(() => props.projects.map((project) => project.id), [props.projects]);
+  const [projectId, setProjectId] = useState(() => rememberedIfOffered(PROJECT_SELECT, projectIds));
   const [spaceId, setSpaceId] = useState('');
   const [documentId, setDocumentId] = useState('');
 
@@ -51,11 +66,14 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
   const [listRevision, setListRevision] = useState('');
   const [onlyBaselines, setOnlyBaselines] = useState(false);
 
-  const [linkRole, setLinkRole] = useState('');
-  // DEPARTURE: the legacy fragment marked the first configuration `selected`, then SearchableDropdown's
-  // restoreSelection() cleared it again, so the panel opened with none chosen and could build a
-  // `&config=` URL with an empty value. Honour what the server meant and preselect the first.
-  const [config, setConfig] = useState(props.configurations[0] ?? '');
+  const linkRoleIds = useMemo(() => props.linkRoles.map((role) => role.id), [props.linkRoles]);
+  const [linkRole, setLinkRole] = useState(() => rememberedIfOffered(LINK_ROLE_SELECT, linkRoleIds));
+  // The remembered configuration wins; otherwise the first one, which is what the server marks
+  // `selected`. (The legacy restoreSelection() cleared that mark when nothing was remembered, so the
+  // panel could open with none chosen and build a `&config=` URL with an empty value.)
+  const [config, setConfig] = useState(
+    () => rememberedIfOffered(CONFIG_SELECT, props.configurations) || (props.configurations[0] ?? ''),
+  );
 
   const [useFilter, setUseFilter] = useState(false);
   const [filterType, setFilterType] = useState<'include' | 'exclude'>('exclude');
@@ -91,10 +109,25 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
     errorMessage: 'Error occurred loading revisions',
   });
 
+  // A user's choice is remembered; the cascade resets below deliberately are not (see useRemembering).
+  const chooseProject = useRemembering(PROJECT_SELECT, setProjectId);
+  const chooseSpace = useRemembering(SPACE_SELECT, setSpaceId);
+  const chooseDocument = useRemembering(DOCUMENT_SELECT, setDocumentId);
+  const chooseRevision = useRemembering(REVISION_SELECT, setListRevision);
+  const chooseLinkRole = useRemembering(LINK_ROLE_SELECT, setLinkRole);
+  const chooseConfig = useRemembering(CONFIG_SELECT, setConfig);
+
   // Selecting a project invalidates the space below it, and a space invalidates the document, exactly as
   // the legacy projectChanged()/spaceChanged() cleared the selects further down.
   useEffect(() => setSpaceId(''), [projectId]);
   useEffect(() => setDocumentId(''), [projectId, spaceId]);
+
+  // ...and once the dependent list has loaded, the remembered choice is re-applied - the legacy
+  // spaceDropdown.refresh() / documentDropdown.refresh() did this, since refresh() restores too.
+  const spaceIds = useMemo(() => spaces.items.map((space) => space.id), [spaces.items]);
+  const documentIds = useMemo(() => documents.items.map((document) => document.id), [documents.items]);
+  useAdoptRemembered(SPACE_SELECT, spaceIds, setSpaceId);
+  useAdoptRemembered(DOCUMENT_SELECT, documentIds, setDocumentId);
 
   const revisionOptions = useMemo(() => [HEAD, ...revisions.items], [revisions.items]);
   // "show only baselines" hid the non-baseline options (HEAD included) and re-selected the first one
@@ -104,7 +137,12 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
     () => (onlyBaselines ? revisionOptions.filter((revision) => revision.baselineName) : revisionOptions),
     [revisionOptions, onlyBaselines],
   );
-  useEffect(() => setListRevision(visibleRevisions[0]?.name ?? ''), [visibleRevisions]);
+  const visibleRevisionIds = useMemo(() => visibleRevisions.map((revision) => revision.name), [visibleRevisions]);
+  useEffect(() => {
+    // The remembered revision wins when it is still on the (possibly baseline-filtered) list, matching
+    // the legacy order: baselineSelected() picked the first visible one, then refresh() restored.
+    setListRevision(rememberedIfOffered(REVISION_SELECT, visibleRevisionIds) || (visibleRevisions[0]?.name ?? ''));
+  }, [visibleRevisions, visibleRevisionIds]);
 
   const busy = firstLoading(spaces, documents, revisions);
   const loadError = firstError(spaces, documents, revisions);
@@ -167,9 +205,9 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
           Project:
         </label>
         <SearchableSelect
-          id="comparison-project-selector"
+          id={PROJECT_SELECT}
           value={projectId}
-          onChange={setProjectId}
+          onChange={chooseProject}
           options={props.projects}
           placeholder="Select Project..."
           allowEmpty
@@ -180,9 +218,9 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
           Space:
         </label>
         <SearchableSelect
-          id="comparison-space-selector"
+          id={SPACE_SELECT}
           value={spaceId}
-          onChange={setSpaceId}
+          onChange={chooseSpace}
           options={spaces.items}
           placeholder="Select Space..."
           allowEmpty
@@ -193,9 +231,9 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
           Document:
         </label>
         <SearchableSelect
-          id="document-selector"
+          id={DOCUMENT_SELECT}
           value={documentId}
-          onChange={setDocumentId}
+          onChange={chooseDocument}
           options={documents.items.map((document) => ({ id: document.id, name: document.title }))}
           placeholder="Select Document..."
           allowEmpty
@@ -240,9 +278,9 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
           ) : (
             <div id="select-revision-list-container">
               <SearchableSelect
-                id="revision-selector"
+                id={REVISION_SELECT}
                 value={listRevision}
-                onChange={setListRevision}
+                onChange={chooseRevision}
                 options={visibleRevisions.map((revision) => ({
                   id: revision.name,
                   name: revision.baselineName ? `${revision.name} | ${revision.baselineName}` : revision.name || 'HEAD',
@@ -271,9 +309,9 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
           Link role:
         </label>
         <SearchableSelect
-          id="comparison-link-role-selector"
+          id={LINK_ROLE_SELECT}
           value={linkRole}
-          onChange={setLinkRole}
+          onChange={chooseLinkRole}
           options={props.linkRoles}
           placeholder="Select Link Role..."
           allowEmpty
@@ -285,9 +323,9 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
           Configuration:
         </label>
         <SearchableSelect
-          id="comparison-config-selector"
+          id={CONFIG_SELECT}
           value={config}
-          onChange={setConfig}
+          onChange={chooseConfig}
           options={props.configurations.map((name) => ({ id: name, name: name }))}
           placeholder="Select Configuration..."
         />

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createdDocumentLink } from '../src/formext/CopyToolPanel';
 import { mountCopyToolPanel } from '../src/formext/mountCopyToolPanel';
-import { $, clickCheckbox, mountPanel, selectOption, waitForPanel } from './formextHelpers';
+import { $, clickCheckbox, forgetRememberedSelections, mountPanel, selectOption, waitForPanel } from './formextHelpers';
 import { type FetchMock, type Route, installFetchMock, jsonResponse } from './mockFetch';
 
 // Behaviour of the port of CopyTool.js + the copy-tool.html fragment. Mounted the way Polarion mounts it,
@@ -38,6 +38,20 @@ async function open(fetchMock: FetchMock = installFetchMock(routes())) {
   return { shadow: panel.shadow, fetchMock: fetchMock };
 }
 
+/** Unmounts and mounts again, as Polarion does when the next document's properties are opened. */
+async function reopen() {
+  panel!.unmount();
+  installFetchMock(routes());
+  panel = mountPanel(mountCopyToolPanel, 'copy-tool-panel', {
+    linkRoles: [
+      { id: '', name: 'none' },
+      { id: 'relates_to', name: 'relates to / relates to' },
+    ],
+  });
+  await waitForPanel(panel, 'create-document');
+  return panel.shadow;
+}
+
 /** Fills in everything the Create button requires. */
 async function fillForm(shadow: ShadowRoot) {
   await selectOption(shadow, 'copy-project-selector', 'drivepilot');
@@ -52,6 +66,7 @@ const createButton = (shadow: ShadowRoot) => $<HTMLButtonElement>(shadow, '#crea
 afterEach(() => {
   panel?.unmount();
   panel = null;
+  forgetRememberedSelections();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -291,5 +306,36 @@ describe('CopyToolPanel', () => {
         'Error occurred loading project [drivepilot] diff configuration',
       ),
     );
+  });
+});
+
+// See src/formext/rememberedSelection.ts: the legacy panel restored every dropdown from a cookie while
+// building the view, which is what made copying many documents into the same target project bearable.
+describe('remembered selections', () => {
+  it('brings the whole form back when the panel is opened again', async () => {
+    const { shadow } = await open();
+    await fillForm(shadow);
+    await vi.waitFor(() => expect(createButton(shadow).disabled).toBe(false));
+
+    const reopened = await reopen();
+
+    await vi.waitFor(() => expect($<HTMLSelectElement>(reopened, '#copy-project-selector').value).toBe('drivepilot'));
+    await vi.waitFor(() => expect($<HTMLSelectElement>(reopened, '#copy-space-selector').value).toBe('design'));
+    expect($<HTMLSelectElement>(reopened, '#copy-link-role-selector').value).toBe('relates_to');
+    expect($<HTMLSelectElement>(reopened, '#handle-refs-selector').value).toBe('KEEP');
+    // The configuration list follows the target project, so this one is restored after it reloads.
+    await vi.waitFor(() => expect($<HTMLSelectElement>(reopened, '#copy-config-selector').value).toBe('Target Strict'));
+    // Everything required is filled in again, so the panel is immediately usable.
+    await vi.waitFor(() => expect($<HTMLButtonElement>(reopened, '#create-document').disabled).toBe(false));
+  });
+
+  it('does not remember the copy-comments checkbox, which was never a dropdown', async () => {
+    const { shadow } = await open();
+    clickCheckbox(shadow, 'copy-comments-checkbox');
+    expect($<HTMLInputElement>(shadow, '#copy-comments-checkbox').checked).toBe(true);
+
+    const reopened = await reopen();
+
+    expect($<HTMLInputElement>(reopened, '#copy-comments-checkbox').checked).toBe(false);
   });
 });

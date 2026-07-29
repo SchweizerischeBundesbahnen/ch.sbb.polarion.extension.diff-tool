@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SearchableSelect } from '@grigoriev/react-sbb-polarion';
 import { sendRequest } from '../services/useRemote';
 import PanelShell from './PanelShell';
 import type { PanelProps } from './panelProps';
+import { rememberedIfOffered, useAdoptRemembered, useRemembering } from './rememberedSelection';
 import useRemoteList, { firstError, firstLoading } from './useRemoteList';
 
 interface SpaceInfo {
@@ -27,6 +28,14 @@ interface CreatedLink {
 }
 
 const encode = (segment: string) => encodeURIComponent(segment);
+
+// The ids of the legacy `<select>`s, which double as the cookie names the remembered selections are kept
+// under (see rememberedSelection.ts) - so they must keep matching the ids rendered below.
+const PROJECT_SELECT = 'copy-project-selector';
+const SPACE_SELECT = 'copy-space-selector';
+const LINK_ROLE_SELECT = 'copy-link-role-selector';
+const CONFIG_SELECT = 'copy-config-selector';
+const HANDLE_REFS_SELECT = 'handle-refs-selector';
 
 /**
  * Builds the two halves of the "Document created" link: a readable label and the editor URL. Ported
@@ -53,11 +62,23 @@ export function createdDocumentLink(created: CreatedDocument, basePath: string):
  * `projectChanged()` -> `reloadSettings(targetProject)` chain did.
  */
 export default function CopyToolPanel({ props }: { props: PanelProps }) {
-  const [projectId, setProjectId] = useState('');
+  // Seeded from the cookie the legacy panel wrote, where the options are already known at mount.
+  const projectIds = useMemo(() => props.projects.map((project) => project.id), [props.projects]);
+  const linkRoleIds = useMemo(() => props.linkRoles.map((role) => role.id), [props.linkRoles]);
+  const handleRefsIds = useMemo(
+    () => props.handleReferencesTypes.map((type) => type.id),
+    [props.handleReferencesTypes],
+  );
+
+  const [projectId, setProjectId] = useState(() => rememberedIfOffered(PROJECT_SELECT, projectIds));
   const [spaceId, setSpaceId] = useState('');
-  const [linkRole, setLinkRole] = useState('');
-  const [config, setConfig] = useState(props.configurations[0] ?? '');
-  const [handleReferences, setHandleReferences] = useState('');
+  const [linkRole, setLinkRole] = useState(() => rememberedIfOffered(LINK_ROLE_SELECT, linkRoleIds));
+  const [config, setConfig] = useState(
+    () => rememberedIfOffered(CONFIG_SELECT, props.configurations) || (props.configurations[0] ?? ''),
+  );
+  const [handleReferences, setHandleReferences] = useState(() =>
+    rememberedIfOffered(HANDLE_REFS_SELECT, handleRefsIds),
+  );
   const [copyComments, setCopyComments] = useState(false);
 
   const [creating, setCreating] = useState(false);
@@ -80,11 +101,28 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
   // legacy fragment showed too.
   const configurationNames = projectId ? configurations.items.map((setting) => setting.name) : props.configurations;
 
+  // A user's choice is remembered; the cascade reset below deliberately is not (see useRemembering).
+  const chooseProject = useRemembering(PROJECT_SELECT, setProjectId);
+  const chooseSpace = useRemembering(SPACE_SELECT, setSpaceId);
+  const chooseLinkRole = useRemembering(LINK_ROLE_SELECT, setLinkRole);
+  const chooseConfig = useRemembering(CONFIG_SELECT, setConfig);
+  const chooseHandleReferences = useRemembering(HANDLE_REFS_SELECT, setHandleReferences);
+
   useEffect(() => setSpaceId(''), [projectId]);
-  // Keep the selection only if the new project still offers it; otherwise fall back to its first
-  // configuration, matching what the server preselects for the source project.
+  // ...and once the target project's spaces have loaded, the remembered one is re-applied, as the legacy
+  // spaceDropdown.refresh() did. `_default` is offered by almost every project, so this usually hits.
+  const spaceIds = useMemo(() => spaces.items.map((space) => space.id), [spaces.items]);
+  useAdoptRemembered(SPACE_SELECT, spaceIds, setSpaceId);
+
+  // Keep the selection if the new project still offers it, then prefer the remembered one, then its
+  // first configuration - which is what the server preselects for the source project.
   useEffect(
-    () => setConfig((current) => (configurationNames.includes(current) ? current : (configurationNames[0] ?? ''))),
+    () =>
+      setConfig((current) =>
+        configurationNames.includes(current)
+          ? current
+          : rememberedIfOffered(CONFIG_SELECT, configurationNames) || (configurationNames[0] ?? ''),
+      ),
     [configurationNames],
   );
 
@@ -144,9 +182,9 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
           Project:
         </label>
         <SearchableSelect
-          id="copy-project-selector"
+          id={PROJECT_SELECT}
           value={projectId}
-          onChange={setProjectId}
+          onChange={chooseProject}
           options={props.projects}
           placeholder="Select Project..."
           allowEmpty
@@ -157,9 +195,9 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
           Space:
         </label>
         <SearchableSelect
-          id="copy-space-selector"
+          id={SPACE_SELECT}
           value={spaceId}
-          onChange={setSpaceId}
+          onChange={chooseSpace}
           options={spaces.items}
           placeholder="Select Space..."
           allowEmpty
@@ -173,9 +211,9 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
         {/* No allowEmpty: the server puts a real "none" entry (id "") at the head of this list, and a
             second empty-valued option would shadow it. */}
         <SearchableSelect
-          id="copy-link-role-selector"
+          id={LINK_ROLE_SELECT}
           value={linkRole}
-          onChange={setLinkRole}
+          onChange={chooseLinkRole}
           options={props.linkRoles}
           placeholder="Select Link Role..."
         />
@@ -185,9 +223,9 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
           Configuration:
         </label>
         <SearchableSelect
-          id="copy-config-selector"
+          id={CONFIG_SELECT}
           value={config}
-          onChange={setConfig}
+          onChange={chooseConfig}
           options={configurationNames.map((name) => ({ id: name, name: name }))}
           placeholder="Select Configuration..."
         />
@@ -198,9 +236,9 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
           Referenced workitems:
         </label>
         <SearchableSelect
-          id="handle-refs-selector"
+          id={HANDLE_REFS_SELECT}
           value={handleReferences}
-          onChange={setHandleReferences}
+          onChange={chooseHandleReferences}
           options={props.handleReferencesTypes.map((type) => ({ id: type.id, name: type.title }))}
           placeholder="Select Behaviour..."
           allowEmpty

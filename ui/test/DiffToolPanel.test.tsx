@@ -1,7 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mountDiffToolPanel } from '../src/formext/mountDiffToolPanel';
 import { readPanelProps } from '../src/formext/panelProps';
-import { $, PANEL_PROPS, clickCheckbox, mountPanel, selectOption, waitForPanel } from './formextHelpers';
+import {
+  $,
+  PANEL_PROPS,
+  clickCheckbox,
+  forgetRememberedSelections,
+  mountPanel,
+  selectOption,
+  waitForPanel,
+} from './formextHelpers';
 import { type FetchMock, type Route, installFetchMock, jsonResponse } from './mockFetch';
 
 // Behaviour of the port of DiffTool.js + the diff-tool.html fragment. Mounted exactly as Polarion mounts
@@ -16,6 +24,7 @@ const DOCUMENTS = [
   { id: 'Design Spec', title: 'Design Specification' },
   { id: 'Test Plan', title: 'Test Plan' },
 ];
+const OTHER_SPACE = { id: 'other', name: 'Other' };
 const REVISIONS = [
   { name: '300', baselineName: 'Release 2' },
   { name: '200', baselineName: null },
@@ -39,6 +48,14 @@ async function open(fetchMock: FetchMock = installFetchMock(routes())) {
   return { shadow: panel.shadow, fetchMock: fetchMock };
 }
 
+/** Unmounts and mounts again, as Polarion does when the next document's properties are opened. */
+async function reopen(fetchMock: FetchMock = installFetchMock(routes())) {
+  panel!.unmount();
+  panel = mountPanel(mountDiffToolPanel, 'diff-tool-panel');
+  await waitForPanel(panel, 'compare-documents');
+  return { shadow: panel.shadow, fetchMock: fetchMock };
+}
+
 /** Walks the target selection down to a document in another project. */
 async function pickTargetDocument(shadow: ShadowRoot) {
   await selectOption(shadow, 'comparison-project-selector', 'drivepilot');
@@ -51,6 +68,7 @@ const compareButton = (shadow: ShadowRoot) => $<HTMLButtonElement>(shadow, '#com
 afterEach(() => {
   panel?.unmount();
   panel = null;
+  forgetRememberedSelections();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   localStorage.clear();
@@ -154,8 +172,10 @@ describe('DiffToolPanel', () => {
     );
   });
 
-  it('clears the space and document when the project changes', async () => {
-    const { shadow } = await open();
+  it('clears the space and document when the new project does not offer them', async () => {
+    const { shadow } = await open(
+      installFetchMock(routes([{ method: 'GET', match: /\/projects\/elibrary\/spaces$/, json: [OTHER_SPACE] }])),
+    );
     await pickTargetDocument(shadow);
 
     await selectOption(shadow, 'comparison-project-selector', 'elibrary');
@@ -344,5 +364,72 @@ describe('DiffToolPanel', () => {
 
     release(jsonResponse(SPACES));
     await vi.waitFor(() => expect(shadow.querySelector('.in-progress-overlay.show')).toBeNull());
+  });
+});
+
+// The legacy panels remembered every dropdown choice in a cookie (the generic SearchableDropdown's
+// _saveSelection) and restored it while building the view, so comparing many documents against the same
+// target project and configuration meant picking them once. See src/formext/rememberedSelection.ts.
+describe('remembered selections', () => {
+  it('brings the whole target selection back when the panel is opened again', async () => {
+    const { shadow } = await open();
+    await pickTargetDocument(shadow);
+    await selectOption(shadow, 'comparison-link-role-selector', 'relates_to');
+    await selectOption(shadow, 'comparison-config-selector', 'Strict');
+
+    const { shadow: reopened } = await reopen();
+
+    // Project, link role and configuration are restored at mount; the space and document only once
+    // their lists have loaded, which is the cascade the legacy refresh() calls drove.
+    await vi.waitFor(() =>
+      expect($<HTMLSelectElement>(reopened, '#comparison-project-selector').value).toBe('drivepilot'),
+    );
+    await vi.waitFor(() => expect($<HTMLSelectElement>(reopened, '#comparison-space-selector').value).toBe('design'));
+    await vi.waitFor(() => expect($<HTMLSelectElement>(reopened, '#document-selector').value).toBe('Design Spec'));
+    expect($<HTMLSelectElement>(reopened, '#comparison-link-role-selector').value).toBe('relates_to');
+    expect($<HTMLSelectElement>(reopened, '#comparison-config-selector').value).toBe('Strict');
+  });
+
+  it('stores the choice under the cookie name the legacy dropdown used', async () => {
+    const { shadow } = await open();
+
+    await selectOption(shadow, 'comparison-project-selector', 'drivepilot');
+
+    // Same name, so a choice remembered before this port is still found afterwards.
+    expect(document.cookie).toContain('searchable_dropdown_comparison-project-selector=drivepilot');
+  });
+
+  it('ignores a remembered value that is no longer offered', async () => {
+    document.cookie = 'searchable_dropdown_comparison-project-selector=deleted_project; path=/';
+    document.cookie = 'searchable_dropdown_comparison-config-selector=Removed; path=/';
+
+    const { shadow } = await open();
+
+    expect($<HTMLSelectElement>(shadow, '#comparison-project-selector').value).toBe('');
+    // Falls back to the configuration the server marks selected rather than to nothing.
+    expect($<HTMLSelectElement>(shadow, '#comparison-config-selector').value).toBe('Default');
+  });
+
+  it('forgets a dropdown the user cleared', async () => {
+    const { shadow } = await open();
+    await selectOption(shadow, 'comparison-project-selector', 'drivepilot');
+
+    await selectOption(shadow, 'comparison-project-selector', '');
+
+    const { shadow: reopened } = await reopen();
+    expect($<HTMLSelectElement>(reopened, '#comparison-project-selector').value).toBe('');
+  });
+
+  it('restores the revision picked from the list once the revisions load', async () => {
+    const { shadow } = await open();
+    await pickTargetDocument(shadow);
+    clickCheckbox(shadow, 'revision-select-from-list');
+    await selectOption(shadow, 'revision-selector', '200');
+
+    const { shadow: reopened } = await reopen();
+    clickCheckbox(reopened, 'revision-select-from-list');
+
+    // Wins over "the first visible one", which is the order the legacy baselineSelected() + refresh() had.
+    await vi.waitFor(() => expect($<HTMLSelectElement>(reopened, '#revision-selector').value).toBe('200'));
   });
 });

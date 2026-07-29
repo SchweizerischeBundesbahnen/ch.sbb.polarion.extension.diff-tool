@@ -75,6 +75,20 @@ path routing - the pathname is fixed per HTML entry and all navigation is query-
 react-router's `useSearchParams` returns a tuple, so all 11 call sites would have had to change anyway,
 for +18 kB instead of +0.4 kB.
 
+**Remembered dropdown choices are now the app's job.** The legacy panels got "remember my last pick"
+for free: the generic `SearchableDropdown` wrote every selection to a `searchable_dropdown_<select-id>`
+cookie, and `DiffTool.js` / `CopyTool.js` called `restoreSelection()` on the project, link-role,
+configuration and referenced-workitems dropdowns while building the view - plus `refresh()`, which
+restores too, on the space / document / revision dropdowns once their options had loaded.
+
+RSP's `createSearchableSelect` passes `rememberSelection: false`, and `SearchableSelect` drives the
+selection from React's controlled value rather than calling `restoreSelection()`. That is right for the
+library - a dropdown re-selecting behind React's back on every `refresh()` would fight the controlled
+value - so `src/formext/rememberedSelection.ts` reimplements the persistence in the React layer, reusing
+the **same cookie names** so choices remembered before the port are still found. Only user-driven changes
+are stored; the cascade resets are not, which is what lets a space survive a project change when the new
+project offers the same one.
+
 **Chart.js driven imperatively, not via `react-chartjs-2`.** The existing code mutates
 `chart.data.datasets[i].data` and calls `chart.update('none')` on a 3 s poll across 9 charts; a thin
 `useChart` hook holding the instance in a ref preserves that exactly.
@@ -107,8 +121,6 @@ Almost all of the port is 1:1. The exceptions, each commented at its site:
 - **The configuration select starts on the first configuration** in both panels, as the server already
   marked it `selected`. The legacy `restoreSelection()` cleared that again, so the panel could open with
   none chosen and send `&config=`.
-- **Dropdown selections are no longer remembered across document opens.** The legacy `SearchableDropdown`
-  persisted the last pick per element id; RSP's `SearchableSelect` does not.
 - **Project Duplication went onto `useRemote()`.** It used raw `fetch` with no auth handling, so
   `VITE_BEARER_TOKEN` dev mode did not work against it. Its `escapeHtml()` + `innerHTML` string
   templating became JSX, removing a class of injection risk.

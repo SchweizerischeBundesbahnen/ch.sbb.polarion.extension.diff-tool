@@ -94,6 +94,20 @@ export async function selectOption(shadow: ShadowRoot, selectId: string, value: 
   setFieldValue(select, value);
 }
 
+/**
+ * Forgets every remembered dropdown selection (see src/formext/rememberedSelection.ts). The panels
+ * persist a user's choice in a cookie, which outlives a test - so without this each test would inherit
+ * whatever the previous one picked.
+ */
+export function forgetRememberedSelections(): void {
+  for (const part of document.cookie.split('; ')) {
+    const name = part.split('=')[0];
+    if (name.startsWith('searchable_dropdown_')) {
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+    }
+  }
+}
+
 export function clickCheckbox(shadow: ShadowRoot, id: string): void {
   $<HTMLInputElement>(shadow, `#${id}`).click();
 }
