@@ -6,6 +6,8 @@ import {
   PageLayout,
   type Revision,
   RevisionsTable,
+  SearchableSelect,
+  type SelectOption,
   getProjectIdFromScope,
   getScope,
   useConfirm,
@@ -14,7 +16,6 @@ import { toast } from 'sonner';
 import useRemote from '../../services/useRemote';
 import useSettings from '../../services/useSettings';
 import FieldsTransferList from '../components/FieldsTransferList';
-import MultiSearchableSelect, { type MultiOption } from '../components/MultiSearchableSelect';
 import type { DiffField, DiffModel, LinkRole, WorkItemField, WorkItemStatus } from '../types';
 import { fieldId } from '../types';
 
@@ -241,20 +242,20 @@ export default function DiffConfigurationsPage() {
   // One nullish check for the whole payload instead of four.
   const lists = data ?? NO_LISTS;
 
-  const statusOptions: MultiOption[] = lists.statuses.map((status) => ({
-    value: status.id,
-    label: status.wiTypeName ? `${status.name} [${status.id} - ${status.wiTypeName}]` : `${status.name} [${status.id}]`,
-    icon: status.iconUrl,
+  const statusOptions: SelectOption[] = lists.statuses.map((status) => ({
+    id: status.id,
+    name: status.wiTypeName ? `${status.name} [${status.id} - ${status.wiTypeName}]` : `${status.name} [${status.id}]`,
+    iconURL: status.iconUrl,
   }));
 
-  const hyperlinkRoleOptions: MultiOption[] = lists.hyperlinkRoles.map((role) => ({
-    value: role.combinedId ?? role.id,
-    label: `[${role.workItemTypeName}] ${role.name}`,
+  const hyperlinkRoleOptions: SelectOption[] = lists.hyperlinkRoles.map((role) => ({
+    id: role.combinedId ?? role.id,
+    name: `[${role.workItemTypeName}] ${role.name}`,
   }));
 
-  const linkedWorkItemRoleOptions: MultiOption[] = lists.linkedWorkItemRoles.map((role) => ({
-    value: role.id,
-    label: role.name,
+  const linkedWorkItemRoleOptions: SelectOption[] = lists.linkedWorkItemRoles.map((role) => ({
+    id: role.id,
+    name: role.name,
   }));
 
   const hasField = (key: string) => model.diffFields.some((field) => field.key === key);
@@ -292,10 +293,11 @@ export default function DiffConfigurationsPage() {
             <label htmlFor="statuses-to-ignore">
               Statuses of WorkItems in a source document to ignore when diffing:
             </label>
-            <MultiSearchableSelect
+            <SearchableSelect
+              multiple
               id="statuses-to-ignore"
               options={statusOptions}
-              selected={model.statusesToIgnore}
+              value={model.statusesToIgnore}
               onChange={(statuses) => setModel((current) => ({ ...current, statusesToIgnore: statuses }))}
               placeholder="Select statuses to ignore..."
             />
@@ -304,10 +306,11 @@ export default function DiffConfigurationsPage() {
           {hasField(HYPERLINKS_FIELD) && (
             <div className="diff-role-column" id="hyperlink-settings-container">
               <label htmlFor="hyperlink-roles">Hyperlink roles to diff and merge</label>
-              <MultiSearchableSelect
+              <SearchableSelect
+                multiple
                 id="hyperlink-roles"
                 options={hyperlinkRoleOptions}
-                selected={model.hyperlinkRoles}
+                value={model.hyperlinkRoles}
                 onChange={(roles) => setModel((current) => ({ ...current, hyperlinkRoles: roles }))}
                 placeholder="Select hyperlink roles..."
               />
@@ -317,10 +320,11 @@ export default function DiffConfigurationsPage() {
           {hasField(LINKED_WORK_ITEMS_FIELD) && (
             <div className="diff-role-column" id="linked-workitem-settings-container">
               <label htmlFor="linked-workitem-roles">Roles of linked WorkItems to diff and merge</label>
-              <MultiSearchableSelect
+              <SearchableSelect
+                multiple
                 id="linked-workitem-roles"
                 options={linkedWorkItemRoleOptions}
-                selected={model.linkedWorkItemRoles}
+                value={model.linkedWorkItemRoles}
                 onChange={(roles) => setModel((current) => ({ ...current, linkedWorkItemRoles: roles }))}
                 placeholder="Select linked WorkItem roles..."
               />
