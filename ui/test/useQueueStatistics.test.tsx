@@ -158,6 +158,82 @@ describe('useQueueStatistics', () => {
     await vi.waitFor(() => expect(errorText()).toContain('HTTP 500'));
   });
 
+  it('backs off while the statistics endpoint keeps failing', async () => {
+    // Without a backoff a service that is down is still asked every 3s for as long as the tab is open.
+    // At a 20ms cadence an unthrottled loop would fire ~13 times in 260ms; backing off (20, 20, 40, 80,
+    // 160) fires about 5. The bounds are deliberately wide apart so this is not a timing race.
+    const fetchMock = installFetchMock([
+      { method: 'POST', match: /\/queueStatistics$/, respond: () => jsonResponse({}, 503) },
+    ]);
+    render(<Probe charts={['1']} intervals={{ '1': 30 }} pollIntervalMs={20} />);
+    await vi.waitFor(() => expect(errorText()).toContain('failed'));
+
+    await new Promise((resolve) => setTimeout(resolve, 260));
+
+    expect(fetchMock.mock.calls.length).toBeLessThan(9);
+  });
+
+  // Guards the backoff *reset* rather than the backoff itself: if a success failed to clear the failure
+  // count, polling would stay at the capped delay for as long as the page was open.
+  it('returns to the normal cadence once a poll succeeds', async () => {
+    let fail = true;
+    const fetchMock = installFetchMock([
+      {
+        method: 'POST',
+        match: /\/queueStatistics$/,
+        respond: () => (fail ? jsonResponse({}, 503) : jsonResponse({ '1': { DIFF: [entry(1, { queued: 1 })] } })),
+      },
+    ]);
+    render(<Probe charts={['1']} intervals={{ '1': 30 }} pollIntervalMs={20} />);
+    await vi.waitFor(() => expect(errorText()).toContain('failed'));
+    // Let it back off a few steps, then let the service recover.
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    fail = false;
+    await vi.waitFor(() => expect(errorText()).toBe(''));
+
+    const afterRecovery = fetchMock.mock.calls.length;
+    await new Promise((resolve) => setTimeout(resolve, 120));
+
+    // Back at the short cadence, so several more polls landed rather than one.
+    expect(fetchMock.mock.calls.length - afterRecovery).toBeGreaterThan(2);
+  });
+
+  it('never has two polls in flight at once', async () => {
+    // The old setInterval fired regardless of whether the previous request had returned, so a slow
+    // endpoint left several overlapping - each advancing the shared cursors as it came back.
+    let inFlight = 0;
+    let maxInFlight = 0;
+    let release: (() => void) | undefined;
+    installFetchMock([
+      {
+        method: 'POST',
+        match: /\/queueStatistics$/,
+        respond: () => {
+          inFlight += 1;
+          maxInFlight = Math.max(maxInFlight, inFlight);
+          return jsonResponse({});
+        },
+      },
+    ]);
+    // Hold the first response open for many cadences.
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const realFetch = globalThis.fetch;
+    vi.stubGlobal('fetch', async (...args: Parameters<typeof fetch>) => {
+      const response = await realFetch(...args);
+      await held;
+      inFlight -= 1;
+      return response;
+    });
+
+    render(<Probe charts={['1']} intervals={{ '1': 30 }} pollIntervalMs={10} />);
+    await new Promise((resolve) => setTimeout(resolve, 120));
+
+    expect(maxInFlight).toBe(1);
+    release?.();
+  });
+
   it('does not poll while disabled', async () => {
     const fetchMock = installFetchMock([{ method: 'POST', match: /queueStatistics/, json: {} }]);
 

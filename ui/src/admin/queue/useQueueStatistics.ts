@@ -7,6 +7,13 @@ export const CPU_LOAD_CHART = 'CPU_LOAD';
 
 export const POLL_INTERVAL_MS = 3000;
 
+/**
+ * Ceiling for the retry backoff, as a multiple of the poll interval - 30s at the default cadence. A
+ * multiple rather than a fixed number of milliseconds so a test that shortens the cadence is not made to
+ * wait for a production-sized ceiling.
+ */
+export const MAX_BACKOFF_FACTOR = 10;
+
 /** ch.sbb.polarion.extension.diff_tool.rest.model.queue.EndpointCallEntry / CpuLoadEntry */
 export interface StatisticsEntry {
   timestamp: string;
@@ -58,13 +65,19 @@ function responseKey(chart: string): string {
 }
 
 /**
- * Polls POST /queueStatistics every 3s, exactly as the legacy page did.
+ * Polls POST /queueStatistics every 3s, as the legacy page did.
  *
- * Two things make this more than a plain fetch loop:
+ * Things that make this more than a plain fetch loop:
  *  - Each chart sends its own `from` cursor - the timestamp of the newest entry it already holds - so the
  *    server returns only what is new. The cursor is per chart because each has its own interval.
  *  - The result is accumulated client-side and trimmed to the chart's interval on every poll, since the
  *    server only ever returns the delta.
+ *  - The next poll is scheduled only once the current one has settled, and a failing poll backs off
+ *    exponentially up to {@link MAX_BACKOFF_FACTOR} times the cadence. The legacy page used a bare
+ *    `setInterval`, which meant a queue service that was down or slow was still asked 20 times a minute
+ *    for as long as the tab stayed open, and a request slower than 3s left several overlapping in flight
+ *    - each mutating the shared cursors as it returned. One failure still retries at the normal cadence,
+ *    so a blip costs nothing; only a sustained outage backs off. Any success resets it.
  */
 export default function useQueueStatistics({
   charts,
@@ -100,8 +113,11 @@ export default function useQueueStatistics({
       return;
     }
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let consecutiveFailures = 0;
 
-    const poll = async () => {
+    /** Resolves to whether the poll succeeded, which is what decides the next delay. */
+    const poll = async (): Promise<boolean> => {
       // Seed a cursor for any chart that does not have one yet, so the first poll asks for its whole
       // window rather than all 30 minutes the server retains.
       for (const chart of chartsRef.current) {
@@ -115,14 +131,14 @@ export default function useQueueStatistics({
           body: JSON.stringify({ from: cursors.current }),
         });
         if (cancelled) {
-          return;
+          return true; // Unused: run() re-checks `cancelled` before scheduling anything.
         }
         if (!response.ok) {
           throw new Error(`Loading queue statistics failed (HTTP ${response.status})`);
         }
         const delta = (await response.json()) as Statistics;
         if (cancelled) {
-          return;
+          return true; // Unused, as above.
         }
 
         for (const chart of chartsRef.current) {
@@ -154,18 +170,31 @@ export default function useQueueStatistics({
         }
         setStatistics({ ...accumulated.current });
         setError(null);
+        return true;
       } catch (caught) {
         if (!cancelled) {
           setError((caught as Error).message);
         }
+        return false;
       }
     };
 
-    void poll();
-    const timer = setInterval(() => void poll(), pollIntervalMs);
+    const run = async () => {
+      const succeeded = await poll();
+      if (cancelled) {
+        return;
+      }
+      consecutiveFailures = succeeded ? 0 : consecutiveFailures + 1;
+      const delay = succeeded
+        ? pollIntervalMs
+        : Math.min(pollIntervalMs * 2 ** (consecutiveFailures - 1), pollIntervalMs * MAX_BACKOFF_FACTOR);
+      timer = setTimeout(() => void run(), delay);
+    };
+
+    void run();
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      clearTimeout(timer);
     };
   }, [enabled, pollIntervalMs]);
 
