@@ -113,7 +113,7 @@ Two layers, deliberately:
 | `npm run test:update:docker` | regenerate visual references (Docker only) |
 | `npm run test:coverage` | behaviour-only coverage + the 80% gate |
 | `npm run test:coverage:full` | full suite coverage |
-| `npm run test:coverage:docker` | **the canonical run** - the full suite + the gate in the image, what Maven's `test` phase and the pre-commit hook invoke |
+| `npm run test:coverage:docker` | **the canonical run** - the full suite + the gate in the image, what Maven's `test` phase invokes |
 
 **Pixel references are Docker-only.** The committed screenshots are locked to the pinned Playwright
 image, so `scripts/docker-test.mjs` marks that container with `PIXEL_REFERENCES=1`, `vitest.config.ts`
