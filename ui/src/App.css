@@ -6,7 +6,20 @@
  * drifts apart again, which is exactly why RSP 0.0.3 took size and colour over from the five apps that
  * each repeated them. */
 
-/* The dev-only Landing overview (never opened inside Polarion, which always passes ?feature=). */
+/* The dev-only Landing overview (never opened inside Polarion, which always passes ?feature=). Its scope
+   picker is the row above the feature list; the dropdown needs a width, since SearchableDropdown only
+   copies an inline one off the <select> it wraps. */
+.landing-scope {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.landing-scope .searchable-dropdown {
+  min-width: 280px;
+}
+
 .landing-features {
   margin: 0;
   padding-left: 20px;
@@ -96,9 +109,18 @@
      - border, radius, background colour, font, hover and focus - now comes from RSP's bundled control
      CSS, which is why the legacy page's hand-written copy of those declarations is not carried over.
      `!important` because that RSP rule sets `padding: 2px 6px` at a higher specificity and the text has
-     to clear the icon. Polarion serves filter.png, so it resolves at runtime and is absent from the
-     Vitest reference screenshots. */
-  background: var(--sbb-control-bg) url('/polarion/ria/images/filter.png') no-repeat 6px center;
+     to clear the icon.
+
+     Longhands, not the `background` shorthand the legacy page used: that shorthand also set the colour
+     from var(--sbb-control-bg), and RSP scopes its tokens to `.sbb-ui`, so anywhere that class is not an
+     ancestor the var fails to substitute, the whole declaration is invalid at computed-value time, and
+     the icon silently disappears. The colour is RSP's to set anyway.
+
+     Polarion serves filter.png, so it resolves at runtime and never appears in the Vitest reference
+     screenshots - which is why FieldsTransferList.test.tsx asserts the declaration instead. */
+  background-image: url('/polarion/ria/images/filter.png');
+  background-repeat: no-repeat;
+  background-position: 6px center;
   background-size: 14px 14px;
   padding-left: 26px !important;
 }

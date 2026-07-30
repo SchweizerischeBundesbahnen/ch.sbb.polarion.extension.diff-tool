@@ -79,6 +79,21 @@ function highlight(id: string, labels: string[]) {
 const selectedModel = () => JSON.parse(document.querySelector('[data-testid="selected"]')!.textContent!);
 
 describe('FieldsTransferList', () => {
+  it('keeps the filter icon on the filter input', () => {
+    // The one part of this control's styling the visual references cannot see. The icon is
+    // `url(/polarion/ria/images/filter.png)` - Polarion serves it, nothing serves it under Vitest - so the
+    // request 404s, the reference was captured without it, and a screenshot comparison would happily agree
+    // with itself if the declaration were deleted. Computed style reports the CSS value regardless of
+    // whether the image loads, so this catches the removal that the pixels cannot.
+    render(<Harness />);
+
+    const filter = document.querySelector<HTMLInputElement>('#available-fields-filter')!;
+    const style = getComputedStyle(filter);
+    expect(style.backgroundImage).toContain('/polarion/ria/images/filter.png');
+    // Left padding has to clear the icon, or the text sits on top of it.
+    expect(parseInt(style.paddingLeft, 10)).toBeGreaterThanOrEqual(26);
+  });
+
   it('lists every field as available when nothing is selected, sorted by name', () => {
     render(<Harness />);
 
