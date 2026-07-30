@@ -70,7 +70,6 @@
 
         <awaitility.version>4.3.0</awaitility.version>
 
-        <swagger-maven-plugin.version>2.2.22</swagger-maven-plugin.version>
 
         <!--suppress UnresolvedMavenProperty -->
         <markdown2html-maven-plugin.failOnError>${env.MARKDOWN2HTML_MAVEN_PLUGIN_FAIL_ON_ERROR}</markdown2html-maven-plugin.failOnError>
