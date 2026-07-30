@@ -41,14 +41,43 @@ describe('buildDocumentsDiffUrl', () => {
     const [path, query] = url.split('?');
     expect(path).toBe('/polarion/diff-tool-app/ui/app/documents.html');
     // Order matters as little as the names do, but pinning the whole thing catches an accidental rename.
+    // Values are percent-encoded (spaces as `+`, which URLSearchParams.get() decodes on the viewer side);
+    // the parameter names and their order are the part of the contract that must not move.
     expect(query.replace(/&additionalParams=.*/, '')).toBe(
-      'sourceProjectId=elibrary&sourceSpaceId=specification&sourceDocument=Product Specification' +
-        '&targetProjectId=drivepilot&targetSpaceId=design&targetDocument=Design Spec' +
+      'sourceProjectId=elibrary&sourceSpaceId=specification&sourceDocument=Product+Specification' +
+        '&targetProjectId=drivepilot&targetSpaceId=design&targetDocument=Design+Spec' +
         '&config=Default&compareAs=Workitems&branched=false',
     );
     expect(url).not.toContain('linkRole=');
     expect(url).not.toContain('sourceRevision=');
     expect(url).not.toContain('targetRevision=');
+  });
+
+  it('encodes values that would otherwise break the query, and the viewer reads them back', () => {
+    // The legacy code concatenated these raw, so `&` started a new parameter and `#` a fragment: the
+    // viewer then compared the wrong document, or none. Asserted through URLSearchParams because that is
+    // exactly how the viewer reads them (getDocumentFromSearchParams in services/useDiffService.js).
+    const url = buildDocumentsDiffUrl(
+      {
+        ...REQUEST,
+        sourceDocument: 'R&D Spec',
+        targetDocument: 'Design #2',
+        targetSpaceId: 'a/b',
+        config: '100% Strict & Fast',
+        linkRole: 'relates&to',
+      },
+      NOW,
+    );
+
+    const query = new URLSearchParams(url.split('?')[1]);
+    expect(query.get('sourceDocument')).toBe('R&D Spec');
+    expect(query.get('targetDocument')).toBe('Design #2');
+    expect(query.get('targetSpaceId')).toBe('a/b');
+    expect(query.get('config')).toBe('100% Strict & Fast');
+    expect(query.get('linkRole')).toBe('relates&to');
+    // Nothing leaked into a stray parameter or a fragment.
+    expect(Array.from(query.keys()).filter((key) => key === 'sourceDocument')).toHaveLength(1);
+    expect(url).not.toContain('#');
   });
 
   it('appends the link role and both revisions when they are set', () => {

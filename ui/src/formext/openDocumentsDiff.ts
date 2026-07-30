@@ -51,28 +51,44 @@ function collectGarbage(now: number): void {
  * Builds the documents-comparison URL and stashes the parameters that do not belong in a query string.
  *
  * This is the handoff contract between the Document Properties panel and the viewer page
- * (src/pages/DocumentsPage.jsx reads both halves), and it MUST NOT drift: the query parameter names and
- * order, `compareAs=Workitems`, the `<uuid>_additionalParams` localStorage key and the shape written
- * under it are all a verbatim port of the legacy `DiffTool.showDiffResult()`. `linkRole`,
- * `sourceRevision` and `targetRevision` are appended only when non-empty, because the viewer treats a
+ * (src/pages/DocumentsPage.jsx reads both halves), and the parts that matter MUST NOT drift: the query
+ * parameter names and order, `compareAs=Workitems`, the `<uuid>_additionalParams` localStorage key and the
+ * shape written under it are all as the legacy `DiffTool.showDiffResult()` had them. `linkRole`,
+ * `sourceRevision` and `targetRevision` are set only when non-empty, because the viewer treats a
  * present-but-empty parameter differently from an absent one.
+ *
+ * The one deliberate correction to the legacy behaviour: the values are **percent-encoded**. The legacy
+ * code concatenated them raw, so a document, space, configuration or role name containing `&`, `#` or `%`
+ * silently produced a different URL than intended - `targetDocument=A&B` parses as two parameters, and the
+ * viewer would compare the wrong document or fail on a missing identifier. Encoding is transparent to the
+ * reader: the viewer only ever reads these through `URLSearchParams.get()` (see
+ * `getDocumentFromSearchParams` in services/useDiffService.js), which decodes, and nothing in the app
+ * decodes them by hand. The app already writes this same query encoded - `utils/useSwapDocuments.js`
+ * rebuilds it with `new URLSearchParams(...).toString()` after a document swap - so the encoded form is
+ * what the viewer has been consuming all along.
  *
  * Returned (rather than only opened) so the contract can be asserted in a test.
  */
 export function buildDocumentsDiffUrl(request: DiffRequest, now: number = Date.now()): string {
-  let path =
-    `${VIEWER_PATH}` +
-    `?sourceProjectId=${request.sourceProjectId}&sourceSpaceId=${request.sourceSpaceId}&sourceDocument=${request.sourceDocument}` +
-    `&targetProjectId=${request.targetProjectId}&targetSpaceId=${request.targetSpaceId}&targetDocument=${request.targetDocument}` +
-    `&config=${request.config}&compareAs=Workitems&branched=${request.branched}`;
+  // Insertion order is preserved by URLSearchParams, so the query reads as it always has.
+  const params = new URLSearchParams();
+  params.set('sourceProjectId', request.sourceProjectId);
+  params.set('sourceSpaceId', request.sourceSpaceId);
+  params.set('sourceDocument', request.sourceDocument);
+  params.set('targetProjectId', request.targetProjectId);
+  params.set('targetSpaceId', request.targetSpaceId);
+  params.set('targetDocument', request.targetDocument);
+  params.set('config', request.config);
+  params.set('compareAs', 'Workitems');
+  params.set('branched', String(request.branched));
   if (request.linkRole) {
-    path += `&linkRole=${request.linkRole}`;
+    params.set('linkRole', request.linkRole);
   }
   if (request.sourceRevision) {
-    path += `&sourceRevision=${request.sourceRevision}`;
+    params.set('sourceRevision', request.sourceRevision);
   }
   if (request.targetRevision) {
-    path += `&targetRevision=${request.targetRevision}`;
+    params.set('targetRevision', request.targetRevision);
   }
 
   collectGarbage(now);
@@ -86,8 +102,9 @@ export function buildDocumentsDiffUrl(request: DiffRequest, now: number = Date.n
     additionalParams.filter = request.filter;
   }
   localStorage.setItem(additionalParamsHash + ADDITIONAL_PARAMS_SUFFIX, JSON.stringify(additionalParams));
+  params.set('additionalParams', additionalParamsHash);
 
-  return `${path}&additionalParams=${additionalParamsHash}`;
+  return `${VIEWER_PATH}?${params.toString()}`;
 }
 
 /** Opens the comparison in a new tab, as the legacy panel's Compare button did. */
