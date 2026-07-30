@@ -82,21 +82,11 @@
         <nextjs.destination.root>${project.basedir}/src/main/resources/webapp/diff-tool-app</nextjs.destination.root>
 
         <skipJsTests>false</skipJsTests>
-    </properties>
 
-    <profiles>
-        <profile>
-            <id>polarion2606</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <commons-collections4.artifactId>org.apache.commons.commons-collections4_4.4.0</commons-collections4.artifactId>
-                <commons-lang3.artifactId>org.apache.commons.lang3_3.12.0</commons-lang3.artifactId>
-                <org.jsoup.artifactId>org.jsoup_1.21.2</org.jsoup.artifactId>
-            </properties>
-        </profile>
-    </profiles>
+        <commons-collections4.artifactId>org.apache.commons.commons-collections4_4.4.0</commons-collections4.artifactId>
+        <commons-lang3.artifactId>org.apache.commons.lang3_3.12.0</commons-lang3.artifactId>
+        <org.jsoup.artifactId>org.jsoup_1.21.2</org.jsoup.artifactId>
+    </properties>
 
     <dependencies>
         <dependency>
