@@ -16,9 +16,13 @@ test.describe("page of diffing Collections c", () => {
   });
 
   test('collections pairs request', async ({page}) => {
+    // The request we are asserting on is fired by the app while the page loads, and beforeEach has
+    // already awaited that load - so attaching waitForRequest here can miss it.
+    // Reload with the listener already armed so the ordering is guaranteed rather than lucky.
     const diffPostRequestPromise = page.waitForRequest(request => {
       return request.url().includes('/diff/collections') && request.method() === "POST";
     });
+    await page.reload();
     // Reload after registering the listener so the request can't fire before we start waiting
     // (the beforeEach navigation may already have sent it on slower browsers, e.g. firefox).
     await page.reload();

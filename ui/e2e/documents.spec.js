@@ -14,9 +14,13 @@ test.describe("page of diffing documents' WorkItems", () => {
   });
 
   test('documents diff request', async ({ page }) => {
+    // The request we are asserting on is fired by the app while the page loads, and beforeEach has
+    // already awaited that load - so attaching waitForRequest here can miss it.
+    // Reload with the listener already armed so the ordering is guaranteed rather than lucky.
     const diffPostRequestPromise = page.waitForRequest(request => {
       return request.url().includes('/diff/documents') && request.method() === "POST";
     });
+    await page.reload();
 
     // Wait for the request and assert request data
     const diffPostRequest = await diffPostRequestPromise;
