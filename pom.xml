@@ -75,13 +75,22 @@
         <!--suppress UnresolvedMavenProperty -->
         <markdown2html-maven-plugin.failOnError>${env.MARKDOWN2HTML_MAVEN_PLUGIN_FAIL_ON_ERROR}</markdown2html-maven-plugin.failOnError>
 
-        <!-- The Playwright end-to-end suite in ui/e2e is diff-tool's own second JS layer and is NOT
-             bound to the build; activate -DjsE2eTests to add it. Everything else about the UI build -
-             node/npm, `npm ci`, `npm run build`, the dockerized Vitest run with its coverage gate in the
-             `test` phase, and the copy into webapp/diff-tool-app - is inherited from the generic
-             parent's `vite-ui` profile, which activates on the presence of ui/package.json. Its
-             defaults (vite.sources.root, vite.destination.root, skipJsTests, jsTestCommand,
-             jsTestExtraArgs) already match what this pom used to declare. -->
+        <!-- Most of the UI build - node/npm, `npm ci`, `npm run build`, the dockerized Vitest run with
+             its coverage gate in the `test` phase, and the copy into webapp/diff-tool-app - is inherited
+             from the generic parent's `vite-ui` profile, which activates on the presence of
+             ui/package.json. Its defaults (vite.sources.root, vite.destination.root, skipJsTests,
+             jsTestCommand, jsTestExtraArgs) already match what this pom used to declare.
+
+             What is diff-tool's own is the Playwright end-to-end suite in ui/e2e, which runs in the
+             `test` phase alongside Vitest - as it has since before the React migration, so that a plain
+             `mvn install` exercises the diff/merge viewer end to end. Skipping:
+               -DskipJsE2eTests=true  drop only the e2e suite, keep Vitest and its coverage gate
+               -DskipJsTests=true     drop both JS suites
+               -DskipTests=true       drop the Java tests and, via frontend-maven-plugin's own skipTests
+                                      parameter, both JS suites with them
+             It needs the Playwright browsers present: `npx playwright install` once in ui/, or
+             -DinstallPlaywright (from the parent) to have the build fetch them. -->
+        <skipJsE2eTests>false</skipJsE2eTests>
     </properties>
 
     <profiles>
@@ -97,37 +106,20 @@
             </properties>
         </profile>
 
-        <!-- Run the Playwright end-to-end suite (ui/e2e) in the `test` phase as well. Opt-in: it drives
-             a real dev server across three browsers and is CI's own job, so it is not part of a normal
-             build. -->
+        <!-- -DskipJsTests=true has to turn off both JS suites, not just the parent's Vitest run, so it
+             switches the e2e flag too. Matched on the exact value, so -DskipJsTests=false does not
+             accidentally activate this (property activation fires on any value otherwise). -->
         <profile>
-            <id>js-e2e-tests</id>
+            <id>skip-js-e2e-tests-with-all-js-tests</id>
             <activation>
                 <property>
-                    <name>jsE2eTests</name>
+                    <name>skipJsTests</name>
+                    <value>true</value>
                 </property>
             </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>npm e2e</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <phase>test</phase>
-                                <configuration>
-                                    <arguments>run e2e:headless</arguments>
-                                    <skip>${skipJsTests}</skip>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
+            <properties>
+                <skipJsE2eTests>true</skipJsE2eTests>
+            </properties>
         </profile>
     </profiles>
 
@@ -203,6 +195,46 @@
 
     <build>
         <plugins>
+            <!-- The Playwright end-to-end suite, in the `test` phase next to the parent's Vitest run
+                 (which is declared first, so the fast suite fails first). Not in a profile: a plain
+                 `mvn install` has always run the viewer's e2e suite, and the migration must not quietly
+                 take that away. CI's build job opts out with -DskipJsE2eTests=true, because its own
+                 per-browser `e2e` job covers the same suite three times over. -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <executions>
+                    <!-- The browsers the e2e suite needs, before it runs. The pre-migration pom did this
+                         too, but unconditionally in generate-resources - so every build paid for it even
+                         with the tests skipped, and on Linux the deps flag wanted root. Gated on the same
+                         flag as the suite, and without the deps flag: the only consumers are developer
+                         machines, since CI's Maven build skips e2e and its dedicated `e2e` job installs
+                         the one browser it needs, with its OS deps, itself. A no-op once cached. -->
+                    <execution>
+                        <id>install-playwright-browsers</id>
+                        <goals>
+                            <goal>npx</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <arguments>playwright install</arguments>
+                            <skip>${skipJsE2eTests}</skip>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm e2e</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>test</phase>
+                        <configuration>
+                            <arguments>run e2e:headless</arguments>
+                            <skip>${skipJsE2eTests}</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>

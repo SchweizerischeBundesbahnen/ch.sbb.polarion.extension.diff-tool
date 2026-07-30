@@ -29,12 +29,14 @@ mvn verify
 # Skip JavaScript tests during build
 mvn clean package -DskipJsTests=true
 
-# The test phase runs the Vitest suite inside the pinned Playwright Docker image. Escape hatches:
+# The test phase runs BOTH JS suites: the Vitest suite inside the pinned Playwright Docker image, then
+# the Playwright E2E suite (which needs the browsers - `npx playwright install` once in ui/).
+# Escape hatches:
 #   -DjsTestsNoDocker      run Vitest directly (no Docker on this host); the visual suites skip
 #                          themselves outside the reference image, so pixels are simply not compared
 #   -DskipVisualJsTests    do not even load the visual suites (only with -DjsTestsNoDocker)
 #   -DinstallPlaywright    download the browser binaries (and OS deps)
-#   -DjsE2eTests           additionally run the Playwright E2E suite
+#   -DskipJsE2eTests       drop only the Playwright E2E suite, keeping Vitest and the coverage gate
 ```
 
 ### Frontend Development (in ui/ directory)
@@ -89,8 +91,8 @@ own `HtmlBuilder` and query engine), plus `js/diff-tool-widget-utils.js` and `cs
 serve exactly those pages.
 
 Playwright browser binaries are not installed by the Maven build; run `npx playwright install` in
-`ui/` once, or build with `-DskipJsTests=true`. CI needs neither: its Maven build runs the Vitest
-suite in the pinned Docker image, and the E2E suite has its own per-browser job.
+`ui/` once, or build with `-DskipJsE2eTests=true`. CI needs neither: its Maven build runs the Vitest
+suite in the pinned Docker image and skips the E2E suite, which has its own per-browser job.
 
 ### Single Test Execution
 

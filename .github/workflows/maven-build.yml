@@ -72,9 +72,10 @@ jobs:
             fi
           fi
           # The `test` phase runs the dockerized Vitest suite + the 80% coverage gate (the runner has
-          # Docker), matching every other converted extension. Only the Playwright E2E suite is split
-          # out, into the per-browser `e2e` job below.
-          mvn --batch-mode -s "${SETTINGS_XML}" clean verify "${SONAR_ARGS[@]}"
+          # Docker), matching every other converted extension. The Playwright E2E suite, which a local
+          # build does run, is skipped here only because the `e2e` job below already runs it once per
+          # browser on its own runner.
+          mvn --batch-mode -s "${SETTINGS_XML}" clean verify -DskipJsE2eTests=true "${SONAR_ARGS[@]}"
       - name: 📦 Build with Maven for PRs
         if: github.event_name == 'pull_request'
         env:
@@ -89,9 +90,10 @@ jobs:
             SONAR_ARGS+=(sonar:sonar "-Dsonar.pullrequest.base=${GITHUB_BASE_REF}" "-Dsonar.pullrequest.branch=${GITHUB_HEAD_REF}" "-Dsonar.pullrequest.key=${GITHUB_PR_NUMBER_REF}" "-Dsonar.exclusions=.github/**")
           fi
           # The `test` phase runs the dockerized Vitest suite + the 80% coverage gate (the runner has
-          # Docker), matching every other converted extension. Only the Playwright E2E suite is split
-          # out, into the per-browser `e2e` job below.
-          mvn --batch-mode -s "${SETTINGS_XML}" clean verify "${SONAR_ARGS[@]}"
+          # Docker), matching every other converted extension. The Playwright E2E suite, which a local
+          # build does run, is skipped here only because the `e2e` job below already runs it once per
+          # browser on its own runner.
+          mvn --batch-mode -s "${SETTINGS_XML}" clean verify -DskipJsE2eTests=true "${SONAR_ARGS[@]}"
       - name: 📋 Analyze dependencies
         run: mvn --batch-mode -s "${SETTINGS_XML}" dependency:analyze
         continue-on-error: false
