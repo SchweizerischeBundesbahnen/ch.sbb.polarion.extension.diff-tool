@@ -31,8 +31,9 @@ class ExecutionQueueManagementInternalControllerTest {
 
     @BeforeEach
     void setUp() {
+        ExecutionQueueMonitor monitor = mock(ExecutionQueueMonitor.class);
         mockedApp = mockStatic(DiffToolRestApplication.class);
-        mockedApp.when(DiffToolRestApplication::getExecutionMonitor).thenReturn(mock(ExecutionQueueMonitor.class));
+        mockedApp.when(DiffToolRestApplication::getExecutionMonitor).thenReturn(monitor);
         controller = new ExecutionQueueManagementInternalController();
     }
 

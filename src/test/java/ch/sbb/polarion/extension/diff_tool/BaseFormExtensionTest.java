@@ -226,8 +226,9 @@ class BaseFormExtensionTest {
     @Test
     void testRenderIgnoresObjectsThatAreNotDocuments() {
         HtmlFragmentBuilder builder = mock(HtmlFragmentBuilder.class);
+        IPObject notADocument = mock(IPObject.class);
         when(sharedContext.createHtmlFragmentBuilderFor().gwt()).thenReturn(builder);
-        when(formExtensionContext.object().getOldApi()).thenReturn(mock(IPObject.class));
+        when(formExtensionContext.object().getOldApi()).thenReturn(notADocument);
         when(transaction.context()).thenReturn(sharedContext);
 
         new TestFormExtension(false).render(formExtensionContext);
