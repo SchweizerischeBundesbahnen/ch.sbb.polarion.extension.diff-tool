@@ -1,0 +1,151 @@
+Please make a summary of how react/vite application works - from which parts it consist of, how they interoperate, communicate, how components are mounted and so on. Refactoring was big and it's difficult for me to cover everything. I need a good understanding.
+
+⏺ Let me verify the current structure so this is accurate rather than from memory.
+
+  Searched for 1 pattern, read 1 file, ran 5 shell commands
+
+⏺ Here's the whole picture. Everything below is verified against the current tree.
+
+  1. One app, three surfaces
+
+  ui/ is a single npm project, a single Vite build, serving three unrelated UIs. That's the thing to hold onto — they share dependencies and tooling but almost no code.
+
+  ┌────────────────────────────────┬──────────────────────────────────────────────────┬────────────────────────────────────────────────────────────┬────────────────────────────────────────────────────┐
+  │            Surface             │                      Entry                       │                  Polarion reaches it via                   │                    Style shell                     │
+  ├────────────────────────────────┼──────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────┤
+  │ Admin pages (5)                │ index.html?feature=<id>                          │ the 5 <extender>s in hivemodule.xml                        │ <body class="sbb-ui"> + .app.standard-admin-page   │
+  ├────────────────────────────────┼──────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────┤
+  │ Diff/merge viewer (3 pages)    │ documents.html, collections.html, workitems.html │ hardcoded window.open from the panels and the Java widgets │ .diff-app.sbb-ui                                   │
+  ├────────────────────────────────┼──────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────┤
+  │ Document Properties panels (2) │ assets/diffToolPanel.js, assets/copyToolPanel.js │ <link onload> in a server-rendered fragment                │ shadow root, .comparison/.copy form-wrapper sbb-ui │
+  └────────────────────────────────┴──────────────────────────────────────────────────┴────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────┘
+
+  All of it is served by one servlet — DiffToolAppUIServlet on /polarion/diff-tool-app/ui/*.
+
+  2. Two build passes (order matters)
+
+  npm run build
+   ├─ vite build                              → dist/app/*.html + assets/*-<hash>.js|css   (emptyOutDir: true)
+   └─ vite build --config vite.formext.config.js → dist/app/assets/{diffToolPanel,copyToolPanel}.js  (emptyOutDir: false)
+
+  The first is a multi-page build (appType: 'mpa', four rollupOptions.input entries) — no SPA router, no history fallback; each page is a real .html. The second is library mode, which is the only way to get fixed, unhashed filenames with preserved named exports — required because the
+  fragments import them by literal URL. It must run second because the first empties dist/app.
+
+  Maven copies ui/dist → src/main/resources/webapp/diff-tool-app/, so it lands in the jar.
+
+  3. How each surface mounts
+
+  Admin — one bundle, page chosen by query param:
+
+  index.html  →  src/main.tsx
+                   ├─ import RSP style.css          (all control CSS, icons inlined)
+                   ├─ configureGenericModules(...)  (where RSP fetches generic ES modules)
+                   └─ createRoot(#root).render(<App/> + <Toaster/>)
+                                                │
+                         src/App.tsx: findFeature(?feature=) → FEATURES registry
+                                                │
+                         <div class="app standard-admin-page"><Suspense>{Page}</Suspense></div>
+
+  src/features.tsx is the single registry; its ids must equal the extender ids in hivemodule.xml. Unknown/missing feature → the dev Landing. Execution Queue is React.lazy so Chart.js stays out of the other pages' chunk.
+
+  Viewer — three independent roots, no shared bundle:
+
+  documents.html → src/entries/documents.jsx
+                     createRoot(#root).render(
+                       <AppShell>        ← AppContext provider + useSessionRenewal + scroll handler
+                         <PublicShell>   ← <main class="diff-app sbb-ui"> + <Suspense>
+                           <ErrorBoundary>
+                             <DocumentsPage/>
+
+  That nesting is deliberately isomorphic to the Next.js tree it replaced (root layout → page frame → route error boundary → page), which is why the port was mechanical.
+
+  Panels — the only shadow-DOM surface:
+
+  BaseFormExtension.renderForm()
+    reads webapp/diff-tool/html/diff-tool.html
+    substitutes {PANEL_PROPS} with escaped JSON
+    ↓  GWT injects the fragment into the Document Properties pane
+  <link href=".../css/starter.css" onload='import(".../assets/diffToolPanel.js")
+                                            .then(m => m.mountDiffToolPanel("#diff-tool-panel"))'>
+  <div id="diff-tool-panel" class="comparison form-wrapper" data-props='{…}'></div>
+    ↓
+  mountDiffToolPanel(selector)
+    ├─ resetParentsOverflowHidden(host)   ← un-clips Polarion's overflow:hidden cell
+    ├─ mountInShadow(host, {…})           ← attachShadow + inject RSP CSS + diff-tool.css
+    └─ createRoot(container).render(<DiffToolPanel props={readPanelProps(host)}/>)
+
+  Two oddities worth knowing: starter.css is an empty stylesheet whose only job is to fire onload (an inline <script type="module"> doesn't execute inside a GWT-injected fragment), and the shadow root exists because that pane hosts several extensions' panels — plus both of ours — and
+  plain CSS would collide.
+
+  4. Data flow
+
+  Layered, all funnelling through one function:
+
+  useRemote.ts  ── sendRequest({method, url, body, contentType})
+     │              picks /internal (session) or /api (bearer) from VITE_BEARER_TOKEN
+     │              always same-origin; turns a network error into a synthetic 503
+     ├── useSettings.ts       generic named-settings REST: 'diff' | 'authorization' | 'executionQueue'
+     ├── useRemoteList.ts     panels' dependent lists (spaces → documents → revisions)
+     ├── useQueueStatistics   3s poll, per-chart cursors, exponential backoff, no overlap
+     ├── useDuplicationJobs   adaptive 3s/30s poll
+     └── useDiffService.js    the viewer's whole diff/merge API
+
+  Two call idioms exist for the same function: useRemote() inside components, import { sendRequest } in non-component modules (needed for rules-of-hooks). I noted earlier that three components use the module form and should use the hook — still outstanding.
+
+  5. Styling — the layer most likely to confuse
+
+  Four sources, in precedence order:
+
+  1. RSP's bundled style.css — design tokens (--sbb-*) + all control styling, icons inlined. Imported by main.tsx for admin; injected into the shadow root for panels; not used by the viewer.
+  2. Polarion-served CSS, <link>ed from the HTML: presentation.css (wiki skin), control-tokens.css + searchable-dropdown.css (viewer only), github-markdown-light.css + configurations.css (admin only).
+  3. App CSS: src/App.css (admin), src/styles/globals.css (viewer), src/formext/diff-tool.css (panels, ?inline).
+  4. Bootstrap — viewer only.
+
+  Three traps I hit:
+  - The tokens are scoped to .sbb-ui, not :root. A var(--sbb-*) inside a shorthand silently invalidates the whole declaration where that class isn't an ancestor — that's what killed the filter icon.
+  - The viewer's shell is .diff-app, not .app, because RSP claims .app.
+  - .standard-admin-page is what scopes the styled admin checkbox; .sbb-ui alone isn't enough.
+
+  6. Navigation and state
+
+  No router. src/router/navigation.ts (~90 lines) provides useSearchParams / usePathname / useRouter over history + useSyncExternalStore. The pathname is fixed per HTML entry; every navigation is a query-string mutation, and push mirrors Next's soft navigation (history changes, no
+  remount). The reference-stable cached snapshot in there is load-bearing — a fresh URLSearchParams per call would render forever.
+
+
+  7. The four handoff contracts
+
+  These cross process/language boundaries and are the things a refactor can silently break:
+
+  ┌──────────────────────────────────────────────────┬─────────────────────────────────────────────────┬─────────────────────────────────────┐
+  │                     Contract                     │                   Written by                    │               Read by               │
+  ├──────────────────────────────────────────────────┼─────────────────────────────────────────────────┼─────────────────────────────────────┤
+  │ documents.html?… query                           │ formext/openDocumentsDiff.ts                    │ viewer via URLSearchParams.get()    │
+  ├──────────────────────────────────────────────────┼─────────────────────────────────────────────────┼─────────────────────────────────────┤
+  │ <uuid>_additionalParams (localStorage, 24 h TTL) │ same                                            │ useAppContext.js, useDiffService.js │
+  ├──────────────────────────────────────────────────┼─────────────────────────────────────────────────┼─────────────────────────────────────┤
+  │ <sha1>_ids (localStorage)                        │ diff-tool-widget-utils.js (vanilla, unmigrated) │ useDiffService.js                   │
+  ├──────────────────────────────────────────────────┼─────────────────────────────────────────────────┼─────────────────────────────────────┤
+  │ data-props (escaped JSON)                        │ BaseFormExtension.PanelProps (Java)             │ formext/panelProps.ts               │
+  └──────────────────────────────────────────────────┴─────────────────────────────────────────────────┴─────────────────────────────────────┘
+
+  Plus searchable_dropdown_<select-id> cookies, which keep the panels' dropdown choices across document opens.
+
+  8. Tests
+
+  ┌─────────────────────┬──────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │        Layer        │  Where   │                                                                           Scope                                                                            │
+  ├─────────────────────┼──────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Vitest browser mode │ ui/test/ │ 217 tests + visual regression, real Chromium, fetch mocked, 80 % gate. Dockerized — visual assertions only inside the pinned image (__PIXEL_REFERENCES__). │
+  ├─────────────────────┼──────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Playwright          │ ui/e2e/  │ 79 tests × 3 browsers, real dev server, REST stubbed from e2e/fixtures/                                                                                    │
+  └─────────────────────┴──────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  Both run in Maven's test phase; CI runs Vitest in the build job and Playwright in a sharded per-browser job.
+
+  9. Deliberately not React
+
+  The three nav-topic JSPs, the four Java widget renderers (widgets/), diff-tool-widget-utils.js, and the trimmed css/common.css. Those tables are Polarion-native because they're rendered by the platform's own HtmlBuilder and query engine — see docs/react-conversion-report.md for the
+  sequencing if that's ever taken on.
+
+  ---
+  Two things I'd flag as worth reading next, in this order: ui/README.md (the surfaces and the test layers) and docs/react-conversion-report.md (the decisions, the deviations, and the contracts). Want me to fold this summary into one of them so it's in the repo rather than in chat?

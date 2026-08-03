@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "1.62.0",
+    "@playwright/test": "1.62.1",
     "@testing-library/jest-dom": "^7.0.0",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/node": "25.9.5",
@@ -48,7 +48,7 @@
   "overrides": {
     "postcss": ">=8.5.10"
   },
-  "packageManager": "npm@12.0.1",
+  "packageManager": "npm@12.0.2",
   "private": true,
   "scripts": {
     "build": "vite build && vite build --config vite.formext.config.js",
