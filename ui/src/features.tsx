@@ -11,7 +11,10 @@ const ExecutionQueuePage = lazy(() => import('./admin/pages/ExecutionQueuePage')
 export interface Feature {
   /** Must equal the extender id in META-INF/hivemodule.xml, which is what `?feature=` carries. */
   id: string;
+  /** Kept identical to the extender's `name`, so the two navigations read the same. */
   label: string;
+  /** One line on what the page is for, shown under its link on the dev Landing overview. */
+  description: string;
   component: ComponentType;
 }
 
@@ -23,11 +26,36 @@ export interface Feature {
  * /polarion/diff-tool/rest/swagger and is not a page of this app.
  */
 export const FEATURES: Feature[] = [
-  { id: 'about', label: 'About', component: AboutPage },
-  { id: 'diff-configurations', label: 'Diff Configurations', component: DiffConfigurationsPage },
-  { id: 'execution-queue', label: 'Execution Queue', component: ExecutionQueuePage },
-  { id: 'merge-authorization', label: 'Merge Authorization', component: MergeAuthorizationPage },
-  { id: 'project-duplication', label: 'Project Duplication', component: ProjectDuplicationPage },
+  {
+    id: 'about',
+    label: 'About',
+    description: 'Version, build and properties of the installed extension.',
+    component: AboutPage,
+  },
+  {
+    id: 'diff-configurations',
+    label: 'Diff Configurations',
+    description: 'Which work item fields, link roles and statuses take part in a comparison.',
+    component: DiffConfigurationsPage,
+  },
+  {
+    id: 'execution-queue',
+    label: 'Execution Queue',
+    description: 'Worker and thread limits for queued operations, plus live queue statistics.',
+    component: ExecutionQueuePage,
+  },
+  {
+    id: 'merge-authorization',
+    label: 'Merge Authorization',
+    description: 'Which project roles may merge work items and documents.',
+    component: MergeAuthorizationPage,
+  },
+  {
+    id: 'project-duplication',
+    label: 'Project Duplication',
+    description: 'Duplicate a project with its documents and work items, and track the jobs.',
+    component: ProjectDuplicationPage,
+  },
 ];
 
 export function findFeature(id: string | null): Feature | undefined {
