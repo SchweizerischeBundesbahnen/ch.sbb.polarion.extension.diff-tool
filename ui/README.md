@@ -122,11 +122,11 @@ turns it into the `__PIXEL_REFERENCES__` constant, and every visual suite is
 metrics - which shift both the antialiasing and the rendered element height, i.e. a red run that says
 nothing about the code. Inside the image every screenshot is still enforced.
 
-**Coverage gate.** 80% on statements/branches/functions/lines, enforced over the code this React
-migration authored - see the annotated `coverage.include` list in `vitest.config.ts`. The diff/merge
-viewer is deliberately outside that list: it came over unchanged from the Next.js app and its
-regression net is `e2e/`. Files join the gate as they are converted to TypeScript, and **new authored
-code must be added to `coverage.include` explicitly** or it is silently ungated.
+**Coverage gate.** 80% on statements/branches/functions/lines over `src/**` minus the annotated
+`coverage.exclude` list in `vitest.config.ts`. The diff/merge viewer is deliberately on that list: it
+came over unchanged from the Next.js app and its regression net is `e2e/`. **A new file is gated unless
+someone excludes it there**, and viewer entries leave the list as those files are converted to
+TypeScript.
 
 Maven runs the Vitest suite (dockerized) in the `test` phase. Useful flags:
 
