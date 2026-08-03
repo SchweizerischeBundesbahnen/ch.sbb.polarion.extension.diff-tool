@@ -40,7 +40,11 @@ export default defineConfig(({ command, mode }) => {
       alias: { '@': resolvePath('./src') },
       // The app and (from stage 4 on) the linked react-sbb-polarion package must resolve to a single
       // React instance, otherwise hooks fail with the dual-React "invalid hook call".
-      dedupe: ['react', 'react-dom'],
+      // sonner for the same reason, and it fails more quietly: the pages call toast() from their own
+      // import while <Toaster/> comes from react-sbb-polarion, so two instances mean the toast is queued
+      // in one store and rendered from the other. Notifications just stop appearing, with nothing in the
+      // console. Mirrors vitest.config.ts.
+      dedupe: ['react', 'react-dom', 'sonner'],
     },
     // Multi-page: one HTML entry per Polarion entry point. The three viewer filenames are a public
     // contract - webapp/diff-tool/js/modules/DiffTool.js and js/diff-tool-widget-utils.js open them by
