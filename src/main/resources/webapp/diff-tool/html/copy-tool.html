@@ -1,66 +1,13 @@
-<link href='/polarion/diff-tool/ui/css/common.css' rel='stylesheet'>
-<link href='/polarion/diff-tool/ui/generic/css/control-tokens.css' rel='stylesheet'>
-<link href='/polarion/diff-tool/ui/generic/css/radios.css' rel='stylesheet'>
-<link href='/polarion/diff-tool/ui/generic/css/inputs.css' rel='stylesheet'>
-<link href='/polarion/diff-tool/ui/generic/css/buttons.css' rel='stylesheet'>
-<link href='/polarion/diff-tool/ui/generic/css/searchable-dropdown.css' rel='stylesheet'
-      onload='import("/polarion/diff-tool/ui/js/modules/CopyTool.js")
-                .then(module => new module.default({SOURCE_DOC_PARAMS}))
+<!-- "Documents Copy" Document Properties panel. Polarion (CopyToolFormExtension -> BaseFormExtension)
+  injects this fragment into the editor's Document Properties pane and substitutes {PANEL_PROPS} with the
+  panel's data as HTML-attribute-escaped JSON.
+
+  Same arrangement as html/diff-tool.html: the <link> to the empty css/starter.css only exists so its
+  onload handler can import the React panel bundle, which then mounts into a SHADOW ROOT on the div below
+  and injects its own encapsulated styles (see ui/src/formext/mountCopyToolPanel.tsx). -->
+<link href='/polarion/diff-tool/ui/css/starter.css' rel='stylesheet'
+      onload='import("/polarion/diff-tool-app/ui/app/assets/copyToolPanel.js")
+                .then(module => module.mountCopyToolPanel("#copy-tool-panel"))
                 .catch(console.error);'>
 
-<div class="copy form-wrapper">
-    <div class="in-progress-overlay"><span class="sbb-spinner" role="img" aria-label="Loading" style="width:48px;height:48px;"></span><span id="copy-in-progress-message"></span></div>
-
-    <p>
-        Please select <strong>target</strong> project and space.
-        Additionally select which link role should be taken into account when copying WorkItems, as well as fields configuration.
-    </p>
-
-    <div class='property-wrapper'>
-        <label for='copy-project-selector' class="fixed-width w-1">Project:</label>
-        <select id='copy-project-selector'>
-            {PROJECT_OPTIONS}
-        </select>
-    </div>
-    <div class='property-wrapper'>
-        <label for='copy-space-selector' class="fixed-width w-1">Space:</label>
-        <select id='copy-space-selector'>
-        </select>
-    </div>
-
-    <div class='property-wrapper'>
-        <label for='copy-link-role-selector' class="fixed-width w-1">Link role:</label>
-        <select id='copy-link-role-selector'>
-            {LINK_ROLE_OPTIONS}
-        </select>
-    </div>
-    <div class='property-wrapper'>
-        <label for='copy-config-selector' class="fixed-width w-1">Configuration:</label>
-        <select id='copy-config-selector'>
-            {CONFIG_OPTIONS}
-        </select>
-    </div>
-
-    <div class='property-wrapper'>
-        <label for='handle-refs-selector' class="fixed-width w-1">Referenced workitems:</label>
-        <select id='handle-refs-selector'>
-            {HANDLE_REFS_OPTIONS}
-        </select>
-    </div>
-
-    <div class='property-wrapper'>
-        <input type='checkbox' id='copy-comments-checkbox'/>
-        <label for='copy-comments-checkbox'>Copy document comments</label>
-    </div>
-
-    <div class='buttons-wrapper'>
-        <button type='button' id="create-document" disabled>
-            <span class="sbb-icon-table-plus" role="img" aria-label="Add" style="margin-right:6px"></span>Create Document
-        </button>
-    </div>
-    <div id='creation-success' class="alert">
-        <span class="alert-success">Document created:</span> <a href="" style="font-weight: normal"></a>
-    </div>
-    <div class="alert alert-error"></div>
-    <div class="alert alert-warning"></div>
-</div>
+<div id="copy-tool-panel" class="copy form-wrapper" data-props='{PANEL_PROPS}'></div>

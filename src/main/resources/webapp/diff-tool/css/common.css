@@ -1,146 +1,19 @@
+/* Styles for the three nav-topic pages (pages/{diff-tool,multiple-work-items,collections}.jsp) and the
+   work-item / collection comparison widgets they host, which are rendered by Polarion's own HtmlBuilder
+   from the Java renderers in widgets/ - so this markup is not React's and stays on a plain stylesheet.
+
+   The Document Properties side panels used to be styled from here too. They are React now and inject
+   their own copy of the rules they need into their shadow root (ui/src/formext/diff-tool.css), so
+   everything panel-specific - .property-wrapper, .buttons-wrapper, .in-progress-overlay, .alert*,
+   the .searchable-dropdown width - has moved out of this file.
+
+   Once the nav-topic pages and the widget renderers are migrated too, this file goes away entirely. */
+
+/* Kept despite SKILL.md rule 3 (never declare font-family in app CSS): these pages load only
+   polarion.css, not the shared control-tokens.css that defines --sbb-control-font-family, so there is no
+   token to inherit from yet. Drop this together with the pages. */
 a, td, div, li, ul, input, button {
     font-family: "Segoe UI", "Selawik", "Open Sans", Arial, sans-serif;
-}
-
-.form-wrapper .in-progress-overlay {
-    z-index: 1000;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: white;
-    opacity: 80%;
-    display: none;
-    flex-flow: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.form-wrapper .in-progress-overlay.show {
-    display: flex;
-}
-
-.property-wrapper {
-    margin-top: 8px;
-    padding-right: 10px;
-    display: flex;
-    align-items: center;
-    column-gap: 5px;
-}
-
-.property-wrapper.hide, .buttons-wrapper.hide {
-    display: none !important;
-}
-
-.property-wrapper label {
-    margin-top: 2px;
-    margin-bottom: 3px;
-}
-
-.property-wrapper label.fixed-width {
-    display: inline-block;
-}
-
-.property-wrapper label.fixed-width.w-1 {
-    width: 140px;
-}
-
-.property-wrapper label.fixed-width.w-2 {
-    width: 200px;
-}
-
-.property-wrapper label input[type="checkbox"] {
-    vertical-align: middle;
-}
-
-.property-wrapper select, .property-wrapper input {
-    font-weight: 600;
-    font-family: "Segoe UI", "Selawik", "Open Sans", Arial, sans-serif;
-    font-size: 13px;
-    border: 1px solid #cccccc;
-    border-radius: 2px;
-}
-
-.property-wrapper input {
-    padding: 2px 4px 4px .4rem;
-}
-
-.property-wrapper input.error {
-    border-color: red;
-    color: red;
-}
-
-.property-wrapper select {
-    padding: 2px 2rem 4px .4rem;
-}
-
-.property-wrapper #select-revision-radios {
-    display: flex;
-    align-items: center;
-}
-
-.property-wrapper #select-revision-radios br {
-    display: none;
-}
-
-/* space between the two radio groups (radio→label spacing comes from radios.css) */
-.property-wrapper #select-revision-radios label {
-    margin-right: 16px;
-}
-
-/* diff-tool comboboxes are wider than the generic default. !important so the width always wins,
-   even if the element-mode container inherited an inline width from the wrapped <select>. */
-.comparison .searchable-dropdown,
-.copy .searchable-dropdown {
-    width: 240px !important;
-    flex-shrink: 0;
-}
-
-.property-wrapper #select-revision-manual-input {
-    display: block;
-    width: 100%;
-}
-
-.property-wrapper #revision-enter-manually, .property-wrapper #baseline-checkbox {
-    margin-left: 0;
-}
-
-.buttons-wrapper {
-    margin: 10px 0;
-}
-
-/* Button chrome (transparent action button) comes from the shared system (generic buttons.css
-   aliases `.buttons-wrapper button`). Only the wrapper layout / icon / disabled bits stay local. */
-.buttons-wrapper button:not(:first-child) {
-    margin-left: 5px;
-}
-
-.buttons-wrapper .divider {
-    padding: 4px 0;
-    width: 1px;
-    border-right-color: #fff;
-    border-left-color: #ccc;
-}
-
-.buttons-wrapper button img {
-    margin-right: 6px;
-    vertical-align: bottom;
-}
-
-.alert {
-    display: none;
-    font-weight: bold;
-}
-
-.alert-error {
-    color: red;
-}
-
-.alert-warning {
-    color: orange;
-}
-
-.alert-success {
-    color: green;
 }
 
 .polarion-rp-column {

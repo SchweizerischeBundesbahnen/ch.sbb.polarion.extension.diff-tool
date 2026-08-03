@@ -37,6 +37,18 @@ repos:
         files: docs/openapi.json
   - repo: local
     hooks:
+      - id: ui-prettier
+        name: UI Prettier (format:check)
+        entry: npm --prefix ui run format:check
+        language: system
+        pass_filenames: false
+        files: ^ui/.*\.(ts|tsx|css|html)$
+      - id: ui-eslint
+        name: UI ESLint
+        entry: npm --prefix ui run lint
+        language: system
+        pass_filenames: false
+        files: ^ui/.*\.(ts|tsx|js|jsx|mjs)$
       - id: sensitive-data-leak-urls
         name: Sensitive data leak - URLs
         entry: (?<!polarion-opensource@)(?<!www\.)sbb\.ch

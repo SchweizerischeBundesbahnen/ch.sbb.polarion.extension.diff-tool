@@ -9,12 +9,13 @@
 
 # testing
 /coverage
+# vitest browser mode: transient visual-diff output and attachments (the committed references live in
+# test/expected/ and are deliberately NOT ignored)
+/test/__diff__/
+/test/__screenshots__/
+/.vitest-attachments/
 
-# next.js
-/.next/
-/out/
-
-# production
+# build output
 /build/
 /dist/
 
@@ -37,7 +38,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # Playwright
 /test-results/

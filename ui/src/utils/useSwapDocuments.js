@@ -1,4 +1,4 @@
-import {usePathname, useRouter, useSearchParams} from "next/navigation";
+import {usePathname, useRouter, useSearchParams} from "@/router/navigation";
 
 const SWAP_MAPPING = {
   sourceProjectId: 'targetProjectId',

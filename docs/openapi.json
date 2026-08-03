@@ -26,6 +26,61 @@
         ]
       }
     },
+    "/api/configuration-properties": {
+      "get": {
+        "operationId": "getConfigurationProperties",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationPropertiesModel"
+                }
+              }
+            },
+            "description": "Configuration properties"
+          }
+        },
+        "summary": "Returns the extension configuration properties (active and obsolete)",
+        "tags": [
+          "Extension Information"
+        ]
+      }
+    },
+    "/api/configuration-status": {
+      "get": {
+        "operationId": "getConfigurationStatus",
+        "parameters": [
+          {
+            "description": "Scope to evaluate the status for, e.g. 'project/elibrary/'",
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConfigurationStatus"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Configuration status entries"
+          }
+        },
+        "summary": "Returns the extension configuration status for the given scope",
+        "tags": [
+          "Extension Information"
+        ]
+      }
+    },
     "/api/context": {
       "get": {
         "operationId": "getContext",
@@ -926,6 +981,27 @@
         ]
       }
     },
+    "/api/queue/configuration-meta": {
+      "get": {
+        "operationId": "getConfigurationMeta",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueConfigurationMeta"
+                }
+              }
+            },
+            "description": "Assignable features with their labels, worker count, thread limit and queue capacity"
+          }
+        },
+        "summary": "Gets the static metadata needed to render the execution queue configuration",
+        "tags": [
+          "Queued Execution Management"
+        ]
+      }
+    },
     "/api/queueStatistics": {
       "delete": {
         "operationId": "clearStatistics",
@@ -965,6 +1041,58 @@
         "summary": "Gets list of statistics items for each worker",
         "tags": [
           "Queued Execution Management"
+        ]
+      }
+    },
+    "/api/readme": {
+      "get": {
+        "operationId": "getDocumentation",
+        "responses": {
+          "default": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "HTML help article"
+          }
+        },
+        "summary": "Returns the build-generated README help article shown on the About page",
+        "tags": [
+          "Extension Information"
+        ]
+      }
+    },
+    "/api/roles": {
+      "get": {
+        "operationId": "getRoles",
+        "parameters": [
+          {
+            "description": "Scope, e.g. project/<projectId>/ (empty for global scope)",
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolesInfo"
+                }
+              }
+            },
+            "description": "Successfully retrieved the available roles"
+          }
+        },
+        "summary": "Get the global and project roles available in the specified scope",
+        "tags": [
+          "Roles"
         ]
       }
     },
@@ -1294,6 +1422,27 @@
         ]
       }
     },
+    "/api/user-guide": {
+      "get": {
+        "operationId": "getUserGuide",
+        "responses": {
+          "default": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "HTML help article"
+          }
+        },
+        "summary": "Returns the build-generated USER_GUIDE help article shown on the User Guide page",
+        "tags": [
+          "Extension Information"
+        ]
+      }
+    },
     "/api/version": {
       "get": {
         "operationId": "getVersion",
@@ -1370,6 +1519,67 @@
             "description": "The number of requests to the server that are allowed to run in parallel",
             "format": "int32",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ConfigurationPropertiesModel": {
+        "description": "Extension configuration properties shown on the About page",
+        "properties": {
+          "obsoleteProperties": {
+            "description": "Obsolete or non-valid configuration properties (only key and value are set), sorted by key",
+            "items": {
+              "$ref": "#/components/schemas/ConfigurationPropertyModel"
+            },
+            "type": "array"
+          },
+          "properties": {
+            "description": "Active configuration properties, sorted by key",
+            "items": {
+              "$ref": "#/components/schemas/ConfigurationPropertyModel"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ConfigurationPropertyModel": {
+        "description": "A single extension configuration property as shown on the About page",
+        "properties": {
+          "defaultValue": {
+            "description": "Default value of the property, if any",
+            "type": "string"
+          },
+          "description": {
+            "description": "Human readable description of the property, if any",
+            "type": "string"
+          },
+          "key": {
+            "description": "Property key",
+            "type": "string"
+          },
+          "value": {
+            "description": "Current value of the property",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ConfigurationStatus": {
+        "properties": {
+          "details": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "OK",
+              "WARNING",
+              "ERROR"
+            ],
+            "type": "string"
           }
         },
         "type": "object"
@@ -2059,6 +2269,24 @@
         },
         "type": "object"
       },
+      "FeatureInfo": {
+        "description": "A queueable feature, as the Execution Queue admin page needs to display it",
+        "properties": {
+          "description": {
+            "description": "Longer explanation shown as additional info next to the label",
+            "type": "string"
+          },
+          "id": {
+            "description": "Feature ID, matching the keys used in the execution queue settings",
+            "type": "string"
+          },
+          "label": {
+            "description": "Short label shown in the workers table",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Field": {
         "description": "Represents a field within a work item",
         "properties": {
@@ -2374,6 +2602,37 @@
         },
         "type": "object"
       },
+      "QueueConfigurationMeta": {
+        "description": "Metadata describing the execution queue configuration options",
+        "properties": {
+          "cpuLoad": {
+            "$ref": "#/components/schemas/FeatureInfo"
+          },
+          "features": {
+            "description": "Features that can be assigned to a worker, in declaration order",
+            "items": {
+              "$ref": "#/components/schemas/FeatureInfo"
+            },
+            "type": "array"
+          },
+          "maxRecommendedThreads": {
+            "description": "Maximum thread count recommended for this machine, used as the upper bound of the thread inputs",
+            "format": "int32",
+            "type": "integer"
+          },
+          "queueCapacity": {
+            "description": "Maximum number of entries a worker queue holds before rejecting further submissions",
+            "format": "int32",
+            "type": "integer"
+          },
+          "workerCount": {
+            "description": "Number of configurable workers",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Revision": {
         "description": "Revision details",
         "properties": {
@@ -2398,6 +2657,32 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "RolesInfo": {
+        "description": "Roles available to grant in a given scope",
+        "properties": {
+          "globalRoles": {
+            "description": "Roles defined for the whole repository",
+            "items": {
+              "description": "Roles defined for the whole repository",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "projectRoles": {
+            "description": "Roles defined for the project of the scope; empty in global scope",
+            "items": {
+              "description": "Roles defined for the project of the scope; empty in global scope",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "globalRoles",
+          "projectRoles"
+        ],
         "type": "object"
       },
       "SettingName": {

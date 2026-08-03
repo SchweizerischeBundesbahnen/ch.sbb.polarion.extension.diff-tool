@@ -1,0 +1,8 @@
+/* Intentionally empty trigger stylesheet. Both Document Properties fragments (html/diff-tool.html and
+   html/copy-tool.html) load this file via a <link> whose `onload` handler dynamically imports and mounts
+   the React panel bundle - an inline module <script> would not run inside a GWT-injected fragment.
+
+   The panels' real styles (ui/src/formext/diff-tool.css plus react-sbb-polarion's stylesheet) are
+   bundled into those modules and injected into each panel's shadow root (see
+   ui/src/formext/shadowMount.ts), so this file only needs to exist and be served for the onload trigger
+   to fire. */

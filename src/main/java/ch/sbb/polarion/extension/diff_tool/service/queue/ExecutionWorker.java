@@ -29,7 +29,11 @@ import static ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStat
 public class ExecutionWorker {
 
     private static final Logger logger = Logger.getLogger(ExecutionWorker.class);
-    private static final int DEFAULT_MAX_QUEUE_CAPACITY = 1000;
+    /**
+     * Public so the Execution Queue admin page can state the real limit instead of repeating it as
+     * literal help text, which is how it silently drifted before.
+     */
+    public static final int DEFAULT_MAX_QUEUE_CAPACITY = 1000;
 
     private final ThreadPoolExecutor executor;
     private final CountersRegistry countersRegistry = new CountersRegistry();
@@ -132,9 +136,11 @@ public class ExecutionWorker {
             throw e;
         } catch (ExecutionException e) {
             throw new RejectedExecutionException("Task execution failed: " + e.getMessage(), e);
-        } finally {
-            countersRegistry.completeExecution(task.getFeature());
         }
+        // No completeExecution here: the task decrements its own execution counter in
+        // FeatureExecutionTask.call()'s finally block. Doing it from this thread was both racy (see the
+        // comment there) and wrong when the task never ran at all, in which case it decremented a
+        // counter that had never been incremented.
     }
 
     public long getQueuedCount(Feature feature) {

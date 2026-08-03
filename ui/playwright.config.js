@@ -13,16 +13,16 @@ import { defineConfig, devices } from '@playwright/test';
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: './tests',
+  testDir: './e2e',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1,
-  /* CI runs the Next.js dev server, which compiles each route on first hit; the
+  /* CI runs the vite dev server, which transforms modules on first request; the
      first test to touch a heavy route can need well over the 30s default while it
-     compiles. Give CI headroom (diagnosed via traces: the merge pane does render,
+     warms up. Give CI headroom (diagnosed via traces: the merge pane does render,
      just slowly). Local keeps the tighter default. */
   timeout: process.env.CI ? 60_000 : 30_000,
   /* Raise the assertion timeout on CI too so auto-waiting expects (e.g. the URL
@@ -87,12 +87,12 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
+  /* `--mode e2e` (see the `dev:e2e` script) loads the committed .env.e2e instead of a developer's
+     .env.development.local, so a locally configured bearer token can never flip the app onto the
+     token-authenticated /rest/api base under test, and it disables the Polarion dev proxy. */
   webServer: {
-    command: 'npm run dev',
+    command: 'npm run dev:e2e',
     port: 3000,
     reuseExistingServer: !process.env.CI,
-    env: {
-      PLAYWRIGHT_TESTS: 'true'
-    },
   },
 });

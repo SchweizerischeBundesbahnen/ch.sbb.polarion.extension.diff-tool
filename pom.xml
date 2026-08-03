@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>15.7.0</version>
+        <version>15.10.1</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
@@ -77,10 +77,22 @@
         <!--suppress UnresolvedMavenProperty -->
         <markdown2html-maven-plugin.failOnError>${env.MARKDOWN2HTML_MAVEN_PLUGIN_FAIL_ON_ERROR}</markdown2html-maven-plugin.failOnError>
 
-        <nextjs.sources.root>${project.basedir}/ui</nextjs.sources.root>
-        <nextjs.destination.root>${project.basedir}/src/main/resources/webapp/diff-tool-app</nextjs.destination.root>
+        <!-- Most of the UI build - node/npm, `npm ci`, `npm run build`, the dockerized Vitest run with
+             its coverage gate in the `test` phase, and the copy into webapp/diff-tool-app - is inherited
+             from the generic parent's `vite-ui` profile, which activates on the presence of
+             ui/package.json. Its defaults (vite.sources.root, vite.destination.root, skipJsTests,
+             jsTestCommand, jsTestExtraArgs) already match what this pom used to declare.
 
-        <skipJsTests>false</skipJsTests>
+             What is diff-tool's own is the Playwright end-to-end suite in ui/e2e, which runs in the
+             `test` phase alongside Vitest - as it has since before the React migration, so that a plain
+             `mvn install` exercises the diff/merge viewer end to end. Skipping:
+               -DskipJsE2eTests=true  drop only the e2e suite, keep Vitest and its coverage gate
+               -DskipJsTests=true     drop both JS suites
+               -DskipTests=true       drop the Java tests and, via frontend-maven-plugin's own skipTests
+                                      parameter, both JS suites with them
+             It needs the Playwright browsers present: `npx playwright install` once in ui/, or
+             -DinstallPlaywright (from the parent) to have the build fetch them. -->
+        <skipJsE2eTests>false</skipJsE2eTests>
     </properties>
 
     <profiles>
@@ -93,6 +105,22 @@
                 <commons-collections4.artifactId>org.apache.commons.commons-collections4_4.4.0</commons-collections4.artifactId>
                 <commons-lang3.artifactId>org.apache.commons.lang3_3.12.0</commons-lang3.artifactId>
                 <org.jsoup.artifactId>org.jsoup_1.21.2</org.jsoup.artifactId>
+            </properties>
+        </profile>
+
+        <!-- -DskipJsTests=true has to turn off both JS suites, not just the parent's Vitest run, so it
+             switches the e2e flag too. Matched on the exact value, so -DskipJsTests=false does not
+             accidentally activate this (property activation fires on any value otherwise). -->
+        <profile>
+            <id>skip-js-e2e-tests-with-all-js-tests</id>
+            <activation>
+                <property>
+                    <name>skipJsTests</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <properties>
+                <skipJsE2eTests>true</skipJsE2eTests>
             </properties>
         </profile>
     </profiles>
@@ -169,11 +197,51 @@
 
     <build>
         <plugins>
+            <!-- The Playwright end-to-end suite, in the `test` phase next to the parent's Vitest run
+                 (which is declared first, so the fast suite fails first). Not in a profile: a plain
+                 `mvn install` has always run the viewer's e2e suite, and the migration must not quietly
+                 take that away. CI's build job opts out with -DskipJsE2eTests=true, because its own
+                 per-browser `e2e` job covers the same suite three times over. -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <executions>
+                    <!-- The browsers the e2e suite needs, before it runs. The pre-migration pom did this
+                         too, but unconditionally in generate-resources - so every build paid for it even
+                         with the tests skipped, and on Linux the deps flag wanted root. Gated on the same
+                         flag as the suite, and without the deps flag: the only consumers are developer
+                         machines, since CI's Maven build skips e2e and its dedicated `e2e` job installs
+                         the one browser it needs, with its OS deps, itself. A no-op once cached. -->
+                    <execution>
+                        <id>install-playwright-browsers</id>
+                        <goals>
+                            <goal>npx</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <arguments>playwright install</arguments>
+                            <skip>${skipJsE2eTests}</skip>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm e2e</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>test</phase>
+                        <configuration>
+                            <arguments>run e2e:headless</arguments>
+                            <skip>${skipJsE2eTests}</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
                 <executions>
-                    <!-- Next.js writes hash-named bundles into the gitignored webapp/diff-tool-app/app
+                    <!-- Vite writes hash-named bundles into the gitignored webapp/diff-tool-app/app
                          dir. copy-resources only overwrites, never deletes, so stale bundles from
                          previous builds pile up there. Purge the dir both on `mvn clean` and right
                          before the copy in every build, so it never accumulates regardless of whether
@@ -196,14 +264,14 @@
                                     <followSymlinks>false</followSymlinks>
                                 </fileset>
                                 <fileset>
-                                    <directory>${nextjs.destination.root}/app</directory>
+                                    <directory>${vite.destination.root}/app</directory>
                                     <followSymlinks>false</followSymlinks>
                                 </fileset>
                             </filesets>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>purge-nextjs-output-before-copy</id>
+                        <id>purge-vite-output-before-copy</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>clean</goal>
@@ -212,7 +280,7 @@
                             <excludeDefaultDirectories>true</excludeDefaultDirectories>
                             <filesets>
                                 <fileset>
-                                    <directory>${nextjs.destination.root}/app</directory>
+                                    <directory>${vite.destination.root}/app</directory>
                                     <followSymlinks>false</followSymlinks>
                                 </fileset>
                             </filesets>
@@ -264,6 +332,7 @@
                     <resourcePackages>
                         <package>ch.sbb.polarion.extension.generic.rest.controller.info</package>
                         <package>ch.sbb.polarion.extension.generic.rest.controller.settings</package>
+                        <package>ch.sbb.polarion.extension.generic.rest.controller.roles</package>
                         <package>ch.sbb.polarion.extension.generic.rest.model</package>
                         <package>ch.sbb.polarion.extension.diff_tool.rest.controller</package>
                         <package>ch.sbb.polarion.extension.diff_tool.rest.model</package>
@@ -275,90 +344,6 @@
                 <artifactId>pre-commit-run-maven-plugin</artifactId>
             </plugin>
 
-            <plugin>
-                <groupId>com.github.eirslett</groupId>
-                <artifactId>frontend-maven-plugin</artifactId>
-                <version>${frontend-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>install node and npm</id>
-                        <goals>
-                            <goal>install-node-and-npm</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                    </execution>
-                    <execution>
-                        <id>npm install</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                    </execution>
-                    <execution>
-                        <id>install-playwright-browsers</id>
-                        <goals>
-                            <goal>npx</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <arguments>playwright install --with-deps</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm build</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <arguments>run build</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm test</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <phase>test</phase>
-                        <configuration>
-                            <arguments>run playwright:test:headless</arguments>
-                            <skip>${skipJsTests}</skip>
-                        </configuration>
-                    </execution>
-                </executions>
-                <configuration>
-                    <nodeVersion>${node.version}</nodeVersion>
-                    <workingDirectory>ui</workingDirectory>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-nextjs-build</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${nextjs.destination.root}</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${nextjs.sources.root}/dist</directory>
-                                    <filtering>false</filtering>
-                                    <includes>
-                                        <include>**/*</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                            <overwrite>true</overwrite>
-                            <includeEmptyDirs>true</includeEmptyDirs>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
