@@ -103,6 +103,7 @@ export default function Landing() {
             {/* No `embedded` parameter on purpose: dev navigation is not embedded, so the pages show
                 their "Overview" back link, which returns here with the scope in the URL. */}
             <a href={linkFor(feature.id)}>{feature.label}</a>
+            <div className="landing-feature-description">{feature.description}</div>
           </li>
         ))}
       </ul>

@@ -26,6 +26,15 @@
   line-height: 1.8;
 }
 
+/* The one-liner from features.tsx under each link. Its own line-height, since the list above is spaced
+   for single-line entries. */
+.landing-feature-description {
+  color: #666;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
 /* Section headings this app renders directly in a page body - react-sbb-polarion styles the page <h1>,
    but an <h2> below it would fall back to the browser default, which is far larger than Polarion's admin
    pages use.

@@ -79,45 +79,47 @@ export default defineConfig({
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: './coverage',
       all: false,
-      // DELIBERATE DEVIATION from the shared gate, which uses include: ['src/**'].
+      // include: ['src/**'] is the shared gate. What deviates here is the exclude list.
       //
-      // The diff/merge viewer (src/components/**, src/pages/**, src/services/useDiffService.js,
-      // src/utils/**, src/useAppContext.js) came over unchanged from the Next.js app when the bundler
-      // was swapped, and is covered end-to-end by the 11 Playwright specs in e2e/ across three
-      // browsers, CI-gated. Reaching 80% branches on it with Vitest would be weeks of work that
-      // duplicates assertions e2e/ already makes, and it would have blocked this gate from existing at
-      // all. So the 80% bar applies to everything this migration authors, listed explicitly below.
+      // The diff/merge viewer (src/pages/**, all of src/components/** except the three shells,
+      // src/services/useDiffService.js and its siblings, src/utils/**, src/useAppContext.js,
+      // src/DiffTypes.js) came over unchanged from the Next.js app when the bundler was swapped, and is
+      // covered end-to-end by the 11 Playwright specs in e2e/ across three browsers, CI-gated. Reaching
+      // 80% branches on it with Vitest would be weeks of work that duplicates assertions e2e/ already
+      // makes, and it would have blocked this gate from existing at all. So the 80% bar applies to
+      // everything this migration authors, i.e. src/** minus the exclusions below.
       //
-      // Two consequences to keep in mind:
-      //  - Files are added to this list as they are written, not discovered. New authored code that is
-      //    not listed here is silently ungated.
-      //  - With all:false a listed file only counts once a test imports it, so a listed-but-untested
-      //    file also does not fail the gate. (all:true is not an option - see the istanbul note above.)
-      // Move viewer files under the gate as they are converted to TypeScript.
-      include: [
-        'src/router/**',
-        'src/services/useRemote.ts',
-        'src/components/AppShell.jsx',
-        'src/components/PublicShell.jsx',
-        'src/components/ErrorBoundary.jsx',
-        'src/App.tsx',
-        'src/features.tsx',
-        'src/admin/**',
-        'src/services/useSettings.ts',
-        // Landing as the remaining surfaces are ported:
-        'src/formext/**',
-      ],
-      // src/entries/** is the per-page bootstrap (the equivalent of main.tsx in the sibling
-      // extensions): it only calls createRoot and nests the shells, all of which are covered directly.
+      // Deliberately an exclude list rather than the include allowlist this started as: a new file is
+      // now gated unless someone takes it out explicitly, where before new authored code that nobody
+      // remembered to list was silently ungated. Drop viewer entries from the list as those files are
+      // converted to TypeScript.
+      //
+      // One consequence remains: with all:false a gated file only counts once a test imports it, so a
+      // gated-but-untested file does not fail the gate. (all:true is not an option - see the istanbul
+      // note above.)
+      include: ['src/**'],
       exclude: [
         'src/**/*.d.ts',
         'src/**/*.css',
+        'src/**/*.svg',
         // Per-page bootstrap (the equivalent of main.tsx in the sibling extensions): createRoot plus
         // nesting the shells, all of which are covered directly.
         'src/entries/**',
         'src/main.tsx',
         // Dev-only scaffolding, never opened inside Polarion (which always passes ?feature=).
         'src/admin/dev/**',
+        // The viewer, gated by e2e/ instead - see the note above. AppShell, PublicShell and
+        // ErrorBoundary are the exception: the admin pages and the panels mount them too, so they stay
+        // under the gate and every other file in src/components/ is named here.
+        'src/pages/**',
+        'src/utils/**',
+        'src/components/*/**',
+        'src/components/AppContext.js',
+        'src/components/{AppAlert,ControlPane,ErrorsOverlay,ExtensionInfo}.jsx',
+        'src/components/{FloatingButton,Modal,PathPart,SearchableSelect,WorkItemHeader}.jsx',
+        'src/services/{useDiffService,usePdf,useSessionRenewal}.js',
+        'src/useAppContext.js',
+        'src/DiffTypes.js',
       ],
       thresholds: {
         statements: 80,
