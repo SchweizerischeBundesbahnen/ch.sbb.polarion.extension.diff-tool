@@ -17,9 +17,9 @@ class CollectionsNodeTest {
         assertEquals("Collections", collectionsNode.getLabel());
         assertEquals("/polarion/ria/images/topicIconsSmall/collectionsTopic.svg", collectionsNode.getIconUrl());
         when(contextId.getContextName()).thenReturn("context");
-        assertEquals("/polarion/diff-tool/pages/collections.jsp?sourceProjectId=context&buildId=null", collectionsNode.getPageUrl(contextId));
+        assertEquals("/polarion/diff-tool-app/ui/app/topics.html?topic=compare-collections&sourceProjectId=context&buildId=null", collectionsNode.getPageUrl(contextId));
         when(contextId.getContextName()).thenReturn(null);
-        assertEquals("/polarion/diff-tool/pages/collections.jsp?sourceProjectId=&buildId=null", collectionsNode.getPageUrl(contextId));
+        assertEquals("/polarion/diff-tool-app/ui/app/topics.html?topic=compare-collections&sourceProjectId=&buildId=null", collectionsNode.getPageUrl(contextId));
         assertTrue(collectionsNode.getChildren().isEmpty());
         assertFalse(collectionsNode.requiresToken());
     }

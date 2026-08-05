@@ -21,7 +21,7 @@ const extensionlessHtml = () => ({
     server.middlewares.use((req, _res, next) => {
       if (req.url) {
         const [pathname, query] = req.url.split('?');
-        if (/^\/(documents|collections|workitems)$/.test(pathname)) {
+        if (/^\/(documents|collections|workitems|topics)$/.test(pathname)) {
           req.url = query === undefined ? `${pathname}.html` : `${pathname}.html?${query}`;
         }
       }
@@ -47,14 +47,16 @@ export default defineConfig(({ command, mode }) => {
       dedupe: ['react', 'react-dom', 'sonner'],
     },
     // Multi-page: one HTML entry per Polarion entry point. The three viewer filenames are a public
-    // contract - webapp/diff-tool/js/modules/DiffTool.js and js/diff-tool-widget-utils.js open them by
-    // literal URL, and so do the Java widget renderers' inline handlers. Do not rename them.
+    // contract - src/formext/openDocumentsDiff.ts and src/topics/open{WorkItems,Collections}Diff.ts open
+    // them by literal URL. Do not rename them.
     // index.html is the admin feature router, opened by the extenders in META-INF/hivemodule.xml with
-    // ?feature=<id>.
+    // ?feature=<id>; topics.html is the same arrangement for the three navigation topics, opened with
+    // ?topic=<id> by the getPageUrl() of the nodes in ch.sbb.polarion.extension.diff_tool.navigation.
     build: {
       rollupOptions: {
         input: {
           index: resolvePath('./index.html'),
+          topics: resolvePath('./topics.html'),
           documents: resolvePath('./documents.html'),
           collections: resolvePath('./collections.html'),
           workitems: resolvePath('./workitems.html'),

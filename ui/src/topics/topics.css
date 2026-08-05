@@ -4,19 +4,30 @@
    Java widget renderers produced. Two things changed with the port: the selectors hang off .diff-topics
    instead of .polarion-DiffTool, and the tables are styled here rather than by Polarion's polarion.css - the
    rows are ours now, not rich page table rows. No Polarion-served stylesheet is needed, which is what lets
-   Vitest mount these pages with ui/ alone. */
+   Vitest mount these pages with ui/ alone.
 
-/* Same base as react-sbb-polarion's .app rule, which this shell deliberately cannot use: RSP claims .app for
-   the admin pages (see TopicsApp). .sbb-ui on <body> defines the --sbb-* tokens but sets no font. */
+   Controls (inputs, checkboxes, radios) come from react-sbb-polarion, scoped by the `form-wrapper` class on
+   the shell - the same class the legacy JSP page shell carried. The values below that are not tokens were
+   measured on the pre-migration pages, so the two look the same side by side. */
+
 .diff-topics {
-  padding: 10px;
+  /* Same base as react-sbb-polarion's .app rule, which this shell deliberately cannot use: RSP claims .app
+     for the admin pages (see TopicsApp). .sbb-ui defines the --sbb-* tokens but sets no font. */
+  padding: 10px 16px;
   font-family: var(--sbb-control-font-family);
   font-size: 13px;
   color: #1a1a1a;
+
+  /* Polarion's own link colour, which the widget's tables and paginator inherited from polarion.css. */
+  --diff-topics-link: #006e87;
 }
 
+/* polarion.css sized these headings; the browser default of 1.17em would render them barely larger than the
+   body text. */
 .diff-topics .header h3 {
   margin: 0 0 20px;
+  font-size: 23px;
+  font-weight: 700;
 }
 
 .diff-topics .header p {
@@ -33,11 +44,14 @@
   border: 0;
   background: none;
   padding: 0;
-  color: #007993;
+  color: var(--diff-topics-link);
   font-size: 13px;
   font-weight: 400;
-  text-decoration: underline;
   cursor: pointer;
+}
+
+.diff-topics .link-button:hover {
+  text-decoration: underline;
 }
 
 .diff-topics .main-pane {
@@ -51,21 +65,38 @@
   color: grey;
 }
 
-/* The Compare button. The widget rendered Polarion's own big TestsExecutionButton, whose styling lives in
-   polarion.css; this is the same shape drawn from the RSP control tokens instead. */
+/* The Compare button. The widget rendered Polarion's own TestsExecutionButton, whose gradient, border and
+   green label live in polarion.css - the values here were measured on that button, so the two match. The icon
+   is the only addition. */
 .diff-topics .compare-button {
   display: inline-flex;
   align-items: center;
   column-gap: 8px;
   height: auto;
+  min-width: 0;
   margin-bottom: 10px;
-  padding: 10px 20px;
+  padding: 10px 14px;
+  border: 1px solid #bababa;
+  border-radius: 2px;
+  background: linear-gradient(#ededed, #d6d6d6);
+  color: #329433;
+  font-family: inherit;
   font-size: 20px;
+  font-weight: 700;
+  text-shadow: none;
+  cursor: pointer;
 }
 
 .diff-topics .compare-button img {
   width: 20px;
   height: 20px;
+}
+
+/* Only the label greys out while nothing is selected, as the widget's -defaultCursor rule did. */
+.diff-topics .compare-button:disabled {
+  color: grey;
+  opacity: 1;
+  cursor: default;
 }
 
 .diff-topics .alert-error {
@@ -100,7 +131,6 @@
 }
 
 .diff-topics .query label {
-  width: auto;
   white-space: nowrap;
 }
 
@@ -108,8 +138,10 @@
   margin-left: 20px;
 }
 
+/* Shrinkable, so the whole query row still fits on one line inside a narrow collections column. */
 .diff-topics .query-input {
-  flex-grow: 2;
+  flex: 1 1 120px;
+  min-width: 60px;
 }
 
 .diff-topics input.records-per-page {
@@ -150,15 +182,17 @@
   border-collapse: collapse;
 }
 
+/* 10px keeps the 37px row pitch the Polarion table had. */
 .diff-topics .items-table th,
 .diff-topics .items-table td {
-  padding: 4px 8px;
+  padding: 10px 8px;
   text-align: left;
-  vertical-align: top;
-  border-bottom: 1px solid #ededed;
+  vertical-align: middle;
+  border-bottom: 1px solid #eeeeee;
 }
 
 .diff-topics .items-table th {
+  padding: 6px 8px;
   background: #f5f5f5;
   border-bottom: 1px solid #dedede;
   font-weight: 600;
@@ -179,6 +213,16 @@
   font-style: italic;
 }
 
+/* Polarion renders a table link without an underline, and underlines it on hover only. */
+.diff-topics .items-table a {
+  color: var(--diff-topics-link);
+  text-decoration: none;
+}
+
+.diff-topics .items-table a:hover {
+  text-decoration: underline;
+}
+
 .diff-topics .enum-cell {
   display: inline-flex;
   align-items: center;
@@ -190,30 +234,41 @@
   height: 16px;
 }
 
+/* Centred under the table and italic, as the rich page table's footer was. */
 .diff-topics .table-footer {
-  display: flex;
-  align-items: center;
-  column-gap: 10px;
-  flex-wrap: wrap;
   padding: 5px 8px;
-  color: grey;
+  color: #1a1a1a;
+  font-style: italic;
+  text-align: center;
+}
+
+.diff-topics .table-footer-line {
+  display: inline-flex;
+  align-items: center;
+  column-gap: 8px;
+}
+
+.diff-topics .table-footer .sbb-btn--link {
+  font-style: italic;
+  color: var(--diff-topics-link);
 }
 
 .diff-topics .table-footer .query-text {
-  flex-basis: 100%;
   padding-top: 5px;
-  font-family: monospace;
+  color: grey;
   overflow-wrap: anywhere;
 }
 
 /* An icon-only trigger, not a control: no border, no background, no fixed height. */
-.diff-topics .icon-button {
+.diff-topics .footer-icon {
+  display: inline-flex;
+  align-items: center;
   height: auto;
   min-width: 0;
   border: 0;
   background: none;
   padding: 0;
-  vertical-align: middle;
+  cursor: pointer;
 }
 
 .diff-topics .paginator {
@@ -225,15 +280,8 @@
 }
 
 .diff-topics .paginator-link {
-  height: auto;
-  min-width: 0;
-  border: 0;
-  background: none;
-  padding: 0;
-  color: #007993;
+  color: var(--diff-topics-link);
   font-weight: 400;
-  text-decoration: underline;
-  cursor: pointer;
 }
 
 .diff-topics .paginator-current {

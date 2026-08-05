@@ -32,9 +32,9 @@ class DiffToolRestApplicationTest {
             mockStaticSettings.when(ExecutionQueueSettings::readAsSystemUser).thenReturn(model);
 
             DiffToolRestApplication app = new DiffToolRestApplication();
-            // 12 of this extension's own, plus generic's two /roles controllers - which generic ships but
+            // 14 of this extension's own, plus generic's two /roles controllers - which generic ships but
             // leaves unregistered, so an extension without an authorization page does not expose them.
-            assertEquals(14, app.getExtensionControllerClasses().size());
+            assertEquals(16, app.getExtensionControllerClasses().size());
             assertNotNull(DiffToolRestApplication.getExecutionService());
             assertNotNull(DiffToolRestApplication.getExecutionMonitor());
         } finally {

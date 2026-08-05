@@ -1,5 +1,5 @@
 // @ts-check
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 // End-to-end cover for the two navigation-topic pickers (topics.html?topic=...), which replaced the
 // nav-topic JSPs and the Java widget renderers. The REST layer is stubbed here rather than in
@@ -34,11 +34,12 @@ const collection = (id, projectId) => ({
   readable: true,
 });
 
-const searchResult = (items) => ({
+const searchResult = (items, projectId) => ({
   totalCount: items.length,
   page: 1,
   lastPage: 1,
-  query: '',
+  // The backend echoes the query it ran, project restriction included
+  query: `project.id:${projectId}`,
   items: items,
 });
 
@@ -49,13 +50,13 @@ async function stubRest(page) {
   await page.route('**/rest/internal/projects/*/link-roles', (route) => route.fulfill(json(LINK_ROLES)));
   await page.route('**/rest/internal/settings/diff/names**', (route) => route.fulfill(json(CONFIGURATIONS)));
   await page.route('**/rest/internal/projects/elibrary/workitems/search**', (route) =>
-    route.fulfill(json(searchResult([workItem('EL-1'), workItem('EL-2')]))),
+    route.fulfill(json(searchResult([workItem('EL-1'), workItem('EL-2')], 'elibrary'))),
   );
   await page.route('**/rest/internal/projects/elibrary/collections/search**', (route) =>
-    route.fulfill(json(searchResult([collection('c1', 'elibrary')]))),
+    route.fulfill(json(searchResult([collection('c1', 'elibrary')], 'elibrary'))),
   );
   await page.route('**/rest/internal/projects/drivepilot/collections/search**', (route) =>
-    route.fulfill(json(searchResult([collection('c2', 'drivepilot')]))),
+    route.fulfill(json(searchResult([collection('c2', 'drivepilot')], 'drivepilot'))),
   );
 }
 
@@ -69,7 +70,7 @@ test.describe('work items picker topic', () => {
 
     await expect(page.locator('.diff-topics .header h3')).toHaveText('Compare work items');
     await expect(page.locator('.items-table .table-content-row')).toHaveCount(2);
-    await expect(page.locator('.table-counts')).toHaveText('2 items');
+    await expect(page.locator('.table-counts')).toHaveText('2 items found');
 
     const compare = page.locator('#compare-items');
     await expect(compare).toBeDisabled();

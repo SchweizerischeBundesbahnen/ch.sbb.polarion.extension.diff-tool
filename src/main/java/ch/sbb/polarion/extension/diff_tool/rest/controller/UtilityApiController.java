@@ -5,6 +5,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CommunicationSettings;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Document;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.LinkRoleOption;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemStatus;
@@ -54,6 +55,11 @@ public class UtilityApiController extends UtilityInternalController {
     @Override
     public Collection<WorkItemStatus> getAllWorkItemStatuses(String projectId) {
         return polarionService.callPrivileged(() -> super.getAllWorkItemStatuses(projectId));
+    }
+
+    @Override
+    public Collection<LinkRoleOption> getLinkRoles(String projectId) {
+        return polarionService.callPrivileged(() -> super.getLinkRoles(projectId));
     }
 
     @Override

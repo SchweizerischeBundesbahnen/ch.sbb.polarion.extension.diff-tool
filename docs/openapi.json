@@ -768,6 +768,37 @@
         ]
       }
     },
+    "/api/projects/{projectId}/link-roles": {
+      "get": {
+        "operationId": "getLinkRoles",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkRoleOption"
+                }
+              }
+            },
+            "description": "List of all link roles for the specified project"
+          }
+        },
+        "summary": "Gets list of all link roles of the specified project, each with both directions of its name",
+        "tags": [
+          "Utility API"
+        ]
+      }
+    },
     "/api/projects/{projectId}/linked-workitem-roles": {
       "get": {
         "operationId": "getAllLinkedWorkItemRoles",
@@ -2519,6 +2550,24 @@
             "type": "string"
           },
           "workItemTypeName": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LinkRoleOption": {
+        "description": "A link role of a project, as offered for selection",
+        "properties": {
+          "id": {
+            "description": "Role ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "Role name in the forward direction",
+            "type": "string"
+          },
+          "oppositeName": {
+            "description": "Role name in the backward direction",
             "type": "string"
           }
         },

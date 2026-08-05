@@ -6,9 +6,10 @@ import { installFetchMock } from './mockFetch';
 
 // The viewer's *reading* half of the two localStorage handoffs, both written by code outside the viewer:
 //
-//   ?ids=<sha1>              -> localStorage["<sha1>_ids"], written by
-//                               webapp/diff-tool/js/diff-tool-widget-utils.js (still vanilla JS, driven
-//                               by the Java-rendered work-item table widget - deliberately not migrated).
+//   ?ids=<sha1>              -> localStorage["<sha1>_ids"], written by the work items picker topic
+//                               (src/topics/openWorkItemsDiff.ts, whose own half is pinned by
+//                               openItemsDiff.test.ts; it was webapp/diff-tool/js/diff-tool-widget-utils.js
+//                               while that table was rendered by Java).
 //   ?additionalParams=<uuid> -> localStorage["<uuid>_additionalParams"], written by the Document
 //                               Properties panel (src/formext/openDocumentsDiff.ts).
 //

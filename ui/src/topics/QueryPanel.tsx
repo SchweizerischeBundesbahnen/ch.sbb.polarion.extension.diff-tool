@@ -63,10 +63,11 @@ export default function QueryPanel({
         value={draftRecordsPerPage}
         onChange={(event) => setDraftRecordsPerPage(event.target.value)}
       />
-      <button type="button" onClick={apply}>
+      {/* react-sbb-polarion's standard control button, so these look like every other button in the suite. */}
+      <button type="button" className="sbb-btn--control" onClick={apply}>
         Apply
       </button>
-      <button type="button" onClick={onReset}>
+      <button type="button" className="sbb-btn--control" onClick={onReset}>
         Reset
       </button>
     </div>

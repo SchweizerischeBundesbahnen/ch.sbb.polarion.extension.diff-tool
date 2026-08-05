@@ -17,10 +17,14 @@ const COLUMNS: Column<SearchWorkItem>[] = [
   {
     key: 'id',
     label: 'ID',
+    // Polarion's own ID cell prefixes the WorkItem's type icon, and the payload already carries it.
     render: (item) => (
-      <a href={`/polarion/#/project/${encode(item.projectId)}/workitem?id=${encode(item.id)}`} target="_top">
-        {item.id}
-      </a>
+      <span className="enum-cell">
+        {item.type?.iconUrl ? <img src={item.type.iconUrl} alt="" /> : null}
+        <a href={`/polarion/#/project/${encode(item.projectId)}/workitem?id=${encode(item.id)}`} target="_top">
+          {item.id}
+        </a>
+      </span>
     ),
   },
   { key: 'title', label: 'Title', render: (item) => item.title },

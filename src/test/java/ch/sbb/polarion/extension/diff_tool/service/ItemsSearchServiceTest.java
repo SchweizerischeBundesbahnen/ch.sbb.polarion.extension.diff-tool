@@ -8,6 +8,7 @@ import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.tracker.ITrackerService;
 import com.polarion.alm.tracker.model.ISeverityOpt;
 import com.polarion.alm.tracker.model.IStatusOpt;
+import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
@@ -84,7 +85,7 @@ class ItemsSearchServiceTest {
             assertEquals(3, result.getTotalCount());
             assertEquals(1, result.getPage());
             assertEquals(2, result.getLastPage());
-            assertEquals("", result.getQuery());
+            assertEquals("project.id:elibrary", result.getQuery());
             assertEquals(List.of("EL-1", "EL-2"), result.getItems().stream().map(SearchWorkItem::getId).toList());
 
             SearchWorkItem first = result.getItems().get(0);
@@ -109,7 +110,7 @@ class ItemsSearchServiceTest {
 
             SearchResult<SearchWorkItem> result = service.searchWorkItems("elibrary", "type:task", "title", 1, 20);
 
-            assertEquals("type:task", result.getQuery());
+            assertEquals("project.id:elibrary AND (type:task)", result.getQuery());
             assertEquals(1, result.getItems().size());
         }
     }
@@ -197,6 +198,57 @@ class ItemsSearchServiceTest {
     }
 
     @Test
+    void testAHeadingTakesItsTypeFromTheDocument() {
+        // A document heading carries no type of its own, and Polarion's own table shows the document's heading
+        // type in that column
+        IWorkItem heading = workItem("EL-5");
+        when(heading.getType()).thenReturn(null);
+        ITypeOpt headingType = mock(ITypeOpt.class);
+        when(headingType.getId()).thenReturn("heading");
+        when(headingType.getName()).thenReturn("Heading");
+        IModule module = mock(IModule.class);
+        when(module.getHeadingWorkItemType()).thenReturn(headingType);
+        when(heading.getModule()).thenReturn(module);
+        when(trackerProject.queryWorkItems("", "id")).thenReturn(objectList(List.of(heading)));
+
+        try (MockedStatic<EnumUtils> enumUtils = mockStatic(EnumUtils.class)) {
+            enumUtils.when(() -> EnumUtils.getIconUrl(any())).thenReturn("/polarion/icons/heading.svg");
+
+            SearchWorkItem item = service.searchWorkItems("elibrary", null, null, 1, 20).getItems().get(0);
+
+            assertEquals("heading", item.getType().getId());
+            assertEquals("Heading", item.getType().getName());
+            assertEquals("/polarion/icons/heading.svg", item.getType().getIconUrl());
+        }
+    }
+
+    @Test
+    void testAnUntypedItemOutsideADocumentHasNoType() {
+        IWorkItem untyped = workItem("EL-5");
+        when(untyped.getType()).thenReturn(null);
+        when(untyped.getModule()).thenReturn(null);
+        when(trackerProject.queryWorkItems("", "id")).thenReturn(objectList(List.of(untyped)));
+
+        assertNull(service.searchWorkItems("elibrary", null, null, 1, 20).getItems().get(0).getType());
+    }
+
+    @Test
+    void testAnOptionWithoutANameRendersItsId() {
+        IWorkItem workItem = workItem("EL-1");
+        ITypeOpt type = mock(ITypeOpt.class);
+        when(type.getId()).thenReturn("obsoleteType");
+        when(type.getName()).thenReturn("");
+        when(workItem.getType()).thenReturn(type);
+        when(trackerProject.queryWorkItems("", "id")).thenReturn(objectList(List.of(workItem)));
+
+        try (MockedStatic<EnumUtils> enumUtils = mockStatic(EnumUtils.class)) {
+            enumUtils.when(() -> EnumUtils.getIconUrl(any())).thenReturn(null);
+
+            assertEquals("obsoleteType", service.searchWorkItems("elibrary", null, null, 1, 20).getItems().get(0).getType().getName());
+        }
+    }
+
+    @Test
     void testAnItemWhoseIdCannotBeReadStillProducesARow() {
         IWorkItem broken = workItem("EL-1");
         when(broken.getId()).thenThrow(new UnresolvableObjectException("gone"));
@@ -240,7 +292,7 @@ class ItemsSearchServiceTest {
         assertEquals("John Doe", mapped.getAuthorName());
         assertEquals(1000L, mapped.getCreated());
         assertEquals(2000L, mapped.getUpdated());
-        assertEquals("name:release*", result.getQuery());
+        assertEquals("project.id:elibrary AND (name:release*)", result.getQuery());
     }
 
     @Test

@@ -6,6 +6,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.CommunicationSettings;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Document;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentRevision;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.LinkRoleOption;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemStatus;
@@ -229,6 +230,34 @@ public class UtilityInternalController {
             throw new BadRequestException(MISSING_PROJECT_ID_MESSAGE);
         }
         return polarionService.getLinkedWorkItemRoles(projectId);
+    }
+
+    @GET
+    @Path("/projects/{projectId}/link-roles")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Gets list of all link roles of the specified project, each with both directions of its name",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "List of all link roles for the specified project",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = LinkRoleOption.class)
+                            )
+                    )
+            }
+    )
+    public Collection<LinkRoleOption> getLinkRoles(@PathParam("projectId") String projectId) {
+        if (StringUtils.isBlank(projectId)) {
+            throw new BadRequestException(MISSING_PROJECT_ID_MESSAGE);
+        }
+        return polarionService.getLinkRoles(projectId).stream()
+                .map(linkRole -> LinkRoleOption.builder()
+                        .id(linkRole.getId())
+                        .name(linkRole.getName())
+                        .oppositeName(linkRole.getOppositeName())
+                        .build())
+                .toList();
     }
 
     @GET

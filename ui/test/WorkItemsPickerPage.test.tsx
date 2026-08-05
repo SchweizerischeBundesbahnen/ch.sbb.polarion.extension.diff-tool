@@ -91,11 +91,14 @@ describe('WorkItemsPickerPage', () => {
     expect(cells.slice(1)).toEqual(['EL-1', 'Title of EL-1', 'Task', 'Open', 'Major']);
   });
 
-  it('links every ID into Polarion', async () => {
+  it('links every ID into Polarion, behind the type icon Polarion shows there', async () => {
     await renderPage();
 
-    const link = rows()[0].querySelector<HTMLAnchorElement>('a')!;
-    expect(link.getAttribute('href')).toBe('/polarion/#/project/elibrary/workitem?id=EL-1');
+    const idCell = rows()[0].querySelectorAll('td')[1];
+    expect(idCell.querySelector<HTMLAnchorElement>('a')!.getAttribute('href')).toBe(
+      '/polarion/#/project/elibrary/workitem?id=EL-1',
+    );
+    expect(idCell.querySelector<HTMLImageElement>('img')!.getAttribute('src')).toBe('/polarion/icons/task.svg');
   });
 
   it('searches the project of the topic, with the default page size', async () => {
@@ -226,10 +229,11 @@ describe('WorkItemsPickerPage', () => {
       ),
     );
 
-    expect(document.querySelector('.table-counts')!.textContent).toBe('2 of 3 items');
+    // Polarion's own wording for a page out of a larger result set
+    expect(document.querySelector('.table-counts')!.textContent).toBe('Showing 2 items of 3 found');
     expect(document.querySelector('.query-text')).toBeNull();
 
-    document.querySelector<HTMLButtonElement>('.show-query .icon-button')!.click();
+    document.querySelector<HTMLButtonElement>('.table-footer button.footer-icon')!.click();
 
     await vi.waitFor(() => expect(document.querySelector('.query-text')!.textContent).toBe('type:task'));
   });

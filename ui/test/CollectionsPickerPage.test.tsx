@@ -26,11 +26,12 @@ const collection = (id: string, projectId: string) => ({
   readable: true,
 });
 
-const page = (items: ReturnType<typeof collection>[]) => ({
+// The backend echoes the query it ran, project restriction included - which is what the footer shows.
+const page = (items: ReturnType<typeof collection>[], projectId: string) => ({
   totalCount: items.length,
   page: 1,
   lastPage: 1,
-  query: '',
+  query: `project.id:${projectId}`,
   items: items,
 });
 
@@ -40,11 +41,15 @@ function routes(overrides: Route[] = []): Route[] {
     { method: 'GET', match: /\/projects$/, json: PROJECTS },
     { method: 'GET', match: /\/projects\/elibrary\/link-roles$/, json: LINK_ROLES },
     { method: 'GET', match: /\/settings\/diff\/names/, json: CONFIGURATIONS },
-    { method: 'GET', match: /\/projects\/elibrary\/collections\/search/, json: page([collection('c1', 'elibrary')]) },
+    {
+      method: 'GET',
+      match: /\/projects\/elibrary\/collections\/search/,
+      json: page([collection('c1', 'elibrary')], 'elibrary'),
+    },
     {
       method: 'GET',
       match: /\/projects\/drivepilot\/collections\/search/,
-      json: page([collection('c2', 'drivepilot'), collection('c3', 'drivepilot')]),
+      json: page([collection('c2', 'drivepilot'), collection('c3', 'drivepilot')], 'drivepilot'),
     },
   ];
 }
@@ -103,10 +108,13 @@ describe('CollectionsPickerPage', () => {
     expect(columns()[0].querySelector('#target-project-selector')).toBeNull();
   });
 
-  it('offers no "open in table" link, which collections have no view for', async () => {
+  it('counts the collections without offering an "open in table" link, which they have no view for', async () => {
     await renderPage();
 
-    expect(document.querySelector('.open-in-table')).toBeNull();
+    expect(columns()[1].querySelector('.table-counts')!.textContent).toBe('2 items found');
+    expect(document.querySelector('a.footer-icon')).toBeNull();
+    // ...but the query behind the info icon is still there
+    expect(document.querySelectorAll('button.footer-icon').length).toBe(2);
   });
 
   it('enables Compare only once both sides have a collection', async () => {

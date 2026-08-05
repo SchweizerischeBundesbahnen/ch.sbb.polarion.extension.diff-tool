@@ -7,6 +7,8 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchWorkItem;
 import ch.sbb.polarion.extension.generic.util.EnumUtils;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.projects.model.IUser;
+import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.alm.tracker.model.baselinecollection.IBaselineCollection;
 import com.polarion.core.util.logging.Logger;
@@ -49,7 +51,7 @@ public class ItemsSearchService {
         String luceneQuery = StringUtils.defaultString(query);
         String sortString = StringUtils.defaultIfBlank(sortBy, IUniqueObject.KEY_ID);
         IPObjectList<IWorkItem> found = polarionService.getTrackerProject(projectId).queryWorkItems(luceneQuery, sortString);
-        return toPage(found, luceneQuery, page, recordsPerPage, this::toSearchWorkItem);
+        return toPage(found, effectiveQuery(projectId, luceneQuery), page, recordsPerPage, this::toSearchWorkItem);
     }
 
     @NotNull
@@ -63,7 +65,18 @@ public class ItemsSearchService {
                 .searchInstances(IBaselineCollection.PROTO, luceneQuery, IBaselineCollection.KEY_NAME)).stream()
                 .filter(collection -> projectId.equals(collection.getProjectId()))
                 .toList();
-        return toPage(found, luceneQuery, page, recordsPerPage, this::toSearchCollection);
+        return toPage(found, effectiveQuery(projectId, luceneQuery), page, recordsPerPage, this::toSearchCollection);
+    }
+
+    /**
+     * The query as it applies, project restriction included. This is what the table footer shows behind its
+     * info icon, the way Polarion's rich page table showed {@code DataSet.queryToShow()}.
+     */
+    @VisibleForTesting
+    @NotNull
+    String effectiveQuery(@NotNull String projectId, @NotNull String query) {
+        String scope = "%s:%s".formatted(IUniqueObject.KEY_PROJECT + ".id", projectId);
+        return query.isBlank() ? scope : "%s AND (%s)".formatted(scope, query);
     }
 
     /**
@@ -100,10 +113,25 @@ public class ItemsSearchService {
         return builder.readable(true)
                 .projectId(workItem.getProjectId())
                 .title(workItem.getTitle())
-                .type(toEnumOption(workItem.getType()))
+                .type(typeOf(workItem))
                 .status(toEnumOption(workItem.getStatus()))
                 .severity(toEnumOption(workItem.getSeverity()))
                 .build();
+    }
+
+    /**
+     * The WorkItem's type, or - for a document heading, which carries no type of its own - the heading type of
+     * the document it belongs to. Polarion's own table shows "Heading" in that column, and
+     * {@link IModule#getHeadingWorkItemType()} is where it takes that from.
+     */
+    @Nullable
+    private EnumOption typeOf(@NotNull IWorkItem workItem) {
+        ITypeOpt type = workItem.getType();
+        if (type != null) {
+            return toEnumOption(type);
+        }
+        IModule module = workItem.getModule();
+        return module == null ? null : toEnumOption(module.getHeadingWorkItemType());
     }
 
     @VisibleForTesting
@@ -156,11 +184,15 @@ public class ItemsSearchService {
         }
     }
 
+    /**
+     * The name falls back to the ID: an option which is configured but not offered by the project's enum any
+     * more still has to render as something.
+     */
     @Nullable
     private EnumOption toEnumOption(@Nullable IEnumOption option) {
         return option == null ? null : EnumOption.builder()
                 .id(option.getId())
-                .name(option.getName())
+                .name(StringUtils.defaultIfBlank(option.getName(), option.getId()))
                 .iconUrl(EnumUtils.getIconUrl(option))
                 .build();
     }

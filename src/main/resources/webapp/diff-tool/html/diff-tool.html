@@ -6,7 +6,7 @@
   ui/src/formext/mountDiffToolPanel.tsx). It injects its own styles into that shadow root -
   react-sbb-polarion's bundled stylesheet plus ui/src/formext/diff-tool.css - so the panel's CSS is fully
   encapsulated and cannot clash with the other panels on this shared page (including this extension's own
-  copy-tool panel). Neither common.css nor the generic control CSS is linked globally here any more.
+  copy-tool panel). No stylesheet is linked globally here any more.
 
   The one remaining <link> loads a tiny empty stylesheet (css/starter.css) whose only job is to fire the
   bundle import from its onload handler; an inline module <script> does not execute inside a

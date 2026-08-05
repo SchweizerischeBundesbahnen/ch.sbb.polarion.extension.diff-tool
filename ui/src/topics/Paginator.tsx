@@ -15,7 +15,12 @@ export default function Paginator({ page, lastPage, onPage }: Readonly<Paginator
   }
 
   const link = (text: string, target: number) => (
-    <button type="button" className="paginator-link" key={`${text}-${target}`} onClick={() => onPage(target)}>
+    <button
+      type="button"
+      className="sbb-btn--link paginator-link"
+      key={`${text}-${target}`}
+      onClick={() => onPage(target)}
+    >
       {text}
     </button>
   );
