@@ -1,0 +1,141 @@
+// @ts-check
+import { test, expect } from '@playwright/test';
+
+// End-to-end cover for the two navigation-topic pickers (topics.html?topic=...), which replaced the
+// nav-topic JSPs and the Java widget renderers. The REST layer is stubbed here rather than in
+// e2e/fixtures/, since these four responses are small enough to read in place.
+
+const PROJECTS = [
+  { id: 'elibrary', name: 'E-Library' },
+  { id: 'drivepilot', name: 'Drive Pilot' },
+];
+
+const LINK_ROLES = [{ id: 'relates_to', name: 'relates to', oppositeName: 'is related to' }];
+
+const CONFIGURATIONS = [{ name: 'Default', scope: '' }];
+
+const workItem = (id) => ({
+  id: id,
+  projectId: 'elibrary',
+  title: `Title of ${id}`,
+  type: { id: 'task', name: 'Task' },
+  status: { id: 'open', name: 'Open' },
+  severity: { id: 'major', name: 'Major' },
+  readable: true,
+});
+
+const collection = (id, projectId) => ({
+  id: id,
+  projectId: projectId,
+  name: `Collection ${id}`,
+  authorName: 'John Doe',
+  created: 1700000000000,
+  updated: 1700000600000,
+  readable: true,
+});
+
+const searchResult = (items) => ({
+  totalCount: items.length,
+  page: 1,
+  lastPage: 1,
+  query: '',
+  items: items,
+});
+
+const json = (body) => ({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+
+async function stubRest(page) {
+  await page.route('**/rest/internal/projects', (route) => route.fulfill(json(PROJECTS)));
+  await page.route('**/rest/internal/projects/*/link-roles', (route) => route.fulfill(json(LINK_ROLES)));
+  await page.route('**/rest/internal/settings/diff/names**', (route) => route.fulfill(json(CONFIGURATIONS)));
+  await page.route('**/rest/internal/projects/elibrary/workitems/search**', (route) =>
+    route.fulfill(json(searchResult([workItem('EL-1'), workItem('EL-2')]))),
+  );
+  await page.route('**/rest/internal/projects/elibrary/collections/search**', (route) =>
+    route.fulfill(json(searchResult([collection('c1', 'elibrary')]))),
+  );
+  await page.route('**/rest/internal/projects/drivepilot/collections/search**', (route) =>
+    route.fulfill(json(searchResult([collection('c2', 'drivepilot')]))),
+  );
+}
+
+test.describe('work items picker topic', () => {
+  test.beforeEach(async ({ page }) => {
+    await stubRest(page);
+  });
+
+  test('lists the work items of the project and compares the selected ones', async ({ page, context }) => {
+    await page.goto('/topics?topic=compare-work-items&sourceProjectId=elibrary');
+
+    await expect(page.locator('.diff-topics .header h3')).toHaveText('Compare work items');
+    await expect(page.locator('.items-table .table-content-row')).toHaveCount(2);
+    await expect(page.locator('.table-counts')).toHaveText('2 items');
+
+    const compare = page.locator('#compare-items');
+    await expect(compare).toBeDisabled();
+
+    await page.locator('.items-table input.select-all').check();
+    await expect(compare).toBeEnabled();
+
+    // Compare opens the viewer in a new tab, as the widget's button did
+    const [viewer] = await Promise.all([context.waitForEvent('page'), compare.click()]);
+    // The production path, which is what the viewer is served at inside Polarion; the dev server has no
+    // such route, so the tab itself stays empty and only its URL is asserted.
+    const url = new URL(viewer.url());
+    expect(url.pathname).toBe('/polarion/diff-tool-app/ui/app/workitems.html');
+    expect(url.searchParams.get('sourceProjectId')).toBe('elibrary');
+    expect(url.searchParams.get('config')).toBe('Default');
+    expect(url.searchParams.get('linkRole')).toBe('relates_to');
+
+    // ...and the selected IDs travel through localStorage under the hash the URL carries
+    const ids = await page.evaluate((hash) => localStorage.getItem(`${hash}_ids`), url.searchParams.get('ids'));
+    expect(ids).toBe('EL-1,EL-2');
+  });
+
+  test('keeps the applied query in its own URL, without reloading the frame', async ({ page }) => {
+    await page.goto('/topics?topic=compare-work-items&sourceProjectId=elibrary');
+    await expect(page.locator('.items-table .table-content-row')).toHaveCount(2);
+
+    await page.locator('#source-query-input').fill('type:task');
+    await page.getByRole('button', { name: 'Apply' }).click();
+
+    await expect(page).toHaveURL(/sourceQuery=type%3Atask/);
+    await expect(page.locator('.items-table .table-content-row')).toHaveCount(2);
+  });
+});
+
+test.describe('collections picker topic', () => {
+  test.beforeEach(async ({ page }) => {
+    await stubRest(page);
+  });
+
+  test('compares one collection from each side', async ({ page, context }) => {
+    await page.goto('/topics?topic=compare-collections&sourceProjectId=elibrary&targetProjectId=drivepilot');
+
+    await expect(page.locator('.diff-topics .header h3')).toHaveText('Compare Collections');
+    await expect(page.locator('.columns .column')).toHaveCount(2);
+
+    const compare = page.locator('#compare-items');
+    await expect(compare).toBeDisabled();
+
+    await page.locator('input[name="source-collection"]').first().check();
+    await page.locator('input[name="target-collection"]').first().check();
+    await expect(compare).toBeEnabled();
+
+    const [viewer] = await Promise.all([context.waitForEvent('page'), compare.click()]);
+    const url = new URL(viewer.url());
+    expect(url.pathname).toBe('/polarion/diff-tool-app/ui/app/collections.html');
+    expect(url.searchParams.get('sourceCollectionId')).toBe('c1');
+    expect(url.searchParams.get('targetCollectionId')).toBe('c2');
+    expect(url.searchParams.get('compareAs')).toBe('Workitems');
+  });
+});
+
+test.describe('diff tool root topic', () => {
+  test('offers both sub-topics', async ({ page }) => {
+    await page.goto('/topics?topic=diff-tool');
+
+    await expect(page.locator('.diff-topics .header h3')).toHaveText('Diff Tool');
+    await expect(page.locator('.link-button')).toHaveText(['Compare multiple Work Items', 'Compare Collections']);
+  });
+});
