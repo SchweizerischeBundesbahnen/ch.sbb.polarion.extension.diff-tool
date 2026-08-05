@@ -40,6 +40,13 @@ public class ItemsSearchService {
     @VisibleForTesting
     static final int DEFAULT_RECORDS_PER_PAGE = 20;
 
+    @VisibleForTesting
+    static final String HEADING_TYPE_ID = "heading";
+
+    /** The icon Polarion ships for a document heading, which the heading type option does not point at. */
+    @VisibleForTesting
+    static final String HEADING_TYPE_ICON_URL = "/polarion/ria/images/enums/type_heading.png";
+
     private final PolarionService polarionService;
 
     public ItemsSearchService(@NotNull PolarionService polarionService) {
@@ -123,15 +130,34 @@ public class ItemsSearchService {
      * The WorkItem's type, or - for a document heading, which carries no type of its own - the heading type of
      * the document it belongs to. Polarion's own table shows "Heading" in that column, and
      * {@link IModule#getHeadingWorkItemType()} is where it takes that from.
+     * <p>
+     * The heading type is configured, not offered, so it carries no name either: that falls back to its
+     * capitalized ID.
      */
     @Nullable
     private EnumOption typeOf(@NotNull IWorkItem workItem) {
         ITypeOpt type = workItem.getType();
-        if (type != null) {
-            return toEnumOption(type);
+        if (type == null) {
+            IModule module = workItem.getModule();
+            type = module == null ? null : module.getHeadingWorkItemType();
         }
-        IModule module = workItem.getModule();
-        return module == null ? null : toEnumOption(module.getHeadingWorkItemType());
+        if (type == null) {
+            return null;
+        }
+        return EnumOption.builder()
+                .id(type.getId())
+                .name(displayName(type))
+                .iconUrl(typeIconUrl(type))
+                .build();
+    }
+
+    /**
+     * The icon of a WorkItem type. The heading type is recognised by its ID rather than by a missing icon URL:
+     * whatever the enum resolves for it, the icon a document heading shows is Polarion's own.
+     */
+    @Nullable
+    private String typeIconUrl(@NotNull ITypeOpt type) {
+        return HEADING_TYPE_ID.equals(type.getId()) ? HEADING_TYPE_ICON_URL : EnumUtils.getIconUrl(type);
     }
 
     @VisibleForTesting
@@ -184,17 +210,22 @@ public class ItemsSearchService {
         }
     }
 
-    /**
-     * The name falls back to the ID: an option which is configured but not offered by the project's enum any
-     * more still has to render as something.
-     */
     @Nullable
     private EnumOption toEnumOption(@Nullable IEnumOption option) {
         return option == null ? null : EnumOption.builder()
                 .id(option.getId())
-                .name(StringUtils.defaultIfBlank(option.getName(), option.getId()))
+                .name(displayName(option))
                 .iconUrl(EnumUtils.getIconUrl(option))
                 .build();
+    }
+
+    /**
+     * An option which is configured but not offered by the project's enum any more carries no name, and still
+     * has to render as something: its capitalized ID, so `heading` reads as "Heading".
+     */
+    @NotNull
+    private String displayName(@NotNull IEnumOption option) {
+        return StringUtils.isNotBlank(option.getName()) ? option.getName() : StringUtils.capitalize(option.getId());
     }
 
     @Nullable

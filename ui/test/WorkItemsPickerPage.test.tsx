@@ -101,6 +101,35 @@ describe('WorkItemsPickerPage', () => {
     expect(idCell.querySelector<HTMLImageElement>('img')!.getAttribute('src')).toBe('/polarion/icons/task.svg');
   });
 
+  it('shows the type of a document heading in both the ID and the Type cell', async () => {
+    // The backend stands in for the heading type Polarion shows there (ItemsSearchService.typeOf)
+    const heading = {
+      id: 'EL-5',
+      projectId: 'elibrary',
+      title: 'Purpose',
+      type: { id: 'heading', name: 'Heading', iconUrl: '/polarion/ria/images/enums/type_heading.png' },
+      status: { id: 'open', name: 'Open', iconUrl: null },
+      severity: null,
+      readable: true,
+    };
+    await renderPage(
+      installFetchMock(
+        routes([
+          { method: 'GET', match: /workitems\/search/, json: { ...PAGE_ONE, items: [heading, workItem('EL-6')] } },
+        ]),
+      ),
+    );
+
+    const cells = rows()[0].querySelectorAll('td');
+    expect(cells[1].querySelector<HTMLImageElement>('img')!.getAttribute('src')).toBe(
+      '/polarion/ria/images/enums/type_heading.png',
+    );
+    expect(cells[3].textContent).toBe('Heading');
+    expect(cells[3].querySelector<HTMLImageElement>('img')!.getAttribute('src')).toBe(
+      '/polarion/ria/images/enums/type_heading.png',
+    );
+  });
+
   it('searches the project of the topic, with the default page size', async () => {
     const fetchMock = await renderPage();
 

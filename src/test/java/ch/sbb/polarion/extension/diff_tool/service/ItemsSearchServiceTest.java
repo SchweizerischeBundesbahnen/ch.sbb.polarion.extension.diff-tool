@@ -201,24 +201,54 @@ class ItemsSearchServiceTest {
     void testAHeadingTakesItsTypeFromTheDocument() {
         // A document heading carries no type of its own, and Polarion's own table shows the document's heading
         // type in that column
-        IWorkItem heading = workItem("EL-5");
-        when(heading.getType()).thenReturn(null);
-        ITypeOpt headingType = mock(ITypeOpt.class);
-        when(headingType.getId()).thenReturn("heading");
-        when(headingType.getName()).thenReturn("Heading");
-        IModule module = mock(IModule.class);
-        when(module.getHeadingWorkItemType()).thenReturn(headingType);
-        when(heading.getModule()).thenReturn(module);
+        IWorkItem heading = headingItem();
         when(trackerProject.queryWorkItems("", "id")).thenReturn(objectList(List.of(heading)));
 
         try (MockedStatic<EnumUtils> enumUtils = mockStatic(EnumUtils.class)) {
-            enumUtils.when(() -> EnumUtils.getIconUrl(any())).thenReturn("/polarion/icons/heading.svg");
+            // Whatever the enum resolves for the heading type, the icon is chosen by its ID
+            enumUtils.when(() -> EnumUtils.getIconUrl(any())).thenReturn("/polarion/icons/something-else.svg");
 
             SearchWorkItem item = service.searchWorkItems("elibrary", null, null, 1, 20).getItems().get(0);
 
             assertEquals("heading", item.getType().getId());
             assertEquals("Heading", item.getType().getName());
-            assertEquals("/polarion/icons/heading.svg", item.getType().getIconUrl());
+            assertEquals("/polarion/ria/images/enums/type_heading.png", item.getType().getIconUrl());
+            assertEquals(ItemsSearchService.HEADING_TYPE_ICON_URL, item.getType().getIconUrl());
+        }
+    }
+
+    @Test
+    void testAWorkItemTypedAsHeadingGetsTheSameIcon() {
+        // Some documents give their headings the heading type outright, so getType() answers it
+        IWorkItem heading = workItem("EL-5");
+        ITypeOpt headingType = mock(ITypeOpt.class);
+        when(headingType.getId()).thenReturn("heading");
+        when(headingType.getName()).thenReturn(null);
+        when(heading.getType()).thenReturn(headingType);
+        when(trackerProject.queryWorkItems("", "id")).thenReturn(objectList(List.of(heading)));
+
+        try (MockedStatic<EnumUtils> enumUtils = mockStatic(EnumUtils.class)) {
+            enumUtils.when(() -> EnumUtils.getIconUrl(any())).thenReturn(null);
+
+            SearchWorkItem item = service.searchWorkItems("elibrary", null, null, 1, 20).getItems().get(0);
+
+            // ...and the name of an option the enum does not offer falls back to its capitalized ID
+            assertEquals("Heading", item.getType().getName());
+            assertEquals(ItemsSearchService.HEADING_TYPE_ICON_URL, item.getType().getIconUrl());
+        }
+    }
+
+    @Test
+    void testAnyOtherTypeKeepsTheIconTheEnumResolves() {
+        IPObjectList<IWorkItem> found = objectList(List.of(workItem("EL-1")));
+        when(trackerProject.queryWorkItems("", "id")).thenReturn(found);
+
+        try (MockedStatic<EnumUtils> enumUtils = mockStatic(EnumUtils.class)) {
+            enumUtils.when(() -> EnumUtils.getIconUrl(any())).thenReturn("/polarion/icons/task.svg");
+
+            SearchWorkItem item = service.searchWorkItems("elibrary", null, null, 1, 20).getItems().get(0);
+
+            assertEquals("/polarion/icons/task.svg", item.getType().getIconUrl());
         }
     }
 
@@ -233,7 +263,7 @@ class ItemsSearchServiceTest {
     }
 
     @Test
-    void testAnOptionWithoutANameRendersItsId() {
+    void testAnOptionWithoutANameRendersItsCapitalizedId() {
         IWorkItem workItem = workItem("EL-1");
         ITypeOpt type = mock(ITypeOpt.class);
         when(type.getId()).thenReturn("obsoleteType");
@@ -244,7 +274,7 @@ class ItemsSearchServiceTest {
         try (MockedStatic<EnumUtils> enumUtils = mockStatic(EnumUtils.class)) {
             enumUtils.when(() -> EnumUtils.getIconUrl(any())).thenReturn(null);
 
-            assertEquals("obsoleteType", service.searchWorkItems("elibrary", null, null, 1, 20).getItems().get(0).getType().getName());
+            assertEquals("ObsoleteType", service.searchWorkItems("elibrary", null, null, 1, 20).getItems().get(0).getType().getName());
         }
     }
 
@@ -336,6 +366,21 @@ class ItemsSearchServiceTest {
         when(workItem.getSeverity()).thenReturn(severity);
 
         return workItem;
+    }
+
+    /** A document heading: no type of its own, but a document whose heading type stands in for it. */
+    private IWorkItem headingItem() {
+        IWorkItem heading = workItem("EL-5");
+        when(heading.getType()).thenReturn(null);
+
+        ITypeOpt headingType = mock(ITypeOpt.class);
+        when(headingType.getId()).thenReturn("heading");
+        when(headingType.getName()).thenReturn("Heading");
+        IModule module = mock(IModule.class);
+        when(module.getHeadingWorkItemType()).thenReturn(headingType);
+        when(heading.getModule()).thenReturn(module);
+
+        return heading;
     }
 
     private IBaselineCollection collection(String id, String projectId) {

@@ -60,12 +60,39 @@ async function stubRest(page) {
   );
 }
 
+/**
+ * Records what the page asks the browser to open, which is the contract the Compare button carries.
+ *
+ * Reading it off a real popup does not work across browsers: the viewer's production path has no route on the
+ * dev server, and Firefox reports the popup before it has committed any URL - so `page.url()` there is still
+ * `about:blank` and parsing it throws.
+ */
+async function captureOpenedUrls(page) {
+  await page.addInitScript(() => {
+    const opened = [];
+    Object.defineProperty(window, 'openedUrls', { value: opened });
+    window.open = (url) => {
+      opened.push(String(url));
+      return null;
+    };
+  });
+}
+
+/** The URL the page opened, resolved against it - the app builds an absolute path, not an absolute URL. */
+async function openedUrl(page) {
+  await page.waitForFunction(() => /** @type {any} */ (window).openedUrls.length > 0);
+  const opened = await page.evaluate(() => /** @type {any} */ (window).openedUrls);
+  expect(opened).toHaveLength(1);
+  return new URL(opened[0], page.url());
+}
+
 test.describe('work items picker topic', () => {
   test.beforeEach(async ({ page }) => {
     await stubRest(page);
+    await captureOpenedUrls(page);
   });
 
-  test('lists the work items of the project and compares the selected ones', async ({ page, context }) => {
+  test('lists the work items of the project and compares the selected ones', async ({ page }) => {
     await page.goto('/topics?topic=compare-work-items&sourceProjectId=elibrary');
 
     await expect(page.locator('.diff-topics .header h3')).toHaveText('Compare work items');
@@ -78,11 +105,10 @@ test.describe('work items picker topic', () => {
     await page.locator('.items-table input.select-all').check();
     await expect(compare).toBeEnabled();
 
-    // Compare opens the viewer in a new tab, as the widget's button did
-    const [viewer] = await Promise.all([context.waitForEvent('page'), compare.click()]);
-    // The production path, which is what the viewer is served at inside Polarion; the dev server has no
-    // such route, so the tab itself stays empty and only its URL is asserted.
-    const url = new URL(viewer.url());
+    // Compare opens the viewer in a new tab, as the widget's button did, at the path Polarion serves it from
+    await compare.click();
+
+    const url = await openedUrl(page);
     expect(url.pathname).toBe('/polarion/diff-tool-app/ui/app/workitems.html');
     expect(url.searchParams.get('sourceProjectId')).toBe('elibrary');
     expect(url.searchParams.get('config')).toBe('Default');
@@ -108,9 +134,10 @@ test.describe('work items picker topic', () => {
 test.describe('collections picker topic', () => {
   test.beforeEach(async ({ page }) => {
     await stubRest(page);
+    await captureOpenedUrls(page);
   });
 
-  test('compares one collection from each side', async ({ page, context }) => {
+  test('compares one collection from each side', async ({ page }) => {
     await page.goto('/topics?topic=compare-collections&sourceProjectId=elibrary&targetProjectId=drivepilot');
 
     await expect(page.locator('.diff-topics .header h3')).toHaveText('Compare Collections');
@@ -123,8 +150,9 @@ test.describe('collections picker topic', () => {
     await page.locator('input[name="target-collection"]').first().check();
     await expect(compare).toBeEnabled();
 
-    const [viewer] = await Promise.all([context.waitForEvent('page'), compare.click()]);
-    const url = new URL(viewer.url());
+    await compare.click();
+
+    const url = await openedUrl(page);
     expect(url.pathname).toBe('/polarion/diff-tool-app/ui/app/collections.html');
     expect(url.searchParams.get('sourceCollectionId')).toBe('c1');
     expect(url.searchParams.get('targetCollectionId')).toBe('c2');
