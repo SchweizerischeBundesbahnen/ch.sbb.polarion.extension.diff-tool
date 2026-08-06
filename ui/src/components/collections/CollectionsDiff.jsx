@@ -1,4 +1,4 @@
-import {useContext, useEffect, useState} from "react";
+import {useContext, useEffect, useMemo, useState} from "react";
 import AppContext from "@/components/AppContext";
 import {useSearchParams} from "@/router/navigation";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -24,12 +24,15 @@ export default function CollectionsDiff() {
   const diffService = useDiffService();
   const remote = useRemote();
 
-  const [compareAsWorkItems] = useState(searchParams.get('compareAs') === 'Workitems');
-  const [compareAsFields] = useState(searchParams.get('compareAs') === 'Fields');
+  // Derived from the query string, not frozen in state: the page is opened without a source document
+  // and ControlPane pushes 'sourceSpaceId'/'sourceDocument' once the paired documents are known.
+  const compareAsWorkItems = useMemo(() => searchParams.get('compareAs') === 'Workitems', [searchParams]);
+  const compareAsFields = useMemo(() => searchParams.get('compareAs') === 'Fields', [searchParams]);
   const [loading, setLoading] = useState(true);
   const [loadingError, setLoadingError] = useState(null);
   const [collectionsData, setCollectionsData] = useState({});
-  const [leftDocumentLocationPath] = useState(`${searchParams.get("sourceSpaceId")}/${searchParams.get("sourceDocument")}`);
+  const leftDocumentLocationPath = useMemo(() => searchParams.has("sourceSpaceId") && searchParams.has("sourceDocument")
+      ? `${searchParams.get("sourceSpaceId")}/${searchParams.get("sourceDocument")}` : "", [searchParams]);
   const [selectedDocumentsPair, setSelectedDocumentsPair] = useState(null);
   const [targetConfigurations, setTargetConfigurations] = useState([]);
   const [targetConfigurationModalVisible, setTargetConfigurationModalVisible] = useState(false);
