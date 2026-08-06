@@ -71,7 +71,7 @@ public class ItemsSearchService {
         // 'project.id'. Restricting in the index keeps the search from resolving every collection of the
         // repository, and leaves an unresolvable hit to the guard in toSearchCollection.
         String luceneQuery = effectiveQuery(projectId, StringUtils.defaultString(query));
-        List<IBaselineCollection> found = (IPObjectList<IBaselineCollection>) polarionService.getTrackerService().getDataService()
+        List<IBaselineCollection> found = polarionService.getTrackerService().getDataService()
                 .searchInstances(IBaselineCollection.PROTO, luceneQuery, IBaselineCollection.KEY_NAME);
         return toPage(found, luceneQuery, page, recordsPerPage, this::toSearchCollection);
     }
