@@ -5,6 +5,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchWorkItem;
 import ch.sbb.polarion.extension.diff_tool.service.ItemsSearchService;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
+import com.polarion.core.util.exceptions.IUserFriendlyException;
 import com.polarion.platform.persistence.UnresolvableObjectException;
 import jakarta.ws.rs.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,11 +83,20 @@ class SearchInternalControllerTest {
     @Test
     void testAMalformedQueryBecomesABadRequest() {
         when(itemsSearchService.searchWorkItems("elibrary", "type:(", null, 1, 0))
-                .thenThrow(new UnresolvableObjectException("Cannot parse 'type:('"));
+                .thenThrow(new RejectedQueryException("Cannot parse 'type:('"));
 
         BadRequestException thrown = assertThrows(BadRequestException.class,
                 () -> controller.searchWorkItems("elibrary", "type:(", null, null, null));
         assertEquals("Cannot parse 'type:('", thrown.getMessage());
+    }
+
+    @Test
+    void testAWrappedMalformedQueryBecomesABadRequest() {
+        // The persistence layer wraps what the index rejected, so the marker sits in the cause
+        when(itemsSearchService.searchCollections("elibrary", "name:(", 1, 0))
+                .thenThrow(new UnresolvableObjectException("Query failed", new RejectedQueryException("Cannot parse 'name:('")));
+
+        assertThrows(BadRequestException.class, () -> controller.searchCollections("elibrary", "name:(", null, null));
     }
 
     @Test
@@ -95,5 +105,26 @@ class SearchInternalControllerTest {
                 .thenThrow(new IllegalArgumentException("Bad query"));
 
         assertThrows(BadRequestException.class, () -> controller.searchCollections("elibrary", "??", null, null));
+    }
+
+    @Test
+    void testABackendFailureIsNotReportedAsABadRequest() {
+        // Nothing here points at the query, so the generic mapper has to turn this into a 500 with a message
+        // which does not carry Polarion internals
+        when(itemsSearchService.searchWorkItems("elibrary", null, null, 1, 0))
+                .thenThrow(new UnresolvableObjectException("repository/collection/1 is gone"));
+
+        assertThrows(UnresolvableObjectException.class, () -> controller.searchWorkItems("elibrary", null, null, null, null));
+    }
+
+    /**
+     * Stands in for what Polarion's index throws for a query it cannot parse: the real class
+     * ({@code com.polarion.subterra.index.QueryIndexException}) is not on this module's classpath, and only its
+     * {@link IUserFriendlyException} marker matters here.
+     */
+    private static class RejectedQueryException extends RuntimeException implements IUserFriendlyException {
+        RejectedQueryException(String message) {
+            super(message);
+        }
     }
 }

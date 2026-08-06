@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
@@ -64,20 +65,22 @@ public class ItemsSearchService {
     @NotNull
     @SuppressWarnings("unchecked")
     public SearchResult<SearchCollection> searchCollections(@NotNull String projectId, @Nullable String query, int page, int recordsPerPage) {
-        String luceneQuery = StringUtils.defaultString(query);
         // IBaselineCollectionsManager offers no query method and searchInstances is repository wide, so the
-        // project restriction is applied here instead of as a Lucene term. This keeps the caller's query
-        // untouched and avoids guessing at index field names.
-        List<IBaselineCollection> found = ((IPObjectList<IBaselineCollection>) polarionService.getTrackerService().getDataService()
-                .searchInstances(IBaselineCollection.PROTO, luceneQuery, IBaselineCollection.KEY_NAME)).stream()
-                .filter(collection -> projectId.equals(collection.getProjectId()))
-                .toList();
-        return toPage(found, effectiveQuery(projectId, luceneQuery), page, recordsPerPage, this::toSearchCollection);
+        // project restriction travels as a Lucene term: a collection carries the project in its 'project'
+        // reference field (IBaselineCollectionsManager.createCollection sets it), which the index exposes as
+        // 'project.id'. Restricting in the index keeps the search from resolving every collection of the
+        // repository, and leaves an unresolvable hit to the guard in toSearchCollection.
+        String luceneQuery = effectiveQuery(projectId, StringUtils.defaultString(query));
+        List<IBaselineCollection> found = (IPObjectList<IBaselineCollection>) polarionService.getTrackerService().getDataService()
+                .searchInstances(IBaselineCollection.PROTO, luceneQuery, IBaselineCollection.KEY_NAME);
+        return toPage(found, luceneQuery, page, recordsPerPage, this::toSearchCollection);
     }
 
     /**
-     * The query as it applies, project restriction included. This is what the table footer shows behind its
-     * info icon, the way Polarion's rich page table showed {@code DataSet.queryToShow()}.
+     * The query as it applies, project restriction included. The collections search sends exactly this string to
+     * the index. The WorkItems search is scoped by Polarion itself, so there the string describes the same
+     * restriction, the way Polarion's rich page table showed {@code DataSet.queryToShow()}. The table footer
+     * shows it behind its info icon.
      */
     @VisibleForTesting
     @NotNull
@@ -89,15 +92,18 @@ public class ItemsSearchService {
     /**
      * Cuts the requested window out of the full result set, the way the widget renderers did: the page is
      * clamped into the available range instead of returning an empty page for an out-of-range request.
+     * <p>
+     * Both the page and the page size come from query parameters, so the window is computed in {@code long}
+     * and capped at the result size: no requested value can overflow the {@code int} bounds.
      */
     @VisibleForTesting
     @NotNull
     <S, T> SearchResult<T> toPage(@NotNull List<S> found, @NotNull String query, int page, int recordsPerPage, @NotNull Function<S, T> mapper) {
-        int pageSize = recordsPerPage < 1 ? DEFAULT_RECORDS_PER_PAGE : recordsPerPage;
-        int lastPage = (Math.max(0, found.size() - 1) / pageSize) + 1;
+        long pageSize = recordsPerPage < 1 ? DEFAULT_RECORDS_PER_PAGE : recordsPerPage;
+        int lastPage = (int) (Math.max(0, found.size() - 1) / pageSize) + 1;
         int currentPage = Math.clamp(page, 1, lastPage);
-        int from = (currentPage - 1) * pageSize;
-        int to = Math.min(from + pageSize, found.size());
+        int from = (int) Math.min((currentPage - 1) * pageSize, found.size());
+        int to = (int) Math.min(from + pageSize, found.size());
         return SearchResult.<T>builder()
                 .totalCount(found.size())
                 .page(currentPage)
@@ -228,8 +234,12 @@ public class ItemsSearchService {
         return StringUtils.isNotBlank(option.getName()) ? option.getName() : StringUtils.capitalize(option.getId());
     }
 
+    /**
+     * Polarion returns the legacy {@link Date} and offers no {@link Instant} variant, so the value is bridged
+     * into the {@code java.time} API here, at the only place which touches it.
+     */
     @Nullable
-    private Long toEpochMillis(@Nullable Date date) {
-        return date == null ? null : date.getTime();
+    private Long toEpochMillis(@Nullable Date polarionDate) {
+        return polarionDate == null ? null : polarionDate.toInstant().toEpochMilli();
     }
 }

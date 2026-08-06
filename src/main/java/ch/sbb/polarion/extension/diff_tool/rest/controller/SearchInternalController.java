@@ -20,8 +20,10 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
-import com.polarion.platform.persistence.PException;
+import com.polarion.core.util.exceptions.IUserFriendlyException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Supplier;
 
@@ -113,15 +115,29 @@ public class SearchInternalController {
     }
 
     /**
-     * The query comes from an input field, so it can be malformed. Polarion answers that with an unchecked
-     * persistence exception, which would otherwise surface as a 500 and an error page. As a 400 the picker can
-     * show the message next to the input instead.
+     * The query comes from an input field, so it can be malformed. Polarion reports that with an exception whose
+     * message is meant for the user, which as a 400 the picker shows next to the input instead of as an error
+     * page. Any other failure is a backend problem: it propagates, so the generic mapper answers 500, keeps the
+     * internal message out of the response and logs it under a correlation id.
      */
     private <T> T searchSafely(Supplier<T> search) {
         try {
             return search.get();
-        } catch (PException | IllegalArgumentException e) {
-            throw new BadRequestException(e.getMessage(), e);
+        } catch (RuntimeException e) {
+            if (isCausedByTheQuery(e)) {
+                throw new BadRequestException(e.getMessage(), e);
+            }
+            throw e;
         }
+    }
+
+    /**
+     * Polarion marks the exceptions whose message may be shown to a user with {@link IUserFriendlyException},
+     * and that is what a rejected query produces. The whole chain is inspected, since the persistence layer
+     * wraps such an exception on its way out.
+     */
+    private boolean isCausedByTheQuery(@NotNull RuntimeException e) {
+        return ExceptionUtils.getThrowableList(e).stream()
+                .anyMatch(cause -> cause instanceof IUserFriendlyException || cause instanceof IllegalArgumentException);
     }
 }

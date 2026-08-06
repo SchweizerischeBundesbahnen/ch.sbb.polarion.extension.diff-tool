@@ -149,6 +149,28 @@ class ItemsSearchServiceTest {
     }
 
     @Test
+    void testExtremePagingValuesStillCutAValidWindow() {
+        // Both the page and the page size come from query parameters, and the window arithmetic is done in
+        // long, so no requested value turns 'from'/'to' into an out-of-range index.
+        List<String> found = List.of("a", "b", "c");
+
+        SearchResult<String> hugePage = service.toPage(found, "query", Integer.MAX_VALUE, 2, value -> value);
+        assertEquals(2, hugePage.getPage());
+        assertEquals(2, hugePage.getLastPage());
+        assertEquals(List.of("c"), hugePage.getItems());
+
+        SearchResult<String> hugePageSize = service.toPage(found, "query", Integer.MAX_VALUE, Integer.MAX_VALUE, value -> value);
+        assertEquals(1, hugePageSize.getPage());
+        assertEquals(1, hugePageSize.getLastPage());
+        assertEquals(found, hugePageSize.getItems());
+
+        SearchResult<String> negativeValues = service.toPage(found, "query", Integer.MIN_VALUE, Integer.MIN_VALUE, value -> value);
+        assertEquals(1, negativeValues.getPage());
+        assertEquals(1, negativeValues.getLastPage());
+        assertEquals(found, negativeValues.getItems());
+    }
+
+    @Test
     void testSearchWorkItemsReportsAnEmptyResult() {
         when(trackerProject.queryWorkItems("", "id")).thenReturn(objectList(List.<IWorkItem>of()));
 
@@ -298,21 +320,34 @@ class ItemsSearchServiceTest {
     }
 
     @Test
-    void testSearchCollectionsKeepsOnlyTheRequestedProject() {
-        IPObjectList<IBaselineCollection> found =
-                objectList(List.of(collection("c1", "elibrary"), collection("c2", "otherProject"), collection("c3", "elibrary")));
-        when(dataService.searchInstances(IBaselineCollection.PROTO, "", "name")).thenReturn(found);
+    void testSearchCollectionsRestrictsTheQueryToTheProject() {
+        // The restriction is a Lucene term, not a filter over the result: the stub answers the scoped query
+        // only, so an unscoped search would find nothing here
+        IPObjectList<IBaselineCollection> found = objectList(List.of(collection("c1", "elibrary"), collection("c3", "elibrary")));
+        when(dataService.searchInstances(IBaselineCollection.PROTO, "project.id:elibrary", "name")).thenReturn(found);
 
         SearchResult<SearchCollection> result = service.searchCollections("elibrary", null, 1, 20);
 
         assertEquals(2, result.getTotalCount());
         assertEquals(List.of("c1", "c3"), result.getItems().stream().map(SearchCollection::getId).toList());
+        assertEquals("project.id:elibrary", result.getQuery());
+    }
+
+    @Test
+    void testSearchCollectionsKeepsTheCallersQueryInsideTheRestriction() {
+        IPObjectList<IBaselineCollection> found = objectList(List.of(collection("c1", "elibrary")));
+        when(dataService.searchInstances(IBaselineCollection.PROTO, "project.id:elibrary AND (name:a OR name:b)", "name")).thenReturn(found);
+
+        SearchResult<SearchCollection> result = service.searchCollections("elibrary", "name:a OR name:b", 1, 20);
+
+        assertEquals(List.of("c1"), result.getItems().stream().map(SearchCollection::getId).toList());
     }
 
     @Test
     void testSearchCollectionsMapsFields() {
         IBaselineCollection collection = collection("c1", "elibrary");
-        when(dataService.searchInstances(IBaselineCollection.PROTO, "name:release*", "name")).thenReturn(objectList(List.of(collection)));
+        when(dataService.searchInstances(IBaselineCollection.PROTO, "project.id:elibrary AND (name:release*)", "name"))
+                .thenReturn(objectList(List.of(collection)));
 
         SearchResult<SearchCollection> result = service.searchCollections("elibrary", "name:release*", 1, 20);
 
@@ -326,12 +361,61 @@ class ItemsSearchServiceTest {
     }
 
     @Test
+    void testAnUnresolvableCollectionIsReportedInsteadOfFailingThePage() {
+        // A stale index entry throws on every attribute read, so nothing may read one before the guard has
+        // classified it: it has to produce the explanatory row rather than break the whole page
+        IBaselineCollection unresolvable = collection("c2", "elibrary");
+        when(unresolvable.getProjectId()).thenThrow(new UnresolvableObjectException("gone"));
+        when(unresolvable.getName()).thenThrow(new UnresolvableObjectException("gone"));
+        when(unresolvable.isUnresolvable()).thenReturn(true);
+        // The collections are built before the stubbing below: they stub themselves, and doing that inside a
+        // thenReturn() argument leaves the outer when() unfinished
+        IPObjectList<IBaselineCollection> found = objectList(List.of(collection("c1", "elibrary"), unresolvable));
+        when(dataService.searchInstances(IBaselineCollection.PROTO, "project.id:elibrary", "name")).thenReturn(found);
+
+        try (MockedStatic<Localization> localization = mockStatic(Localization.class)) {
+            localization.when(() -> Localization.getString(eq("richpages.widget.table.unresolvableItem"), any(String[].class)))
+                    .thenReturn("Collection c2 cannot be resolved");
+
+            SearchResult<SearchCollection> result = service.searchCollections("elibrary", null, 1, 20);
+
+            assertEquals(2, result.getTotalCount());
+            assertTrue(result.getItems().get(0).isReadable());
+            SearchCollection reported = result.getItems().get(1);
+            assertFalse(reported.isReadable());
+            assertEquals("Collection c2 cannot be resolved", reported.getUnavailableMessage());
+            assertNull(reported.getName());
+        }
+    }
+
+    @Test
+    void testAnUnreadableCollectionIsReportedInsteadOfMapped() {
+        IBaselineCollection unreadable = collection("c2", "elibrary");
+        IPObjectPermissions permissions = mock(IPObjectPermissions.class);
+        when(permissions.read()).thenReturn(false);
+        when(unreadable.can()).thenReturn(permissions);
+        IPObjectList<IBaselineCollection> found = objectList(List.of(unreadable));
+        when(dataService.searchInstances(IBaselineCollection.PROTO, "project.id:elibrary", "name")).thenReturn(found);
+
+        try (MockedStatic<Localization> localization = mockStatic(Localization.class)) {
+            localization.when(() -> Localization.getString("security.cannotread")).thenReturn("You cannot read this collection");
+
+            SearchCollection mapped = service.searchCollections("elibrary", null, 1, 20).getItems().get(0);
+
+            assertFalse(mapped.isReadable());
+            assertEquals("You cannot read this collection", mapped.getUnavailableMessage());
+            assertNull(mapped.getName());
+        }
+    }
+
+    @Test
     void testSearchCollectionsToleratesMissingAuthorAndDates() {
         IBaselineCollection collection = collection("c1", "elibrary");
         when(collection.getAuthor()).thenReturn(null);
         when(collection.getCreated()).thenReturn(null);
         when(collection.getUpdated()).thenReturn(null);
-        when(dataService.searchInstances(IBaselineCollection.PROTO, "", "name")).thenReturn(objectList(List.of(collection)));
+        when(dataService.searchInstances(IBaselineCollection.PROTO, "project.id:elibrary", "name"))
+                .thenReturn(objectList(List.of(collection)));
 
         SearchCollection mapped = service.searchCollections("elibrary", null, 1, 20).getItems().get(0);
 
