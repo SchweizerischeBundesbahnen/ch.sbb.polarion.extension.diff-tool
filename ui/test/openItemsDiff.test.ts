@@ -51,12 +51,42 @@ describe('openWorkItemsDiff', () => {
     expect(url).toContain('config=A%26B');
   });
 
-  it('opens the comparison in a new tab', async () => {
+  it('opens the tab under the click, before awaiting the digest, and navigates it afterwards', async () => {
+    // window.open() in the continuation of an await no longer runs under the user activation, and Safari blocks
+    // the tab for it. The tab therefore has to exist before buildWorkItemsDiffUrl is awaited.
+    const viewer = { location: { replace: vi.fn() }, close: vi.fn() };
+    const open = vi.spyOn(window, 'open').mockReturnValue(viewer as unknown as Window);
+
+    const opening = openWorkItemsDiff(WORK_ITEMS_REQUEST);
+
+    expect(open).toHaveBeenCalledWith('', '_blank');
+    expect(viewer.location.replace).not.toHaveBeenCalled();
+
+    await opening;
+
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(viewer.location.replace).toHaveBeenCalledWith(
+      expect.stringContaining('/workitems.html?sourceProjectId=elibrary'),
+    );
+    expect(viewer.close).not.toHaveBeenCalled();
+  });
+
+  it('falls back to opening the URL directly when the blank tab is blocked', async () => {
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
 
     await openWorkItemsDiff(WORK_ITEMS_REQUEST);
 
     expect(open).toHaveBeenCalledWith(expect.stringContaining('/workitems.html?sourceProjectId=elibrary'), '_blank');
+  });
+
+  it('closes the blank tab when the URL cannot be built', async () => {
+    const viewer = { location: { replace: vi.fn() }, close: vi.fn() };
+    vi.spyOn(window, 'open').mockReturnValue(viewer as unknown as Window);
+    vi.spyOn(crypto.subtle, 'digest').mockRejectedValue(new Error('no crypto here'));
+
+    await expect(openWorkItemsDiff(WORK_ITEMS_REQUEST)).rejects.toThrow('no crypto here');
+    expect(viewer.close).toHaveBeenCalled();
+    expect(viewer.location.replace).not.toHaveBeenCalled();
   });
 });
 

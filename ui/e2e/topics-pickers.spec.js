@@ -71,9 +71,18 @@ async function captureOpenedUrls(page) {
   await page.addInitScript(() => {
     const opened = [];
     Object.defineProperty(window, 'openedUrls', { value: opened });
+    // The WorkItems handoff opens a blank tab under the click and navigates it once the digest resolves, so the
+    // stub answers with a tab and records where it ends up rather than the blank open itself.
     window.open = (url) => {
-      opened.push(String(url));
-      return null;
+      if (url) {
+        opened.push(String(url));
+      }
+      return {
+        location: {
+          replace: (target) => opened.push(String(target)),
+        },
+        close: () => {},
+      };
     };
   });
 }

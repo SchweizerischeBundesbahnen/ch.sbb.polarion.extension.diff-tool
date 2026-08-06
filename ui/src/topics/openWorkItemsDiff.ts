@@ -52,7 +52,26 @@ export async function buildWorkItemsDiffUrl(request: WorkItemsDiffRequest): Prom
   return `${VIEWER_PATH}?${params.toString()}`;
 }
 
-/** Opens the comparison in a new tab, as the widget's Compare button did. */
+/**
+ * Opens the comparison in a new tab, as the widget's Compare button did.
+ *
+ * The tab is opened before the URL is built, not after: building it awaits a Web Crypto digest, and a
+ * `window.open()` in that continuation no longer runs under the click's user activation, which Safari answers by
+ * blocking the tab. The blank tab is navigated once the URL is ready, and closed again if building it fails.
+ * Should the blank tab be blocked as well, the late call is still attempted, the way the legacy widget did it.
+ */
 export async function openWorkItemsDiff(request: WorkItemsDiffRequest): Promise<void> {
-  window.open(await buildWorkItemsDiffUrl(request), '_blank');
+  const viewer = window.open('', '_blank');
+  let url: string;
+  try {
+    url = await buildWorkItemsDiffUrl(request);
+  } catch (error) {
+    viewer?.close();
+    throw error;
+  }
+  if (viewer) {
+    viewer.location.replace(url); // replace, so the tab's history does not start with about:blank
+  } else {
+    window.open(url, '_blank');
+  }
 }
