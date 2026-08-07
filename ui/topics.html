@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Diff Tool</title>
+    <link rel="icon" href="favicon.ico" />
+    <!-- Polarion's page chrome, served at runtime. The generic *control* CSS is deliberately not linked:
+         react-sbb-polarion bundles it into its own stylesheet, which src/entries/topics.tsx imports. Nothing
+         else is needed - unlike the JSPs these pages replace, they do not render Polarion's own markup, so
+         polarion.css is no longer a dependency. -->
+    <link rel="stylesheet" href="/polarion/wiki/skins/sidecar/presentation.css" />
+  </head>
+  <body class="sbb-ui">
+    <div id="root"></div>
+    <script type="module" src="/src/entries/topics.tsx"></script>
+  </body>
+</html>

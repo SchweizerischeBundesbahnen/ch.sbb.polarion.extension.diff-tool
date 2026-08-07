@@ -1,4 +1,4 @@
-import {useContext, useEffect, useState} from "react";
+import {useContext, useEffect, useMemo, useState} from "react";
 import {faAnglesLeft, faAnglesRight} from "@fortawesome/free-solid-svg-icons";
 import AppContext from "@/components/AppContext";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -21,8 +21,10 @@ export default function ControlPane({diff_type}) {
   const [configurations, setConfigurations] = useState([]);
   const [selectedConfiguration, setSelectedConfiguration] = useState(searchParams.get("config") || 'Default');
   const [documentSelectionToBeConfirmed, setDocumentSelectionToBeConfirmed] = useState("");
-  const [selectedDocumentLocationPath] = useState(searchParams.has("sourceSpaceId") && searchParams.has("sourceDocument")
-      ? `${searchParams.get("sourceSpaceId")}/${searchParams.get("sourceDocument")}` : "");
+  // Derived from the query string, not frozen in state, so the selector reflects the document
+  // auto-selected below and every later switch.
+  const selectedDocumentLocationPath = useMemo(() => searchParams.has("sourceSpaceId") && searchParams.has("sourceDocument")
+      ? `${searchParams.get("sourceSpaceId")}/${searchParams.get("sourceDocument")}` : "", [searchParams]);
   const [paperSize, setPaperSize] = useState("A4");
   const [orientation, setOrientation] = useState("landscape");
   const [exportInProgress, setExportInProgress] = useState(false);

@@ -19,3 +19,6 @@ import '@testing-library/jest-dom/vitest';
 import 'bootstrap/dist/css/bootstrap.css';
 import '../src/App.css';
 import '../src/styles/globals.css';
+//   4. the navigation topics' own stylesheet, which src/entries/topics.tsx imports. Safe alongside the
+//      other two: every rule is scoped under .diff-topics.
+import '../src/topics/topics.css';

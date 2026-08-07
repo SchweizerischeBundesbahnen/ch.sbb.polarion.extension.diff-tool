@@ -171,8 +171,20 @@ test.describe("page of diffing Collections c", () => {
     const sourceDocumentSelect = page.locator("#source-document");
     await sourceDocumentSelect.selectOption("Specification/Administration Specification");
 
-    // Verify the header updates with the new source document
+    // Verify the selection is reflected in the URL and the header updates with the new source document
+    await expect(page).toHaveURL(/sourceSpaceId=Specification/);
+    await expect(sourceDocumentSelect).toHaveValue("Specification/Administration Specification");
     const header = page.getByTestId('LEFT-doc-title');
-    await expect(header).toHaveText("Test SpecificationHEAD (rev. 9487)");
+    await expect(header).toHaveText("Administration SpecificationHEAD (rev. 9487)");
+  });
+
+  test('first source document is selected when opened without source document parameters', async ({ page }) => {
+    // The Collections topic opens the viewer without 'sourceSpaceId'/'sourceDocument': the control pane
+    // selects the first paired document, and the diff must appear without a page reload.
+    await page.goto('/collections?sourceProjectId=elibrary&sourceCollectionId=1&targetProjectId=Project2&targetCollectionId=1&linkRole=relates_to&config=Default&compareAs=Workitems');
+
+    await expect(page.getByTestId('LEFT-doc-title')).toHaveText("Administration SpecificationHEAD (rev. 9487)");
+    await expect(page.getByTestId('app-alert-title')).toHaveCount(0);
+    await expect(page).toHaveURL(/sourceSpaceId=Specification/);
   });
 })

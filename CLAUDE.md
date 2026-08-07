@@ -65,10 +65,10 @@ npm run e2e:headless
 ```
 
 The UI is a **Vite** multi-page app (not Next.js). Each Polarion entry point is its own HTML entry:
-`index.html` (the admin pages, chosen by `?feature=<id>`), plus `documents.html`, `collections.html`
-and `workitems.html` for the diff/merge viewer. The three viewer filenames are a public contract:
-`src/formext/openDocumentsDiff.ts` and `webapp/diff-tool/js/diff-tool-widget-utils.js` open them by
-literal URL, as do the Java widget renderers' inline handlers. Do not rename them.
+`index.html` (the admin pages, chosen by `?feature=<id>`), `topics.html` (the three Diff Tool navigation
+topics, chosen by `?topic=<id>`), plus `documents.html`, `collections.html` and `workitems.html` for the
+diff/merge viewer. The three viewer filenames are a public contract: `src/formext/openDocumentsDiff.ts`
+and `src/topics/open{WorkItems,Collections}Diff.ts` open them by literal URL. Do not rename them.
 
 `npm run build` is **two** Vite invocations, in this order:
 
@@ -85,10 +85,12 @@ it. `META-INF/hivemodule.xml` is the source of truth for which extenders point a
 `/polarion/diff-tool/rest/swagger`. See `ui/README.md` for the details, including why the viewer's page
 shell is `.diff-app` rather than `.app`.
 
-Still deliberately **not** React: the three nav-topic JSPs under `webapp/diff-tool/pages/` and the four
-Java widget renderers in `widgets/` (they render Polarion-native work-item tables through the platform's
-own `HtmlBuilder` and query engine), plus `js/diff-tool-widget-utils.js` and `css/common.css`, which
-serve exactly those pages.
+The three navigation topics are React too, since `topics.html` replaced the nav-topic JSPs and the Java
+widget renderers that rendered their tables (`widgets/`, deleted). `ch.sbb.polarion.extension.diff_tool.
+navigation` points each node at `topics.html?topic=<node id>`, and the tables are built in
+`src/topics/` from the plain values `/projects/{id}/{workitems,collections}/search` return. The legacy
+`webapp/diff-tool/{css/common.css,js/*}` went with them; that context now serves only the REST API and the
+two Document Properties fragments.
 
 Playwright browser binaries are not installed by the Maven build; run `npx playwright install` in
 `ui/` once, or build with `-DskipJsE2eTests=true`. CI needs neither: its Maven build runs the Vitest

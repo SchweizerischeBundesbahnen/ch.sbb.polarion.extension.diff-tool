@@ -10,6 +10,8 @@ import ch.sbb.polarion.extension.diff_tool.rest.controller.ExecutionQueueQueueMa
 import ch.sbb.polarion.extension.diff_tool.rest.controller.ExecutionQueueManagementInternalController;
 import ch.sbb.polarion.extension.diff_tool.rest.controller.ProjectDuplicationApiController;
 import ch.sbb.polarion.extension.diff_tool.rest.controller.ProjectDuplicationInternalController;
+import ch.sbb.polarion.extension.diff_tool.rest.controller.SearchApiController;
+import ch.sbb.polarion.extension.diff_tool.rest.controller.SearchInternalController;
 import ch.sbb.polarion.extension.diff_tool.rest.controller.UtilityApiController;
 import ch.sbb.polarion.extension.diff_tool.rest.controller.UtilityInternalController;
 import ch.sbb.polarion.extension.diff_tool.rest.exception.QueueFullExceptionMapper;
@@ -77,6 +79,8 @@ public class DiffToolRestApplication extends GenericRestApplication {
                 ExecutionQueueQueueManagementApiController.class,
                 ProjectDuplicationInternalController.class,
                 ProjectDuplicationApiController.class,
+                SearchInternalController.class,
+                SearchApiController.class,
                 // Generic ships /roles but does not register it by default, since only the extensions
                 // with an authorization page need it. This one does - see the Merge Authorization page,
                 // which reads it through react-sbb-polarion's createAuthorizationService.

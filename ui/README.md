@@ -6,9 +6,10 @@ app, one HTML entry per Polarion entry point.
 | Entry | Served at | Opened by |
 |---|---|---|
 | `index.html` | `/polarion/diff-tool-app/ui/app/index.html?feature=<id>` | the admin extenders in `META-INF/hivemodule.xml` |
+| `topics.html` | `/polarion/diff-tool-app/ui/app/topics.html?topic=<id>` | the navigation nodes in `ch.sbb.polarion.extension.diff_tool.navigation` |
 | `documents.html` | `/polarion/diff-tool-app/ui/app/documents.html` | `src/formext/openDocumentsDiff.ts` |
-| `collections.html` | `/polarion/diff-tool-app/ui/app/collections.html` | `webapp/diff-tool/js/diff-tool-widget-utils.js` |
-| `workitems.html` | `/polarion/diff-tool-app/ui/app/workitems.html` | `webapp/diff-tool/js/diff-tool-widget-utils.js` |
+| `collections.html` | `/polarion/diff-tool-app/ui/app/collections.html` | `src/topics/openCollectionsDiff.ts` |
+| `workitems.html` | `/polarion/diff-tool-app/ui/app/workitems.html` | `src/topics/openWorkItemsDiff.ts` |
 
 Plus a second, library-mode build for the two Document Properties side panels:
 
@@ -17,11 +18,10 @@ Plus a second, library-mode build for the two Document Properties side panels:
 | `assets/diffToolPanel.js` | `/polarion/diff-tool-app/ui/app/assets/diffToolPanel.js` | `webapp/diff-tool/html/diff-tool.html` |
 | `assets/copyToolPanel.js` | `/polarion/diff-tool-app/ui/app/assets/copyToolPanel.js` | `webapp/diff-tool/html/copy-tool.html` |
 
-The three viewer filenames are a **public contract** - the callers above, `diff-tool-widget-utils.js`
-and the Java widget renderers' inline handlers open them by literal URL, and pass extra state through
-`localStorage`. Do not rename them.
+The three viewer filenames are a **public contract** - the callers above open them by literal URL and pass
+extra state through `localStorage`. Do not rename them.
 
-## Three surfaces
+## Four surfaces
 
 **Admin pages** (`index.html`) are built on the shared
 [`react-sbb-polarion`](https://github.com/grigoriev/react-sbb-polarion) library (RSP), like every other
@@ -30,6 +30,15 @@ migrated SBB Polarion extension: `PageLayout`, `About`, `ConfigurationButtons`, 
 ids match the extender ids in `META-INF/hivemodule.xml` - see `src/features.tsx`. Root classes are
 `<body class="sbb-ui">` plus `<div class="app standard-admin-page">`; both are a cross-extension
 contract, not a local choice.
+
+**The navigation topics** (`topics.html`, `src/topics/`) are the three Diff Tool entries in a project's
+navigation: the root topic and the two pickers that choose what to compare. The page is chosen by
+`?topic=<id>`, where the ids are the node ids of `ch.sbb.polarion.extension.diff_tool.navigation` - see
+`src/topics/topics.tsx`. They replaced the nav-topic JSPs and the Java widget renderers, so their tables are
+built from the plain values `/projects/{id}/{workitems,collections}/search` returns rather than from
+Polarion-rendered HTML. That is what lets them - like the panels - render with no Polarion-served
+stylesheet, so Vitest can mount them with `ui/` alone. The shell is `.diff-topics.sbb-ui`, again not
+`.app`; RSP's controls read their `--sbb-*` tokens off that `sbb-ui`.
 
 **The diff/merge viewer** (the other three entries) predates RSP and does not use it. Its page shell is
 `.diff-app`, deliberately not `.app`, because RSP claims `.app` for the admin shell. Vite emits CSS per
@@ -101,9 +110,9 @@ Two layers, deliberately:
   needed. Visual references live in `test/expected/<Component>/` and **must** be generated inside the
   pinned Playwright Docker image (`npm run test:update:docker`) so any dev machine and Linux CI
   produce identical pixels.
-- **`e2e/`** - the Playwright end-to-end suite for the diff/merge viewer: 11 specs across
-  chromium/firefox/webkit, driving the real dev server with every REST call stubbed from
-  `e2e/fixtures/`.
+- **`e2e/`** - the Playwright end-to-end suite for the diff/merge viewer and the two picker topics: 12
+  specs across chromium/firefox/webkit, driving the real dev server with every REST call stubbed from
+  `e2e/fixtures/` (`topics-pickers.spec.js` stubs its four responses inline).
 
 | Script | |
 |---|---|
@@ -141,13 +150,14 @@ Maven runs the Vitest suite (dockerized) in the `test` phase. Useful flags:
 ## Layout
 
 ```
-documents.html collections.html workitems.html   HTML entries
+index.html topics.html documents.html collections.html workitems.html   HTML entries
 src/entries/     one module per HTML entry: mounts the React tree
 src/pages/       the page component behind each entry
 src/components/  the diff/merge UI
 src/services/    REST access (useRemote), diff/merge orchestration, PDF export
 src/router/      navigation.ts - the useSearchParams/usePathname/useRouter shim
 src/admin/       the RSP admin pages (pages/, components/, dev/ scaffolding)
+src/topics/      the three navigation topics: the ?topic=<id> registry, the two pickers and their table
 src/formext/     the two Document Properties panels + their library-mode entry points
 src/features.tsx the ?feature=<id> registry, ids matching hivemodule.xml
 src/styles/      globals.css

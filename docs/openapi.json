@@ -676,6 +676,67 @@
         ]
       }
     },
+    "/api/projects/{projectId}/collections/search": {
+      "get": {
+        "operationId": "searchCollections",
+        "parameters": [
+          {
+            "description": "Project to search in",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Lucene query, empty for all collections",
+            "in": "query",
+            "name": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "1-based page number",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "in": "query",
+            "name": "recordsPerPage",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultSearchCollection"
+                }
+              }
+            },
+            "description": "One page of matching collections"
+          },
+          "400": {
+            "description": "Missing project ID or malformed query"
+          }
+        },
+        "summary": "Searches baseline collections of a project by a Lucene query and returns one page of them",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
     "/api/projects/{projectId}/hyperlink-roles": {
       "get": {
         "operationId": "getAllHyperlinkRoles",
@@ -702,6 +763,37 @@
           }
         },
         "summary": "Gets list of all hyperlink roles in the specified project",
+        "tags": [
+          "Utility API"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/link-roles": {
+      "get": {
+        "operationId": "getLinkRoles",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkRoleOption"
+                }
+              }
+            },
+            "description": "List of all link roles for the specified project"
+          }
+        },
+        "summary": "Gets list of all link roles of the specified project, each with both directions of its name",
         "tags": [
           "Utility API"
         ]
@@ -978,6 +1070,75 @@
         "summary": "Gets list of all statuses configured for all kind of work items in specified project",
         "tags": [
           "Utility API"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/workitems/search": {
+      "get": {
+        "operationId": "searchWorkItems",
+        "parameters": [
+          {
+            "description": "Project to search in",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Lucene query, empty for all WorkItems",
+            "in": "query",
+            "name": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Lucene sort string, 'id' by default",
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "1-based page number",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "in": "query",
+            "name": "recordsPerPage",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultSearchWorkItem"
+                }
+              }
+            },
+            "description": "One page of matching WorkItems"
+          },
+          "400": {
+            "description": "Missing project ID or malformed query"
+          }
+        },
+        "summary": "Searches WorkItems of a project by a Lucene query and returns one page of them",
+        "tags": [
+          "Search"
         ]
       }
     },
@@ -2258,6 +2419,24 @@
         ],
         "type": "object"
       },
+      "EnumOption": {
+        "description": "An enumeration value of a WorkItem field, with the icon Polarion renders for it",
+        "properties": {
+          "iconUrl": {
+            "description": "URL of the option icon, if defined",
+            "type": "string"
+          },
+          "id": {
+            "description": "Option ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "Option name as displayed to the user",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ExtensionInfo": {
         "properties": {
           "context": {
@@ -2371,6 +2550,24 @@
             "type": "string"
           },
           "workItemTypeName": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LinkRoleOption": {
+        "description": "A link role of a project, as offered for selection",
+        "properties": {
+          "id": {
+            "description": "Role ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "Role name in the forward direction",
+            "type": "string"
+          },
+          "oppositeName": {
+            "description": "Role name in the backward direction",
             "type": "string"
           }
         },
@@ -2683,6 +2880,145 @@
           "globalRoles",
           "projectRoles"
         ],
+        "type": "object"
+      },
+      "SearchCollection": {
+        "description": "One row of the baseline collection selection table",
+        "properties": {
+          "authorName": {
+            "description": "Name of the user who created the collection",
+            "type": "string"
+          },
+          "created": {
+            "description": "Creation time in epoch milliseconds",
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier of the collection",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the collection",
+            "type": "string"
+          },
+          "projectId": {
+            "description": "Project ID of the collection",
+            "type": "string"
+          },
+          "readable": {
+            "description": "False when the collection is unresolvable or the user may not read it",
+            "type": "boolean"
+          },
+          "unavailableMessage": {
+            "description": "Reason why the collection is not readable, null otherwise",
+            "type": "string"
+          },
+          "updated": {
+            "description": "Last update time in epoch milliseconds",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SearchResultSearchCollection": {
+        "description": "One page of a search result",
+        "properties": {
+          "items": {
+            "description": "Items of the requested page",
+            "items": {
+              "$ref": "#/components/schemas/SearchCollection"
+            },
+            "type": "array"
+          },
+          "lastPage": {
+            "description": "Number of the last available page, at least 1",
+            "format": "int32",
+            "type": "integer"
+          },
+          "page": {
+            "description": "Number of the returned page, 1-based and clamped to the available pages",
+            "format": "int32",
+            "type": "integer"
+          },
+          "query": {
+            "description": "The Lucene query which produced this result, as executed",
+            "type": "string"
+          },
+          "totalCount": {
+            "description": "Size of the whole result set, not of this page",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SearchResultSearchWorkItem": {
+        "description": "One page of a search result",
+        "properties": {
+          "items": {
+            "description": "Items of the requested page",
+            "items": {
+              "$ref": "#/components/schemas/SearchWorkItem"
+            },
+            "type": "array"
+          },
+          "lastPage": {
+            "description": "Number of the last available page, at least 1",
+            "format": "int32",
+            "type": "integer"
+          },
+          "page": {
+            "description": "Number of the returned page, 1-based and clamped to the available pages",
+            "format": "int32",
+            "type": "integer"
+          },
+          "query": {
+            "description": "The Lucene query which produced this result, as executed",
+            "type": "string"
+          },
+          "totalCount": {
+            "description": "Size of the whole result set, not of this page",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SearchWorkItem": {
+        "description": "One row of the WorkItem selection table",
+        "properties": {
+          "id": {
+            "description": "Unique identifier of the WorkItem",
+            "type": "string"
+          },
+          "projectId": {
+            "description": "Project ID of the WorkItem",
+            "type": "string"
+          },
+          "readable": {
+            "description": "False when the item is unresolvable or the user may not read it",
+            "type": "boolean"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/EnumOption"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EnumOption"
+          },
+          "title": {
+            "description": "Title of the WorkItem",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/EnumOption"
+          },
+          "unavailableMessage": {
+            "description": "Reason why the item is not readable, null otherwise",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "SettingName": {

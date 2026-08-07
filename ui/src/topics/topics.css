@@ -1,0 +1,287 @@
+/* Styles for the three Diff Tool navigation topics (topics.html?topic=<id>).
+
+   Ported from the trimmed webapp/diff-tool/css/common.css, which styled the nav-topic JSPs and the markup the
+   Java widget renderers produced. Two things changed with the port: the selectors hang off .diff-topics
+   instead of .polarion-DiffTool, and the tables are styled here rather than by Polarion's polarion.css - the
+   rows are ours now, not rich page table rows. No Polarion-served stylesheet is needed, which is what lets
+   Vitest mount these pages with ui/ alone.
+
+   Controls (inputs, checkboxes, radios) come from react-sbb-polarion, scoped by the `form-wrapper` class on
+   the shell - the same class the legacy JSP page shell carried. The values below that are not tokens were
+   measured on the pre-migration pages, so the two look the same side by side. */
+
+.diff-topics {
+  /* Same base as react-sbb-polarion's .app rule, which this shell deliberately cannot use: RSP claims .app
+     for the admin pages (see TopicsApp). .sbb-ui defines the --sbb-* tokens but sets no font. */
+  padding: 10px 16px;
+  font-family: var(--sbb-control-font-family);
+  font-size: 13px;
+  color: #1a1a1a;
+
+  /* Polarion's own link colour, which the widget's tables and paginator inherited from polarion.css. */
+  --diff-topics-link: #006e87;
+}
+
+/* polarion.css sized these headings; the browser default of 1.17em would render them barely larger than the
+   body text. */
+.diff-topics .header h3 {
+  margin: 0 0 20px;
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.diff-topics .header p {
+  color: grey;
+}
+
+.diff-topics .header ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* The two links of the root topic. A button, because they navigate the top frame rather than follow an href. */
+.diff-topics .link-button {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--diff-topics-link);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.diff-topics .link-button:hover {
+  text-decoration: underline;
+}
+
+.diff-topics .main-pane {
+  display: flex;
+  flex-direction: column;
+  row-gap: 10px;
+  margin-bottom: 30px;
+}
+
+.diff-topics .top-pane p {
+  color: grey;
+}
+
+/* The Compare button. The widget rendered Polarion's own TestsExecutionButton, whose gradient, border and
+   green label live in polarion.css - the values here were measured on that button, so the two match. The icon
+   is the only addition. */
+.diff-topics .compare-button {
+  display: inline-flex;
+  align-items: center;
+  column-gap: 8px;
+  height: auto;
+  min-width: 0;
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  border: 1px solid #bababa;
+  border-radius: 2px;
+  background: linear-gradient(#ededed, #d6d6d6);
+  color: #329433;
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  text-shadow: none;
+  cursor: pointer;
+}
+
+.diff-topics .compare-button img {
+  width: 20px;
+  height: 20px;
+}
+
+/* Only the label greys out while nothing is selected, as the widget's -defaultCursor rule did. */
+.diff-topics .compare-button:disabled {
+  color: grey;
+  opacity: 1;
+  cursor: default;
+}
+
+.diff-topics .alert-error {
+  color: #c60018;
+}
+
+.diff-topics label {
+  width: 100px;
+}
+
+.diff-topics .target-project,
+.diff-topics .link-role,
+.diff-topics .configuration,
+.diff-topics .items-for-diff .query {
+  display: flex;
+  column-gap: 10px;
+  align-items: center;
+}
+
+/* The shared dropdown defaults to 130px, which truncates a link role carrying both directions of its name.
+   The panels widen it the same way (src/formext/diff-tool.css). */
+.diff-topics .searchable-dropdown {
+  width: 260px !important;
+  flex-shrink: 0;
+}
+
+/* The query row wraps rather than squeezing its controls: the collections topic renders two of these side
+   by side, so at a narrow window there is not always one line's worth of space. */
+.diff-topics .items-for-diff .query {
+  flex-wrap: wrap;
+  row-gap: 5px;
+}
+
+.diff-topics .query label {
+  white-space: nowrap;
+}
+
+.diff-topics .query label:not(:first-child) {
+  margin-left: 20px;
+}
+
+/* Shrinkable, so the whole query row still fits on one line inside a narrow collections column. */
+.diff-topics .query-input {
+  flex: 1 1 120px;
+  min-width: 60px;
+}
+
+.diff-topics input.records-per-page {
+  width: 40px;
+}
+
+.diff-topics .items-for-diff {
+  display: flex;
+  flex-direction: column;
+  row-gap: 10px;
+}
+
+/* The collections topic compares two tables side by side. */
+.diff-topics .columns {
+  display: flex;
+}
+
+.diff-topics .columns .column {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.diff-topics .columns .column:first-of-type {
+  padding-right: 20px;
+  border-right: 1px solid #999;
+}
+
+.diff-topics .columns .column:last-of-type {
+  padding-left: 20px;
+}
+
+.diff-topics .items-table-wrapper {
+  overflow-x: auto;
+}
+
+.diff-topics .items-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.diff-topics .items-table th,
+.diff-topics .items-table td {
+  padding: 8px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.diff-topics .items-table th {
+  background: #f5f5f5;
+  border-bottom: 1px solid #dedede;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.diff-topics .items-table .table-content-row:hover td {
+  background: #f7f7f7;
+}
+
+.diff-topics .items-table .select-column {
+  width: 20px;
+}
+
+.diff-topics .items-table .table-empty-cell,
+.diff-topics .items-table .table-not-readable-cell {
+  color: grey;
+  font-style: italic;
+}
+
+/* Polarion renders a table link without an underline, and underlines it on hover only. */
+.diff-topics .items-table a {
+  color: var(--diff-topics-link);
+  text-decoration: none;
+}
+
+.diff-topics .items-table a:hover {
+  text-decoration: underline;
+}
+
+.diff-topics .enum-cell {
+  display: inline-flex;
+  align-items: center;
+  column-gap: 5px;
+}
+
+.diff-topics .enum-cell img {
+  width: 16px;
+  height: 16px;
+}
+
+/* Centred under the table and italic, as the rich page table's footer was. */
+.diff-topics .table-footer {
+  padding: 5px 8px;
+  color: #1a1a1a;
+  font-style: italic;
+  text-align: center;
+}
+
+.diff-topics .table-footer-line {
+  display: inline-flex;
+  align-items: center;
+  column-gap: 8px;
+}
+
+.diff-topics .table-footer .sbb-btn--link {
+  font-style: italic;
+  color: var(--diff-topics-link);
+}
+
+.diff-topics .table-footer .query-text {
+  padding-top: 5px;
+  color: grey;
+  overflow-wrap: anywhere;
+}
+
+/* An icon-only trigger, not a control: no border, no background, no fixed height. */
+.diff-topics .footer-icon {
+  display: inline-flex;
+  align-items: center;
+  height: auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.diff-topics .paginator {
+  display: flex;
+  margin: 20px 0 10px;
+  column-gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.diff-topics .paginator-link {
+  color: var(--diff-topics-link);
+  font-weight: 400;
+}
+
+.diff-topics .paginator-current {
+  font-weight: 700;
+}
