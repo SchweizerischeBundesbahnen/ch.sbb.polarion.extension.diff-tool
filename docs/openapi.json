@@ -721,7 +721,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SearchResult"
+                  "$ref": "#/components/schemas/SearchResultSearchCollection"
                 }
               }
             },
@@ -1126,7 +1126,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SearchResult"
+                  "$ref": "#/components/schemas/SearchResultSearchWorkItem"
                 }
               }
             },
@@ -2922,14 +2922,45 @@
         },
         "type": "object"
       },
-      "SearchResult": {
+      "SearchResultSearchCollection": {
         "description": "One page of a search result",
         "properties": {
           "items": {
             "description": "Items of the requested page",
             "items": {
-              "description": "Items of the requested page",
-              "type": "object"
+              "$ref": "#/components/schemas/SearchCollection"
+            },
+            "type": "array"
+          },
+          "lastPage": {
+            "description": "Number of the last available page, at least 1",
+            "format": "int32",
+            "type": "integer"
+          },
+          "page": {
+            "description": "Number of the returned page, 1-based and clamped to the available pages",
+            "format": "int32",
+            "type": "integer"
+          },
+          "query": {
+            "description": "The Lucene query which produced this result, as executed",
+            "type": "string"
+          },
+          "totalCount": {
+            "description": "Size of the whole result set, not of this page",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SearchResultSearchWorkItem": {
+        "description": "One page of a search result",
+        "properties": {
+          "items": {
+            "description": "Items of the requested page",
+            "items": {
+              "$ref": "#/components/schemas/SearchWorkItem"
             },
             "type": "array"
           },

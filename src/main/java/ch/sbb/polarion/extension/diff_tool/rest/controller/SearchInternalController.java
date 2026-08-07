@@ -8,8 +8,6 @@ import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.inject.Singleton;
@@ -59,10 +57,7 @@ public class SearchInternalController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "One page of matching WorkItems",
-                            content = @Content(
-                                    mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(implementation = SearchResult.class)
-                            )
+                            useReturnTypeSchema = true
                     ),
                     @ApiResponse(responseCode = "400", description = "Missing project ID or malformed query")
             }
@@ -84,10 +79,7 @@ public class SearchInternalController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "One page of matching collections",
-                            content = @Content(
-                                    mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(implementation = SearchResult.class)
-                            )
+                            useReturnTypeSchema = true
                     ),
                     @ApiResponse(responseCode = "400", description = "Missing project ID or malformed query")
             }
