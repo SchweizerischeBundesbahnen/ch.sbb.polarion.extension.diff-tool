@@ -61,8 +61,11 @@ class DiffToolAppUIServletTest {
     @Test
     void rejectsAnotherWebappContext() {
         // The extension's other context: a request meant for it must not be served from this app.
+        HttpServletRequest request = requestFor("/polarion/diff-tool/ui/app/index.html");
+
+        // Only the call under test may throw here, so the assertion cannot pass for the wrong reason.
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-                () -> servlet.service(requestFor("/polarion/diff-tool/ui/app/index.html"), response));
+                () -> servlet.service(request, response));
 
         assertEquals("Unsupported resource path", thrown.getMessage());
     }
