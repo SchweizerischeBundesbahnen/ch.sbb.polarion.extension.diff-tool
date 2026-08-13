@@ -112,7 +112,7 @@ The reports will be available in `target/site/jacoco`.
 
 ### UI Test Flags
 
-The `ui/` Vitest suite runs in the `test` phase alongside the Java tests. By default it runs the full suite (behavior + visual regression) inside the pinned Playwright Docker image so the screenshots match the committed references. These `-D` flags adjust that:
+The `ui/` Vitest suite runs in the `test` phase alongside the Java tests. By default it runs the full suite (behavior + visual regression) inside the pinned Playwright Docker image so the screenshots match the committed references. The Playwright end-to-end suite in `ui/e2e` runs in the same phase and is this repository's own - a plain `mvn install` exercises the diff/merge viewer end to end. These `-D` flags adjust that:
 
 | Flag | Effect |
 | --- | --- |
@@ -121,12 +121,17 @@ The `ui/` Vitest suite runs in the `test` phase alongside the Java tests. By def
 | `-DinstallPlaywright` | Install the Chromium browser plus its OS libraries (the with-deps variant) before the tests. Needs a Debian/Ubuntu host with `apt-get` and root/sudo. |
 | `-DinstallPlaywrightNoDeps` | Install the Chromium browser binary only. For hosts without `apt-get`/root; the host must already provide Chromium's system libraries. |
 | `-DskipVisualJsTests` | Exclude the pixel-based visual-regression tests (`*.visual.test.tsx`), which only reproduce inside the Docker image. Only effective together with `-DjsTestsNoDocker`. |
+| `-DskipJsE2eTests` | Skip the Playwright end-to-end suite in `ui/e2e`, keeping Vitest and its coverage gate. It runs by default and needs the browsers installed; CI passes this flag. |
 
 Docker-less run of the behavior tests:
 
 ```bash
-mvn clean install -DjsTestsNoDocker -DinstallPlaywrightNoDeps -DskipVisualJsTests
+mvn clean install -DjsTestsNoDocker -DinstallPlaywrightNoDeps -DskipVisualJsTests -DskipJsE2eTests=true
 ```
+
+`-DskipJsE2eTests=true` belongs in that line: without it the build still runs `npx playwright install`
+and the end-to-end suite, which downloads the full browser set and then needs the very OS libraries
+`-DinstallPlaywrightNoDeps` exists to avoid.
 
 ## Debugging
 
