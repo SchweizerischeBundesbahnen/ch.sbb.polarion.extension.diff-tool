@@ -6,14 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Polarion ALM extension providing document and work item comparison/merging capabilities. It consists of:
 - **Java backend**: JAX-RS REST API integrated into Polarion (Java 21, Maven)
-- **Next.js UI**: Standalone React application (Next.js 16.1.1, React 19)
+- **Vite UI** (`ui/`): standalone React application (Vite 8, React 19, TypeScript for new code)
 
 ## Common Commands
 
 ### Build and Test
 
 ```bash
-# Full build (includes Java backend + Next.js UI build + tests)
+# Full build (includes Java backend + the Vite UI build + tests)
 mvn clean package
 
 # Build and install to local Polarion instance
@@ -28,6 +28,15 @@ mvn verify
 
 # Skip JavaScript tests during build
 mvn clean package -DskipJsTests=true
+
+# The test phase runs BOTH JS suites: the Vitest suite inside the pinned Playwright Docker image, then
+# the Playwright E2E suite (which needs the browsers - `npx playwright install` once in ui/).
+# Escape hatches:
+#   -DjsTestsNoDocker      run Vitest directly (no Docker on this host); the visual suites skip
+#                          themselves outside the reference image, so pixels are simply not compared
+#   -DskipVisualJsTests    do not even load the visual suites (only with -DjsTestsNoDocker)
+#   -DinstallPlaywright    download the browser binaries (and OS deps)
+#   -DskipJsE2eTests       drop only the Playwright E2E suite, keeping Vitest and the coverage gate
 ```
 
 ### Frontend Development (in ui/ directory)
@@ -36,24 +45,56 @@ mvn clean package -DskipJsTests=true
 # Install dependencies
 npm install
 
-# Development server
+# Development server (proxies REST/assets to VITE_BASE_URL - see .env.development.template)
 npm run dev
 
-# Development server with coverage
-npm run dev:coverage
+# Development server as the E2E suite runs it (loads .env.e2e, no Polarion proxy)
+npm run dev:e2e
 
-# Build for production
+# Build for production (vite, multi-page -> dist/app)
 npm run build
 
-# Run Playwright tests (interactive)
-npm run playwright:test
+# Type-check
+npm run typecheck
 
-# Run Playwright tests (headless)
-npm run playwright:test:headless
+# Run Playwright E2E tests (interactive)
+npm run e2e
 
-# Lint code
-npm run lint
+# Run Playwright E2E tests (headless)
+npm run e2e:headless
 ```
+
+The UI is a **Vite** multi-page app (not Next.js). Each Polarion entry point is its own HTML entry:
+`index.html` (the admin pages, chosen by `?feature=<id>`), `topics.html` (the three Diff Tool navigation
+topics, chosen by `?topic=<id>`), plus `documents.html`, `collections.html` and `workitems.html` for the
+diff/merge viewer. The three viewer filenames are a public contract: `src/formext/openDocumentsDiff.ts`
+and `src/topics/open{WorkItems,Collections}Diff.ts` open them by literal URL. Do not rename them.
+
+`npm run build` is **two** Vite invocations, in this order:
+
+1. `vite build` - the multi-page SPA above, into `dist/app` (`emptyOutDir: true`).
+2. `vite build --config vite.formext.config.js` - library mode, appending the two Document Properties
+   panels as fixed-name modules `dist/app/assets/{diffToolPanel,copyToolPanel}.js`
+   (`emptyOutDir: false`, so it must run second). The names are fixed because the server-rendered
+   fragments import them by literal URL and call a named export.
+
+The admin pages and both Document Properties panels are built on the shared **react-sbb-polarion**
+library (RSP), like the other migrated SBB Polarion extensions; the viewer predates it and does not use
+it. `META-INF/hivemodule.xml` is the source of truth for which extenders point at the React app
+(`.../ui/app/index.html?feature=<id>`); all five now do, and `rest-api` deliberately still points at
+`/polarion/diff-tool/rest/swagger`. See `ui/README.md` for the details, including why the viewer's page
+shell is `.diff-app` rather than `.app`.
+
+The three navigation topics are React too, since `topics.html` replaced the nav-topic JSPs and the Java
+widget renderers that rendered their tables (`widgets/`, deleted). `ch.sbb.polarion.extension.diff_tool.
+navigation` points each node at `topics.html?topic=<node id>`, and the tables are built in
+`src/topics/` from the plain values `/projects/{id}/{workitems,collections}/search` return. The legacy
+`webapp/diff-tool/{css/common.css,js/*}` went with them; that context now serves only the REST API and the
+two Document Properties fragments.
+
+Playwright browser binaries are not installed by the Maven build; run `npx playwright install` in
+`ui/` once, or build with `-DskipJsE2eTests=true`. CI needs neither: its Maven build runs the Vitest
+suite in the pinned Docker image and skips the E2E suite, which has its own per-browser job.
 
 ### Single Test Execution
 
@@ -73,7 +114,7 @@ mvn test -Dtest=DiffServiceTest#testDiffDocuments
   - `/polarion/diff-tool/rest/internal/*` - session-based auth for internal Polarion UI
   - `/polarion/diff-tool/rest/api/*` - bearer token auth for external access
 - **Controller Pattern**: ApiControllers wrap InternalControllers with `polarionService.callPrivileged()` for privilege escalation
-- **Authentication Detection**: UI auto-detects mode via `NEXT_PUBLIC_BEARER_TOKEN` environment variable
+- **Authentication Detection**: the UI auto-detects the mode from `VITE_BEARER_TOKEN` (see `ui/src/services/useRemote.ts`): set, it uses `/api` with a bearer header; unset, `/internal` with the Polarion session
 
 ### Core Service Architecture
 
@@ -195,7 +236,9 @@ When merging rich text fields containing work item links:
 
 - Unit tests use mocked Polarion services (ITrackerService, IProjectService, etc.)
 - Integration tests require Polarion dependencies extracted via [polarion-artifacts-deployer](https://github.com/SchweizerischeBundesbahnen/polarion-artifacts-deployer)
-- Frontend uses Playwright for E2E testing
+- Frontend has two layers: Vitest browser mode (real Chromium via Playwright) for components and
+  visual regression, and Playwright specs in `ui/e2e/` for the viewer end-to-end. Only the Vitest layer
+  runs in the Maven `test` phase; see `ui/README.md`
 
 ### Deployment and Installation
 
@@ -233,13 +276,16 @@ Increase for faster processing, but may overload server.
 
 - **SonarCloud Integration**: Quality gate must pass before merging
 - **Pre-commit Hooks**: Configured in `.pre-commit-config.yaml` (run automatically via maven plugin)
-- **Coverage Reports**: Generated by JaCoCo (Java) and NYC (JavaScript)
+- **Coverage Reports**: Generated by JaCoCo (Java) and Vitest/istanbul (JavaScript, 80% gate - see the
+  scoping note in `ui/vitest.config.ts`)
 - **Code Smells**: Actively monitored and fixed (see recent commits)
 
 ## Related Extensions
 
 - **PDF-Exporter** (v9+): Used for HTML to PDF conversion in ConversionService
-- **Generic Extension Framework** (v13.1.0): Provides base classes for settings, REST controllers, and servlet integration
+- **Generic Extension Framework** (v15.9.0, from the parent POM): Provides base classes for settings, REST
+  controllers, servlet integration, and - via its `vite-ui` profile, activated by the presence of
+  `ui/package.json` - the whole React/Vite build
 
 ## Important Notes
 
@@ -283,7 +329,7 @@ Increase for faster processing, but may overload server.
 **Testing** (handled by Maven + Surefire/Failsafe):
 - Test execution and coverage
 - JUnit test configuration
-- JavaScript test execution (Mocha)
+- JavaScript test execution (Vitest, dockerized)
 - Integration test setup
 
 **Security & Compliance** (handled by pre-commit hooks):
@@ -303,8 +349,8 @@ Increase for faster processing, but may overload server.
 - OSGi bundle structure
 - Polarion extension patterns from parent POM
 - Maven plugin configurations already in use
-- JavaScript testing with Mocha/Chai
-- Testcontainers for integration tests
+- JavaScript testing with Vitest + react-sbb-polarion test helpers
+- Shadow-root mounting for form-extension panels (`ui/src/formext/shadowMount.ts`)
 
 ### Project-Specific Review Focus
 

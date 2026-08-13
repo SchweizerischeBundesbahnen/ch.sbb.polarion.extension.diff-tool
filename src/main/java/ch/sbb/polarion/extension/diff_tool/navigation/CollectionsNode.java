@@ -31,8 +31,7 @@ public class CollectionsNode extends NavigationExtenderNode {
     @Nullable
     @Override
     public String getPageUrl(IContextId contextId) {
-        String contextName = contextId.getContextName();
-        return "/polarion/diff-tool/pages/collections.jsp?sourceProjectId=" + (contextName == null || contextName.startsWith("-") ? "" : contextName) + "&buildId=" + System.getProperty("polarion.build.id");
+        return DiffToolNavigationExtender.topicPageUrl(NODE_ID, contextId);
     }
 
     @Override

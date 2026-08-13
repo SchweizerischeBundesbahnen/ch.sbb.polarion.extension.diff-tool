@@ -31,8 +31,7 @@ public class MultipleWorkItemsNode extends NavigationExtenderNode {
     @Nullable
     @Override
     public String getPageUrl(IContextId contextId) {
-        String contextName = contextId.getContextName();
-        return "/polarion/diff-tool/pages/multiple-work-items.jsp?sourceProjectId=" + (contextName == null || contextName.startsWith("-") ? "" : contextName) + "&buildId=" + System.getProperty("polarion.build.id");
+        return DiffToolNavigationExtender.topicPageUrl(NODE_ID, contextId);
     }
 
     @Override

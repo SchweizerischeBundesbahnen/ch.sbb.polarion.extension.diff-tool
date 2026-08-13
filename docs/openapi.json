@@ -26,6 +26,61 @@
         ]
       }
     },
+    "/api/configuration-properties": {
+      "get": {
+        "operationId": "getConfigurationProperties",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigurationPropertiesModel"
+                }
+              }
+            },
+            "description": "Configuration properties"
+          }
+        },
+        "summary": "Returns the extension configuration properties (active and obsolete)",
+        "tags": [
+          "Extension Information"
+        ]
+      }
+    },
+    "/api/configuration-status": {
+      "get": {
+        "operationId": "getConfigurationStatus",
+        "parameters": [
+          {
+            "description": "Scope to evaluate the status for, e.g. 'project/elibrary/'",
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConfigurationStatus"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Configuration status entries"
+          }
+        },
+        "summary": "Returns the extension configuration status for the given scope",
+        "tags": [
+          "Extension Information"
+        ]
+      }
+    },
     "/api/context": {
       "get": {
         "operationId": "getContext",
@@ -395,6 +450,27 @@
         ]
       }
     },
+    "/api/disclaimer": {
+      "get": {
+        "operationId": "getDisclaimer",
+        "responses": {
+          "default": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "HTML help article"
+          }
+        },
+        "summary": "Returns the build-generated DISCLAIMER help article shown on the Usage Disclaimer page",
+        "tags": [
+          "Extension Information"
+        ]
+      }
+    },
     "/api/extension/info": {
       "get": {
         "operationId": "getExtensionInfo",
@@ -621,6 +697,67 @@
         ]
       }
     },
+    "/api/projects/{projectId}/collections/search": {
+      "get": {
+        "operationId": "searchCollections",
+        "parameters": [
+          {
+            "description": "Project to search in",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Lucene query, empty for all collections",
+            "in": "query",
+            "name": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "1-based page number",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "in": "query",
+            "name": "recordsPerPage",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultSearchCollection"
+                }
+              }
+            },
+            "description": "One page of matching collections"
+          },
+          "400": {
+            "description": "Missing project ID or malformed query"
+          }
+        },
+        "summary": "Searches baseline collections of a project by a Lucene query and returns one page of them",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
     "/api/projects/{projectId}/hyperlink-roles": {
       "get": {
         "operationId": "getAllHyperlinkRoles",
@@ -647,6 +784,37 @@
           }
         },
         "summary": "Gets list of all hyperlink roles in the specified project",
+        "tags": [
+          "Utility API"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/link-roles": {
+      "get": {
+        "operationId": "getLinkRoles",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkRoleOption"
+                }
+              }
+            },
+            "description": "List of all link roles for the specified project"
+          }
+        },
+        "summary": "Gets list of all link roles of the specified project, each with both directions of its name",
         "tags": [
           "Utility API"
         ]
@@ -926,6 +1094,96 @@
         ]
       }
     },
+    "/api/projects/{projectId}/workitems/search": {
+      "get": {
+        "operationId": "searchWorkItems",
+        "parameters": [
+          {
+            "description": "Project to search in",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Lucene query, empty for all WorkItems",
+            "in": "query",
+            "name": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Lucene sort string, 'id' by default",
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "1-based page number",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "in": "query",
+            "name": "recordsPerPage",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultSearchWorkItem"
+                }
+              }
+            },
+            "description": "One page of matching WorkItems"
+          },
+          "400": {
+            "description": "Missing project ID or malformed query"
+          }
+        },
+        "summary": "Searches WorkItems of a project by a Lucene query and returns one page of them",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/queue/configuration-meta": {
+      "get": {
+        "operationId": "getConfigurationMeta",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueConfigurationMeta"
+                }
+              }
+            },
+            "description": "Assignable features with their labels, worker count, thread limit and queue capacity"
+          }
+        },
+        "summary": "Gets the static metadata needed to render the execution queue configuration",
+        "tags": [
+          "Queued Execution Management"
+        ]
+      }
+    },
     "/api/queueStatistics": {
       "delete": {
         "operationId": "clearStatistics",
@@ -965,6 +1223,58 @@
         "summary": "Gets list of statistics items for each worker",
         "tags": [
           "Queued Execution Management"
+        ]
+      }
+    },
+    "/api/readme": {
+      "get": {
+        "operationId": "getDocumentation",
+        "responses": {
+          "default": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "HTML help article"
+          }
+        },
+        "summary": "Returns the build-generated README help article shown on the About page",
+        "tags": [
+          "Extension Information"
+        ]
+      }
+    },
+    "/api/roles": {
+      "get": {
+        "operationId": "getRoles",
+        "parameters": [
+          {
+            "description": "Scope, e.g. project/<projectId>/ (empty for global scope)",
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolesInfo"
+                }
+              }
+            },
+            "description": "Successfully retrieved the available roles"
+          }
+        },
+        "summary": "Get the global and project roles available in the specified scope",
+        "tags": [
+          "Roles"
         ]
       }
     },
@@ -1294,6 +1604,27 @@
         ]
       }
     },
+    "/api/user-guide": {
+      "get": {
+        "operationId": "getUserGuide",
+        "responses": {
+          "default": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "HTML help article"
+          }
+        },
+        "summary": "Returns the build-generated USER_GUIDE help article shown on the User Guide page",
+        "tags": [
+          "Extension Information"
+        ]
+      }
+    },
     "/api/version": {
       "get": {
         "operationId": "getVersion",
@@ -1370,6 +1701,67 @@
             "description": "The number of requests to the server that are allowed to run in parallel",
             "format": "int32",
             "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ConfigurationPropertiesModel": {
+        "description": "Extension configuration properties shown on the About page",
+        "properties": {
+          "obsoleteProperties": {
+            "description": "Obsolete or non-valid configuration properties (only key and value are set), sorted by key",
+            "items": {
+              "$ref": "#/components/schemas/ConfigurationPropertyModel"
+            },
+            "type": "array"
+          },
+          "properties": {
+            "description": "Active configuration properties, sorted by key",
+            "items": {
+              "$ref": "#/components/schemas/ConfigurationPropertyModel"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ConfigurationPropertyModel": {
+        "description": "A single extension configuration property as shown on the About page",
+        "properties": {
+          "defaultValue": {
+            "description": "Default value of the property, if any",
+            "type": "string"
+          },
+          "description": {
+            "description": "Human readable description of the property, if any",
+            "type": "string"
+          },
+          "key": {
+            "description": "Property key",
+            "type": "string"
+          },
+          "value": {
+            "description": "Current value of the property",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ConfigurationStatus": {
+        "properties": {
+          "details": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "OK",
+              "WARNING",
+              "ERROR"
+            ],
+            "type": "string"
           }
         },
         "type": "object"
@@ -2048,6 +2440,24 @@
         ],
         "type": "object"
       },
+      "EnumOption": {
+        "description": "An enumeration value of a WorkItem field, with the icon Polarion renders for it",
+        "properties": {
+          "iconUrl": {
+            "description": "URL of the option icon, if defined",
+            "type": "string"
+          },
+          "id": {
+            "description": "Option ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "Option name as displayed to the user",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ExtensionInfo": {
         "properties": {
           "context": {
@@ -2055,6 +2465,24 @@
           },
           "version": {
             "$ref": "#/components/schemas/Version"
+          }
+        },
+        "type": "object"
+      },
+      "FeatureInfo": {
+        "description": "A queueable feature, as the Execution Queue admin page needs to display it",
+        "properties": {
+          "description": {
+            "description": "Longer explanation shown as additional info next to the label",
+            "type": "string"
+          },
+          "id": {
+            "description": "Feature ID, matching the keys used in the execution queue settings",
+            "type": "string"
+          },
+          "label": {
+            "description": "Short label shown in the workers table",
+            "type": "string"
           }
         },
         "type": "object"
@@ -2143,6 +2571,24 @@
             "type": "string"
           },
           "workItemTypeName": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LinkRoleOption": {
+        "description": "A link role of a project, as offered for selection",
+        "properties": {
+          "id": {
+            "description": "Role ID",
+            "type": "string"
+          },
+          "name": {
+            "description": "Role name in the forward direction",
+            "type": "string"
+          },
+          "oppositeName": {
+            "description": "Role name in the backward direction",
             "type": "string"
           }
         },
@@ -2374,6 +2820,37 @@
         },
         "type": "object"
       },
+      "QueueConfigurationMeta": {
+        "description": "Metadata describing the execution queue configuration options",
+        "properties": {
+          "cpuLoad": {
+            "$ref": "#/components/schemas/FeatureInfo"
+          },
+          "features": {
+            "description": "Features that can be assigned to a worker, in declaration order",
+            "items": {
+              "$ref": "#/components/schemas/FeatureInfo"
+            },
+            "type": "array"
+          },
+          "maxRecommendedThreads": {
+            "description": "Maximum thread count recommended for this machine, used as the upper bound of the thread inputs",
+            "format": "int32",
+            "type": "integer"
+          },
+          "queueCapacity": {
+            "description": "Maximum number of entries a worker queue holds before rejecting further submissions",
+            "format": "int32",
+            "type": "integer"
+          },
+          "workerCount": {
+            "description": "Number of configurable workers",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Revision": {
         "description": "Revision details",
         "properties": {
@@ -2395,6 +2872,171 @@
           },
           "name": {
             "description": "The name of the revision",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "RolesInfo": {
+        "description": "Roles available to grant in a given scope",
+        "properties": {
+          "globalRoles": {
+            "description": "Roles defined for the whole repository",
+            "items": {
+              "description": "Roles defined for the whole repository",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "projectRoles": {
+            "description": "Roles defined for the project of the scope; empty in global scope",
+            "items": {
+              "description": "Roles defined for the project of the scope; empty in global scope",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "globalRoles",
+          "projectRoles"
+        ],
+        "type": "object"
+      },
+      "SearchCollection": {
+        "description": "One row of the baseline collection selection table",
+        "properties": {
+          "authorName": {
+            "description": "Name of the user who created the collection",
+            "type": "string"
+          },
+          "created": {
+            "description": "Creation time in epoch milliseconds",
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier of the collection",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the collection",
+            "type": "string"
+          },
+          "projectId": {
+            "description": "Project ID of the collection",
+            "type": "string"
+          },
+          "readable": {
+            "description": "False when the collection is unresolvable or the user may not read it",
+            "type": "boolean"
+          },
+          "unavailableMessage": {
+            "description": "Reason why the collection is not readable, null otherwise",
+            "type": "string"
+          },
+          "updated": {
+            "description": "Last update time in epoch milliseconds",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SearchResultSearchCollection": {
+        "description": "One page of a search result",
+        "properties": {
+          "items": {
+            "description": "Items of the requested page",
+            "items": {
+              "$ref": "#/components/schemas/SearchCollection"
+            },
+            "type": "array"
+          },
+          "lastPage": {
+            "description": "Number of the last available page, at least 1",
+            "format": "int32",
+            "type": "integer"
+          },
+          "page": {
+            "description": "Number of the returned page, 1-based and clamped to the available pages",
+            "format": "int32",
+            "type": "integer"
+          },
+          "query": {
+            "description": "The Lucene query which produced this result, as executed",
+            "type": "string"
+          },
+          "totalCount": {
+            "description": "Size of the whole result set, not of this page",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SearchResultSearchWorkItem": {
+        "description": "One page of a search result",
+        "properties": {
+          "items": {
+            "description": "Items of the requested page",
+            "items": {
+              "$ref": "#/components/schemas/SearchWorkItem"
+            },
+            "type": "array"
+          },
+          "lastPage": {
+            "description": "Number of the last available page, at least 1",
+            "format": "int32",
+            "type": "integer"
+          },
+          "page": {
+            "description": "Number of the returned page, 1-based and clamped to the available pages",
+            "format": "int32",
+            "type": "integer"
+          },
+          "query": {
+            "description": "The Lucene query which produced this result, as executed",
+            "type": "string"
+          },
+          "totalCount": {
+            "description": "Size of the whole result set, not of this page",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SearchWorkItem": {
+        "description": "One row of the WorkItem selection table",
+        "properties": {
+          "id": {
+            "description": "Unique identifier of the WorkItem",
+            "type": "string"
+          },
+          "projectId": {
+            "description": "Project ID of the WorkItem",
+            "type": "string"
+          },
+          "readable": {
+            "description": "False when the item is unresolvable or the user may not read it",
+            "type": "boolean"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/EnumOption"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EnumOption"
+          },
+          "title": {
+            "description": "Title of the WorkItem",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/EnumOption"
+          },
+          "unavailableMessage": {
+            "description": "Reason why the item is not readable, null otherwise",
             "type": "string"
           }
         },

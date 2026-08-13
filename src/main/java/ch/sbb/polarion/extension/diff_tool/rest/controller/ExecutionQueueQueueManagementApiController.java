@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
+import ch.sbb.polarion.extension.diff_tool.rest.model.queue.QueueConfigurationMeta;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.StatisticsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
@@ -20,6 +21,11 @@ public class ExecutionQueueQueueManagementApiController extends ExecutionQueueMa
     @Override
     public Map<String, Map<Feature, List<TimeframeStatisticsEntry>>> getStatistics(StatisticsParams statisticsParams) {
         return polarionService.callPrivileged(() -> super.getStatistics(statisticsParams));
+    }
+
+    @Override
+    public QueueConfigurationMeta getConfigurationMeta() {
+        return polarionService.callPrivileged(super::getConfigurationMeta);
     }
 
     @Override

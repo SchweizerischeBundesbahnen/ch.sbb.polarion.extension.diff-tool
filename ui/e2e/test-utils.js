@@ -1,0 +1,258 @@
+import { test as base, expect } from '@playwright/test';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// The package is ESM ("type": "module"), so __dirname does not exist here.
+const fixturesDir = fileURLToPath(new URL('./fixtures/', import.meta.url));
+
+const fixtureDataProvider = (fixtureFile) => {
+  const filePath = path.join(fixturesDir, fixtureFile);
+  const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  return JSON.stringify(fixtureData)
+};
+
+const workItemsDiffFixtureDataProvider = (requestBody) => {
+
+  const left = requestBody.leftWorkItem ? requestBody.leftWorkItem.id : 'NONE';
+  const right = requestBody.rightWorkItem ? requestBody.rightWorkItem.id : 'NONE';
+  const fixtureFile = `${left}_${right}.json`;
+
+  const filePath = path.join(fixturesDir, fixtureFile);
+  if (fs.existsSync(filePath)) {
+    const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    return JSON.stringify(fixtureData)
+  } else {
+    console.log(`fixture file not found: ${fixtureFile}`);
+    return {}
+  }
+};
+
+const workItemsMergeFixtureDataProvider = (requestBody) => {
+  let fixtureFile;
+  if (!requestBody.pairs[0].leftWorkItem) {
+    if (requestBody.pairs[0].rightWorkItem.id === "DP-11570") {
+      fixtureFile = "NONE_DP-11570_merge.json";
+    }
+  } else if (!requestBody.pairs[0].rightWorkItem) {
+    if (requestBody.pairs[0].leftWorkItem.id === "EL-156") {
+      fixtureFile = "EL-156_NONE_merge.json";
+    } else if (requestBody.pairs[0].leftWorkItem.id === "EL-11600") {
+      fixtureFile = "EL-11600_NONE_merge.json";
+    }
+  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-4977" && requestBody.pairs[0].rightWorkItem.id === "DP-11559" && requestBody.mergeDirection === 0) {
+    fixtureFile = "EL-4977_DP-11559_merge.json";
+  }  else if (requestBody.pairs[0].leftWorkItem.id === "DP-11559" && requestBody.pairs[0].rightWorkItem.id === "EL-4977" && requestBody.mergeDirection === 0) {
+    fixtureFile = "DP-11559_EL-4977_conflicted_merge.json";
+  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-11575" && requestBody.pairs[0].rightWorkItem.id === "EL-11575" && requestBody.leftDocument.projectId === "elibrary") {
+    fixtureFile = "EL-11575_EL-11575_merge_into_referenced.json";
+  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-11575" && requestBody.pairs[0].rightWorkItem.id === "EL-11575" && requestBody.leftDocument.projectId === "drivepilot") {
+    fixtureFile = "EL-11575_EL-11575_merge_from_referenced.json";
+  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-157" && requestBody.pairs[0].rightWorkItem.id === "DP-11562" && requestBody.mergeDirection === 0) {
+    fixtureFile = "EL-157_DP-11562_merge.json";
+  } else if (requestBody.pairs[0].leftWorkItem.id === "EL-14873" && requestBody.pairs[0].rightWorkItem.id === "DP-536") {
+    fixtureFile = "EL-14873_DP-536.json";
+  }
+
+
+  if (fixtureFile) {
+    const filePath = path.join(fixturesDir, fixtureFile);
+    const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    return JSON.stringify(fixtureData)
+  } else {
+    console.log("workitems merge fixture not found: ", requestBody);
+    return {}
+  }
+};
+
+const fieldsMergeFixtureDataProvider = (requestBody) => {
+  let fixtureFile;
+  if (requestBody.fieldIds.includes("version")) {
+    fixtureFile = "version-field-merge.json";
+  } else if (requestBody.fieldIds.includes("docRevision")) {
+    fixtureFile = "docRevision-field-merge.json";
+  } else if (requestBody.fieldIds.includes("docLanguage")) {
+    fixtureFile = "docLanguage-field-merge.json";
+  }
+
+  if (fixtureFile) {
+    const filePath = path.join(fixturesDir, fixtureFile);
+    const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    return JSON.stringify(fixtureData)
+  } else {
+    console.log("field merge fixture not found: ", requestBody);
+    return {}
+  }
+};
+
+const contentMergeFixtureDataProvider = (requestBody) => {
+  let fixtureFile;
+  if (requestBody.pairs[0].leftWorkItemId === "EL-63012") {
+    fixtureFile = "content-merge.json";
+  } else if (requestBody.pairs[0].leftWorkItemId === "EL-63013") {
+    fixtureFile = "content-merge-not-authorized.json";
+  } else if (requestBody.pairs[0].leftWorkItemId === "EL-63016") {
+    fixtureFile = "content-merge-aborted.json";
+  }
+
+  if (fixtureFile) {
+    const filePath = path.join(fixturesDir, fixtureFile);
+    const fixtureData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    return JSON.stringify(fixtureData)
+  } else {
+    console.log("field merge fixture not found: ", requestBody);
+    return {}
+  }
+};
+
+// API mocking
+export const test = base.extend({
+  // The E2E dev server (`npm run dev`) has no Polarion backend, so the runtime-served
+  // /polarion/.../generic/css/control-tokens.css 404s and its --sbb-* tokens are undefined. That
+  // collapses the token-sized custom checkbox to 0×0, which Playwright treats as not-visible and
+  // refuses to click. Fulfil that request with the checkbox size token (its production value) so
+  // controls stay clickable — kept in the test layer so production globals.css stays token-only.
+  page: async ({ page }, use) => {
+    await page.route("**/generic/css/control-tokens.css", route =>
+      route.fulfill({ contentType: "text/css", body: ":root{--sbb-toggle-size:15px}" }));
+    await use(page);
+  },
+  mockApi: async ({ page }, use) => {
+    const mockApi = {
+      // Mock any API endpoint with certain JSON response in general
+      mockEndpoint: async ({ url, fixtureFile }) => {
+        const responseData = fixtureDataProvider(fixtureFile);
+
+        await page.route(url, route => {
+          route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: fixtureDataProvider(fixtureFile)
+          });
+        });
+
+        return responseData;
+      },
+
+      // Mock "/diff/document-workitems" endpoint which returns JSON response depending on data in request body
+      mockWorkItemsDiffEndpoint: async () => {
+        await page.route("**/diff/document-workitems", route => {
+          const request = route.request();
+          let requestBody;
+          try {
+            requestBody = request.postDataJSON();
+          } catch {
+            requestBody = {};
+          }
+
+          route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: workItemsDiffFixtureDataProvider(requestBody)
+          });
+        });
+      },
+      // Mock "/diff/documents" endpoint which emulates merge operation and returns JSON response depending on data in request body
+      mockWorkItemsMergeEndpoint: async () => {
+        await page.route("**/merge/documents", route => {
+          const request = route.request();
+          let requestBody;
+          try {
+            requestBody = request.postDataJSON();
+          } catch {
+            requestBody = {};
+          }
+
+          route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: workItemsMergeFixtureDataProvider(requestBody)
+          });
+        });
+      },
+
+      // Mock "/diff/documents-fields" endpoint which emulates merge operation and returns JSON response depending on data in request body
+      mockFieldsMergeEndpoint: async () => {
+        await page.route("**/merge/documents-fields", route => {
+          const request = route.request();
+          let requestBody;
+          try {
+            requestBody = request.postDataJSON();
+          } catch {
+            requestBody = {};
+          }
+
+          route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: fieldsMergeFixtureDataProvider(requestBody)
+          });
+        });
+      },
+
+      // Mock "/diff/documents-content" endpoint which emulates merge operation and returns JSON response depending on data in request body
+      mockContentMergeEndpoint: async () => {
+        await page.route("**/merge/documents-content", route => {
+          const request = route.request();
+          let requestBody;
+          try {
+            requestBody = request.postDataJSON();
+          } catch {
+            requestBody = {};
+          }
+
+          route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: contentMergeFixtureDataProvider(requestBody)
+          });
+        });
+      }
+
+    };
+
+    // Use the fixture in the test
+    await use(mockApi);
+  },
+});
+
+/**
+ * Clicks the swap button and waits until the URL reflects the swap.
+ *
+ * The documents page renders entirely on the client (it is a `use client` tree
+ * behind a Suspense fallback), so right after the first render WebKit sometimes
+ * drops clicks on the freshly-mounted swap button and the swap never fires —
+ * the main source of "swap documents" flakiness in CI. Re-clicking quickly
+ * recovers within a couple of seconds; the URL guard before every click means a
+ * landed navigation is never clicked on top of and toggled back. In the rare
+ * case a whole page load stays unresponsive, a reload gives a fresh mount.
+ */
+export const swapDocuments = async (page, expectedUrl) => {
+  for (let round = 0; round < 3; round++) {
+    const swapButton = page.locator('.swap-button');
+    await expect(swapButton).toBeVisible();
+    // Let the mocked config/diff requests settle before interacting.
+    await page.waitForLoadState('networkidle');
+    for (let attempt = 0; attempt < 12; attempt++) {
+      if (expectedUrl.test(page.url())) return;
+      await swapButton.click();
+      await page.waitForTimeout(400);
+    }
+    if (expectedUrl.test(page.url())) return;
+    // The button on this page load never responded — reload for a fresh mount.
+    // Skip on the final round: there would be no clicks left to benefit from it.
+    if (round < 2) {
+      await page.reload();
+      await page.waitForSelector('.header .merge-pane', { state: 'visible' });
+    }
+  }
+  await expect(page).toHaveURL(expectedUrl);
+};
+
+export const normalizeHtml = (htmlString) => {
+  return htmlString
+      .replace(/changes="([^"]*)"/g, (match) => match.replace(/&gt;/g, '>').replace(/&lt;/g, '<')) // replace encoded diff HTML inside 'changes' attribute
+      .replace(/\s+/g, ' ')
+      .replace(/> </g, '><')
+      .trim();
+};

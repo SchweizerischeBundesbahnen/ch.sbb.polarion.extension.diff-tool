@@ -1,0 +1,458 @@
+/* App-specific styling for the admin pages only.
+ *
+ * Deliberately does NOT declare: body { margin }, .app { padding | font-family | font-size | color } or
+ * .page > h1 - react-sbb-polarion owns page spacing, the unified Selawik typography, the 13px admin base
+ * size, the text colour and the admin heading. Re-declaring any of them here would be how the family
+ * drifts apart again, which is exactly why RSP 0.0.3 took size and colour over from the five apps that
+ * each repeated them. */
+
+/* The dev-only Landing overview (never opened inside Polarion, which always passes ?feature=). Its scope
+   picker is the row above the feature list; the dropdown needs a width, since SearchableDropdown only
+   copies an inline one off the <select> it wraps. */
+.landing-scope {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.landing-scope .searchable-dropdown {
+  min-width: 280px;
+}
+
+.landing-features {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.8;
+}
+
+/* The one-liner from features.tsx under each link. Its own line-height, since the list above is spaced
+   for single-line entries. */
+.landing-feature-description {
+  color: #666;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+/* Section headings this app renders directly in a page body - react-sbb-polarion styles the page <h1>,
+   but an <h2> below it would fall back to the browser default, which is far larger than Polarion's admin
+   pages use.
+   Deliberately the direct-child selector: a descendant selector would also restyle the headings inside
+   RSP's own About and UserGuide components, which own their look. */
+.page-body > h2 {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 24px 0 8px;
+}
+
+/* The role-group labels on Merge Authorization. react-sbb-polarion's AuthorizationSettings renders these
+   <h2>s but deliberately leaves their size to the app (each consumer scopes a heading rule to its own
+   root class); here they nest inside .authorization-page, so the .page-body > h2 rule above - direct
+   child on purpose, to stay off the About/UserGuide article headings - does not reach them, and they
+   would fall back to the browser default. 15px keeps the size the local RoleCheckboxGroup had. */
+.authorization-page h2 {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 0 0 8px;
+}
+
+/* Wide enough for the "New value" placeholder, which the browser default truncates to "Ne". */
+.number-input {
+  width: 90px;
+}
+
+/* Diff Configurations: the Available/Selected dual listbox with its move buttons between them.
+ *
+ * Ported from the <style> block of the legacy configuration.jsp, which the conversion left behind. Three
+ * things depend on it and regressed without it: the fixed column widths (the page is not meant to stretch
+ * to the window), the token-based restyling of the two <select multiple>s, and the filter input's icon.
+ * react-sbb-polarion styles no <select> at all, so these rules are the only thing standing between the
+ * design tokens and the browser's native listbox - tight rows, system-blue selection. */
+.diff-settings {
+  border-top: 1px solid #ccc;
+  margin-top: 20px;
+  padding-top: 15px;
+
+  /* Fixed geometry, as the legacy page had: two 440px list columns with a 100px button column between
+     them, and the bottom dropdowns spanning the full width of that top component. */
+  --select-column-width: 440px;
+  --buttons-column-width: 100px;
+  --flex-gap: 20px;
+  --top-component-width: calc(2 * var(--select-column-width) + var(--buttons-column-width) + 2 * var(--flex-gap));
+}
+
+/* While the configurations pane has its name editor open the form below is not the thing being edited. */
+.diff-settings.dimmed {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.fields-transfer {
+  display: flex;
+  column-gap: var(--flex-gap);
+  align-items: stretch;
+}
+
+.fields-column {
+  display: flex;
+  flex-direction: column;
+  row-gap: 5px;
+  width: var(--select-column-width);
+  min-height: 200px;
+}
+
+.fields-column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  /* Keeps both lists' top edges level, though only the left column carries a filter input. */
+  min-height: var(--sbb-control-height, 23px);
+}
+
+.fields-column-header .filter-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  /* The filter icon, pinned left and sized so it cannot crowd the text. Everything else about this input
+     - border, radius, background colour, font, hover and focus - now comes from RSP's bundled control
+     CSS, which is why the legacy page's hand-written copy of those declarations is not carried over.
+     `!important` because that RSP rule sets `padding: 2px 6px` at a higher specificity and the text has
+     to clear the icon.
+
+     Longhands, not the `background` shorthand the legacy page used: that shorthand also set the colour
+     from var(--sbb-control-bg), and RSP scopes its tokens to `.sbb-ui`, so anywhere that class is not an
+     ancestor the var fails to substitute, the whole declaration is invalid at computed-value time, and
+     the icon silently disappears. The colour is RSP's to set anyway.
+
+     Polarion serves filter.png, so it resolves at runtime and never appears in the Vitest reference
+     screenshots - which is why FieldsTransferList.test.tsx asserts the declaration instead. */
+  background-image: url('/polarion/ria/images/filter.png');
+  background-repeat: no-repeat;
+  background-position: 6px center;
+  background-size: 14px 14px;
+  padding-left: 26px !important;
+}
+
+/* Fills the column, whose width and minimum height are fixed above; `size` sets the row count. */
+.fields-column select {
+  width: 100%;
+  height: 100%;
+}
+
+.fields-buttons {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  row-gap: 5px;
+  width: var(--buttons-column-width);
+}
+
+/* The two lists, restyled to read as part of the same design system as the shared controls. */
+#available-fields,
+#selected-fields {
+  border: 1px solid var(--sbb-control-border);
+  border-radius: var(--sbb-control-radius);
+  background-color: var(--sbb-control-bg);
+  color: var(--sbb-control-text);
+  font-family: var(--sbb-control-font-family);
+  font-size: var(--sbb-control-font-size);
+  font-weight: var(--sbb-control-font-weight);
+  padding: 2px;
+  outline: none;
+  /* Match the soft elevation the generic controls animate on hover/focus. */
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+#available-fields:hover,
+#selected-fields:hover {
+  box-shadow: var(--sbb-control-shadow-hover);
+}
+
+#available-fields:focus,
+#selected-fields:focus {
+  border-color: var(--sbb-control-border-focus);
+  box-shadow: var(--sbb-control-shadow-hover);
+}
+
+#available-fields option,
+#selected-fields option {
+  padding: 4px 8px;
+}
+
+#available-fields option:hover,
+#selected-fields option:hover,
+#available-fields option:checked,
+#selected-fields option:checked {
+  background-color: var(--sbb-option-hover);
+  color: var(--sbb-control-text);
+}
+
+/* A highlighted row in the list that has focus. The redundant-looking gradient and
+   -webkit-text-fill-color are what it takes to repaint a checked <option> in Chromium at all - it
+   otherwise forces the system selection colours over background-color and color alike. */
+#available-fields:focus option:checked,
+#available-fields:focus option:checked:hover,
+#selected-fields:focus option:checked,
+#selected-fields:focus option:checked:hover {
+  background: #d1fff2 linear-gradient(#d1fff2, #d1fff2) !important;
+  color: var(--sbb-control-text) !important;
+  -webkit-text-fill-color: var(--sbb-control-text);
+}
+
+/* The three bottom dropdowns are stacked vertically, each spanning the full width of the top two-pane
+   component - not laid out side by side across the window. */
+.diff-role-settings {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--flex-gap);
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #ccc;
+}
+
+.diff-role-column {
+  display: flex;
+  flex-direction: column;
+  row-gap: 5px;
+  width: var(--top-component-width);
+}
+
+/* Make the upgraded multiselect fill its column. SearchableDropdown sizes its wrapper from the original
+   select's *inline* style width only (and then shrinks the select itself to 1px), so without this the
+   control collapses to its content and truncates the selected chips to "Draft [draf...". */
+.diff-role-column .searchable-dropdown {
+  width: 100%;
+}
+
+/* Execution Queue: the grid of collapsible charts plus the two configuration tables. */
+.chart-containers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.chart-container {
+  flex: 1 1 480px;
+  min-width: 0;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 8px 12px 12px;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chart-header h3 {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.chart-expand-button {
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Chart.js needs a sized parent: it fills its container, and with maintainAspectRatio off a canvas in an
+   unconstrained flex item grows without bound on every resize. */
+.chart-canvas {
+  position: relative;
+  height: 220px;
+}
+
+.chart-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.chart-footer .footer-item {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* Rendered as a button for keyboard accessibility, styled as the link the legacy page used. */
+.chart-reset-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--sbb-color-accent, #0d5c9e);
+  text-decoration: none;
+}
+
+.chart-reset-button:hover {
+  text-decoration: underline;
+}
+
+.workers-configuration-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.workers-configuration-table table {
+  border-collapse: collapse;
+}
+
+.workers-configuration-table th,
+.workers-configuration-table td {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 4px 10px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.workers-configuration-table th {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.workers-configuration-table .center-column-value {
+  text-align: center;
+}
+
+.workers-configuration-table.has-delimiter {
+  border-left: 1px solid #ccc;
+  padding-left: 32px;
+}
+
+/* The tooltip carrier next to a feature name; the text itself lives in its title attribute. */
+.more-info {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: #e6e6e6;
+  cursor: help;
+  vertical-align: middle;
+}
+
+/* Project Duplication: the request form and the jobs table with its expandable log frames. */
+.duplication-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 900px;
+}
+
+.duplication-form .form-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.duplication-form label {
+  flex: 0 0 150px;
+}
+
+.duplication-form input[type='text'] {
+  flex: 0 0 280px;
+}
+
+/* Same width as the text inputs. SearchableDropdown only inherits an *inline* width from the original
+   control, so without this the combobox shrinks to its content and truncates to "Select sour...". */
+.duplication-form .searchable-dropdown {
+  flex: 0 0 280px;
+}
+
+.duplication-form .field-hint {
+  color: #666;
+  font-style: italic;
+}
+
+.duplication-form .actions {
+  margin-top: 8px;
+  /* Aligned with the inputs rather than the labels. */
+  padding-left: 160px;
+}
+
+.auto-refresh-note {
+  font-size: 12px;
+  font-weight: normal;
+  color: #666;
+}
+
+.jobs-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.jobs-table th,
+.jobs-table td {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.jobs-table th {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.jobs-table .job-id {
+  color: #888;
+  font-size: 0.85em;
+}
+
+.jobs-table .row-clickable {
+  cursor: pointer;
+}
+
+.jobs-table .row-clickable:hover {
+  background: #f5f5f5;
+}
+
+.jobs-table .state-FINISHED {
+  color: #197a19;
+}
+
+.jobs-table .state-ABORTED,
+.jobs-table .status-FAILED {
+  color: #b00020;
+}
+
+.job-log-frame {
+  width: 100%;
+  height: 260px;
+  border: 1px solid #ccc;
+}
+
+.page-loading {
+  padding: 10px 0;
+  color: #666;
+}
+
+.quick-help {
+  margin-top: 32px;
+}
+
+.quick-help h2 {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0 0 8px;
+}
+
+.quick-help h3 {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 16px 0 4px;
+}
+
+.quick-help p {
+  margin: 0 0 6px;
+}
