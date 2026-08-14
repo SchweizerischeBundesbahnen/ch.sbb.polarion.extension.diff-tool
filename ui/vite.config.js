@@ -1,5 +1,7 @@
-import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
+import { copyFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { fileURLToPath, URL } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 
 const resolvePath = (relativePath) => fileURLToPath(new URL(relativePath, import.meta.url));
@@ -29,6 +31,22 @@ const extensionlessHtml = () => ({
     });
   },
 });
+
+// react-sbb-polarion ships BreadcrumbBridge.js as a classic script that runs in the Polarion shell
+// window, outside this app's frame, so it cannot be imported and has to be served as a file. Copying
+// it next to the built app is what replaces fetching it from generic's webapp.
+function copyRspShellScripts() {
+  return {
+    name: 'copy-rsp-shell-scripts',
+    writeBundle(options) {
+      const require = createRequire(import.meta.url);
+      copyFileSync(
+        require.resolve('@grigoriev/react-sbb-polarion/breadcrumb-bridge.js'),
+        `${options.dir}/breadcrumb-bridge.js`,
+      );
+    },
+  };
+}
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -99,6 +117,7 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     ...shared,
+    plugins: [...shared.plugins, copyRspShellScripts()],
     // Never let a developer's personal access token reach a shipped bundle. VITE_BEARER_TOKEN is a
     // `vite dev` convenience (it switches useRemote to the token-authenticated /api endpoints so the app
     // can talk to a real Polarion without a session); Vite inlines import.meta.env.VITE_* at build time,
