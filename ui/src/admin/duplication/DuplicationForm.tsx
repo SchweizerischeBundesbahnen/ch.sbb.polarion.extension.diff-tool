@@ -1,4 +1,4 @@
-import { SearchableSelect } from '@grigoriev/react-sbb-polarion';
+import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
 import type { DuplicationRequest, ProjectInfo } from '../types';
 
 interface DuplicationFormProps {

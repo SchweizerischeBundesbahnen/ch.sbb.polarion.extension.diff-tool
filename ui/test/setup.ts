@@ -14,7 +14,7 @@
 //
 // Loading the viewer's globals.css and RSP's stylesheet into one document is only safe because the
 // viewer's page shell is `.diff-app`, not `.app`: RSP claims `.app` for the admin shell.
-import '@grigoriev/react-sbb-polarion/style.css';
+import '@sbb-polarion/react-sbb-polarion/style.css';
 import '@testing-library/jest-dom/vitest';
 import 'bootstrap/dist/css/bootstrap.css';
 import '../src/App.css';

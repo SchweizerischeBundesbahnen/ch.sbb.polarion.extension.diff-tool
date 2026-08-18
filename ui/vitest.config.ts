@@ -41,7 +41,7 @@ export default defineConfig({
       'react/jsx-runtime',
       'react/jsx-dev-runtime',
       'vitest-browser-react',
-      '@grigoriev/react-sbb-polarion',
+      '@sbb-polarion/react-sbb-polarion',
       'sonner',
       'chart.js',
       'chartjs-adapter-date-fns',

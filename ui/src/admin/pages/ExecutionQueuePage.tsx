@@ -6,7 +6,7 @@ import {
   RevisionsTable,
   getScope,
   useConfirm,
-} from '@grigoriev/react-sbb-polarion';
+} from '@sbb-polarion/react-sbb-polarion';
 import { toast } from 'sonner';
 import useRemote from '../../services/useRemote';
 import useSettings, { DEFAULT_CONFIGURATION } from '../../services/useSettings';

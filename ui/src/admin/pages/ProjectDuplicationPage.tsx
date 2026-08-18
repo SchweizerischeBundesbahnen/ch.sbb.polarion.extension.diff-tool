@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PageLayout } from '@grigoriev/react-sbb-polarion';
+import { PageLayout } from '@sbb-polarion/react-sbb-polarion';
 import { toast } from 'sonner';
 import useRemote from '../../services/useRemote';
 import DuplicationForm, { missingFields } from '../duplication/DuplicationForm';

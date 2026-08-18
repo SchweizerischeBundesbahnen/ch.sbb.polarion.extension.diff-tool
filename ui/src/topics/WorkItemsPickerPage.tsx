@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { SettingName } from '@grigoriev/react-sbb-polarion';
+import type { SettingName } from '@sbb-polarion/react-sbb-polarion';
 import useRemoteList, { firstError } from '../formext/useRemoteList';
 import ItemsTable, { type Column, EnumCell } from './ItemsTable';
 import Paginator from './Paginator';

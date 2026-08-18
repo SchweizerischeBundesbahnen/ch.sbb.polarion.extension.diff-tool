@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { getCookie, setCookie } from '@grigoriev/react-sbb-polarion';
+import { getCookie, setCookie } from '@sbb-polarion/react-sbb-polarion';
 
 /**
  * Per-dropdown "remember my last choice" for the Document Properties panels.

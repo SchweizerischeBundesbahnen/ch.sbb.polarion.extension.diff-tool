@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { AuthorizationSettings, createAuthorizationService } from '@grigoriev/react-sbb-polarion';
-import type { AuthorizationService } from '@grigoriev/react-sbb-polarion';
+import { AuthorizationSettings, createAuthorizationService } from '@sbb-polarion/react-sbb-polarion';
+import type { AuthorizationService } from '@sbb-polarion/react-sbb-polarion';
 import { sendRequest } from '../../services/useRemote';
 
 /** The `authorization` named setting, whose single "Default" configuration this page edits. */

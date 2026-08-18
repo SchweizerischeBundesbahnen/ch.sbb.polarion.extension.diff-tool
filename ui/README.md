@@ -24,7 +24,7 @@ extra state through `localStorage`. Do not rename them.
 ## Four surfaces
 
 **Admin pages** (`index.html`) are built on the shared
-[`react-sbb-polarion`](https://github.com/grigoriev/react-sbb-polarion) library (RSP), like every other
+[`react-sbb-polarion`](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion) library (RSP), like every other
 migrated SBB Polarion extension: `PageLayout`, `About`, `ConfigurationButtons`, `RevisionsTable`,
 `Toaster` and the generic control CSS all come from it. The page is chosen by `?feature=<id>`, where the
 ids match the extender ids in `META-INF/hivemodule.xml` - see `src/features.tsx`. Root classes are

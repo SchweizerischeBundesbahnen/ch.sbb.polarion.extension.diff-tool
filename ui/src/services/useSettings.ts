@@ -1,4 +1,4 @@
-import type { Revision, SettingName } from '@grigoriev/react-sbb-polarion';
+import type { Revision, SettingName } from '@sbb-polarion/react-sbb-polarion';
 // The module-level request function, not the useRemote() wrapper: the service is built once per feature
 // outside of any render, so calling something named use* here would (rightly) trip rules-of-hooks.
 import { sendRequest } from './useRemote';

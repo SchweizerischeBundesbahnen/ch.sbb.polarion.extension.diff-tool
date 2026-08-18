@@ -1,4 +1,4 @@
-import { Toaster } from '@grigoriev/react-sbb-polarion';
+import { Toaster } from '@sbb-polarion/react-sbb-polarion';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import DiffConfigurationsPage from '../src/admin/pages/DiffConfigurationsPage';
