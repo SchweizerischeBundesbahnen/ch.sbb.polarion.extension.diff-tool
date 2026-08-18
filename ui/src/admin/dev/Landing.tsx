@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PageLayout, SearchableSelect, getCookie, getScope, setCookie } from '@grigoriev/react-sbb-polarion';
+import { PageLayout, SearchableSelect, getCookie, getScope, setCookie } from '@sbb-polarion/react-sbb-polarion';
 import { FEATURES } from '../../features';
 import { sendRequest } from '../../services/useRemote';
 import type { ProjectInfo } from '../types';

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SearchableSelect } from '@grigoriev/react-sbb-polarion';
+import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
 import NumericSpinner from './NumericSpinner';
 import PanelShell from './PanelShell';
 import compareIcon from './compare.svg';

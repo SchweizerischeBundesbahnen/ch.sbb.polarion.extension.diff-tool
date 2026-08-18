@@ -1,5 +1,5 @@
-import { SearchableSelect } from '@grigoriev/react-sbb-polarion';
-import type { SettingName } from '@grigoriev/react-sbb-polarion';
+import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
+import type { SettingName } from '@sbb-polarion/react-sbb-polarion';
 // The same icon the Document Properties panel's Compare button uses.
 import compareIcon from '../formext/compare.svg';
 import type { LinkRoleOption, ProjectInfo } from './types';

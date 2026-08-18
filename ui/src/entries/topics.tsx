@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
-import { Toaster, configureGenericModules } from '@grigoriev/react-sbb-polarion';
-import '@grigoriev/react-sbb-polarion/style.css';
+import { Toaster, configureGenericModules } from '@sbb-polarion/react-sbb-polarion';
+import '@sbb-polarion/react-sbb-polarion/style.css';
 import TopicsApp from '../topics/TopicsApp';
 import { GENERIC_MODULES_BASE } from '../topics/genericModules';
 import '../topics/topics.css';
