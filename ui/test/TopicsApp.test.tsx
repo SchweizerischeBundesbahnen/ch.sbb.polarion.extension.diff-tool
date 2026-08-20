@@ -64,6 +64,26 @@ describe('TopicsApp breadcrumb', () => {
     expect(script.dataset.parent).toBe('Diff Tool');
   });
 
+  // The re-labelling path: the bridge is already on the shell (an earlier topic in the same session
+  // installed it), so no second script is injected and the live breadcrumb is re-installed instead. This
+  // is the behaviour the deleted local port existed for, before the shared component gained it.
+  it('re-installs on a shell that already carries the bridge', async () => {
+    const install = vi.fn();
+    (shell as Window & { SbbBreadcrumbBridge?: unknown }).SbbBreadcrumbBridge = { install };
+    openTopic(COMPARE_WORK_ITEMS);
+    render(<TopicsApp />);
+
+    await vi.waitFor(() => expect(install).toHaveBeenCalled());
+    expect(install).toHaveBeenCalledWith(
+      expect.objectContaining({
+        marker: 'diff-tool',
+        title: findTopic(COMPARE_WORK_ITEMS)!.title,
+        parent: 'Diff Tool',
+      }),
+    );
+    expect(loader(), 'a second loader script was injected').toBeNull();
+  });
+
   it('leaves the parent off the root topic', async () => {
     openTopic(DIFF_TOOL);
     render(<TopicsApp />);
