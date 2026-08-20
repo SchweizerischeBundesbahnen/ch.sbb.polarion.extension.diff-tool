@@ -219,6 +219,18 @@ a:hover {
   white-space: nowrap;
   margin-right: 0.5rem;
   gap: 0.4rem;
+  /* The merge pane's row is justified to the right, so content wider than the row overflows to the
+     left - under the expanded control pane, which is fixed on top and swallows the clicks of the
+     select-all checkbox. The row must therefore shrink instead of pushing: this label is the only
+     elastic part, so let it shrink and clip its text. Fonts that render this text a few pixels wider
+     otherwise break the checkbox, on some platforms only. */
+  min-width: 0;
+}
+
+.link-role-direction-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 @container (max-width: 450px) {
@@ -388,13 +400,8 @@ a:hover {
   transition: all 0.1s linear;
 }
 
-/* A few pixels more than the pane is wide, deliberately. The pane is fixed at 0..300px and this
-   padding is what keeps the page's own content clear of it - but the select-all checkbox in the merge
-   pane carries a -7px margin, which left it 2.6px clear of the pane's edge. Anything that rendered a
-   fraction wider - another platform's fonts, a scrollbar - put an interactive control under a fixed
-   overlay that then swallowed its clicks. */
 .doc-diff.control-pane-expanded {
-  padding-left: calc(var(--control-pane-expanded-width) + 10px);
+  padding-left: var(--control-pane-expanded-width);
 }
 
 .doc-diff > .header {
