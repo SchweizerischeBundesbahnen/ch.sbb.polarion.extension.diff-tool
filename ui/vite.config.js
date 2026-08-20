@@ -1,3 +1,5 @@
+import { copyFileSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
@@ -34,8 +36,34 @@ export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const polarionUrl = env.VITE_BASE_URL || 'http://localhost';
 
+// react-sbb-polarion's BreadcrumbInjector loads breadcrumb-bridge.js from next to the running page. It
+// runs in the Polarion shell window rather than in this app's frame, so it stays a classic script and
+// cannot be bundled - it is copied next to the built entries instead. See "Shell scripts" in the
+// library's README.
+function copyRspShellScripts() {
+  return {
+    name: 'copy-rsp-shell-scripts',
+    // `vite dev` serves nothing out of the build output, so without this the same request 404s and the
+    // breadcrumb just never appears - silently, since the injector treats the shell as optional chrome.
+    configureServer(server) {
+      const require = createRequire(import.meta.url);
+      server.middlewares.use('/breadcrumb-bridge.js', (_req, res) => {
+        res.setHeader('Content-Type', 'text/javascript');
+        res.end(readFileSync(require.resolve('@sbb-polarion/react-sbb-polarion/breadcrumb-bridge.js')));
+      });
+    },
+    writeBundle(options) {
+      const require = createRequire(import.meta.url);
+      copyFileSync(
+        require.resolve('@sbb-polarion/react-sbb-polarion/breadcrumb-bridge.js'),
+        `${options.dir}/breadcrumb-bridge.js`,
+      );
+    },
+  };
+}
+
   const shared = {
-    plugins: [react()],
+    plugins: [react(), copyRspShellScripts()],
     resolve: {
       alias: { '@': resolvePath('./src') },
       // The app and (from stage 4 on) the linked react-sbb-polarion package must resolve to a single
@@ -66,10 +94,13 @@ export default defineConfig(({ command, mode }) => {
   };
 
   if (command === 'serve') {
-    // Everything the pages load from Polarion itself: REST, the generic UI toolkit CSS/JS, the wiki
+    // Everything the pages load from Polarion itself: REST, the generic UI toolkit CSS, the wiki
     // skin stylesheet, and the icon/font assets referenced from CSS. Replaces the
     // NEXT_PUBLIC_BASE_URL prefixing useRemote used to do, so requests stay same-origin with no CORS.
     const polarionProxy = {
+      // Still needed: the three viewer pages link generic's control-tokens.css / searchable-dropdown.css
+      // directly, so vite dev has to reach them even though the breadcrumb bridge no longer comes from
+      // there.
       '/polarion/diff-tool-app/ui/generic': { target: polarionUrl, changeOrigin: true },
       '/polarion/diff-tool/rest': { target: polarionUrl, changeOrigin: true },
       '/polarion/diff-tool/ui': { target: polarionUrl, changeOrigin: true },
