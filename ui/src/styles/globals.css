@@ -388,8 +388,13 @@ a:hover {
   transition: all 0.1s linear;
 }
 
+/* A few pixels more than the pane is wide, deliberately. The pane is fixed at 0..300px and this
+   padding is what keeps the page's own content clear of it - but the select-all checkbox in the merge
+   pane carries a -7px margin, which left it 2.6px clear of the pane's edge. Anything that rendered a
+   fraction wider - another platform's fonts, a scrollbar - put an interactive control under a fixed
+   overlay that then swallowed its clicks. */
 .doc-diff.control-pane-expanded {
-  padding-left: var(--control-pane-expanded-width);
+  padding-left: calc(var(--control-pane-expanded-width) + 10px);
 }
 
 .doc-diff > .header {
