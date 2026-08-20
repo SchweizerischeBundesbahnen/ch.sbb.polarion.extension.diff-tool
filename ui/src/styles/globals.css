@@ -114,7 +114,7 @@ a:hover {
 }
 
 /* --polarion-blue derives from the --sbb-accent design token. That token lives on the .sbb-ui scope
-   (control-tokens.css), not :root, so derive it here too — a :root derivation would resolve against a
+   (react-sbb-polarion's bundled style.css), not :root, so derive it here too — a :root derivation would resolve against a
    missing --sbb-accent and leave --polarion-blue invalid (teal headers/badges fall back to no fill). */
 .sbb-ui {
   --polarion-blue: var(--sbb-accent);
@@ -308,7 +308,7 @@ a:hover {
 }
 
 /* Polarion 2606 checkbox — override Bootstrap's blue default with Polarion's own images,
-   sourced from generic's control tokens (control-tokens.css, linked in layout.js). */
+   sourced from the SBB control tokens in react-sbb-polarion's bundled style.css. */
 .diff-app .form-check-input {
   appearance: none;
   -webkit-appearance: none;
