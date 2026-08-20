@@ -372,30 +372,8 @@ a:hover {
   width: 40%;
 }
 
-.control-pane .select-set .form-select {
-  display: inline-block;
-  width: 60%;
-  font-size: 12px;
-  padding: 0.2rem 2.2rem 0.2rem 0.5rem;
-  /* Polarion 2606 combobox look via generic tokens (overrides Bootstrap's chevron/blue focus). */
-  appearance: none;
-  -webkit-appearance: none;
-  border: 1px solid var(--sbb-control-border);
-  border-radius: var(--sbb-control-radius);
-  background-image: var(--sbb-combo-chevron);
-  background-repeat: no-repeat;
-  background-position: right 0.6rem center;
-  background-size: 16px 16px;
-}
-
-.control-pane .select-set .form-select:focus {
-  border-color: var(--sbb-control-border-focus);
-  box-shadow: none;
-  outline: none;
-}
-
-/* The native <select>s are wrapped by the shared SearchableDropdown (see SearchableSelect); give
-   the resulting combobox the same width the native select had (60% of the row). */
+/* react-sbb-polarion's SearchableSelect renders the shared combobox; give it the same width the
+   native select had (60% of the row). The rules that styled that native select are gone with it. */
 .control-pane .select-set .searchable-dropdown {
   width: 60%;
   flex-shrink: 0;

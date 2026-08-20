@@ -1,4 +1,4 @@
-import { test } from "./test-utils";
+import { test, pickOption } from "./test-utils";
 import { expect } from "@playwright/test";
 
 
@@ -168,12 +168,11 @@ test.describe("page of diffing Collections c", () => {
 
 
     // Select a different source document
-    const sourceDocumentSelect = page.locator("#source-document");
-    await sourceDocumentSelect.selectOption("Specification/Administration Specification");
+    await pickOption(page, "source-document", "Specification / Administration Specification");
 
     // Verify the selection is reflected in the URL and the header updates with the new source document
     await expect(page).toHaveURL(/sourceSpaceId=Specification/);
-    await expect(sourceDocumentSelect).toHaveValue("Specification/Administration Specification");
+    await expect(page.locator("#source-document")).toHaveValue("Specification/Administration Specification");
     const header = page.getByTestId('LEFT-doc-title');
     await expect(header).toHaveText("Administration SpecificationHEAD (rev. 9487)");
   });
