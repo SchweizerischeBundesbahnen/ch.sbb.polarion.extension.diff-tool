@@ -94,14 +94,10 @@ function copyRspShellScripts() {
   };
 
   if (command === 'serve') {
-    // Everything the pages load from Polarion itself: REST, the generic UI toolkit CSS, the wiki
+    // Everything the pages load from Polarion itself: REST, the wiki
     // skin stylesheet, and the icon/font assets referenced from CSS. Replaces the
     // NEXT_PUBLIC_BASE_URL prefixing useRemote used to do, so requests stay same-origin with no CORS.
     const polarionProxy = {
-      // Still needed: the three viewer pages link generic's control-tokens.css / searchable-dropdown.css
-      // directly, so vite dev has to reach them even though the breadcrumb bridge no longer comes from
-      // there.
-      '/polarion/diff-tool-app/ui/generic': { target: polarionUrl, changeOrigin: true },
       '/polarion/diff-tool/rest': { target: polarionUrl, changeOrigin: true },
       '/polarion/diff-tool/ui': { target: polarionUrl, changeOrigin: true },
       '/polarion/wiki': { target: polarionUrl, changeOrigin: true },

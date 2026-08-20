@@ -227,9 +227,9 @@ a:hover {
   }
 }
 
-/* The link-role picker renders as the shared SearchableDropdown (see MergePane), which brings its
-   own combobox styling from searchable-dropdown.css — no native-<select> border/focus rules here,
-   which used to stack on top of the SD and left a stray dark frame after selection. */
+/* The link-role picker renders as react-sbb-polarion's SearchableSelect (see MergePane), which brings
+   its own combobox styling in the bundled style.css — no native-<select> border/focus rules here,
+   which used to stack on top of it and left a stray dark frame after selection. */
 
 .sticky-top {
   transition: all 0.1s linear;
