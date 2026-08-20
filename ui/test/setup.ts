@@ -4,10 +4,10 @@
 // and visual references match runtime:
 //   1. Bootstrap, which the viewer's markup is built on.
 //   2. this app's own globals.css (design-token bridging, layout, the restyled Bootstrap controls).
-// The Polarion-served stylesheets linked from the HTML entries (presentation.css and generic's
-// control-tokens.css / searchable-dropdown.css) are NOT bundled and are deliberately not loaded here -
-// they are baseline chrome resolved at runtime by GenericUiServlet. globals.css carries literal
-// fallbacks for the --sbb-* tokens, which is exactly what the browser sees when those links fail.
+// The one Polarion-served stylesheet the HTML entries still link, presentation.css, is NOT bundled and
+// is deliberately not loaded here - it is baseline chrome resolved at runtime. The --sbb-* tokens no
+// longer depend on such a link: react-sbb-polarion's bundled style.css carries them, and item 3 below
+// loads it, so the browser sees the same token values here as at runtime.
 //
 //   3. react-sbb-polarion's bundled control CSS (tokens + buttons/inputs/checkboxes/alerts + its own
 //      component styles), the same import main.tsx uses, plus this app's App.css for the admin pages.
