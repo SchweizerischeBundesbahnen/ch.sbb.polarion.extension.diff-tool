@@ -91,11 +91,11 @@ export default function ControlPane({diff_type}) {
     }
   }, [selectedDocumentLocationPath, context.state.pairedDocuments]);
 
-  const changeSelectedDocument = (event) => {
+  const changeSelectedDocument = (locationPath) => {
     if (context.state.selectedItemsCount > 0) {
-      setDocumentSelectionToBeConfirmed(event.target.value);
+      setDocumentSelectionToBeConfirmed(locationPath);
     } else {
-      documentSelected(event.target.value);
+      documentSelected(locationPath);
     }
   };
 
