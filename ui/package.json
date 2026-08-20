@@ -4,7 +4,7 @@
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
     "@fortawesome/react-fontawesome": "^3.3.1",
-    "@sbb-polarion/react-sbb-polarion": "^1.0.0",
+    "@sbb-polarion/react-sbb-polarion": "^2.0.0",
     "bootstrap": "^5.3.8",
     "chart.js": "^4.5.1",
     "chartjs-adapter-date-fns": "^3.0.0",

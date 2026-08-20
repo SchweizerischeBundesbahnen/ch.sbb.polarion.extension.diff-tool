@@ -39,6 +39,40 @@ describe('topic registry', () => {
   });
 });
 
+// Breadcrumb: the component doing the work is react-sbb-polarion's BreadcrumbInjector, and its own
+// behaviour is covered there. What belongs here is that a topic still asks for one, with its own title and
+// its parent - the hierarchy the navigation nodes render. Vitest browser mode runs each file in a
+// same-origin iframe, so window.top is a real other window, the shell the injector talks to.
+describe('TopicsApp breadcrumb', () => {
+  const shell = window.top as Window & { SbbBreadcrumbBridge?: unknown };
+  const loader = () => shell.document.getElementById('diff-tool-breadcrumb-bridge') as HTMLScriptElement | null;
+
+  beforeEach(() => {
+    delete shell.SbbBreadcrumbBridge;
+    loader()?.remove();
+  });
+  afterEach(() => loader()?.remove());
+
+  it('asks the shell for the topic breadcrumb, under its parent', async () => {
+    openTopic(COMPARE_COLLECTIONS);
+    render(<TopicsApp />);
+
+    await vi.waitFor(() => expect(loader()).not.toBeNull());
+    const script = loader()!;
+    expect(script.dataset.marker).toBe('diff-tool');
+    expect(script.dataset.title).toBe(findTopic(COMPARE_COLLECTIONS)!.title);
+    expect(script.dataset.parent).toBe('Diff Tool');
+  });
+
+  it('leaves the parent off the root topic', async () => {
+    openTopic(DIFF_TOOL);
+    render(<TopicsApp />);
+
+    await vi.waitFor(() => expect(loader()).not.toBeNull());
+    expect(loader()!.dataset.parent).toBeUndefined();
+  });
+});
+
 describe('TopicsApp', () => {
   it('renders the work items picker for its topic id', async () => {
     openTopic(COMPARE_WORK_ITEMS);
