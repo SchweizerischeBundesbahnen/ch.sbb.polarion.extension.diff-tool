@@ -7,7 +7,7 @@ import useRemote from "@/services/useRemote";
 import usePdf from "@/services/usePdf";
 import * as DiffTypes from "@/DiffTypes";
 import Modal from "@/components/Modal";
-import SearchableSelect from "@/components/SearchableSelect";
+import {SearchableSelect} from "@sbb-polarion/react-sbb-polarion";
 
 export default function ControlPane({diff_type}) {
   const context = useContext(AppContext);
@@ -91,11 +91,11 @@ export default function ControlPane({diff_type}) {
     }
   }, [selectedDocumentLocationPath, context.state.pairedDocuments]);
 
-  const changeSelectedDocument = (event) => {
+  const changeSelectedDocument = (locationPath) => {
     if (context.state.selectedItemsCount > 0) {
-      setDocumentSelectionToBeConfirmed(event.target.value);
+      setDocumentSelectionToBeConfirmed(locationPath);
     } else {
-      documentSelected(event.target.value);
+      documentSelected(locationPath);
     }
   };
 
@@ -175,11 +175,11 @@ export default function ControlPane({diff_type}) {
                 <label htmlFor="source-document">
                   Source documents:
                 </label>
-                <SearchableSelect id="source-document" className="form-select" value={selectedDocumentLocationPath} onChange={changeSelectedDocument}>
-                  {context.state.pairedDocuments.map((documentsPair, index) => {
-                    return <option key={index} value={documentsPair.leftDocument.locationPath}>{documentsPair.leftDocument.spaceId === "_default" ? "Default Space" : documentsPair.leftDocument.spaceId} / {documentsPair.leftDocument.title}</option>
-                  })}
-                </SearchableSelect>
+                <SearchableSelect id="source-document" value={selectedDocumentLocationPath} onChange={changeSelectedDocument}
+                                  options={context.state.pairedDocuments.map(({leftDocument}) => ({
+                                    id: leftDocument.locationPath,
+                                    name: `${leftDocument.spaceId === "_default" ? "Default Space" : leftDocument.spaceId} / ${leftDocument.title}`
+                                  }))} />
               </div>
           }
           {diff_type !== DiffTypes.WORK_ITEMS_DIFF &&
@@ -189,11 +189,8 @@ export default function ControlPane({diff_type}) {
                 <label htmlFor="target-type">
                   Compare as:
                 </label>
-                <SearchableSelect id="target-type" className="form-select" value={selectedCompareAs} onChange={(event) => setSelectedCompareAs(event.target.value)}>
-                  {["Workitems", "Fields", "Content"].map((compareAs, index) => {
-                    return <option key={index} value={compareAs}>{compareAs}</option>
-                  })}
-                </SearchableSelect>
+                <SearchableSelect id="target-type" value={selectedCompareAs} onChange={setSelectedCompareAs}
+                                  options={["Workitems", "Fields", "Content"].map((compareAs) => ({id: compareAs, name: compareAs}))} />
               </div>
           }
           {diff_type !== DiffTypes.DOCUMENTS_FIELDS_DIFF && diff_type !== DiffTypes.DOCUMENTS_CONTENT_DIFF &&
@@ -203,11 +200,8 @@ export default function ControlPane({diff_type}) {
                 <label htmlFor="configuration">
                   Configuration:
                 </label>
-                <SearchableSelect id="configuration" className="form-select" value={selectedConfiguration} onChange={(event) => setSelectedConfiguration(event.target.value)}>
-                  {configurations.map((configuration, index) => {
-                    return <option key={index} value={configuration}>{configuration}</option>
-                  })}
-                </SearchableSelect>
+                <SearchableSelect id="configuration" value={selectedConfiguration} onChange={setSelectedConfiguration}
+                                  options={configurations.map((configuration) => ({id: configuration, name: configuration}))} />
               </div>
           }
           {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.COLLECTIONS_DIFF) &&
@@ -315,19 +309,15 @@ export default function ControlPane({diff_type}) {
               <label htmlFor="paper-size">
                 Paper size:
               </label>
-              <SearchableSelect id="paper-size" className="form-select" value={paperSize} onChange={(event) => setPaperSize(event.target.value)}>
-                <option value="A4">A4</option>
-                <option value="A3">A3</option>
-              </SearchableSelect>
+              <SearchableSelect id="paper-size" value={paperSize} onChange={setPaperSize} searchable={false}
+                                options={[{id: "A4", name: "A4"}, {id: "A3", name: "A3"}]} />
             </div>
             <div className="select-set">
               <label htmlFor="orientation">
                 Orientation:
               </label>
-              <SearchableSelect id="orientation" className="form-select" value={orientation} onChange={(event) => setOrientation(event.target.value)}>
-                <option value="landscape">Landscape</option>
-                <option value="portrait">Portrait</option>
-              </SearchableSelect>
+              <SearchableSelect id="orientation" value={orientation} onChange={setOrientation} searchable={false}
+                                options={[{id: "landscape", name: "Landscape"}, {id: "portrait", name: "Portrait"}]} />
             </div>
             <div className="text-end">
               <button className="btn btn-secondary btn-sm form-button" onClick={exportToPDF} disabled={exportInProgress} data-testid="export-button">

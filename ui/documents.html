@@ -6,14 +6,8 @@
     <title>Documents Diff/Merge</title>
     <link rel="icon" href="favicon.ico" />
     <link rel="stylesheet" href="/polarion/wiki/skins/sidecar/presentation.css" />
-    <!-- Shared 2606 control design tokens from generic (served by GenericUiServlet out of the
-         embedded generic.app). globals.css restyles the Bootstrap controls to the Polarion look via
-         var(--sbb-*); its literal fallbacks keep the look if this file fails to load (e.g. vite dev
-         outside Polarion). -->
-    <link rel="stylesheet" href="/polarion/diff-tool-app/ui/generic/css/control-tokens.css" />
-    <!-- The shared SearchableDropdown (wrapped around the native <select>s in SearchableSelect)
-         renders with these classes; load them so the combos match every other extension's. -->
-    <link rel="stylesheet" href="/polarion/diff-tool-app/ui/generic/css/searchable-dropdown.css" />
+    <!-- The 2606 control design tokens and the dropdown's own rules come from react-sbb-polarion's
+         bundled style.css, which the entry imports - no longer linked from the generic webapp. -->
   </head>
   <body>
     <div id="root"></div>

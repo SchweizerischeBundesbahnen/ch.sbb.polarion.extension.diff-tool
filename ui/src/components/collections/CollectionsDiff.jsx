@@ -8,7 +8,7 @@ import AppAlert from "@/components/AppAlert";
 import useDiffService from "@/services/useDiffService";
 import DocumentsDiff from "@/components/documents/DocumentsDiff";
 import DocumentHeader from "@/components/documents/DocumentHeader";
-import SearchableSelect from "@/components/SearchableSelect";
+import {SearchableSelect} from "@sbb-polarion/react-sbb-polarion";
 import CollectionHeader from "@/components/collections/CollectionHeader";
 import useRemote from "@/services/useRemote";
 import Modal from "@/components/Modal";
@@ -149,12 +149,9 @@ export default function CollectionsDiff() {
           <label htmlFor="target-configuration">
             Available configurations:
           </label>
-          <SearchableSelect id="target-configuration" className="form-select" value={selectedTargetConfiguration}
-                            onChange={event => setSelectedTargetConfiguration(event.target.value)} searchable={false}>
-            {targetConfigurations.map((configuration, index) => {
-              return <option key={index} value={configuration}>{configuration}</option>
-            })}
-          </SearchableSelect>
+          <SearchableSelect id="target-configuration" value={selectedTargetConfiguration}
+                            onChange={setSelectedTargetConfiguration} searchable={false}
+                            options={targetConfigurations.map((configuration) => ({id: configuration, name: configuration}))} />
         </div>
       </Modal>
       {documentCreationInProgress && <Loading message="Creating target document"/>}

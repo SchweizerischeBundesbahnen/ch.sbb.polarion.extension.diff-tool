@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test, normalizeHtml, swapDocuments } from './test-utils';
+import { test, normalizeHtml, swapDocuments, pickOption } from './test-utils';
 
 test.describe("page of diffing documents' WorkItems", () => {
 
@@ -131,8 +131,8 @@ test.describe("page of diffing documents' WorkItems", () => {
     await expandButton.click();
     expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
 
-    await page.locator("#paper-size").selectOption("A3");
-    await page.locator("#orientation").selectOption("portrait");
+    await pickOption(page, "paper-size", "A3");
+    await pickOption(page, "orientation", "Portrait");
 
     const exportRequestPromise = page.waitForRequest(request => {
       return request.url().includes('/conversion/html-to-pdf');

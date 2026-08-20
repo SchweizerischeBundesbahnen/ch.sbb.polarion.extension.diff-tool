@@ -256,3 +256,18 @@ export const normalizeHtml = (htmlString) => {
       .replace(/> </g, '><')
       .trim();
 };
+
+/**
+ * Pick an option from a react-sbb-polarion SearchableSelect.
+ *
+ * The native <select> is still there and still carries the value - which is what `toHaveValue` reads -
+ * but it is hidden behind the shared combobox, so `selectOption` has nothing actionable to click. The
+ * combobox is the select's next sibling, hence the `+` selector, and its popup is a portal on <body>.
+ */
+export const pickOption = async (page, selectId, label) => {
+  await page.locator(`#${selectId} + .searchable-dropdown .sd-trigger`).click();
+  await page.locator('.sd-portal .items .option', { hasText: label }).first().click();
+};
+
+/** The visible half of a SearchableSelect, for asserting on what the user actually sees. */
+export const comboTrigger = (page, selectId) => page.locator(`#${selectId} + .searchable-dropdown .sd-trigger`);
