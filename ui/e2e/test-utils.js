@@ -107,16 +107,6 @@ const contentMergeFixtureDataProvider = (requestBody) => {
 
 // API mocking
 export const test = base.extend({
-  // The E2E dev server (`npm run dev`) has no Polarion backend, so the runtime-served
-  // /polarion/.../generic/css/control-tokens.css 404s and its --sbb-* tokens are undefined. That
-  // collapses the token-sized custom checkbox to 0×0, which Playwright treats as not-visible and
-  // refuses to click. Fulfil that request with the checkbox size token (its production value) so
-  // controls stay clickable — kept in the test layer so production globals.css stays token-only.
-  page: async ({ page }, use) => {
-    await page.route("**/generic/css/control-tokens.css", route =>
-      route.fulfill({ contentType: "text/css", body: ":root{--sbb-toggle-size:15px}" }));
-    await use(page);
-  },
   mockApi: async ({ page }, use) => {
     const mockApi = {
       // Mock any API endpoint with certain JSON response in general
