@@ -88,10 +88,6 @@
              It needs the Playwright browsers present: `npx playwright install` once in ui/, or
              -DinstallPlaywright (from the parent) to have the build fetch them. -->
         <skipJsE2eTests>false</skipJsE2eTests>
-
-        <commons-collections4.artifactId>org.apache.commons.commons-collections4_4.4.0</commons-collections4.artifactId>
-        <commons-lang3.artifactId>org.apache.commons.lang3_3.12.0</commons-lang3.artifactId>
-        <org.jsoup.artifactId>org.jsoup_1.21.2</org.jsoup.artifactId>
     </properties>
 
     <profiles>
@@ -121,7 +117,7 @@
 
         <dependency>
             <groupId>com.polarion.thirdparty</groupId>
-            <artifactId>${commons-collections4.artifactId}</artifactId>
+            <artifactId>org.apache.commons.commons-collections4_4.4.0</artifactId>
             <version>${polarion.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -135,7 +131,7 @@
 
         <dependency>
             <groupId>com.polarion.thirdparty</groupId>
-            <artifactId>${commons-lang3.artifactId}</artifactId>
+            <artifactId>org.apache.commons.lang3_3.12.0</artifactId>
             <version>${polarion.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -162,7 +158,7 @@
 
         <dependency>
             <groupId>com.polarion.thirdparty</groupId>
-            <artifactId>${org.jsoup.artifactId}</artifactId>
+            <artifactId>org.jsoup_1.21.2</artifactId>
             <version>${polarion.version}</version>
             <scope>provided</scope>
         </dependency>
