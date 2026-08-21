@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>15.11.0</version>
+        <version>16.0.0</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
@@ -44,9 +44,6 @@
     </issueManagement>
 
     <properties>
-        <node.version>v24.16.0</node.version>
-        <frontend-maven-plugin.version>2.0.2</frontend-maven-plugin.version>
-
         <maven-jar-plugin.Extension-Context>diff-tool</maven-jar-plugin.Extension-Context>
         <maven-jar-plugin.Automatic-Module-Name>ch.sbb.polarion.extension.diff_tool</maven-jar-plugin.Automatic-Module-Name>
         <maven-jar-plugin.Discover-Base-Package>ch.sbb.polarion.extension.diff_tool</maven-jar-plugin.Discover-Base-Package>
@@ -74,10 +71,6 @@
         <awaitility.version>4.3.0</awaitility.version>
 
 
-        <!-- A broken README.md -> about.html conversion fails the build instead of shipping an
-             empty About page. markdown2html renders locally since 1.7.x - no GitHub API, no token -
-             so the same setting is right in CI, in a deploy job and on a developer machine. -->
-        <markdown2html-maven-plugin.failOnError>true</markdown2html-maven-plugin.failOnError>
 
         <!-- Most of the UI build - node/npm, `npm ci`, `npm run build`, the dockerized Vitest run with
              its coverage gate in the `test` phase, and the copy into webapp/diff-tool-app - is inherited
@@ -98,18 +91,6 @@
     </properties>
 
     <profiles>
-        <profile>
-            <id>polarion2606</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <commons-collections4.artifactId>org.apache.commons.commons-collections4_4.4.0</commons-collections4.artifactId>
-                <commons-lang3.artifactId>org.apache.commons.lang3_3.12.0</commons-lang3.artifactId>
-                <org.jsoup.artifactId>org.jsoup_1.21.2</org.jsoup.artifactId>
-            </properties>
-        </profile>
-
         <!-- -DskipJsTests=true has to turn off both JS suites, not just the parent's Vitest run, so it
              switches the e2e flag too. Matched on the exact value, so -DskipJsTests=false does not
              accidentally activate this (property activation fires on any value otherwise). -->
@@ -136,7 +117,7 @@
 
         <dependency>
             <groupId>com.polarion.thirdparty</groupId>
-            <artifactId>${commons-collections4.artifactId}</artifactId>
+            <artifactId>org.apache.commons.commons-collections4_4.4.0</artifactId>
             <version>${polarion.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -150,7 +131,7 @@
 
         <dependency>
             <groupId>com.polarion.thirdparty</groupId>
-            <artifactId>${commons-lang3.artifactId}</artifactId>
+            <artifactId>org.apache.commons.lang3_3.12.0</artifactId>
             <version>${polarion.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -177,7 +158,7 @@
 
         <dependency>
             <groupId>com.polarion.thirdparty</groupId>
-            <artifactId>${org.jsoup.artifactId}</artifactId>
+            <artifactId>org.jsoup_1.21.2</artifactId>
             <version>${polarion.version}</version>
             <scope>provided</scope>
         </dependency>
