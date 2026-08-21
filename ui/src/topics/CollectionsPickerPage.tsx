@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState } from 'react';
-import type { SettingName } from '@grigoriev/react-sbb-polarion';
+import type { SettingName } from '@sbb-polarion/react-sbb-polarion';
 import { format } from 'date-fns';
 import useRemoteList, { firstError } from '../formext/useRemoteList';
 import ItemsTable, { type Column } from './ItemsTable';

@@ -1,4 +1,4 @@
-import { SearchableSelect } from '@grigoriev/react-sbb-polarion';
+import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
 import type { FeatureInfo } from '../types';
 
 /** Worker 0 means "not queued at all" and is shown as a dash rather than a number. */

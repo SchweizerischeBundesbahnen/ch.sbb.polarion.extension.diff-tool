@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from './test-utils';
+import { test, pickOption, comboTrigger } from './test-utils';
 
 test.describe("page of diffing documents' WorkItems", () => {
 
@@ -591,9 +591,9 @@ test.describe("page of diffing documents' WorkItems", () => {
     await selectionCheckbox.click();
 
     // Verify default link role direction is "Direct"
-    const linkRoleSelect = page.locator('.link-role-direction-select');
-    await expect(linkRoleSelect).toBeVisible();
-    await expect(linkRoleSelect).toHaveValue('DIRECT');
+    // The value lives on the native <select>; what the user sees is the combobox in front of it.
+    await expect(comboTrigger(page, 'link-role-direction')).toBeVisible();
+    await expect(page.locator('#link-role-direction')).toHaveValue('DIRECT');
 
     const mergeButton = page.locator('.header .merge-pane .merge-button .btn').nth(0);
     await expect(mergeButton).toBeEnabled();
@@ -627,10 +627,9 @@ test.describe("page of diffing documents' WorkItems", () => {
     await selectionCheckbox.click();
 
     // Change link role direction to "Reverse"
-    const linkRoleSelect = page.locator('.link-role-direction-select');
-    await expect(linkRoleSelect).toBeVisible();
-    await linkRoleSelect.selectOption('REVERSE');
-    await expect(linkRoleSelect).toHaveValue('REVERSE');
+    await expect(comboTrigger(page, 'link-role-direction')).toBeVisible();
+    await pickOption(page, 'link-role-direction', 'Reverse');
+    await expect(page.locator('#link-role-direction')).toHaveValue('REVERSE');
 
     const mergeButton = page.locator('.header .merge-pane .merge-button .btn').nth(0);
     await expect(mergeButton).toBeEnabled();

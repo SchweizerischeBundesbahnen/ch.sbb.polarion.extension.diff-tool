@@ -1,4 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.css';
+// The shared control styling, including the combobox and the --sbb-* tokens it reads: what these pages
+// used to link from the generic webapp. Before globals.css, which overrides parts of it.
+import '@sbb-polarion/react-sbb-polarion/style.css';
 import '@/styles/globals.css';
 
 import {createRoot} from "react-dom/client";

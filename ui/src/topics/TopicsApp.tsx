@@ -1,4 +1,4 @@
-import BreadcrumbTopic from './BreadcrumbTopic';
+import { BreadcrumbInjector } from '@sbb-polarion/react-sbb-polarion';
 import { DIFF_TOOL, findTopic } from './topics';
 
 /**
@@ -27,7 +27,7 @@ export default function TopicsApp() {
     <div className="diff-topics sbb-ui form-wrapper">
       {/* Polarion shows a generic "home" in the app header for an extension's navigation topic; this puts
           the topic's own name there, with the parent topic before it. */}
-      <BreadcrumbTopic marker="diff-tool" title={topic.title} parent={topic.parent} icon={topic.icon} />
+      <BreadcrumbInjector marker="diff-tool" title={topic.title} parent={topic.parent} icon={topic.icon} />
       <Page />
     </div>
   );

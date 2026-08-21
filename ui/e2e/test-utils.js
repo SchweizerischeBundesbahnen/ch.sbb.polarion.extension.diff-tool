@@ -107,16 +107,6 @@ const contentMergeFixtureDataProvider = (requestBody) => {
 
 // API mocking
 export const test = base.extend({
-  // The E2E dev server (`npm run dev`) has no Polarion backend, so the runtime-served
-  // /polarion/.../generic/css/control-tokens.css 404s and its --sbb-* tokens are undefined. That
-  // collapses the token-sized custom checkbox to 0×0, which Playwright treats as not-visible and
-  // refuses to click. Fulfil that request with the checkbox size token (its production value) so
-  // controls stay clickable — kept in the test layer so production globals.css stays token-only.
-  page: async ({ page }, use) => {
-    await page.route("**/generic/css/control-tokens.css", route =>
-      route.fulfill({ contentType: "text/css", body: ":root{--sbb-toggle-size:15px}" }));
-    await use(page);
-  },
   mockApi: async ({ page }, use) => {
     const mockApi = {
       // Mock any API endpoint with certain JSON response in general
@@ -256,3 +246,18 @@ export const normalizeHtml = (htmlString) => {
       .replace(/> </g, '><')
       .trim();
 };
+
+/**
+ * Pick an option from a react-sbb-polarion SearchableSelect.
+ *
+ * The native <select> is still there and still carries the value - which is what `toHaveValue` reads -
+ * but it is hidden behind the shared combobox, so `selectOption` has nothing actionable to click. The
+ * combobox is the select's next sibling, hence the `+` selector, and its popup is a portal on <body>.
+ */
+export const pickOption = async (page, selectId, label) => {
+  await page.locator(`#${selectId} + .searchable-dropdown .sd-trigger`).click();
+  await page.locator('.sd-portal .items .option', { hasText: label }).first().click();
+};
+
+/** The visible half of a SearchableSelect, for asserting on what the user actually sees. */
+export const comboTrigger = (page, selectId) => page.locator(`#${selectId} + .searchable-dropdown .sd-trigger`);
