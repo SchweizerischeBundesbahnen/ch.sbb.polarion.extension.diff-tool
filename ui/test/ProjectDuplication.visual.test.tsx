@@ -3,6 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import App from '../src/App';
 import { installFetchMock } from './mockFetch';
+import { settleBeforeCapture } from './visualHelpers';
 
 // Docker-only snapshot of the Project Duplication page: the request form (including the source-project
 // combobox upgraded to the shared dropdown) and the jobs table with a finished and a running job.
@@ -67,6 +68,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Project Duplication page visual', () => 
 
     const app = document.querySelector('.app') as HTMLElement;
     await page.viewport(1280, Math.ceil(app.scrollHeight) + 40);
+    await settleBeforeCapture();
     await expect(page.elementLocator(app)).toMatchScreenshot('project-duplication-loaded');
   });
 });

@@ -3,6 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import App from '../src/App';
 import { installFetchMock } from './mockFetch';
+import { settleBeforeCapture } from './visualHelpers';
 
 /**
  * Docker-only snapshot of the Execution Queue page with its charts collapsed.
@@ -67,6 +68,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Execution Queue page visual', () => {
 
     const app = document.querySelector('.app') as HTMLElement;
     await page.viewport(1280, Math.ceil(app.scrollHeight) + 40);
+    await settleBeforeCapture();
     await expect(page.elementLocator(app)).toMatchScreenshot('execution-queue-collapsed');
   });
 });

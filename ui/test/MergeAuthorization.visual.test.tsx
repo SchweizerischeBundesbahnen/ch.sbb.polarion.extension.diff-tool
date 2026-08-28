@@ -3,6 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import App from '../src/App';
 import { installFetchMock } from './mockFetch';
+import { settleBeforeCapture } from './visualHelpers';
 
 // Docker-only snapshot of the Merge Authorization page, which is react-sbb-polarion's
 // AuthorizationSettings with this extension's title, setting and Quick Help. This is the surface where
@@ -51,6 +52,7 @@ async function renderPage() {
 async function snapshot(name: string) {
   const app = document.querySelector('.app') as HTMLElement;
   await page.viewport(1280, Math.ceil(app.scrollHeight) + 40);
+  await settleBeforeCapture();
   await expect(page.elementLocator(app)).toMatchScreenshot(name);
 }
 

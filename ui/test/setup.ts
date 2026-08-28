@@ -22,3 +22,14 @@ import '../src/styles/globals.css';
 //   4. the navigation topics' own stylesheet, which src/entries/topics.tsx imports. Safe alongside the
 //      other two: every rule is scoped under .diff-topics.
 import '../src/topics/topics.css';
+
+// Chromium decides per layer how to rasterize text, and the decision depends on the compositing of the
+// page as a whole - which differs between "this file ran on its own" and "this file ran after that one".
+// The result is the same glyphs at the same coordinates with a different gamma, and a reference that
+// agrees with the runs that had the same files ahead of it and with no others. Asking for grayscale
+// explicitly takes the decision away from the compositor.
+//
+// Test-only, and the references are regenerated with it so they and the runs agree.
+const textRendering = document.createElement('style');
+textRendering.textContent = '*, *::before, *::after { -webkit-font-smoothing: antialiased !important; }';
+document.head.appendChild(textRendering);
