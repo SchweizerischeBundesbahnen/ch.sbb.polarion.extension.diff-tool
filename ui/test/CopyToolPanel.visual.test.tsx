@@ -3,7 +3,7 @@ import { page } from 'vitest/browser';
 import { mountCopyToolPanel } from '../src/formext/mountCopyToolPanel';
 import { mountPanel, waitForPanel } from './formextHelpers';
 import { installFetchMock } from './mockFetch';
-import { settleBeforeCapture } from './visualHelpers';
+import { settleBeforeCapture, settleLayout } from './visualHelpers';
 
 // Docker-only snapshot of the "Documents Copy" Document Properties panel, captured through its shadow
 // host - so this also proves the shadow root carries the styling (see DiffToolPanel.visual.test.tsx).
@@ -29,6 +29,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents Copy panel visual', () => {
     await vi.waitFor(() => expect(panel!.shadow.querySelectorAll('.searchable-dropdown').length).toBe(5));
 
     const container = panel.shadow.querySelector('.form-wrapper') as HTMLElement;
+    await settleLayout();
     await page.viewport(720, Math.ceil(container.scrollHeight) + 40);
     await settleBeforeCapture();
     await expect(page.elementLocator(panel.host)).toMatchScreenshot('copy-tool-panel-loaded');

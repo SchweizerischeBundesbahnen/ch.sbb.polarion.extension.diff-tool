@@ -3,7 +3,7 @@ import { page } from 'vitest/browser';
 import { mountDiffToolPanel } from '../src/formext/mountDiffToolPanel';
 import { mountPanel, waitForPanel } from './formextHelpers';
 import { installFetchMock } from './mockFetch';
-import { settleBeforeCapture } from './visualHelpers';
+import { settleBeforeCapture, settleLayout } from './visualHelpers';
 
 // Docker-only snapshots of the "Documents Comparison" Document Properties panel, in its two shapes: the
 // default (manual revision entry) and the revision-list variant.
@@ -43,6 +43,7 @@ async function open() {
 async function capture(name: string) {
   const host = panel!.host;
   const container = panel!.shadow.querySelector('.form-wrapper') as HTMLElement;
+  await settleLayout();
   await page.viewport(720, Math.ceil(container.scrollHeight) + 40);
   await settleBeforeCapture();
   await expect(page.elementLocator(host)).toMatchScreenshot(name);

@@ -3,7 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import App from '../src/App';
 import { installFetchMock } from './mockFetch';
-import { settleBeforeCapture } from './visualHelpers';
+import { settleBeforeCapture, settleLayout } from './visualHelpers';
 
 // Docker-only snapshot of the Diff Configurations page: the configurations pane, the Available/Selected
 // dual listbox, and the multiselects upgraded to the shared Polarion dropdown (chips + search) - the one
@@ -79,6 +79,7 @@ async function renderPage() {
 
 async function snapshot(name: string) {
   const app = document.querySelector('.app') as HTMLElement;
+  await settleLayout();
   await page.viewport(1280, Math.ceil(app.scrollHeight) + 40);
   await settleBeforeCapture();
   await expect(page.elementLocator(app)).toMatchScreenshot(name);

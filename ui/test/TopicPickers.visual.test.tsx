@@ -3,7 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import TopicsApp from '../src/topics/TopicsApp';
 import { installFetchMock } from './mockFetch';
-import { settleBeforeCapture } from './visualHelpers';
+import { settleBeforeCapture, settleLayout } from './visualHelpers';
 
 // Docker-only snapshots of the three navigation topics, which replaced the nav-topic JSPs and the tables the
 // Java widget renderers produced. These pages own their whole look now (topics.css plus the
@@ -86,6 +86,7 @@ async function renderTopic(topic: string, extraParams = '') {
 
 async function snapshot(name: string) {
   const shell = document.querySelector('.diff-topics') as HTMLElement;
+  await settleLayout();
   await page.viewport(1280, Math.ceil(shell.scrollHeight) + 40);
   await settleBeforeCapture();
   await expect(page.elementLocator(shell)).toMatchScreenshot(name);
