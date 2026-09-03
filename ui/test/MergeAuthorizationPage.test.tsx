@@ -5,10 +5,10 @@ import MergeAuthorizationPage from '../src/admin/pages/MergeAuthorizationPage';
 import { answerConfirm } from './confirmDialog';
 import { type FetchMock, installFetchMock, jsonResponse } from './mockFetch';
 
-// The page is react-sbb-polarion's AuthorizationSettings, which has its own suite there - toggling,
+// The page is react-sbb-polarion's AuthorizationSettings, which has its own suite there - picking roles,
 // saving, the confirmations, the revision table. What is diff-tool's own, and therefore what is tested
 // here, is the wiring: the feature name the service reads and writes, that the roles come from generic's
-// /roles endpoint, the sorted checkbox order this page adds, and the Quick Help text.
+// /roles endpoint, the sorted option order this page adds, and the Quick Help text.
 
 const origUrl = window.location.pathname + window.location.search;
 const SCOPE = 'project/elibrary/';
@@ -41,25 +41,51 @@ function Page() {
 
 async function renderPage(fetchMock: FetchMock = installFetchMock(routes())) {
   render(<Page />);
-  await vi.waitFor(() =>
-    expect(document.querySelectorAll('.roles-list input[type=checkbox]').length).toBeGreaterThan(0),
-  );
+  await vi.waitFor(() => expect(document.querySelectorAll('.roles-group .sd-trigger-multi')).toHaveLength(2));
   return fetchMock;
 }
 
-const roleLabels = (groupIndex: number) =>
-  Array.from(document.querySelectorAll('.roles-group')[groupIndex].querySelectorAll('.roles-list li')).map((li) =>
-    li.textContent?.trim(),
-  );
+/** The dropdown opens, closes and picks on mousedown, so the interactions here drive that event. */
+const mousedown = (node: Element) =>
+  node.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
 
-function checkboxFor(role: string): HTMLInputElement {
-  const item = Array.from(document.querySelectorAll('.roles-list li')).find(
-    (element) => element.textContent?.trim() === role,
-  );
-  if (!item) {
-    throw new Error(`no checkbox for role "${role}"`);
+/** Each role set is a multi-select SearchableSelect, which inserts itself right after the <select> the
+ *  component ids. Addressing it from that id keeps these helpers off the page order. */
+const trigger = (kind: 'global' | 'project'): HTMLElement => {
+  const container = document.querySelector(`#${kind}-roles`)?.nextElementSibling;
+  if (!(container instanceof HTMLElement)) {
+    throw new Error(`no ${kind} roles control`);
   }
-  return item.querySelector('input[type=checkbox]') as HTMLInputElement;
+  return container.querySelector<HTMLElement>('.sd-trigger-multi')!;
+};
+
+/** The roles one control offers, in the order it lists them. The popup renders its options only while
+ *  open, and every dropdown keeps its own portal in the body - hence the open, and the aria-controls. */
+const listedRoles = (kind: 'global' | 'project'): string[] => {
+  mousedown(trigger(kind));
+  const listbox = document.getElementById(trigger(kind).getAttribute('aria-controls')!)!;
+  const labels = Array.from(listbox.querySelectorAll('.option')).map((option) => (option.textContent ?? '').trim());
+  mousedown(trigger(kind));
+  return labels;
+};
+
+/** The roles granted in one control, as the chips painted on its trigger. */
+const granted = (kind: 'global' | 'project'): string[] =>
+  Array.from(trigger(kind).querySelectorAll('.sd-chip-label')).map((chip) => (chip.textContent ?? '').trim());
+
+/** Ticks (or unticks) one role and waits for its chip to follow, which is what proves React took the
+ *  change - so a Save right after reads the new selection rather than the previous render's. */
+async function toggleRole(kind: 'global' | 'project', role: string) {
+  const wasGranted = granted(kind).includes(role);
+  mousedown(trigger(kind));
+  const listbox = document.getElementById(trigger(kind).getAttribute('aria-controls')!)!;
+  const option = Array.from(listbox.querySelectorAll('.option')).find((o) => (o.textContent ?? '').trim() === role);
+  if (!option) {
+    throw new Error(`no option for role "${role}"`);
+  }
+  mousedown(option);
+  mousedown(trigger(kind));
+  await vi.waitFor(() => expect(granted(kind).includes(role)).toBe(!wasGranted));
 }
 
 const toolbarButton = (index: number) =>
@@ -71,6 +97,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  document.querySelectorAll('.sd-portal').forEach((portal) => portal.remove());
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   window.history.replaceState({}, '', origUrl);
@@ -88,23 +115,22 @@ describe('MergeAuthorizationPage', () => {
   it('sorts both role groups, which arrive unordered', async () => {
     await renderPage();
 
-    expect(roleLabels(0)).toEqual(['admin', 'developer', 'user']);
-    expect(roleLabels(1)).toEqual(['lead', 'reviewer']);
+    expect(listedRoles('global')).toEqual(['admin', 'developer', 'user']);
+    expect(listedRoles('project')).toEqual(['lead', 'reviewer']);
   });
 
   it('shows which roles are granted', async () => {
     await renderPage();
 
-    expect(checkboxFor('admin').checked).toBe(true);
-    expect(checkboxFor('developer').checked).toBe(false);
-    expect(checkboxFor('lead').checked).toBe(false);
+    expect(granted('global')).toEqual(['admin']);
+    expect(granted('project')).toEqual([]);
   });
 
   it('saves the granted roles under the authorization setting', async () => {
     const fetchMock = await renderPage();
 
-    checkboxFor('developer').click();
-    checkboxFor('lead').click();
+    await toggleRole('global', 'developer');
+    await toggleRole('project', 'lead');
     toolbarButton(0).click();
 
     await vi.waitFor(() => {
@@ -122,7 +148,7 @@ describe('MergeAuthorizationPage', () => {
 
   it('loads the defaults on Default without persisting them', async () => {
     const fetchMock = await renderPage();
-    checkboxFor('developer').click();
+    await toggleRole('global', 'developer');
 
     toolbarButton(2).click();
     await answerConfirm('OK');
@@ -131,17 +157,17 @@ describe('MergeAuthorizationPage', () => {
       expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/default-content'))).toBe(true),
     );
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'PUT')).toBe(false);
-    await vi.waitFor(() => expect(checkboxFor('developer').checked).toBe(false));
+    await vi.waitFor(() => expect(granted('global')).toEqual(['admin']));
   });
 
   it('reports a failure to load', async () => {
     // Rendered directly rather than through renderPage(): with the roles unavailable there are no
-    // checkboxes to wait for, which is the whole point of the case.
+    // controls to wait for, which is the whole point of the case.
     installFetchMock(routes([{ method: 'GET', match: /\/roles\?/, respond: () => jsonResponse({}, 500) }]));
     render(<Page />);
 
     await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
-    expect(document.querySelectorAll('.roles-list input[type=checkbox]')).toHaveLength(0);
+    expect(document.querySelectorAll('.roles-group .sd-trigger-multi')).toHaveLength(0);
   });
 
   it('renders the merge-specific Quick Help', async () => {
