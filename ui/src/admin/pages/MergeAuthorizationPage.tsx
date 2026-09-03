@@ -6,7 +6,7 @@ import { sendRequest } from '../../services/useRemote';
 /** The `authorization` named setting, whose single "Default" configuration this page edits. */
 const FEATURE_NAME = 'authorization';
 
-/** Sorted, for a stable checkbox order: both role lookups end in ISecurityService, whose
+/** Sorted, for a stable option order: both role lookups end in ISecurityService, whose
  *  getGlobalRoles / getContextRoles return unordered collections. */
 function sorted(roles: string[] | undefined): string[] {
   return [...(roles ?? [])].sort((left, right) => left.localeCompare(right));
@@ -20,7 +20,7 @@ function sorted(roles: string[] | undefined): string[] {
  * The service talks to generic's own endpoints - `/roles`, from the RolesInternalController that
  * DiffToolRestApplication registers, plus the single-setting endpoints of `authorization`. This extension
  * used to carry its own equivalent of all of that: a `/roles` endpoint, a RolesModel, a RolesUtils, the
- * role checkbox columns and the toolbar wiring.
+ * role columns and the toolbar wiring.
  *
  * One thing is deliberately gone with the move: the "saved by a different version of the extension"
  * banner. A role setting is two lists of role names, so there is no schema that can go stale, and since

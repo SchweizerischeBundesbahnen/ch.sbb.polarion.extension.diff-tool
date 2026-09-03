@@ -6,9 +6,9 @@ import { installFetchMock } from './mockFetch';
 import { settleBeforeCapture, settleLayout } from './visualHelpers';
 
 // Docker-only snapshot of the Merge Authorization page, which is react-sbb-polarion's
-// AuthorizationSettings with this extension's title, setting and Quick Help. This is the surface where
-// the styled admin checkbox matters most: it only renders correctly under the `.standard-admin-page`
-// scope that App.tsx puts on the root.
+// AuthorizationSettings with this extension's title, setting and Quick Help. Each role set is a
+// multi-select SearchableSelect, whose chips and trigger only render in the product's look under the
+// `.standard-admin-page` scope that App.tsx puts on the root.
 
 const origUrl = window.location.pathname + window.location.search;
 
@@ -46,7 +46,9 @@ async function renderPage() {
   installFetchMock(routes);
   window.history.replaceState({}, '', '?feature=merge-authorization&embedded=true&scope=project/elibrary/');
   render(<App />);
-  await vi.waitFor(() => expect(document.querySelectorAll('.roles-list input[type=checkbox]').length).toBe(6));
+  // Both controls, not just the first: they are upgraded asynchronously, and a capture taken between
+  // the two catches the page mid-upgrade.
+  await vi.waitFor(() => expect(document.querySelectorAll('.roles-group .sd-trigger-multi')).toHaveLength(2));
 }
 
 async function snapshot(name: string) {
