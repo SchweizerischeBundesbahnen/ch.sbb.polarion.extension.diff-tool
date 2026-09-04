@@ -101,6 +101,14 @@ class ItemsSearchServiceTest {
     }
 
     @Test
+    void testEffectiveQueryEscapesTheProjectId() {
+        // A project id is a value, not query syntax. Left raw, the colon would end the project.id term and
+        // leave "archive" as a term of the default field, so the search would no longer be confined.
+        assertEquals("project.id:project\\:archive", service.effectiveQuery("project:archive", ""));
+        assertEquals("(project.id:project\\:archive) AND (type:task)", service.effectiveQuery("project:archive", "type:task"));
+    }
+
+    @Test
     void testSearchWorkItemsUsesTheGivenQueryAndSort() {
         IPObjectList<IWorkItem> found = objectList(List.of(workItem("EL-1")));
         when(trackerProject.queryWorkItems("type:task", "title")).thenReturn(found);
