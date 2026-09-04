@@ -1,5 +1,18 @@
 # Changelog
 
+## [9.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.2.1...v9.3.0) (2026-09-04)
+
+
+### Features
+
+* upgrade authorization settings page where roles selection is implemented as dropdowns instead of checkboxes ([#652](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/652)) ([72493f6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/72493f6d1e18e34d98863087395c38c1382d3f57))
+
+
+### Bug Fixes
+
+* **deps:** update dependency globals to v17.12.0 ([#658](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/658)) ([538a54c](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/538a54c338fa95a6d9300f2ac8ab69e4dab068ab))
+* **deps:** update dependency typescript-eslint to v8.69.0 ([#654](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/654)) ([3b0bb3b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/3b0bb3b9aef0ccce00d913c0ff69ba393c1854c2))
+
 ## [9.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.2.0...v9.2.1) (2026-09-01)
 
 
