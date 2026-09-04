@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>16.0.0</version>
+        <version>16.1.0</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.diff-tool</artifactId>
@@ -74,7 +74,7 @@
 
         <!-- Most of the UI build - node/npm, `npm ci`, `npm run build`, the dockerized Vitest run with
              its coverage gate in the `test` phase, and the copy into webapp/diff-tool-app - is inherited
-             from the generic parent's `vite-ui` profile, which activates on the presence of
+             from the generic parent's `ui-build-react-app` profile, which activates on the presence of
              ui/package.json. Its defaults (vite.sources.root, vite.destination.root, skipJsTests,
              jsTestCommand, jsTestExtraArgs) already match what this pom used to declare.
 

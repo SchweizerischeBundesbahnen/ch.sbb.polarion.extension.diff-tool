@@ -18,7 +18,7 @@ mvn clean package
 
 # Build and install to local Polarion instance
 # Requires POLARION_HOME environment variable to be set
-mvn clean install -P install-to-local-polarion
+mvn clean install -P local-install-into-polarion
 
 # Run Java tests only
 mvn test
@@ -247,7 +247,7 @@ After building (`mvn clean package`):
 2. Clear `<polarion_home>/data/workspace/.config` folder
 3. Restart Polarion service
 
-For development, use: `mvn clean install -P install-to-local-polarion` with `POLARION_HOME` environment variable set.
+For development, use: `mvn clean install -P local-install-into-polarion` with `POLARION_HOME` environment variable set.
 
 ## Configuration in Polarion
 
@@ -284,7 +284,7 @@ Increase for faster processing, but may overload server.
 
 - **PDF-Exporter** (v9+): Used for HTML to PDF conversion in ConversionService
 - **Generic Extension Framework** (v15.9.0, from the parent POM): Provides base classes for settings, REST
-  controllers, servlet integration, and - via its `vite-ui` profile, activated by the presence of
+  controllers, servlet integration, and - via its `ui-build-react-app` profile, activated by the presence of
   `ui/package.json` - the whole React/Vite build
 
 ## Important Notes
