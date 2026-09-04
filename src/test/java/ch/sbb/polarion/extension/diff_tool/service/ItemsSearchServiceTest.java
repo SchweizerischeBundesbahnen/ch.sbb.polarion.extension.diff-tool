@@ -110,7 +110,7 @@ class ItemsSearchServiceTest {
 
             SearchResult<SearchWorkItem> result = service.searchWorkItems("elibrary", "type:task", "title", 1, 20);
 
-            assertEquals("project.id:elibrary AND (type:task)", result.getQuery());
+            assertEquals("(project.id:elibrary) AND (type:task)", result.getQuery());
             assertEquals(1, result.getItems().size());
         }
     }
@@ -336,7 +336,7 @@ class ItemsSearchServiceTest {
     @Test
     void testSearchCollectionsKeepsTheCallersQueryInsideTheRestriction() {
         IPObjectList<IBaselineCollection> found = objectList(List.of(collection("c1", "elibrary")));
-        when(dataService.searchInstances(IBaselineCollection.PROTO, "project.id:elibrary AND (name:a OR name:b)", "name")).thenReturn(found);
+        when(dataService.searchInstances(IBaselineCollection.PROTO, "(project.id:elibrary) AND (name:a OR name:b)", "name")).thenReturn(found);
 
         SearchResult<SearchCollection> result = service.searchCollections("elibrary", "name:a OR name:b", 1, 20);
 
@@ -346,7 +346,7 @@ class ItemsSearchServiceTest {
     @Test
     void testSearchCollectionsMapsFields() {
         IBaselineCollection collection = collection("c1", "elibrary");
-        when(dataService.searchInstances(IBaselineCollection.PROTO, "project.id:elibrary AND (name:release*)", "name"))
+        when(dataService.searchInstances(IBaselineCollection.PROTO, "(project.id:elibrary) AND (name:release*)", "name"))
                 .thenReturn(objectList(List.of(collection)));
 
         SearchResult<SearchCollection> result = service.searchCollections("elibrary", "name:release*", 1, 20);
@@ -357,7 +357,7 @@ class ItemsSearchServiceTest {
         assertEquals("John Doe", mapped.getAuthorName());
         assertEquals(1000L, mapped.getCreated());
         assertEquals(2000L, mapped.getUpdated());
-        assertEquals("project.id:elibrary AND (name:release*)", result.getQuery());
+        assertEquals("(project.id:elibrary) AND (name:release*)", result.getQuery());
     }
 
     @Test

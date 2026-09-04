@@ -5,6 +5,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchCollection;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchWorkItem;
 import ch.sbb.polarion.extension.generic.util.EnumUtils;
+import ch.sbb.polarion.extension.generic.util.LuceneUtils;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.tracker.model.IModule;
@@ -85,8 +86,7 @@ public class ItemsSearchService {
     @VisibleForTesting
     @NotNull
     String effectiveQuery(@NotNull String projectId, @NotNull String query) {
-        String scope = "%s:%s".formatted(IUniqueObject.KEY_PROJECT + ".id", projectId);
-        return query.isBlank() ? scope : "%s AND (%s)".formatted(scope, query);
+        return LuceneUtils.and(LuceneUtils.projectTerm(projectId), query);
     }
 
     /**
