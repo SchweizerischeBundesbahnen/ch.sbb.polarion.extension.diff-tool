@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
 import { sendRequest } from '../services/useRemote';
 import PanelShell from './PanelShell';
+import { FieldCell, FieldRow, SwitchRow } from './formRows';
 import type { PanelProps } from './panelProps';
 import { rememberedIfOffered, useAdoptRemembered, useRemembering } from './rememberedSelection';
+import { clearReports, reportFailure } from './reporting';
 import useRemoteList, { firstError, firstLoading } from './useRemoteList';
 
 interface SpaceInfo {
@@ -36,6 +38,9 @@ const SPACE_SELECT = 'copy-space-selector';
 const LINK_ROLE_SELECT = 'copy-link-role-selector';
 const CONFIG_SELECT = 'copy-config-selector';
 const HANDLE_REFS_SELECT = 'handle-refs-selector';
+
+/** What a failed duplication says when the server said nothing usable - the legacy generic message. */
+const CREATE_ERROR = 'Error creating document';
 
 /**
  * Builds the two halves of the "Document created" link: a readable label and the editor URL. Ported
@@ -82,7 +87,6 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
   const [copyComments, setCopyComments] = useState(false);
 
   const [creating, setCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<CreatedLink | null>(null);
 
   const spaces = useRemoteList<SpaceInfo>({
@@ -127,7 +131,9 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
   );
 
   const busy = creating ? 'Creating a document' : firstLoading(spaces, configurations);
-  const loadError = error ?? firstError(spaces, configurations);
+  // Only what a list could not load stays in the form. A duplication that failed is an event and is
+  // reported as a toast - see reporting.ts.
+  const loadError = firstError(spaces, configurations);
 
   // Every field is required, exactly as in the legacy updateCreateButtonState(). Note that this is also
   // what makes copy-tool's leading "none" link role (id "") unusable - see linkRoles in panelProps.ts.
@@ -135,7 +141,8 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
 
   const create = async () => {
     setCreating(true);
-    setError(null);
+    // What the last attempt reported, taken back before this one starts.
+    clearReports();
     setCreated(null);
     try {
       const revisionUrlPart = props.sourceRevision ? `?revision=${encode(props.sourceRevision)}` : '';
@@ -164,7 +171,7 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
       }
       setCreated(createdDocumentLink(JSON.parse(text) as CreatedDocument, `//${location.host}${location.pathname}`));
     } catch (caught) {
-      setError((caught as Error).message || 'Error creating document');
+      reportFailure((caught as Error).message || CREATE_ERROR);
     } finally {
       setCreating(false);
     }
@@ -177,97 +184,98 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
         into account when copying WorkItems, as well as fields configuration.
       </p>
 
-      <div className="property-wrapper">
-        <label htmlFor="copy-project-selector" className="fixed-width w-1">
-          Project:
-        </label>
-        <SearchableSelect
-          id={PROJECT_SELECT}
-          value={projectId}
-          onChange={chooseProject}
-          options={props.projects}
-          placeholder="Select Project..."
-          allowEmpty
-        />
-      </div>
-      <div className="property-wrapper">
-        <label htmlFor="copy-space-selector" className="fixed-width w-1">
-          Space:
-        </label>
-        <SearchableSelect
-          id={SPACE_SELECT}
-          value={spaceId}
-          onChange={chooseSpace}
-          options={spaces.items}
-          placeholder="Select Space..."
-          allowEmpty
-        />
-      </div>
-
-      <div className="property-wrapper">
-        <label htmlFor="copy-link-role-selector" className="fixed-width w-1">
-          Link role:
-        </label>
-        {/* No allowEmpty: the server puts a real "none" entry (id "") at the head of this list, and a
-            second empty-valued option would shadow it. */}
-        <SearchableSelect
-          id={LINK_ROLE_SELECT}
-          value={linkRole}
-          onChange={chooseLinkRole}
-          options={props.linkRoles}
-          placeholder="Select Link Role..."
-        />
-      </div>
-      <div className="property-wrapper">
-        <label htmlFor="copy-config-selector" className="fixed-width w-1">
-          Configuration:
-        </label>
-        <SearchableSelect
-          id={CONFIG_SELECT}
-          value={config}
-          onChange={chooseConfig}
-          options={configurationNames.map((name) => ({ id: name, name: name }))}
-          placeholder="Select Configuration..."
-        />
+      {/* Where the copy is created. */}
+      <div className="diff-section">
+        <FieldRow label="Project:" labelFor={PROJECT_SELECT}>
+          <FieldCell>
+            <SearchableSelect
+              id={PROJECT_SELECT}
+              value={projectId}
+              onChange={chooseProject}
+              options={props.projects}
+              placeholder="Select Project..."
+              allowEmpty
+            />
+          </FieldCell>
+        </FieldRow>
+        <FieldRow label="Space:" labelFor={SPACE_SELECT}>
+          <FieldCell>
+            <SearchableSelect
+              id={SPACE_SELECT}
+              value={spaceId}
+              onChange={chooseSpace}
+              options={spaces.items}
+              placeholder="Select Space..."
+              allowEmpty
+            />
+          </FieldCell>
+        </FieldRow>
       </div>
 
-      <div className="property-wrapper">
-        <label htmlFor="handle-refs-selector" className="fixed-width w-1">
-          Referenced workitems:
-        </label>
-        <SearchableSelect
-          id={HANDLE_REFS_SELECT}
-          value={handleReferences}
-          onChange={chooseHandleReferences}
-          options={props.handleReferencesTypes.map((type) => ({ id: type.id, name: type.title }))}
-          placeholder="Select Behaviour..."
-          allowEmpty
-        />
-      </div>
-
-      <div className="property-wrapper">
-        <input
-          type="checkbox"
+      {/* What the copy carries over: how its work items are paired, which fields are copied, and what
+          happens to a reference whose counterpart is not in the target project. */}
+      <div className="diff-section group-start">
+        <FieldRow label="Link role:" labelFor={LINK_ROLE_SELECT}>
+          {/* No allowEmpty: the server puts a real "none" entry (id "") at the head of this list, and a
+              second empty-valued option would shadow it. */}
+          <FieldCell>
+            <SearchableSelect
+              id={LINK_ROLE_SELECT}
+              value={linkRole}
+              onChange={chooseLinkRole}
+              options={props.linkRoles}
+              placeholder="Select Link Role..."
+            />
+          </FieldCell>
+        </FieldRow>
+        <FieldRow label="Configuration:" labelFor={CONFIG_SELECT}>
+          <FieldCell>
+            <SearchableSelect
+              id={CONFIG_SELECT}
+              value={config}
+              onChange={chooseConfig}
+              options={configurationNames.map((name) => ({ id: name, name: name }))}
+              placeholder="Select Configuration..."
+            />
+          </FieldCell>
+        </FieldRow>
+        <FieldRow label="Referenced workitems:" labelFor={HANDLE_REFS_SELECT}>
+          <FieldCell>
+            <SearchableSelect
+              id={HANDLE_REFS_SELECT}
+              value={handleReferences}
+              onChange={chooseHandleReferences}
+              options={props.handleReferencesTypes.map((type) => ({ id: type.id, name: type.title }))}
+              placeholder="Select Behaviour..."
+              allowEmpty
+            />
+          </FieldCell>
+        </FieldRow>
+        <SwitchRow
           id="copy-comments-checkbox"
+          label="Copy document comments"
           checked={copyComments}
-          onChange={(event) => setCopyComments(event.target.checked)}
+          onChange={setCopyComments}
         />
-        <label htmlFor="copy-comments-checkbox">Copy document comments</label>
       </div>
 
       <div className="buttons-wrapper">
         <button type="button" id="create-document" disabled={!canCreate || busy !== null} onClick={() => void create()}>
-          <span className="sbb-icon-table-plus" role="img" aria-label="Add" style={{ marginRight: 6 }} />
+          <span className="sbb-icon-table-plus" role="img" aria-label="Add" />
           Create Document
         </button>
       </div>
 
+      {/* The document that was created, which stays in the form: it is a link the user has to click, not
+          a message about something that happened. */}
       {created ? (
-        <div id="creation-success" className="alert">
-          <span className="alert-success">Document created:</span>{' '}
-          <a href={created.href} target="_blank" rel="noreferrer" style={{ fontWeight: 'normal' }}>
-            {created.text}
-          </a>
+        <div className="notifications">
+          <div id="creation-success" className="alert alert-success">
+            Document created:{' '}
+            <a href={created.href} target="_blank" rel="noreferrer">
+              {created.text}
+            </a>
+          </div>
         </div>
       ) : null}
     </PanelShell>
@@ -282,8 +290,8 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
 function messageFrom(body: string): string {
   try {
     const parsed = JSON.parse(body) as { message?: unknown };
-    return typeof parsed.message === 'string' && parsed.message ? parsed.message : 'Error creating document';
+    return typeof parsed.message === 'string' && parsed.message ? parsed.message : CREATE_ERROR;
   } catch {
-    return 'Error creating document';
+    return CREATE_ERROR;
   }
 }

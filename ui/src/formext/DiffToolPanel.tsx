@@ -3,6 +3,7 @@ import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
 import NumericSpinner from './NumericSpinner';
 import PanelShell from './PanelShell';
 import compareIcon from './compare.svg';
+import { FieldCell, FieldRow, RadioPair, SwitchRow } from './formRows';
 import { openDocumentsDiff } from './openDocumentsDiff';
 import type { PanelProps } from './panelProps';
 import { rememberedIfOffered, useAdoptRemembered, useRemembering } from './rememberedSelection';
@@ -170,7 +171,8 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
       filter: useFilter ? { value: filterValue, type: filterType } : undefined,
     });
 
-  const hiddenWhenComparingSame = compareWithSame ? 'property-wrapper hide' : 'property-wrapper';
+  /** The whole target selection goes when the panel is comparing one document with itself. */
+  const targetSectionClass = compareWithSame ? 'diff-section group-start hide' : 'diff-section group-start';
 
   return (
     <PanelShell prefix="comparison" busy={busy} error={loadError}>
@@ -180,202 +182,205 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
         taken into account when determining counterpart work items as well as diffing configuration.
       </p>
 
-      {/* The two checkboxes are mutually exclusive: each hides the other while it is ticked. */}
-      <div className={compareAsBranched ? 'property-wrapper hide' : 'property-wrapper'} id="compare-with-same-wrapper">
-        <input
-          type="checkbox"
+      {/* How the two documents are paired. The two checkboxes are mutually exclusive: each hides the
+          other while it is ticked. */}
+      <div className="diff-section">
+        <SwitchRow
+          rowId="compare-with-same-wrapper"
+          className={compareAsBranched ? 'hide' : undefined}
           id="compare-with-same-checkbox"
+          label="Compare with another revision of the same document"
           checked={compareWithSame}
-          onChange={(event) => setCompareWithSame(event.target.checked)}
+          onChange={setCompareWithSame}
         />
-        <label htmlFor="compare-with-same-checkbox">Compare with another revision of the same document</label>
-      </div>
-      <div className={compareWithSame ? 'property-wrapper hide' : 'property-wrapper'} id="compare-as-branched-wrapper">
-        <input
-          type="checkbox"
+        <SwitchRow
+          rowId="compare-as-branched-wrapper"
+          className={compareWithSame ? 'hide' : undefined}
           id="compare-as-branched-checkbox"
+          label="Compare as branched documents"
           checked={compareAsBranched}
-          onChange={(event) => setCompareAsBranched(event.target.checked)}
-        />
-        <label htmlFor="compare-as-branched-checkbox">Compare as branched documents</label>
-      </div>
-
-      <div className={hiddenWhenComparingSame}>
-        <label htmlFor="comparison-project-selector" className="fixed-width w-1">
-          Project:
-        </label>
-        <SearchableSelect
-          id={PROJECT_SELECT}
-          value={projectId}
-          onChange={chooseProject}
-          options={props.projects}
-          placeholder="Select Project..."
-          allowEmpty
-        />
-      </div>
-      <div className={hiddenWhenComparingSame}>
-        <label htmlFor="comparison-space-selector" className="fixed-width w-1">
-          Space:
-        </label>
-        <SearchableSelect
-          id={SPACE_SELECT}
-          value={spaceId}
-          onChange={chooseSpace}
-          options={spaces.items}
-          placeholder="Select Space..."
-          allowEmpty
-        />
-      </div>
-      <div className={hiddenWhenComparingSame}>
-        <label htmlFor="document-selector" className="fixed-width w-1">
-          Document:
-        </label>
-        <SearchableSelect
-          id={DOCUMENT_SELECT}
-          value={documentId}
-          onChange={chooseDocument}
-          options={documents.items.map((document) => ({ id: document.id, name: document.title }))}
-          placeholder="Select Document..."
-          allowEmpty
+          onChange={setCompareAsBranched}
         />
       </div>
 
-      <div className="property-wrapper">
-        <label htmlFor="select-revision-panel" className="fixed-width w-1">
-          Revision:
-        </label>
-        <div id="select-revision-panel">
-          <div id="select-revision-radios">
-            <input
-              type="radio"
-              id="revision-enter-manually"
-              name="select-revision-type"
-              value="manually"
-              checked={revisionMode === 'manual'}
-              onChange={() => setRevisionMode('manual')}
+      {/* Which document to compare against, narrowed down one dropdown at a time. */}
+      <div className={targetSectionClass} id="comparison-target-wrapper">
+        <FieldRow label="Project:" labelFor={PROJECT_SELECT}>
+          <FieldCell>
+            <SearchableSelect
+              id={PROJECT_SELECT}
+              value={projectId}
+              onChange={chooseProject}
+              options={props.projects}
+              placeholder="Select Project..."
+              allowEmpty
             />
-            <label htmlFor="revision-enter-manually">Enter manually</label>
-            <input
-              type="radio"
-              id="revision-select-from-list"
-              name="select-revision-type"
-              value="list"
-              checked={revisionMode === 'list'}
-              onChange={() => setRevisionMode('list')}
+          </FieldCell>
+        </FieldRow>
+        <FieldRow label="Space:" labelFor={SPACE_SELECT}>
+          <FieldCell>
+            <SearchableSelect
+              id={SPACE_SELECT}
+              value={spaceId}
+              onChange={chooseSpace}
+              options={spaces.items}
+              placeholder="Select Space..."
+              allowEmpty
             />
-            <label htmlFor="revision-select-from-list">Select from list</label>
-          </div>
+          </FieldCell>
+        </FieldRow>
+        <FieldRow label="Document:" labelFor={DOCUMENT_SELECT}>
+          <FieldCell>
+            <SearchableSelect
+              id={DOCUMENT_SELECT}
+              value={documentId}
+              onChange={chooseDocument}
+              options={documents.items.map((document) => ({ id: document.id, name: document.title }))}
+              placeholder="Select Document..."
+              allowEmpty
+            />
+          </FieldCell>
+        </FieldRow>
+      </div>
 
-          {revisionMode === 'manual' ? (
-            <div id="select-revision-manual-container">
+      {/* Which revision of it, entered or picked - a section of its own, the value belonging under the
+          choice rather than beside it.
+
+          Its sub-rows keep the control column rather than taking the label one, unlike the work items
+          filter's below: there the switch is the whole row and what it reveals indents to the label, here
+          the radios already sit in the control column and the value has to line up under them. */}
+      <div className="diff-section group-start">
+        <FieldRow label="Revision:" labelFor="revision-enter-manually">
+          <FieldCell>
+            <RadioPair
+              name="select-revision-type"
+              value={revisionMode}
+              onChange={setRevisionMode}
+              options={[
+                { id: 'revision-enter-manually', label: 'Enter manually', value: 'manual' },
+                { id: 'revision-select-from-list', label: 'Select from list', value: 'list' },
+              ]}
+            />
+          </FieldCell>
+        </FieldRow>
+        {revisionMode === 'manual' ? (
+          <div className="property-wrapper sub-row" id="select-revision-manual-container">
+            <FieldCell>
               <NumericSpinner
                 id="select-revision-manual-input"
                 value={manualRevision}
                 onChange={setManualRevision}
                 placeholder="leave empty to use latest revision"
               />
-            </div>
-          ) : (
-            <div id="select-revision-list-container">
-              <SearchableSelect
-                id={REVISION_SELECT}
-                value={listRevision}
-                onChange={chooseRevision}
-                options={visibleRevisions.map((revision) => ({
-                  id: revision.name,
-                  name: revision.baselineName ? `${revision.name} | ${revision.baselineName}` : revision.name || 'HEAD',
-                }))}
-                placeholder="Select Revision..."
-              />
-              <div>
-                <input
-                  type="checkbox"
-                  id="baseline-checkbox"
-                  checked={onlyBaselines}
-                  onChange={(event) => setOnlyBaselines(event.target.checked)}
-                />
-                <label htmlFor="baseline-checkbox">show only baselines</label>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div
-        className={compareWithSame || compareAsBranched ? 'property-wrapper hide' : 'property-wrapper'}
-        id="comparison-link-role-wrapper"
-      >
-        <label htmlFor="comparison-link-role-selector" className="fixed-width w-1">
-          Link role:
-        </label>
-        <SearchableSelect
-          id={LINK_ROLE_SELECT}
-          value={linkRole}
-          onChange={chooseLinkRole}
-          options={props.linkRoles}
-          placeholder="Select Link Role..."
-          allowEmpty
-        />
-      </div>
-
-      <div className="property-wrapper">
-        <label htmlFor="comparison-config-selector" className="fixed-width w-1">
-          Configuration:
-        </label>
-        <SearchableSelect
-          id={CONFIG_SELECT}
-          value={config}
-          onChange={chooseConfig}
-          options={props.configurations.map((name) => ({ id: name, name: name }))}
-          placeholder="Select Configuration..."
-        />
-      </div>
-
-      <div className="property-wrapper">
-        <input
-          type="checkbox"
-          id="use-work-items-filter"
-          checked={useFilter}
-          onChange={(event) => setUseFilter(event.target.checked)}
-        />
-        <label htmlFor="use-work-items-filter">Use work items filter</label>
-      </div>
-      {useFilter ? (
-        <div className="property-wrapper">
-          <div id="work-items-filter-pane" style={{ width: '100%' }}>
-            <div id="work-items-filter-radios">
-              <input
-                type="radio"
-                id="include-work-items"
-                name="work-items-filter-type"
-                value="including"
-                checked={filterType === 'include'}
-                onChange={() => setFilterType('include')}
-              />
-              <label htmlFor="include-work-items">Only work items</label>
-              <input
-                type="radio"
-                id="exclude-work-items"
-                name="work-items-filter-type"
-                value="excluding"
-                checked={filterType === 'exclude'}
-                onChange={() => setFilterType('exclude')}
-              />
-              <label htmlFor="exclude-work-items">Excluding work items</label>
-            </div>
-            <div id="work-items-filter" style={{ margin: '5px 0 0 5px' }}>
-              <input
-                id="work-items-filter-input"
-                placeholder="comma/space separated list of IDs"
-                type="text"
-                style={{ width: '100%' }}
-                value={filterValue}
-                onChange={(event) => setFilterValue(event.target.value)}
-              />
-            </div>
+            </FieldCell>
           </div>
-        </div>
-      ) : null}
+        ) : (
+          <>
+            <div className="property-wrapper sub-row" id="select-revision-list-container">
+              <FieldCell>
+                <SearchableSelect
+                  id={REVISION_SELECT}
+                  value={listRevision}
+                  onChange={chooseRevision}
+                  options={visibleRevisions.map((revision) => ({
+                    id: revision.name,
+                    name: revision.baselineName
+                      ? `${revision.name} | ${revision.baselineName}`
+                      : revision.name || 'HEAD',
+                  }))}
+                  placeholder="Select Revision..."
+                />
+              </FieldCell>
+            </div>
+            <div className="property-wrapper sub-row" id="baseline-wrapper">
+              <FieldCell>
+                <div className="option-pair">
+                  <label htmlFor="baseline-checkbox">
+                    <input
+                      id="baseline-checkbox"
+                      type="checkbox"
+                      checked={onlyBaselines}
+                      onChange={(event) => setOnlyBaselines(event.target.checked)}
+                    />
+                    show only baselines
+                  </label>
+                </div>
+              </FieldCell>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* How the work items inside the two documents are paired up, and which fields are compared. */}
+      <div className="diff-section group-start">
+        <FieldRow
+          rowId="comparison-link-role-wrapper"
+          className={compareWithSame || compareAsBranched ? 'hide' : undefined}
+          label="Link role:"
+          labelFor={LINK_ROLE_SELECT}
+        >
+          <FieldCell>
+            <SearchableSelect
+              id={LINK_ROLE_SELECT}
+              value={linkRole}
+              onChange={chooseLinkRole}
+              options={props.linkRoles}
+              placeholder="Select Link Role..."
+              allowEmpty
+            />
+          </FieldCell>
+        </FieldRow>
+        <FieldRow label="Configuration:" labelFor={CONFIG_SELECT}>
+          <FieldCell>
+            <SearchableSelect
+              id={CONFIG_SELECT}
+              value={config}
+              onChange={chooseConfig}
+              options={props.configurations.map((name) => ({ id: name, name: name }))}
+              placeholder="Select Configuration..."
+            />
+          </FieldCell>
+        </FieldRow>
+      </div>
+
+      {/* Which work items to leave out of the comparison, the switch keeping its own line and the two
+          rows it reveals belonging under it. */}
+      <div className="diff-section group-start">
+        <SwitchRow
+          id="use-work-items-filter"
+          label="Use work items filter"
+          checked={useFilter}
+          onChange={setUseFilter}
+        />
+        {useFilter ? (
+          <>
+            <div className="property-wrapper sub-row" id="work-items-filter-radios">
+              <FieldCell wide>
+                <RadioPair
+                  name="work-items-filter-type"
+                  value={filterType}
+                  onChange={setFilterType}
+                  options={[
+                    { id: 'include-work-items', label: 'Only work items', value: 'include' },
+                    { id: 'exclude-work-items', label: 'Excluding work items', value: 'exclude' },
+                  ]}
+                />
+              </FieldCell>
+            </div>
+            <div className="property-wrapper sub-row" id="work-items-filter">
+              <FieldCell wide>
+                <input
+                  id="work-items-filter-input"
+                  type="text"
+                  placeholder="comma/space separated list of IDs"
+                  value={filterValue}
+                  onChange={(event) => setFilterValue(event.target.value)}
+                />
+              </FieldCell>
+            </div>
+          </>
+        ) : null}
+      </div>
 
       <div className="buttons-wrapper">
         <button type="button" id="compare-documents" disabled={!canCompare || busy !== null} onClick={compare}>

@@ -3,6 +3,7 @@ import { createdDocumentLink } from '../src/formext/CopyToolPanel';
 import { mountCopyToolPanel } from '../src/formext/mountCopyToolPanel';
 import { $, clickCheckbox, forgetRememberedSelections, mountPanel, selectOption, waitForPanel } from './formextHelpers';
 import { type FetchMock, type Route, installFetchMock, jsonResponse } from './mockFetch';
+import { clearToasts, toasted } from './toasts';
 
 // Behaviour of the port of CopyTool.js + the copy-tool.html fragment. Mounted the way Polarion mounts it,
 // into a shadow root on a div carrying `data-props`.
@@ -67,6 +68,8 @@ afterEach(() => {
   panel?.unmount();
   panel = null;
   forgetRememberedSelections();
+  // Sonner's queue outlives a test, and would be replayed into the next panel's host - see test/toasts.ts.
+  clearToasts();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -234,7 +237,10 @@ describe('CopyToolPanel', () => {
 
     createButton(shadow).click();
 
-    await vi.waitFor(() => expect(shadow.querySelector('.alert-error')?.textContent).toBe('Document already exists'));
+    // An event, so it is reported as a toast rather than taking a place in the form - see reporting.ts.
+    expect(await toasted(shadow, 'error')).toBe('Document already exists');
+    // ...and nothing about it is left in the form, whose alert slot is for a state.
+    expect(shadow.querySelector('.notifications')).toBeNull();
   });
 
   it('falls back to a generic message when the failure body is not the expected JSON', async () => {
@@ -254,7 +260,7 @@ describe('CopyToolPanel', () => {
 
     createButton(shadow).click();
 
-    await vi.waitFor(() => expect(shadow.querySelector('.alert-error')?.textContent).toBe('Error creating document'));
+    expect(await toasted(shadow, 'error')).toBe('Error creating document');
   });
 
   it('blocks the panel while the document is being created', async () => {
@@ -286,7 +292,7 @@ describe('CopyToolPanel', () => {
     await selectOption(shadow, 'copy-project-selector', 'drivepilot');
 
     await vi.waitFor(() =>
-      expect(shadow.querySelector('.alert-error')?.textContent).toBe('Error occurred loading spaces'),
+      expect(shadow.querySelector('.notifications .alert-error')?.textContent).toBe('Error occurred loading spaces'),
     );
   });
 
@@ -302,7 +308,7 @@ describe('CopyToolPanel', () => {
     await selectOption(shadow, 'copy-project-selector', 'drivepilot');
 
     await vi.waitFor(() =>
-      expect(shadow.querySelector('.alert-error')?.textContent).toBe(
+      expect(shadow.querySelector('.notifications .alert-error')?.textContent).toBe(
         'Error occurred loading project [drivepilot] diff configuration',
       ),
     );

@@ -3,18 +3,18 @@
 The React front end of the Polarion diff-tool extension: a [Vite](https://vite.dev/) **multi-page**
 app, one HTML entry per Polarion entry point.
 
-| Entry | Served at | Opened by |
-|---|---|---|
-| `index.html` | `/polarion/diff-tool-app/ui/app/index.html?feature=<id>` | the admin extenders in `META-INF/hivemodule.xml` |
-| `topics.html` | `/polarion/diff-tool-app/ui/app/topics.html?topic=<id>` | the navigation nodes in `ch.sbb.polarion.extension.diff_tool.navigation` |
-| `documents.html` | `/polarion/diff-tool-app/ui/app/documents.html` | `src/formext/openDocumentsDiff.ts` |
-| `collections.html` | `/polarion/diff-tool-app/ui/app/collections.html` | `src/topics/openCollectionsDiff.ts` |
-| `workitems.html` | `/polarion/diff-tool-app/ui/app/workitems.html` | `src/topics/openWorkItemsDiff.ts` |
+| Entry              | Served at                                                | Opened by                                                                |
+| ------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `index.html`       | `/polarion/diff-tool-app/ui/app/index.html?feature=<id>` | the admin extenders in `META-INF/hivemodule.xml`                         |
+| `topics.html`      | `/polarion/diff-tool-app/ui/app/topics.html?topic=<id>`  | the navigation nodes in `ch.sbb.polarion.extension.diff_tool.navigation` |
+| `documents.html`   | `/polarion/diff-tool-app/ui/app/documents.html`          | `src/formext/openDocumentsDiff.ts`                                       |
+| `collections.html` | `/polarion/diff-tool-app/ui/app/collections.html`        | `src/topics/openCollectionsDiff.ts`                                      |
+| `workitems.html`   | `/polarion/diff-tool-app/ui/app/workitems.html`          | `src/topics/openWorkItemsDiff.ts`                                        |
 
 Plus a second, library-mode build for the two Document Properties side panels:
 
-| Module | Served at | Imported by |
-|---|---|---|
+| Module                    | Served at                                                | Imported by                            |
+| ------------------------- | -------------------------------------------------------- | -------------------------------------- |
 | `assets/diffToolPanel.js` | `/polarion/diff-tool-app/ui/app/assets/diffToolPanel.js` | `webapp/diff-tool/html/diff-tool.html` |
 | `assets/copyToolPanel.js` | `/polarion/diff-tool-app/ui/app/assets/copyToolPanel.js` | `webapp/diff-tool/html/copy-tool.html` |
 
@@ -47,13 +47,14 @@ entry, so the two never share a stylesheet at runtime - but they do share the do
 **The Document Properties panels** (`src/formext/`) are not part of the SPA at all. They are built by
 `vite.formext.config.js` in **library mode**, which is what guarantees the fixed filenames and the
 preserved named exports (`mountDiffToolPanel` / `mountCopyToolPanel`) the server-rendered fragments call.
-`emptyOutDir: false`, so this build must run *after* the SPA build - hence the two-step `npm run build`.
+`emptyOutDir: false`, so this build must run _after_ the SPA build - hence the two-step `npm run build`.
 
 Each panel mounts into a **shadow root** on the fragment's div (`src/formext/shadowMount.ts`). The
 Document Properties pane is one page shared by several extensions' panels - and by both of these - so
-plain global CSS would collide. RSP's stylesheet and `src/formext/diff-tool.css` are injected *inside*
-the shadow (via `?inline`), which also means nothing has to be `<link>`ed from a Polarion-served URL and
-the panels can be tested with `ui/` alone.
+plain global CSS would collide. RSP's stylesheet and `src/formext/diff-tool.css` - the row layout both
+panels share, plus the toast styles a shadow root cannot see - are injected _inside_ the shadow (via
+`?inline`), which also means nothing has to be `<link>`ed from a Polarion-served URL and the panels can be
+tested with `ui/` alone.
 
 Their data is **server-injected**, not fetched: `BaseFormExtension` puts the source document's identity,
 the projects, link roles, configuration names and referenced-workitem behaviours into a single
@@ -84,16 +85,16 @@ dev too (see the `extensionlessHtml` plugin in `vite.config.js`).
 
 ## Scripts
 
-| Script | |
-|---|---|
-| `npm run dev` | dev server on port 3000, Polarion requests proxied to `VITE_BASE_URL` |
-| `npm run dev:e2e` | dev server as the E2E suite runs it: loads `.env.e2e`, no proxy |
-| `npm run build` | production build to `dist/app`, both Vite passes (copied into the extension jar by Maven) |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run lint` / `lint:fix` | ESLint |
-| `npm run format` / `format:check` | Prettier (`**/*.{ts,tsx,css,html}`) |
-| `npm run e2e` | Playwright E2E suite (interactive) |
-| `npm run e2e:headless` | Playwright E2E suite (list reporter) |
+| Script                            |                                                                                           |
+| --------------------------------- | ----------------------------------------------------------------------------------------- |
+| `npm run dev`                     | dev server on port 3000, Polarion requests proxied to `VITE_BASE_URL`                     |
+| `npm run dev:e2e`                 | dev server as the E2E suite runs it: loads `.env.e2e`, no proxy                           |
+| `npm run build`                   | production build to `dist/app`, both Vite passes (copied into the extension jar by Maven) |
+| `npm run typecheck`               | `tsc --noEmit`                                                                            |
+| `npm run lint` / `lint:fix`       | ESLint                                                                                    |
+| `npm run format` / `format:check` | Prettier (`**/*.{ts,tsx,css,html}`)                                                       |
+| `npm run e2e`                     | Playwright E2E suite (interactive)                                                        |
+| `npm run e2e:headless`            | Playwright E2E suite (list reporter)                                                      |
 
 Maven runs **both** JS suites in the `test` phase - Vitest (dockerized, with the coverage gate) and then
 the Playwright E2E suite, as it did before the React migration. The browser binaries are not downloaded
@@ -114,14 +115,14 @@ Two layers, deliberately:
   specs across chromium/firefox/webkit, driving the real dev server with every REST call stubbed from
   `e2e/fixtures/` (`topics-pickers.spec.js` stubs its four responses inline).
 
-| Script | |
-|---|---|
-| `npm run test` | Vitest, host browser; the visual suites skip themselves outside the reference image |
-| `npm run test:watch` | Vitest in watch mode |
-| `npm run test:docker` | Vitest in the pinned Playwright image (authoritative for visuals) |
-| `npm run test:update:docker` | regenerate visual references (Docker only) |
-| `npm run test:coverage` | behaviour-only coverage + the 80% gate |
-| `npm run test:coverage:full` | full suite coverage |
+| Script                         |                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `npm run test`                 | Vitest, host browser; the visual suites skip themselves outside the reference image               |
+| `npm run test:watch`           | Vitest in watch mode                                                                              |
+| `npm run test:docker`          | Vitest in the pinned Playwright image (authoritative for visuals)                                 |
+| `npm run test:update:docker`   | regenerate visual references (Docker only)                                                        |
+| `npm run test:coverage`        | behaviour-only coverage + the 80% gate                                                            |
+| `npm run test:coverage:full`   | full suite coverage                                                                               |
 | `npm run test:coverage:docker` | **the canonical run** - the full suite + the gate in the image, what Maven's `test` phase invokes |
 
 **Pixel references are Docker-only.** The committed screenshots are locked to the pinned Playwright
@@ -139,13 +140,13 @@ TypeScript.
 
 Maven runs the Vitest suite (dockerized) in the `test` phase. Useful flags:
 
-| Flag | |
-|---|---|
-| `-DskipJsTests=true` | skip both JS suites. CI does NOT skip Vitest: it runs it in the Maven build |
+| Flag                    |                                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| `-DskipJsTests=true`    | skip both JS suites. CI does NOT skip Vitest: it runs it in the Maven build                            |
 | `-DskipJsE2eTests=true` | skip only the Playwright suite - what CI's Maven build passes, since its `e2e` job runs it per browser |
-| `-DjsTestsNoDocker` | run Vitest directly instead of in the image |
-| `-DskipVisualJsTests` | keep behaviour tests, drop the pixel comparisons |
-| `-DinstallPlaywright` | download the browser binaries (and OS deps) |
+| `-DjsTestsNoDocker`     | run Vitest directly instead of in the image                                                            |
+| `-DskipVisualJsTests`   | keep behaviour tests, drop the pixel comparisons                                                       |
+| `-DinstallPlaywright`   | download the browser binaries (and OS deps)                                                            |
 
 ## Layout
 
@@ -158,7 +159,7 @@ src/services/    REST access (useRemote), diff/merge orchestration, PDF export
 src/router/      navigation.ts - the useSearchParams/usePathname/useRouter shim
 src/admin/       the RSP admin pages (pages/, components/, dev/ scaffolding)
 src/topics/      the three navigation topics: the ?topic=<id> registry, the two pickers and their table
-src/formext/     the two Document Properties panels + their library-mode entry points
+src/formext/     the two Document Properties panels, their shared row layout and their entry points
 src/features.tsx the ?feature=<id> registry, ids matching hivemodule.xml
 src/styles/      globals.css
 test/            Vitest component + visual tests

@@ -222,8 +222,11 @@ describe('DiffToolPanel', () => {
 
     clickCheckbox(shadow, 'compare-with-same-checkbox');
 
-    // The whole target selection is hidden and Compare is immediately available.
+    // The whole target selection is hidden and Compare is immediately available. The project / space /
+    // document group goes as a section, so the hairline above it goes with it rather than being left
+    // over an empty group.
     await vi.waitFor(() => expect(compareButton(shadow).disabled).toBe(false));
+    expect($<HTMLElement>(shadow, '#comparison-target-wrapper').className).toContain('hide');
     expect($<HTMLElement>(shadow, '#comparison-link-role-wrapper').className).toContain('hide');
     expect($<HTMLElement>(shadow, '#compare-as-branched-wrapper').className).toContain('hide');
 
@@ -342,7 +345,7 @@ describe('DiffToolPanel', () => {
     await selectOption(shadow, 'comparison-project-selector', 'drivepilot');
 
     await vi.waitFor(() =>
-      expect(shadow.querySelector('.alert-error')?.textContent).toBe('Error occurred loading spaces'),
+      expect(shadow.querySelector('.notifications .alert-error')?.textContent).toBe('Error occurred loading spaces'),
     );
   });
 
