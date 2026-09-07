@@ -79,10 +79,10 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
               });
               setFieldsDiffs(diffs);
               context.state.setDiffsExist(diffs.length > 0);
-            }
-        )
-        // Error already surfaced via loadingContext; swallow the redundant rejection.
-        .catch(() => {});
+            },
+            // Error already surfaced via loadingContext; swallow only the request rejection.
+            () => {}
+        );
   };
 
   useEffect(() => {

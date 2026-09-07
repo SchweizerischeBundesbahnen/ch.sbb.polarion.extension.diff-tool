@@ -78,9 +78,9 @@ export default function DocumentsDiff({ enclosingCollections }) {
           if (!ignore) {
             setDocsData(data);
           }
-        })
-        // Error already surfaced via loadingContext; swallow the redundant rejection.
-        .catch(() => {});
+        },
+        // Error already surfaced via loadingContext; swallow only the request rejection.
+        () => {});
     return () => {
       ignore = true;
     };

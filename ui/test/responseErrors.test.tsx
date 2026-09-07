@@ -183,4 +183,30 @@ describe('useDiffService on a failed request', () => {
     expect(rejections).toEqual([]);
     expect(loadingContext.pairsLoadingFinishedWithError).toHaveBeenCalledWith('left document not found');
   });
+
+  // Pins the promise contract the 4 consumers rely on: swallowing the request rejection with the
+  // second argument of .then() leaves a throw from the success handler observable, where a trailing
+  // .catch() would absorb it. This builds its own chain, so it does not guard the call sites.
+  it('does not swallow a throw from the success handler', async () => {
+    installFetchMock([{ method: 'POST', match: /\/diff\/documents/, json: { pairedWorkItems: [] } }]);
+    const loadingContext = loadingContextStub();
+    const bug = new Error('bug in the success handler');
+
+    useDiffService()
+      .sendDocumentsDiffRequest(
+        new URLSearchParams('sourceProjectId=a&targetProjectId=b'),
+        'cache',
+        loadingContext,
+        false,
+      )
+      .then(
+        () => {
+          throw bug;
+        },
+        () => {},
+      );
+    await settle();
+
+    expect(rejections).toEqual([bug]);
+  });
 });

@@ -74,9 +74,9 @@ export default function WorkItemsDiff() {
           }
           setWorkItemsData(data);
           setRedundancyModalVisible(data.leftWorkItemIdsWithRedundancy && data.leftWorkItemIdsWithRedundancy.length > 0);
-        })
-        // Error already surfaced via loadingContext; swallow the redundant rejection.
-        .catch(() => {});
+        },
+        // Error already surfaced via loadingContext; swallow only the request rejection.
+        () => {});
     return () => {
       ignore = true;
     };
