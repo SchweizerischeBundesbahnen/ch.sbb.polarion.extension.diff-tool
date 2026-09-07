@@ -13,7 +13,7 @@
 # test/expected/ and are deliberately NOT ignored)
 /test/__diff__/
 /test/__screenshots__/
-/.vitest-attachments/
+/.vitest/
 
 # build output
 /build/
