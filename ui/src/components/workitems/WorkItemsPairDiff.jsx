@@ -4,6 +4,7 @@ import {useContext, useEffect, useRef, useState} from "react";
 import useImageUtils from "@/utils/useImageUtils";
 import DiffContent from "@/components/diff/DiffContent";
 import useRemote from "@/services/useRemote";
+import {responseError} from "@/services/responseError";
 import AppContext from "@/components/AppContext";
 import FloatingButton from "@/components/FloatingButton";
 import {faChevronDown, faChevronUp, faEquals, faQuestion} from "@fortawesome/free-solid-svg-icons";
@@ -159,7 +160,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
       url: `/diff/detached-workitems`,
       body: JSON.stringify(body),
       contentType: "application/json"
-    }).then(response => {
+    }).then(async response => {
       if (response.status === 200) {
         return response.json();
       } else {
@@ -169,9 +170,9 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
               requestDiff(body, triesCount + 1, requestId);
             }
           }, triesCount * 2000 + 1000);
-          throw Promise.resolve(RETRY_MARKER); // Marker for later code that we are still trying to obtain diff from server
+          throw RETRY_MARKER; // Marker for later code that we are still trying to obtain diff from server
         } else {
-          throw response.json();
+          throw await responseError(response);
         }
       }
     }).then(data =>  {
@@ -188,18 +189,16 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
       // -----
       setDiffData(data);
       setLoading(false);
-    }).catch(errorResponse => {
-      Promise.resolve(errorResponse).then((error) => {
-        if (requestId !== latestRequestRef.current) {
-          return; // superseded request, ignore its error too
-        }
-        if (RETRY_MARKER !== error) {
-          setError(error && error.message ? error.message : "Error occurred loading diff data");
-          setLoading(false);
-        } else {
-          // Retry caught, swallow
-        }
-      });
+    }).catch(error => {
+      if (requestId !== latestRequestRef.current) {
+        return; // superseded request, ignore its error too
+      }
+      if (RETRY_MARKER !== error) {
+        setError(error && error.message ? error.message : "Error occurred loading diff data");
+        setLoading(false);
+      } else {
+        // Retry caught, swallow
+      }
     });
   };
 
