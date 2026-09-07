@@ -40,8 +40,8 @@
     "vitest-browser-react": "2.3.0"
   },
   "engines": {
-    "node": ">=20.9.0",
-    "npm": ">=11"
+    "node": "^24.15.0 || >=26.0.0",
+    "npm": ">=12"
   },
   "name": "objects-diff",
   "type": "module",
