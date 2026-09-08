@@ -286,6 +286,33 @@ describe('DiffToolPanel', () => {
     expect($<HTMLSelectElement>(shadow, '#revision-selector').value).toBe('300');
   });
 
+  // The row's label used to carry `htmlFor="revision-enter-manually"`, so clicking `Revision:` chose
+  // "Enter manually" and the revision picked from the list was dropped from the comparison URL.
+  it('keeps the picked revision when the Revision: label is clicked', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+    const { shadow } = await open();
+    await pickTargetDocument(shadow);
+    clickCheckbox(shadow, 'revision-select-from-list');
+    await selectOption(shadow, 'revision-selector', '200');
+
+    $<HTMLLabelElement>(shadow, '#revision-label').click();
+
+    // Still in list mode, with the revision the user chose.
+    expect($<HTMLInputElement>(shadow, '#revision-select-from-list').checked).toBe(true);
+    expect($<HTMLSelectElement>(shadow, '#revision-selector').value).toBe('200');
+    compareButton(shadow).click();
+    expect(String(openSpy.mock.calls[0][0])).toContain('&targetRevision=200');
+  });
+
+  // The label names the group instead, which a radio group cannot get from a `<label>` of its own.
+  it('names the revision radio group with the row label', async () => {
+    const { shadow } = await open();
+
+    const group = $<HTMLElement>(shadow, '[role="radiogroup"]');
+    expect(group.getAttribute('aria-labelledby')).toBe('revision-label');
+    expect($<HTMLLabelElement>(shadow, '#revision-label').textContent).toBe('Revision:');
+  });
+
   it('sends the revision picked from the list', async () => {
     const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
     const { shadow } = await open();

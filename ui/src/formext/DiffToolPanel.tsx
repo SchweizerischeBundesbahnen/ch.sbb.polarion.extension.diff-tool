@@ -3,7 +3,7 @@ import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
 import NumericSpinner from './NumericSpinner';
 import PanelShell from './PanelShell';
 import compareIcon from './compare.svg';
-import { FieldCell, FieldRow, RadioPair, SwitchRow } from './formRows';
+import { FieldCell, FieldRow, RadioPair, SubRow, SwitchRow } from './formRows';
 import { openDocumentsDiff } from './openDocumentsDiff';
 import type { PanelProps } from './panelProps';
 import { rememberedIfOffered, useAdoptRemembered, useRemembering } from './rememberedSelection';
@@ -250,9 +250,13 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
           filter's below: there the switch is the whole row and what it reveals indents to the label, here
           the radios already sit in the control column and the value has to line up under them. */}
       <div className="diff-section group-start">
-        <FieldRow label="Revision:" labelFor="revision-enter-manually">
+        {/* No `labelFor`: the row's value is a radio group, and a label pointing at one of the radios
+            would make a click on `Revision:` pick that mode - discarding a revision chosen from the
+            list. The group is named through the label's id instead. */}
+        <FieldRow label="Revision:" labelId="revision-label">
           <FieldCell>
             <RadioPair
+              ariaLabelledBy="revision-label"
               name="select-revision-type"
               value={revisionMode}
               onChange={setRevisionMode}
@@ -264,49 +268,43 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
           </FieldCell>
         </FieldRow>
         {revisionMode === 'manual' ? (
-          <div className="property-wrapper sub-row" id="select-revision-manual-container">
-            <FieldCell>
-              <NumericSpinner
-                id="select-revision-manual-input"
-                value={manualRevision}
-                onChange={setManualRevision}
-                placeholder="leave empty to use latest revision"
-              />
-            </FieldCell>
-          </div>
+          <SubRow rowId="select-revision-manual-container">
+            <NumericSpinner
+              id="select-revision-manual-input"
+              value={manualRevision}
+              onChange={setManualRevision}
+              placeholder="leave empty to use latest revision"
+            />
+          </SubRow>
         ) : (
           <>
-            <div className="property-wrapper sub-row" id="select-revision-list-container">
-              <FieldCell>
-                <SearchableSelect
-                  id={REVISION_SELECT}
-                  value={listRevision}
-                  onChange={chooseRevision}
-                  options={visibleRevisions.map((revision) => ({
-                    id: revision.name,
-                    name: revision.baselineName
-                      ? `${revision.name} | ${revision.baselineName}`
-                      : revision.name || 'HEAD',
-                  }))}
-                  placeholder="Select Revision..."
-                />
-              </FieldCell>
-            </div>
-            <div className="property-wrapper sub-row" id="baseline-wrapper">
-              <FieldCell>
-                <div className="option-pair">
-                  <label htmlFor="baseline-checkbox">
-                    <input
-                      id="baseline-checkbox"
-                      type="checkbox"
-                      checked={onlyBaselines}
-                      onChange={(event) => setOnlyBaselines(event.target.checked)}
-                    />
-                    show only baselines
-                  </label>
-                </div>
-              </FieldCell>
-            </div>
+            <SubRow rowId="select-revision-list-container">
+              <SearchableSelect
+                id={REVISION_SELECT}
+                value={listRevision}
+                onChange={chooseRevision}
+                options={visibleRevisions.map((revision) => ({
+                  id: revision.name,
+                  name: revision.baselineName ? `${revision.name} | ${revision.baselineName}` : revision.name || 'HEAD',
+                }))}
+                placeholder="Select Revision..."
+              />
+            </SubRow>
+            <SubRow rowId="baseline-wrapper">
+              {/* `option-pair` for a lone checkbox because that is what centers a label-wrapped
+                  control against its text; see diff-tool.css. */}
+              <div className="option-pair">
+                <label htmlFor="baseline-checkbox">
+                  <input
+                    id="baseline-checkbox"
+                    type="checkbox"
+                    checked={onlyBaselines}
+                    onChange={(event) => setOnlyBaselines(event.target.checked)}
+                  />
+                  show only baselines
+                </label>
+              </div>
+            </SubRow>
           </>
         )}
       </div>
@@ -354,30 +352,26 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
         />
         {useFilter ? (
           <>
-            <div className="property-wrapper sub-row" id="work-items-filter-radios">
-              <FieldCell wide>
-                <RadioPair
-                  name="work-items-filter-type"
-                  value={filterType}
-                  onChange={setFilterType}
-                  options={[
-                    { id: 'include-work-items', label: 'Only work items', value: 'include' },
-                    { id: 'exclude-work-items', label: 'Excluding work items', value: 'exclude' },
-                  ]}
-                />
-              </FieldCell>
-            </div>
-            <div className="property-wrapper sub-row" id="work-items-filter">
-              <FieldCell wide>
-                <input
-                  id="work-items-filter-input"
-                  type="text"
-                  placeholder="comma/space separated list of IDs"
-                  value={filterValue}
-                  onChange={(event) => setFilterValue(event.target.value)}
-                />
-              </FieldCell>
-            </div>
+            <SubRow rowId="work-items-filter-radios" wide>
+              <RadioPair
+                name="work-items-filter-type"
+                value={filterType}
+                onChange={setFilterType}
+                options={[
+                  { id: 'include-work-items', label: 'Only work items', value: 'include' },
+                  { id: 'exclude-work-items', label: 'Excluding work items', value: 'exclude' },
+                ]}
+              />
+            </SubRow>
+            <SubRow rowId="work-items-filter" wide>
+              <input
+                id="work-items-filter-input"
+                type="text"
+                placeholder="comma/space separated list of IDs"
+                value={filterValue}
+                onChange={(event) => setFilterValue(event.target.value)}
+              />
+            </SubRow>
           </>
         ) : null}
       </div>
