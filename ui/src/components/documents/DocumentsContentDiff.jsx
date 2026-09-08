@@ -56,7 +56,9 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
           if (!ignore) {
             setDocsData(data);
           }
-        });
+        },
+        // Error already surfaced via loadingContext; swallow only the request rejection.
+        () => {});
     return () => {
       ignore = true;
     };

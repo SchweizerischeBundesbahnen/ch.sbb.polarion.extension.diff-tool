@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import useRemote from "@/services/useRemote";
+import {responseError} from "@/services/responseError";
 
 export default function ExtensionInfo() {
   const remote = useRemote();
@@ -12,16 +13,15 @@ export default function ExtensionInfo() {
         method: "GET",
         url: `/extension/info`,
         contentType: "application/json"
-      }).then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw response.json();
+      }).then(async response => {
+        if (!response.ok) {
+          throw await responseError(response);
         }
+        return response.json();
       }).then(data => {
         setExtensionInfo(`v${data?.version?.bundleVersion} | ${data?.version?.bundleBuildTimestamp}`);
-      }).catch(errorResponse => {
-        Promise.resolve(errorResponse).then((error) => console.log("Error occurred loading extension info" + (error && error.message ? ": " + error.message : "")));
+      }).catch(error => {
+        console.log("Error occurred loading extension info" + (error && error.message ? ": " + error.message : ""));
       });
     }
   }, []);
