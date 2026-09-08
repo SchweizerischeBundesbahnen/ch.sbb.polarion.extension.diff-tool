@@ -94,14 +94,30 @@ export interface SwitchRowProps extends RowBase {
   label: ReactNode;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  /**
+   * The id of the label element, for a group in a {@link SubRow} below that has to point back at it to
+   * be named - the switch's own text being the only visible heading such a group has.
+   */
+  labelId?: string;
 }
 
 /** A row the user switches on, with whatever value it carries beside it. */
-export function SwitchRow({ id, label, checked, onChange, className, rowId, children }: Readonly<SwitchRowProps>) {
+export function SwitchRow({
+  id,
+  label,
+  checked,
+  onChange,
+  className,
+  rowId,
+  labelId,
+  children,
+}: Readonly<SwitchRowProps>) {
   return (
     <div className={classes('property-wrapper', className)} id={rowId}>
       <input id={id} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id} id={labelId}>
+        {label}
+      </label>
       {children}
     </div>
   );
@@ -151,11 +167,17 @@ export interface RadioPairProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   /**
-   * The id of the element naming the group - the row's label, where the group is a row's value. This is
-   * how such a row is named, `FieldRow` deliberately not pointing its `<label>` at one of the radios
-   * (see {@link FieldRowProps.labelFor}).
+   * The id of the element naming the group: the row's own label where the group is a row's value, and
+   * the label of the switch above it where the group sits in a {@link SubRow}.
+   *
+   * Required, because the group carries `role="radiogroup"` and a role without an accessible name is
+   * what leaves a screen reader announcing the options but not what they decide. There is no
+   * `aria-label` alternative on purpose - both groups here sit under visible text that already names
+   * them, and pointing at that text is what keeps the two descriptions from drifting apart. It is also
+   * why `FieldRow` does not point its `<label>` at one of the radios (see
+   * {@link FieldRowProps.labelFor}): the label names the group, not an option.
    */
-  ariaLabelledBy?: string;
+  ariaLabelledBy: string;
 }
 
 /**

@@ -349,11 +349,15 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
           label="Use work items filter"
           checked={useFilter}
           onChange={setUseFilter}
+          labelId="work-items-filter-label"
         />
         {useFilter ? (
           <>
             <SubRow rowId="work-items-filter-radios" wide>
+              {/* Named by the switch above it, which is the only visible text that says what these two
+                  options decide. */}
               <RadioPair
+                ariaLabelledBy="work-items-filter-label"
                 name="work-items-filter-type"
                 value={filterType}
                 onChange={setFilterType}

@@ -304,13 +304,21 @@ describe('DiffToolPanel', () => {
     expect(String(openSpy.mock.calls[0][0])).toContain('&targetRevision=200');
   });
 
-  // The label names the group instead, which a radio group cannot get from a `<label>` of its own.
-  it('names the revision radio group with the row label', async () => {
+  // A radio group cannot be named by a `<label>` of its own, so each points at the visible text that
+  // says what its options decide - the row's label, or the switch that revealed it. Without a name the
+  // `role="radiogroup"` leaves a screen reader reading the options and not the question.
+  it('names every radio group with the visible text above it', async () => {
     const { shadow } = await open();
+    clickCheckbox(shadow, 'use-work-items-filter');
+    await vi.waitFor(() => expect(shadow.querySelectorAll('[role="radiogroup"]').length).toBe(2));
 
-    const group = $<HTMLElement>(shadow, '[role="radiogroup"]');
-    expect(group.getAttribute('aria-labelledby')).toBe('revision-label');
-    expect($<HTMLLabelElement>(shadow, '#revision-label').textContent).toBe('Revision:');
+    const named = Array.from(shadow.querySelectorAll<HTMLElement>('[role="radiogroup"]')).map((group) => {
+      const labelId = group.getAttribute('aria-labelledby');
+      // Resolvable, not merely present: an aria-labelledby pointing at nothing names nothing.
+      return $<HTMLElement>(shadow, `#${labelId}`).textContent;
+    });
+
+    expect(named).toEqual(['Revision:', 'Use work items filter']);
   });
 
   it('sends the revision picked from the list', async () => {
