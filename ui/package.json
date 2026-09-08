@@ -27,7 +27,7 @@
     "@vitest/browser-playwright": "5.0.0",
     "@vitest/coverage-istanbul": "5.0.0",
     "cross-spawn": "7.0.6",
-    "eslint": "10.9.1",
+    "eslint": "10.10.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.12.0",
