@@ -85,6 +85,25 @@ it. `META-INF/hivemodule.xml` is the source of truth for which extenders point a
 `/polarion/diff-tool/rest/swagger`. See `ui/README.md` for the details, including why the viewer's page
 shell is `.diff-app` rather than `.app`.
 
+Both Document Properties panels are laid out by **one row model**, in `src/formext/formRows.tsx` +
+`diff-tool.css`, with `PanelShell.tsx` as the frame they share. It is the row model pdf-exporter and
+docx-exporter lay their export form out with, ported here deliberately: the three extensions each
+contribute a panel to the same properties pane, so a change to one is worth making in the others. A row is
+a three-track grid - a checkbox gutter, a 148px label column, the control - so every checkbox, label and
+control of a panel lands on one of three shared x positions, which the legacy per-row flex lines did not
+do. Neither panel writes `<div className="property-wrapper">` by hand any more. There is no two-column
+variant of a section: the exporters' form is also an export dialog, these panels are only ever in the
+~360px pane.
+
+A panel reports an operation through **toasts** (`reporting.ts`), the same ones every administration page
+of this extension raises; only what describes a *state* stays in the form (a list that could not be
+loaded, and the document a copy created). Two things a toast in a shadow root needs that an administration
+page does not: its stylesheet has to be inside the root, so `diff-tool.css` imports
+`sonner/dist/styles.css` and Vite inlines it into both roots; and since `toast()` broadcasts to **every**
+mounted `Toaster` and this extension puts two panels on one page, `ToastHost.tsx` makes the newest host
+the only one that renders, and empties the queue when the reporting changes hands so one panel's report
+cannot be replayed into the other.
+
 The three navigation topics are React too, since `topics.html` replaced the nav-topic JSPs and the Java
 widget renderers that rendered their tables (`widgets/`, deleted). `ch.sbb.polarion.extension.diff_tool.
 navigation` points each node at `topics.html?topic=<node id>`, and the tables are built in

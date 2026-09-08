@@ -222,8 +222,11 @@ describe('DiffToolPanel', () => {
 
     clickCheckbox(shadow, 'compare-with-same-checkbox');
 
-    // The whole target selection is hidden and Compare is immediately available.
+    // The whole target selection is hidden and Compare is immediately available. The project / space /
+    // document group goes as a section, so the hairline above it goes with it rather than being left
+    // over an empty group.
     await vi.waitFor(() => expect(compareButton(shadow).disabled).toBe(false));
+    expect($<HTMLElement>(shadow, '#comparison-target-wrapper').className).toContain('hide');
     expect($<HTMLElement>(shadow, '#comparison-link-role-wrapper').className).toContain('hide');
     expect($<HTMLElement>(shadow, '#compare-as-branched-wrapper').className).toContain('hide');
 
@@ -281,6 +284,41 @@ describe('DiffToolPanel', () => {
       ).toEqual(['300 | Release 2', '100 | Release 1']),
     );
     expect($<HTMLSelectElement>(shadow, '#revision-selector').value).toBe('300');
+  });
+
+  // The row's label used to carry `htmlFor="revision-enter-manually"`, so clicking `Revision:` chose
+  // "Enter manually" and the revision picked from the list was dropped from the comparison URL.
+  it('keeps the picked revision when the Revision: label is clicked', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+    const { shadow } = await open();
+    await pickTargetDocument(shadow);
+    clickCheckbox(shadow, 'revision-select-from-list');
+    await selectOption(shadow, 'revision-selector', '200');
+
+    $<HTMLLabelElement>(shadow, '#revision-label').click();
+
+    // Still in list mode, with the revision the user chose.
+    expect($<HTMLInputElement>(shadow, '#revision-select-from-list').checked).toBe(true);
+    expect($<HTMLSelectElement>(shadow, '#revision-selector').value).toBe('200');
+    compareButton(shadow).click();
+    expect(String(openSpy.mock.calls[0][0])).toContain('&targetRevision=200');
+  });
+
+  // A radio group cannot be named by a `<label>` of its own, so each points at the visible text that
+  // says what its options decide - the row's label, or the switch that revealed it. Without a name the
+  // `role="radiogroup"` leaves a screen reader reading the options and not the question.
+  it('names every radio group with the visible text above it', async () => {
+    const { shadow } = await open();
+    clickCheckbox(shadow, 'use-work-items-filter');
+    await vi.waitFor(() => expect(shadow.querySelectorAll('[role="radiogroup"]').length).toBe(2));
+
+    const named = Array.from(shadow.querySelectorAll<HTMLElement>('[role="radiogroup"]')).map((group) => {
+      const labelId = group.getAttribute('aria-labelledby');
+      // Resolvable, not merely present: an aria-labelledby pointing at nothing names nothing.
+      return $<HTMLElement>(shadow, `#${labelId}`).textContent;
+    });
+
+    expect(named).toEqual(['Revision:', 'Use work items filter']);
   });
 
   it('sends the revision picked from the list', async () => {
@@ -342,7 +380,7 @@ describe('DiffToolPanel', () => {
     await selectOption(shadow, 'comparison-project-selector', 'drivepilot');
 
     await vi.waitFor(() =>
-      expect(shadow.querySelector('.alert-error')?.textContent).toBe('Error occurred loading spaces'),
+      expect(shadow.querySelector('.notifications .alert-error')?.textContent).toBe('Error occurred loading spaces'),
     );
   });
 

@@ -2,7 +2,7 @@ import { type Root, createRoot } from 'react-dom/client';
 import DiffToolPanel from './DiffToolPanel';
 import panelStyle from './diff-tool.css?inline';
 import { readPanelProps } from './panelProps';
-import { mountInShadow, resetParentsOverflowHidden } from './shadowMount';
+import { mountInShadow, resetParentsOverflowHidden, takeOverPanelRoot } from './shadowMount';
 
 /**
  * Entry point for the "Documents Comparison" Document Properties panel, built by Vite into a
@@ -27,12 +27,16 @@ export function mountDiffToolPanel(selector: string): Root | undefined {
   // dropdown popups. Must start from the host: closest() does not cross the shadow boundary.
   resetParentsOverflowHidden(host);
 
-  const container = mountInShadow(host, {
-    containerClassName: 'comparison form-wrapper sbb-ui',
-    styleTexts: [panelStyle],
+  // Wrapped so a fragment Polarion re-rendered ends the panel it replaces instead of orphaning it -
+  // see takeOverPanelRoot. Polarion never unmounts these roots itself; the one returned here is for a
+  // test (or a future dev harness), and the fragment ignores it.
+  return takeOverPanelRoot(selector, () => {
+    const container = mountInShadow(host, {
+      containerClassName: 'comparison form-wrapper sbb-ui',
+      styleTexts: [panelStyle],
+    });
+    const root = createRoot(container);
+    root.render(<DiffToolPanel props={readPanelProps(host)} />);
+    return root;
   });
-  const root = createRoot(container);
-  root.render(<DiffToolPanel props={readPanelProps(host)} />);
-  // Returned so a test (or a future dev harness) can unmount; the Polarion fragment ignores it.
-  return root;
 }

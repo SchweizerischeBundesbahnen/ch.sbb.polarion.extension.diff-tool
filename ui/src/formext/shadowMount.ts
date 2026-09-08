@@ -1,3 +1,4 @@
+import type { Root } from 'react-dom/client';
 import styleText from '@sbb-polarion/react-sbb-polarion/style.css?inline';
 
 interface ShadowMountOptions {
@@ -56,6 +57,39 @@ export function mountInShadow(host: HTMLElement, options: ShadowMountOptions = {
   }
   shadow.appendChild(container);
   return container;
+}
+
+/** The React root each panel selector currently has mounted. See {@link takeOverPanelRoot}. */
+const panelRoots = new Map<string, Root>();
+
+/**
+ * Mounts a panel's React root, tearing down whatever was mounted for the same selector before it.
+ *
+ * Nothing in Polarion ever unmounts these panels: the fragment is re-rendered every time the Document
+ * Properties pane is built - each document open, and every GWT re-render of the pane - and each render
+ * fires the bundle import again, so `mountDiffToolPanel` / `mountCopyToolPanel` are called over and
+ * over. The `Root` they return is documented as being for the tests; the fragment discards it.
+ *
+ * Left at that, every re-mount orphans a live React tree rather than ending it. {@link mountInShadow}
+ * calls `replaceChildren()` on the shadow root, which takes the container out from under React without
+ * telling it, and a fragment Polarion re-created brings a new host element whose shadow root is new
+ * anyway - so the previous root is simply never unmounted, and its effects never clean up. That is a
+ * leak with teeth, because `ToastHost` keeps its registry of mounted hosts in module scope and
+ * deregisters in an effect teardown: each re-mount would leave behind an entry and a listener that goes
+ * on calling `setState` on a detached tree, and `announce()` would walk more of them every time.
+ *
+ * So the mount path owns the teardown, which is the one thing about a panel's lifetime this code
+ * controls. The previous root is unmounted **before** `mount` runs, so its effect cleanups - the
+ * `ToastHost` deregistration included - have finished before the new tree registers anything. Calling
+ * `unmount()` on a root whose container is already detached is fine, and so is a second `unmount()` on
+ * a root a test has already ended.
+ */
+export function takeOverPanelRoot(selector: string, mount: () => Root): Root {
+  panelRoots.get(selector)?.unmount();
+  panelRoots.delete(selector);
+  const root = mount();
+  panelRoots.set(selector, root);
+  return root;
 }
 
 /**

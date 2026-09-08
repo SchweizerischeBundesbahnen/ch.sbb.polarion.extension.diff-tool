@@ -1,56 +1,171 @@
-/* Panel CSS for the two Document Properties side panels, injected INSIDE their shadow roots
-   (see shadowMount.ts) rather than linked from a Polarion-served URL. It is the subset of
-   webapp/diff-tool/css/common.css that the panels actually use - the rest of that file styles the
-   nav-topic pages and the Java-rendered widgets, which stay on the legacy stylesheet.
+/* The look of the two Document Properties side panels ("Documents Comparison" and "Documents Copy"),
+   injected INSIDE their shadow roots (see shadowMount.ts) rather than linked from a Polarion-served URL.
 
-   Deliberately absent from the copy: the global `a, td, div, li, ul, input, button { font-family }`
-   rule. Inside the shadow root the font comes from the `.sbb-ui` base rule shadowMount.ts injects,
-   which reads the shared --sbb-control-font-family token; re-declaring font-family here would pin the
-   panels to a hardcoded stack (SKILL.md rule 3). */
+   Both panels render the same kind of rows through the same components (formRows.tsx) and share the same
+   frame (PanelShell.tsx), so the rows, the columns and the toasts are one stylesheet. It is the row model
+   pdf-exporter and docx-exporter lay their export form out with, ported here on purpose: the three
+   extensions' side panels are looked at next to each other.
 
-.form-wrapper .in-progress-overlay {
-  z-index: 1000;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: white;
-  opacity: 80%;
-  display: none;
-  flex-flow: column;
-  justify-content: center;
-  align-items: center;
+   The ids the markup carries are the legacy fragment's own. They are safe to keep - and worth keeping,
+   the rules being copies - because inside a shadow root they cannot collide with anything on the page.
+
+   Rules for a control's insides are deliberately absent: a dropdown, a text field and a number spinner
+   are styled by the shared control system in react-sbb-polarion's stylesheet (scoped to `.form-wrapper`),
+   which both roots carry. What is here is where a control sits, not what it looks like. Deliberately
+   absent too is the global `a, td, div, li, ul, input, button { font-family }` rule the legacy
+   common.css carried: inside the shadow root the font comes from the `.sbb-ui` base rule shadowMount.ts
+   injects, which reads the shared --sbb-control-font-family token. */
+
+/* The toast stylesheet, bundled in rather than left to sonner.
+
+   sonner injects these rules into `document.head` when its module loads, which is all an administration
+   page needs - and nothing at all to a panel inside a shadow root, which sees no rule of the document's.
+   Vite inlines the import at build time, so each root gets the toast styles next to the panel's own. */
+@import 'sonner/dist/styles.css';
+
+/* --- The form ------------------------------------------------------------------------------------ */
+
+/* The three measurements every row is laid out against, stated once so that every checkbox, every label
+   text and every control lands on the same three x positions.
+
+   That is what the legacy panels did not do: each row was a flex line, so `Compare with another revision
+   of the same document` started where a checkbox happened to end while `Project:` started at the panel's
+   own edge, 50px to the left of it.
+
+   148px is the label column pdf-exporter and docx-exporter use, kept identical so the three panels read
+   as one form; the widest label here (`Referenced workitems:`) fits it with room for a font the browser
+   had to substitute. `position: relative` is what the progress overlay is sized against. */
+.diff-form {
+  position: relative;
+  --diff-switch-column: 15px; /* --sbb-toggle-size, the checkbox's own width */
+  --diff-label-column: 148px;
+  --diff-cell-gap: 5px;
 }
 
-.form-wrapper .in-progress-overlay.show {
-  display: flex;
+/* The sentence each panel opens with.
+   Stated rather than left to the browser, whose default is `1em` above and below - 13px of it above the
+   first line, on top of the pane's own padding, and 13px more between the sentence and the row under it.
+   Nothing above (the pane's padding is the gap) and one row's worth below. */
+.diff-form p {
+  margin: 0 0 8px;
 }
 
-.property-wrapper {
-  margin-top: 8px;
-  padding-right: 10px;
-  display: flex;
-  align-items: center;
-  column-gap: 5px;
+/* A group separated from the one above it by a hairline. The legacy panels ran every row together in one
+   undifferentiated column; this is what tells the target selection from the revision from the pairing. */
+.diff-form .group-start {
+  border-top: 1px solid #eee;
+  margin-top: 15px;
+  padding-top: 5px;
 }
 
-.property-wrapper.hide,
-.buttons-wrapper.hide {
+/* --- Sections ------------------------------------------------------------------------------------ */
+
+/* A group of rows, one under another.
+
+   One column at every width, unlike the exporters' `.pdf-section` / `.docx-section`, which become two
+   above 620px of form width: their form is also an export dialog, which has the room for it. These
+   panels are only ever in the ~360px properties pane, so a container query here would describe a layout
+   that can never be reached.
+
+   Rows keep their own height rather than stretching, so a row whose value wraps onto a second line does
+   not stretch the label beside it. */
+.diff-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+/* A whole group a mode switch takes away - the target selection, when the panel is comparing one document
+   with another revision of itself. On the section rather than its rows, so the hairline above them goes
+   with them instead of being left over an empty group. */
+.diff-section.hide {
   display: none !important;
 }
 
-.property-wrapper label {
-  margin-top: 2px;
-  margin-bottom: 3px;
+/* --- Rows ---------------------------------------------------------------------------------------- */
+
+/* One row: the checkbox gutter, the label, the control.
+
+   A row without a checkbox leaves the gutter empty, so its label still starts where every other label
+   starts. A row without a control lets its label take the rest of the line, which is what the long switch
+   texts need. `min-height` keeps such a row as tall as a row with a control, so the vertical rhythm does
+   not change from one to the next. */
+.property-wrapper {
+  display: grid;
+  grid-template-columns: var(--diff-switch-column) var(--diff-label-column) minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--diff-cell-gap);
+  margin-top: 8px;
+  min-height: var(--sbb-control-height, 23px);
 }
 
-.property-wrapper label.fixed-width {
-  display: inline-block;
+.property-wrapper.hide {
+  display: none !important;
 }
 
-.property-wrapper label.fixed-width.w-1 {
-  width: 140px;
+.property-wrapper > input[type='checkbox'] {
+  grid-column: 1;
+  justify-self: center;
+  /* The shared control system leaves 4px on the right of a checkbox, for a label that follows it in the
+     same box. Here the gutter is the gap. */
+  margin: 0;
 }
 
+.property-wrapper > label {
+  grid-column: 2;
+}
+
+.property-wrapper > label:last-child {
+  grid-column: 2 / -1;
+}
+
+/* The cell a control sits in. Always an element of its own, never the control itself: a SearchableSelect
+   renders the native `<select>` it upgrades *and* the visible `.searchable-dropdown` next to it, and two
+   grid items in one track would place the second one on a row of its own.
+
+   It takes whatever the label leaves rather than a width of its own - the exporters pin their controls to
+   130px, which a project name or a document title does not fit - and never goes below 200px, at which
+   point the row is wider than the pane and the pane scrolls. */
+.property-wrapper > .field {
+  grid-column: 3;
+  justify-self: stretch;
+  min-width: 200px;
+}
+
+/* A cell that replaces the label rather than following it: what a switch or a radio pair above it
+   reveals, indented to the label column so it reads as belonging to that row. */
+.property-wrapper > .field.field-wide {
+  grid-column: 2 / -1;
+}
+
+/* A row that belongs to the row above it. Full width, so the row it depends on keeps its own line. */
+.diff-section > .sub-row {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+/* Named options side by side, wrapping where the pane cannot hold both. Each radio is inside its own
+   label (see formRows.tsx), so this is a row of boxes with a gap between them rather than a run of
+   labels each carrying a margin - which is what the legacy `#select-revision-radios label` did, and so
+   also to the last of the group. */
+.property-wrapper .option-pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 16px;
+  row-gap: 4px;
+}
+
+.property-wrapper .option-pair label {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* --- Controls ------------------------------------------------------------------------------------ */
+
+/* The baseline every control of these panels falls back on. What a control looks like otherwise is owned
+   by the shared control system in react-sbb-polarion's stylesheet (scoped to `.form-wrapper`), which both
+   roots carry - these rules only state what it does not. */
 .property-wrapper select,
 .property-wrapper input {
   font-weight: 600;
@@ -67,35 +182,55 @@
   padding: 2px 2rem 4px 0.4rem;
 }
 
-#select-revision-radios {
-  display: flex;
-  align-items: center;
+/* Every control in a cell fills it, the cell being what the row sized. The dropdown needs `!important`
+   because SearchableDropdown copies an inline width off the `<select>` it wraps; the number spinner is a
+   wrapper around its input, so the width has to be set on the wrapper. */
+.property-wrapper > .field .searchable-dropdown,
+.property-wrapper > .field .sbb-number,
+.property-wrapper > .field > input[type='text'] {
+  width: 100% !important;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
-/* space between the two radio groups (radio -> label spacing comes from the shared radios.css) */
-#select-revision-radios label,
-#work-items-filter-radios label {
-  margin-right: 16px;
+/* Ensure the dropdown popup is combobox-width + 35px here too (high specificity so a Polarion .options
+   rule in the page context cannot flatten it back to the trigger width). */
+.property-wrapper .searchable-dropdown .options {
+  min-width: calc(100% + 35px);
 }
 
-/* The revision input is wrapped in the shared .sbb-number spinner, so the width has to be set on the
-   wrapper - the input itself is stretched to fill it. */
-#select-revision-panel .sbb-number {
-  display: block;
+/* --- The progress overlay ------------------------------------------------------------------------ */
+
+/* What covers the form while a list is loading or a document is being created. Sized against `.diff-form`
+   rather than `.form-wrapper`, which RSP does not position - so this used to be sized from the initial
+   containing block instead of from the panel.
+
+   A 48px spinner above its message, centered: a button-sized one alone reads as a stuck glyph rather than
+   as work in progress. */
+.diff-form .in-progress-overlay {
+  z-index: 1000;
+  position: absolute;
   width: 100%;
+  height: 100%;
+  background: white;
+  opacity: 80%;
+  display: none;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  row-gap: 8px;
 }
 
-#revision-enter-manually,
-#baseline-checkbox {
-  margin-left: 0;
+.diff-form .in-progress-overlay.show {
+  display: flex;
 }
 
-/* diff-tool comboboxes are wider than the generic default. !important so the width always wins, even
-   though SearchableDropdown copies an inline width off the <select> it wraps. */
-.searchable-dropdown {
-  width: 240px !important;
-  flex-shrink: 0;
+.diff-form .in-progress-overlay .sbb-spinner {
+  width: 48px;
+  height: 48px;
 }
+
+/* --- Buttons ------------------------------------------------------------------------------------- */
 
 .buttons-wrapper {
   margin: 10px 0;
@@ -107,23 +242,68 @@
   margin-left: 5px;
 }
 
-.buttons-wrapper button img {
+/* The glyph each button leads with: the comparison panel's own SVG, the copy panel's shared icon span.
+   The button itself is an `inline-flex` box that centers its children (RSP's `.buttons-wrapper button`),
+   so all either of them needs is the gap after it. */
+.buttons-wrapper button > img,
+.buttons-wrapper button > span[class^='sbb-icon-'] {
   margin-right: 6px;
-  vertical-align: bottom;
 }
 
-.alert {
-  font-weight: bold;
+/* --- Toasts -------------------------------------------------------------------------------------- */
+
+/* Twice the 356px sonner sizes a toast at, capped to the window.
+
+   What a panel reports is not "Saved.": a failed duplication carries the server's own message, which at
+   356px wraps over four or five lines in a box the eye then has to read downwards. Twice that keeps most
+   of them to one or two lines.
+
+   Here rather than on the `Toaster`, and with `!important`, for one reason each. Here, because this
+   stylesheet is injected into the two panels' shadow roots and nowhere else: an administration page of
+   this extension keeps sonner's own width, where a 712px box at the top of the page would cover the
+   controls under it. And `!important`, because sonner writes `--width` as an inline style on its host,
+   which an author rule cannot outrank otherwise. Below a 600px window sonner ignores the variable anyway
+   and goes full width with its own mobile offsets. */
+[data-sonner-toaster][dir] {
+  --width: min(712px, calc(100vw - 32px)) !important;
+
+  /* The close button in the top RIGHT corner, which is where a reader looks for it. sonner puts it top
+     left for a left-to-right document (top right being where it puts it for a right-to-left one),
+     through these three variables and nothing else - so these are sonner's own right-to-left values,
+     mirrored back. `[dir]` rather than a bare attribute selector because that is what sonner's own
+     declaration is scoped to (`[data-sonner-toaster][dir='ltr']`): same specificity, and later here. */
+  --toast-close-button-start: unset;
+  --toast-close-button-end: 0;
+  --toast-close-button-transform: translate(35%, -35%);
 }
 
-.alert-error {
-  color: red;
+/* --- Alerts -------------------------------------------------------------------------------------- */
+
+/* What a panel says about a state rather than an event: a list that could not be loaded, and the document
+   a copy created. Everything about an operation that ran is a toast (see reporting.ts).
+
+   The colours, the border and the glyph come from the shared `.notifications .alert-*` rules in
+   react-sbb-polarion's stylesheet - which is what replaces the legacy plain red / orange / green bold
+   text. Only the width is restated: that shared rule leaves 32px for a page container's padding, which a
+   panel in the properties pane has already had taken off it. */
+.notifications {
+  padding: 10px 0 0;
 }
 
-.alert-warning {
-  color: orange;
+.notifications .alert {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 8px;
+  padding: 6px 12px;
+  border-radius: 3px;
+  white-space: pre-line;
 }
 
-.alert-success {
-  color: green;
+.notifications .alert:last-child {
+  margin-bottom: 0;
+}
+
+/* The link to the document a copy created, which is the one thing in an alert here that is not its text. */
+.notifications .alert a {
+  font-weight: normal;
 }
