@@ -4,6 +4,7 @@ import AppContext from "@/components/AppContext";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {usePathname, useRouter, useSearchParams} from "@/router/navigation";
 import useRemote from "@/services/useRemote";
+import {responseError} from "@/services/responseError";
 import usePdf from "@/services/usePdf";
 import * as DiffTypes from "@/DiffTypes";
 import Modal from "@/components/Modal";
@@ -35,16 +36,15 @@ export default function ControlPane({diff_type}) {
         method: "GET",
         url: `/settings/diff/names?scope=project/${projectId}/`,
         contentType: "text/html"
-      }).then(response => {
-        if (response.ok) {
-          return response.text();
-        } else {
-          throw response.json();
+      }).then(async response => {
+        if (!response.ok) {
+          throw await responseError(response);
         }
+        return response.text();
       }).then(data => {
         setConfigurations(JSON.parse(data).map(setting => setting.name));
-      }).catch(errorResponse => {
-        Promise.resolve(errorResponse).then((error) => console.log("Error occurred loading setting names" + (error && error.message ? ": " + error.message : "")));
+      }).catch(error => {
+        console.log("Error occurred loading setting names" + (error && error.message ? ": " + error.message : ""));
       });
     }
   }, [projectId]);
@@ -128,16 +128,15 @@ export default function ControlPane({diff_type}) {
       url: `/conversion/html-to-pdf?orientation=${orientation}&paperSize=${paperSize}`,
       body: `<html lang='en'>${body}</html>`,
       contentType: "text/html"
-    }).then(response => {
+    }).then(async response => {
       if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
         alert("Your session has expired. Please refresh the page to log in. Note that any unsaved changes will be lost.");
         return Promise.resolve();
       }
-      if (response.ok) {
-        return response.blob();
-      } else {
-        throw response.json();
+      if (!response.ok) {
+        throw await responseError(response);
       }
+      return response.blob();
     }).then(data => {
       if (!data) return;
       const objectURL = (window.URL ? window.URL : window.webkitURL).createObjectURL(data);
@@ -149,8 +148,8 @@ export default function ControlPane({diff_type}) {
       anchorElement.remove();
       setTimeout(() => URL.revokeObjectURL(objectURL), 100);
     })
-    .catch(errorResponse => {
-      Promise.resolve(errorResponse).then((error) => alert("Error occurred converting diff data to PDF" + (error && error.message ? ": " + error.message : "")));
+    .catch(error => {
+      alert("Error occurred converting diff data to PDF" + (error && error.message ? ": " + error.message : ""));
     }).finally(() => {
       setExportInProgress(false);
     });

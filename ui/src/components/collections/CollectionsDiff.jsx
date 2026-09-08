@@ -6,6 +6,7 @@ import {faSquarePlus} from "@fortawesome/free-solid-svg-icons";
 import Loading from "@/components/loading/Loading";
 import AppAlert from "@/components/AppAlert";
 import useDiffService from "@/services/useDiffService";
+import {responseError} from "@/services/responseError";
 import DocumentsDiff from "@/components/documents/DocumentsDiff";
 import DocumentHeader from "@/components/documents/DocumentHeader";
 import {SearchableSelect} from "@sbb-polarion/react-sbb-polarion";
@@ -64,16 +65,15 @@ export default function CollectionsDiff() {
       method: "GET",
       url: `/settings/diff/names?scope=project/${searchParams.get("targetProjectId")}/`,
       contentType: "text/html"
-    }).then(response => {
-      if (response.ok) {
-        return response.text();
-      } else {
-        throw response.json();
+    }).then(async response => {
+      if (!response.ok) {
+        throw await responseError(response);
       }
+      return response.text();
     }).then(data => {
       setTargetConfigurations(JSON.parse(data).map(setting => setting.name));
-    }).catch(errorResponse => {
-      Promise.resolve(errorResponse).then((error) => alert("Error occurred loading setting names of target project" + (error && error.message ? ": " + error.message : "")));
+    }).catch(error => {
+      alert("Error occurred loading setting names of target project" + (error && error.message ? ": " + error.message : ""));
     });
   }, []);
 

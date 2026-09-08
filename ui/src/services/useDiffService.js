@@ -1,4 +1,5 @@
 import useRemote from "@/services/useRemote";
+import {responseError} from "@/services/responseError";
 import {CONTENT_ABOVE, CONTENT_BELOW} from "@/components/documents/ContentAnchorsDiff";
 
 export default function useDiffService() {
@@ -32,11 +33,9 @@ export default function useDiffService() {
             loadingContext.pairsLoadingFinished(getFilteredPairs(data.pairedWorkItems.slice(), searchParams));
             resolve(data);
           })
-          .catch(errorResponse => {
-            Promise.resolve(errorResponse).then((error) => {
-              loadingContext.pairsLoadingFinishedWithError(error && error.message);
-              reject(error);
-            });
+          .catch(error => {
+            loadingContext.pairsLoadingFinishedWithError(error && error.message);
+            reject(error);
           });
     });
   };
@@ -66,11 +65,9 @@ export default function useDiffService() {
             loadingContext.fieldsDiffLoadingFinished();
             resolve(data);
           })
-          .catch(errorResponse => {
-            Promise.resolve(errorResponse).then((error) => {
-              loadingContext.fieldsDiffLoadingFinishedWithError(error && error.message);
-              reject(error);
-            });
+          .catch(error => {
+            loadingContext.fieldsDiffLoadingFinishedWithError(error && error.message);
+            reject(error);
           });
     });
   };
@@ -102,11 +99,9 @@ export default function useDiffService() {
             loadingContext.contentDiffLoadingFinished();
             resolve(data);
           })
-          .catch(errorResponse => {
-            Promise.resolve(errorResponse).then((error) => {
-              loadingContext.contentDiffLoadingFinishedWithError(error && error.message);
-              reject(error);
-            });
+          .catch(error => {
+            loadingContext.contentDiffLoadingFinishedWithError(error && error.message);
+            reject(error);
           });
     });
   };
@@ -167,11 +162,9 @@ export default function useDiffService() {
             loadingContext.pairsLoadingFinished(data.pairedWorkItems.slice());
             resolve(data);
           })
-          .catch(errorResponse => {
-            Promise.resolve(errorResponse).then((error) => {
-              loadingContext.pairsLoadingFinishedWithError(error && error.message);
-              reject(error);
-            });
+          .catch(error => {
+            loadingContext.pairsLoadingFinishedWithError(error && error.message);
+            reject(error);
           });
     });
   };
@@ -196,8 +189,8 @@ export default function useDiffService() {
           .then(data =>  {
             resolve(data);
           })
-          .catch(errorResponse => {
-            handleErrorResponse(errorResponse, reject);
+          .catch(error => {
+            handleErrorResponse(error, reject);
           });
     });
   };
@@ -225,8 +218,8 @@ export default function useDiffService() {
           .then((data) =>  {
             resolve(data);
           })
-          .catch(errorResponse => {
-            handleErrorResponse(errorResponse, reject);
+          .catch(error => {
+            handleErrorResponse(error, reject);
           });
     });
   };
@@ -274,8 +267,8 @@ export default function useDiffService() {
             loadingContext.reload(mergingContext.getSelectedIndexes());
             resolve(data);
           })
-          .catch(errorResponse => {
-            handleErrorResponse(errorResponse, reject);
+          .catch(error => {
+            handleErrorResponse(error, reject);
           });
     });
   };
@@ -304,8 +297,8 @@ export default function useDiffService() {
           .then((data) =>  {
             resolve(data);
           })
-          .catch(errorResponse => {
-            handleErrorResponse(errorResponse, reject);
+          .catch(error => {
+            handleErrorResponse(error, reject);
           });
     });
   };
@@ -355,8 +348,8 @@ export default function useDiffService() {
           .then((data) =>  {
             resolve(data);
           })
-          .catch(errorResponse => {
-            handleErrorResponse(errorResponse, reject);
+          .catch(error => {
+            handleErrorResponse(error, reject);
           });
     });
   };
@@ -391,8 +384,8 @@ export default function useDiffService() {
             loadingContext.reload(mergingContext.getSelectedIndexes());
             resolve(data);
           })
-          .catch(errorResponse => {
-            handleErrorResponse(errorResponse, reject);
+          .catch(error => {
+            handleErrorResponse(error, reject);
           });
     });
   };
@@ -455,18 +448,15 @@ export default function useDiffService() {
     return handleResponse(response);
   };
 
-  const handleResponse = (response) => {
-    if (response.ok) {
-      return response.json();
-    } else {
-      throw response.json();
+  const handleResponse = async (response) => {
+    if (!response.ok) {
+      throw await responseError(response);
     }
+    return response.json();
   };
 
-  const handleErrorResponse = (errorResponse, reject) => {
-    Promise.resolve(errorResponse).then((error) => {
-      return reject(error && error.message);
-    });
+  const handleErrorResponse = (error, reject) => {
+    return reject(error && error.message);
   };
 
   return {
