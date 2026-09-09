@@ -108,6 +108,7 @@ public class BaseFormExtension implements IFormExtension {
         List<IdName> projects = polarionService.getProjects().stream().map(BaseFormExtension::toIdName).toList();
 
         List<ILinkRoleOpt> linkRoles = new ArrayList<>(polarionService.getLinkRoles(module.getProjectId()));
+        removeStructureLinkRole(linkRoles, module);
         if (allowEmptyLinkRole) {
             linkRoles.add(0, null);
         }
@@ -122,6 +123,27 @@ public class BaseFormExtension implements IFormExtension {
                 linkRoles.stream().map(BaseFormExtension::toIdName).toList(),
                 configurationNames(module.getProjectId()),
                 handleReferencesOptions());
+    }
+
+    /**
+     * Drops the document's structure link role, the role Polarion reserves for the parent/child hierarchy
+     * of the document itself.
+     * <p>
+     * Links in that role are not stored on the work item. Polarion strips them when it writes a work item
+     * that belongs to a document, and regenerates the single one the document tree implies when it reads
+     * one back (see {@code removeModuleStructureLinks} / {@code createModuleStructureLinks} in Polarion's
+     * {@code XMLStructuredDocument}). Adding such a link reports success and leaves nothing behind, so
+     * copy-tool created its documents with no link to the source, and diff-tool would pair nothing.
+     * Polarion's own "paste with link role" dropdown filters the role out for the same reason.
+     * <p>
+     * The role belongs to the document, not to the project, which is why this filters here rather than in
+     * {@link PolarionService#getLinkRoles(String)}.
+     */
+    private static void removeStructureLinkRole(@NotNull List<ILinkRoleOpt> linkRoles, @NotNull IModule module) {
+        ILinkRoleOpt structureLinkRole = module.getStructureLinkRole();
+        if (structureLinkRole != null) {
+            linkRoles.removeIf(linkRole -> Objects.equals(linkRole.getId(), structureLinkRole.getId()));
+        }
     }
 
     /**

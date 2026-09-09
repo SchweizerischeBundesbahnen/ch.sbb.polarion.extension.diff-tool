@@ -88,6 +88,7 @@ class BaseFormExtensionTest {
         lenient().when(module.getModuleFolder()).thenReturn("spaceId");
         lenient().when(module.getModuleName()).thenReturn("documentName");
         lenient().when(module.getTitleOrName()).thenReturn("Document Title");
+        lenient().when(module.getStructureLinkRole()).thenReturn(null);
     }
 
     @AfterEach
@@ -139,6 +140,34 @@ class BaseFormExtensionTest {
         assertEquals(
                 List.of(new BaseFormExtension.IdName("", "none"),
                         new BaseFormExtension.IdName("id1", "name1 / oppositeName1")),
+                new TestFormExtension(true).buildProps(module).linkRoles());
+    }
+
+    /**
+     * Polarion strips a link in the document's structure link role when it saves a document work item and
+     * rebuilds it from the document tree on read, so a copy made with that role silently loses the link to
+     * its source and a comparison pairs nothing. Neither panel offers it.
+     */
+    @Test
+    void testStructureLinkRoleIsNotOffered() {
+        ILinkRoleOpt structureLinkRole = mockLinkRoleOpt("parent", "parent", "child");
+        linkRoles = List.of(structureLinkRole, mockLinkRoleOpt("relates_to", "relates to", "relates to"));
+        when(module.getStructureLinkRole()).thenReturn(structureLinkRole);
+
+        assertEquals(
+                List.of(new BaseFormExtension.IdName("relates_to", "relates to / relates to")),
+                new TestFormExtension(false).buildProps(module).linkRoles());
+    }
+
+    @Test
+    void testStructureLinkRoleIsNotOfferedButTheEmptyOneStillIs() {
+        ILinkRoleOpt structureLinkRole = mockLinkRoleOpt("parent", "parent", "child");
+        linkRoles = List.of(structureLinkRole);
+        when(module.getStructureLinkRole()).thenReturn(structureLinkRole);
+
+        // Filtering happens before the synthetic entry is prepended, so copy-tool keeps its "none".
+        assertEquals(
+                List.of(new BaseFormExtension.IdName("", "none")),
                 new TestFormExtension(true).buildProps(module).linkRoles());
     }
 
@@ -283,9 +312,9 @@ class BaseFormExtensionTest {
 
     private ILinkRoleOpt mockLinkRoleOpt(String id, String name, String oppositeName) {
         ILinkRoleOpt linkRoleOpt = mock(ILinkRoleOpt.class);
-        when(linkRoleOpt.getId()).thenReturn(id);
-        when(linkRoleOpt.getName()).thenReturn(name);
-        when(linkRoleOpt.getOppositeName()).thenReturn(oppositeName);
+        lenient().when(linkRoleOpt.getId()).thenReturn(id);
+        lenient().when(linkRoleOpt.getName()).thenReturn(name);
+        lenient().when(linkRoleOpt.getOppositeName()).thenReturn(oppositeName);
         return linkRoleOpt;
     }
 
