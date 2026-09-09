@@ -138,6 +138,16 @@ test.describe("page of diffing documents' WorkItems", () => {
       return request.url().includes('/conversion/html-to-pdf');
     });
 
+    // This suite mocks no conversion endpoint, so the export always fails and ControlPane's catch opens a
+    // native alert. Arm the handler before the click and await the alert below: left to fire on its own it
+    // lands after the test body, where Playwright's auto-dismiss races the page teardown and reports
+    // "Protocol error (Page.handleJavaScriptDialog): ... session closed".
+    const alertMessage = new Promise(resolve => page.once('dialog', async dialog => {
+      const message = dialog.message();
+      await dialog.dismiss();
+      resolve(message);
+    }));
+
     const exportButton = page.getByTestId("export-button");
     await expect(exportButton).toBeVisible();
     await expect(exportButton).toBeEnabled();
@@ -146,6 +156,8 @@ test.describe("page of diffing documents' WorkItems", () => {
     const exportRequest = await exportRequestPromise;
     expect(exportRequest.method()).toBe('POST');
     expect(exportRequest.url()).toContain('/conversion/html-to-pdf?orientation=portrait&paperSize=A3');
+
+    expect(await alertMessage).toContain('Error occurred converting diff data to PDF');
   });
 
   test('expand/collapse', async ({ page }) => {
