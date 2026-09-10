@@ -22,12 +22,28 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationResultType.MODIFIED;
+import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor.ContentPosition.ABOVE;
+import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor.ContentPosition.BELOW;
 
 class DocumentsContentHandler {
 
     private static final Set<String> HTML_HEADER_TAGS = new HashSet<>(Arrays.asList("h1", "h2", "h3", "h4", "h5", "h6"));
+
+    /**
+     * The element a work item takes on a document page, eg.
+     * {@code <div id="polarion_wiki macro name=module-workitem;params=id=EL-1|layout=0"></div>}, whose ID is
+     * followed either by the closing quote of the attribute or by the next parameter.
+     * <p>
+     * The element carries no markup, but it does carry text: Polarion writes the work item ID into a snippet it
+     * builds itself (see {@code ModulePageModifier.createWorkItemPart}), while its editor writes the element empty.
+     */
+    private static final String ANCHOR_REGEX = "<(?<tag>[a-zA-Z][a-zA-Z0-9]*)\\s[^>]+params=id=%s[\"|][^>]*>[^<]*</\\k<tag>>";
+
+
 
     public Map<String, DocumentContentAnchor> parse(@NotNull String documentContent) {
         DocumentContentAnchor lastAnchor = null;
@@ -108,6 +124,135 @@ class DocumentsContentHandler {
 
     private Element preProcessSourceDocument(Element body) {
         return CommentUtils.removeComments(body);
+    }
+
+    /**
+     * Copies into the target document the text which is placed between the work items of a merged chapter, i.e. the
+     * content of the source document page which doesn't belong to any work item.
+     * <p>
+     * The content is spliced into the page around the anchors of the merged work items, the way
+     * {@code MergeService.modifyHeaderTag} rewrites a heading tag: every other byte of the page is left as it is.
+     * A document page is written by Polarion's own editor and read back by its own parser, and this method has no
+     * business normalizing the parts of it which the merge does not touch.
+     *
+     * The markers which anchor a comment to a piece of that text are pointed at the comments copied along with it:
+     * a marker refers to a comment of the document it was written in, so it has to name the copy of that comment.
+     *
+     * @param sourceContent      home page content of the source document, as it was before the merge started
+     * @param sourceWorkItemIds  IDs of the merged work items, in document order
+     * @param idMapping          maps the ID of a copied work item to the ID of its copy, empty for a moved item
+     * @param commentIdMapping   maps the ID of a copied comment to the ID of its copy
+     * @return whether the content of the target document was modified
+     */
+    public boolean copyFreeContent(@NotNull String sourceContent, @NotNull IModule targetModule, @NotNull List<String> sourceWorkItemIds,
+                                   @NotNull Map<String, String> idMapping, @NotNull Map<String, String> commentIdMapping) {
+        Map<String, DocumentContentAnchor> sourceAnchors = parse(sourceContent);
+        String targetContent = targetModule.getHomePageContent() == null ? "" : targetModule.getHomePageContent().getContent();
+
+        String newContent = targetContent;
+        for (String sourceWorkItemId : sourceWorkItemIds) {
+            DocumentContentAnchor anchor = sourceAnchors.get(sourceWorkItemId);
+            if (anchor == null) {
+                continue;
+            }
+            String targetWorkItemId = idMapping.getOrDefault(sourceWorkItemId, sourceWorkItemId);
+            newContent = insertAtAnchor(newContent, targetWorkItemId, contentToInsert(anchor.getContentAbove(), commentIdMapping), ABOVE);
+            newContent = insertAtAnchor(newContent, targetWorkItemId, contentToInsert(anchor.getContentBelow(), commentIdMapping), BELOW);
+        }
+
+        if (newContent.equals(targetContent)) {
+            return false;
+        }
+        targetModule.setHomePageContent(Text.html(newContent));
+        return true;
+    }
+
+    /**
+     * Puts the work items of a merge directly under the chapter they were merged into, in the order they were
+     * merged, leaving everything the chapter already had below them.
+     * <p>
+     * Polarion places a work item on the page at the end of the parsed state of the item it is added to, and that
+     * state covers the text which follows that item. A chapter which already holds text and work items therefore
+     * decides where a merged item lands, and merged items end up interleaved with what was already there. Their
+     * order among themselves comes from the structure; where the whole block sits is fixed here.
+     *
+     * @return whether the content of the target document was modified
+     */
+    public boolean moveAnchorsBelow(@NotNull IModule targetModule, @NotNull List<String> workItemIds, @NotNull String belowWorkItemId) {
+        String documentContent = targetModule.getHomePageContent() == null ? "" : targetModule.getHomePageContent().getContent();
+
+        StringBuilder mergedBlock = new StringBuilder();
+        String remainingContent = documentContent;
+        for (String workItemId : workItemIds) {
+            Matcher anchorMatcher = Pattern.compile(ANCHOR_REGEX.formatted(Pattern.quote(workItemId))).matcher(remainingContent);
+            if (!anchorMatcher.find()) {
+                continue;
+            }
+            mergedBlock.append(anchorMatcher.group());
+            remainingContent = remainingContent.substring(0, anchorMatcher.start()) + remainingContent.substring(anchorMatcher.end());
+        }
+
+        if (mergedBlock.isEmpty()) {
+            return false;
+        }
+        String newContent = insertAtAnchor(remainingContent, belowWorkItemId, mergedBlock.toString(), BELOW);
+        if (newContent.equals(documentContent)) {
+            return false;
+        }
+        targetModule.setHomePageContent(Text.html(newContent));
+        return true;
+    }
+
+    /**
+     * IDs of the comments which are written on the text between the given work items, i.e. the comments a merge of
+     * these work items takes along with that text.
+     */
+    public @NotNull Set<String> freeContentCommentIds(@NotNull String sourceContent, @NotNull List<String> sourceWorkItemIds) {
+        Map<String, DocumentContentAnchor> sourceAnchors = parse(sourceContent);
+        Set<String> commentIds = new HashSet<>();
+        for (String sourceWorkItemId : sourceWorkItemIds) {
+            DocumentContentAnchor anchor = sourceAnchors.get(sourceWorkItemId);
+            if (anchor != null) {
+                commentIds.addAll(CommentUtils.extractCommentIds(anchor.getContentAbove()));
+                commentIds.addAll(CommentUtils.extractCommentIds(anchor.getContentBelow()));
+            }
+        }
+        return commentIds;
+    }
+
+    /**
+     * The text to put into the target document: the text of the source document with its comment markers pointed at
+     * the comments which were copied along with it. The markers are rewritten in the text itself, where the comment
+     * they belong to is known - matching them into a whole page by their surroundings would not find them, because
+     * the text around them names the work items of the source document.
+     */
+    @VisibleForTesting
+    @Nullable
+    String contentToInsert(@Nullable String content, @NotNull Map<String, String> commentIdMapping) {
+        if (content == null || content.isBlank()) {
+            return null;
+        }
+        return CommentUtils.remapComments(content, commentIdMapping);
+    }
+
+    /**
+     * Puts content right before or right after the anchor of a certain work item. Content whose anchor is not on the
+     * page is not placed anywhere: there is nothing it could be anchored to, and a page is never rewritten blindly.
+     */
+    @VisibleForTesting
+    @NotNull
+    String insertAtAnchor(@NotNull String documentContent, @NotNull String workItemId, @Nullable String contentToInsert,
+                          @NotNull DocumentContentAnchor.ContentPosition position) {
+        if (contentToInsert == null) {
+            return documentContent;
+        }
+        Matcher anchorMatcher = Pattern.compile(ANCHOR_REGEX.formatted(Pattern.quote(workItemId))).matcher(documentContent);
+        if (!anchorMatcher.find()) {
+            return documentContent;
+        }
+        String anchorElement = anchorMatcher.group();
+        String replacement = position == ABOVE ? contentToInsert + anchorElement : anchorElement + contentToInsert;
+        return new StringBuilder(documentContent).replace(anchorMatcher.start(), anchorMatcher.end(), replacement).toString();
     }
 
     @VisibleForTesting

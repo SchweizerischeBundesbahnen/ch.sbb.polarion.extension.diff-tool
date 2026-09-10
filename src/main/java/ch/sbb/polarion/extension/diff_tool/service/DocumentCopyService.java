@@ -44,10 +44,12 @@ public class DocumentCopyService {
 
     private final PolarionService polarionService;
     private final MergeService mergeService;
+    private final CommentsCopier commentsCopier;
 
     public DocumentCopyService(PolarionService polarionService, MergeService mergeService) {
         this.polarionService = polarionService;
         this.mergeService = mergeService;
+        this.commentsCopier = new CommentsCopier(polarionService);
     }
 
     /**
@@ -184,59 +186,11 @@ public class DocumentCopyService {
 
     @VisibleForTesting
     void copyModuleComments(@NotNull IModule sourceModule, @NotNull IModule targetModule) {
-        IPObjectList<IModuleComment> sourceRootComments = sourceModule.getRootComments(true);
-        if (sourceRootComments.isEmpty()) {
+        Map<String, String> oldToNewCommentIdMap = commentsCopier.copyComments(sourceModule, targetModule, comment -> true, targetModule.getAuthor());
+        if (oldToNewCommentIdMap.isEmpty()) {
             return;
         }
-
-        Map<String, String> oldToNewCommentIdMap = new LinkedHashMap<>();
-
-        for (IModuleComment sourceRootComment : sourceRootComments) {
-            IModuleComment newRootComment = targetModule.createComment(sourceRootComment.getText());
-            copyCommentMetadata(sourceRootComment, newRootComment, targetModule);
-            newRootComment.save();
-            oldToNewCommentIdMap.put(sourceRootComment.getId(), newRootComment.getId());
-            copyChildComments(sourceRootComment, newRootComment, targetModule, oldToNewCommentIdMap);
-            if (sourceRootComment.isResolvedComment()) {
-                // The resolved flag can be set only on a root comment.
-                // Set it only after all child comments have been created, which requires an additional save.
-                newRootComment.setResolvedComment(true);
-                newRootComment.save();
-            }
-        }
-
         copyCommentMarkers(sourceModule, targetModule, oldToNewCommentIdMap);
-    }
-
-    private void copyChildComments(@NotNull IModuleComment sourceParent, @NotNull IModuleComment targetParent, @NotNull IModule targetModule,
-                                   @NotNull Map<String, String> oldToNewCommentIdMap) {
-        IPObjectList<IModuleComment> children = sourceParent.getChildComments();
-        for (IModuleComment sourceChild : children) {
-            IModuleComment newChild = targetParent.createChildComment(sourceChild.getText());
-            copyCommentMetadata(sourceChild, newChild, targetModule);
-            newChild.save();
-            oldToNewCommentIdMap.put(sourceChild.getId(), newChild.getId());
-            copyChildComments(sourceChild, newChild, targetModule, oldToNewCommentIdMap);
-        }
-    }
-
-    private void copyCommentMetadata(@NotNull IModuleComment source, @NotNull IModuleComment target, @NotNull IModule targetModule) {
-        target.setValue(ICommentBase.KEY_CREATED, source.getCreated());
-        try {
-            polarionService.getSecurityService().doAsSystemUser((java.security.PrivilegedAction<Void>) () -> {
-                target.setValue(ICommentBase.KEY_AUTHOR, source.getAuthor());
-                return null;
-            });
-        } catch (Exception e) {
-            String authorName = source.getAuthor() != null ? source.getAuthor().getName() : "<null>";
-            log.warn(String.format("Could not assign source comment author [%s] in target module [%s]: %s", authorName, targetModule.getModuleLocation(), e.getMessage()));
-            try {
-                target.setValue(ICommentBase.KEY_AUTHOR, targetModule.getAuthor());
-                log.warn("Fallback: target module author assigned as a comment author: " + e.getMessage());
-            } catch (Exception ex) {
-                log.warn("Could not assign target module author as a comment author (as a fallback): " + ex.getMessage());
-            }
-        }
     }
 
     private void copyCommentMarkers(@NotNull IModule sourceModule, @NotNull IModule targetModule,

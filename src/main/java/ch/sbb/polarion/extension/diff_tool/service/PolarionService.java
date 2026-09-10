@@ -83,6 +83,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -529,7 +530,19 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         if (Objects.equals(from.getProjectId(), to.getProjectId())) {
             return html; // do not modify links when copying data between same project work items
         }
+        return rewriteWorkItemLinks(from, html, workItem -> getPairedWorkItems(workItem, to.getProjectId(), linkRole).stream().findFirst().orElse(null));
+    }
 
+    /**
+     * Rewrites work item links of a rich text field, replacing every link whose target has a counterpart in the target
+     * project with a link to that counterpart. Links without a counterpart keep pointing to the original work item and
+     * get an explicit 'data-scope', otherwise they would be broken in the target project.
+     *
+     * @param from                work item the rich text belongs to, its project is the default scope of a link without an explicit one
+     * @param counterpartResolver resolves the counterpart of a linked work item, returning {@code null} if there is none
+     */
+    @NotNull
+    public String rewriteWorkItemLinks(@NotNull IWorkItem from, @NotNull String html, @NotNull UnaryOperator<IWorkItem> counterpartResolver) {
         Pattern pattern = Pattern.compile(LinksHandler.LINK_REGEX);
         Matcher matcher = pattern.matcher(html);
 
@@ -546,7 +559,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                 logger.error("Cannot get work item %s/%s/%s".formatted(projectId, workItemId, revision), e);
                 continue;
             }
-            IWorkItem pairedWorkItem = getPairedWorkItems(workItem, to.getProjectId(), linkRole).stream().findFirst().orElse(null);
+            IWorkItem pairedWorkItem = counterpartResolver.apply(workItem);
             if (pairedWorkItem != null) {
                 projectId = ""; // when we place link to the wi from target project there's no need to set 'data-scope' explicitly
                 workItemId = pairedWorkItem.getId();

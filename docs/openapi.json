@@ -492,6 +492,101 @@
         ]
       }
     },
+    "/api/merge/chapter": {
+      "post": {
+        "description": "Merging a chapter can take long, so it is executed as a Polarion job: this method returns as soon as the job is scheduled, its result is delivered by GET /merge/chapter/jobs/{jobId}",
+        "operationId": "mergeChapter",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapterMergeParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterMergeJobInfo"
+                }
+              }
+            },
+            "description": "Information about the scheduled chapter merge job"
+          },
+          "400": {
+            "description": "Mandatory parameters are missing"
+          }
+        },
+        "summary": "Copies or moves a chapter of one Document into another one",
+        "tags": [
+          "Merge"
+        ]
+      }
+    },
+    "/api/merge/chapter/jobs": {
+      "get": {
+        "operationId": "listChapterMergeJobs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChapterMergeJobInfo"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Chapter merge jobs"
+          }
+        },
+        "summary": "Lists chapter merge jobs, the most recent one first",
+        "tags": [
+          "Merge"
+        ]
+      }
+    },
+    "/api/merge/chapter/jobs/{jobId}": {
+      "get": {
+        "description": "This is what a caller of a chapter merge polls to learn that the merge has finished: a job which is still running is answered with its state and no merge result",
+        "operationId": "getChapterMergeJob",
+        "parameters": [
+          {
+            "description": "ID of the chapter merge job",
+            "in": "path",
+            "name": "jobId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterMergeJobInfo"
+                }
+              }
+            },
+            "description": "The chapter merge job"
+          },
+          "404": {
+            "description": "There is no chapter merge job with this ID"
+          }
+        },
+        "summary": "Returns a certain chapter merge job, with its merge result as soon as it has one",
+        "tags": [
+          "Merge"
+        ]
+      }
+    },
     "/api/merge/documents": {
       "post": {
         "operationId": "mergeDocuments",
@@ -1667,6 +1762,200 @@
         },
         "type": "object"
       },
+      "ChapterMergeInfo": {
+        "description": "Summary of a chapter merge operation",
+        "properties": {
+          "copiedLayoutTypeIds": {
+            "description": "IDs of work item types whose layout was copied into the target document",
+            "items": {
+              "description": "IDs of work item types whose layout was copied into the target document",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "createdWorkItemIds": {
+            "description": "IDs of work items created in the target document",
+            "items": {
+              "description": "IDs of work items created in the target document",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "insertedOutlineNumber": {
+            "description": "Outline number the merged chapter got in the target document, eg. '3.2'",
+            "type": "string"
+          },
+          "movedWorkItemIds": {
+            "description": "IDs of work items moved into the target document",
+            "items": {
+              "description": "IDs of work items moved into the target document",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "referencedWorkItemIds": {
+            "description": "IDs of work items referenced in the target document",
+            "items": {
+              "description": "IDs of work items referenced in the target document",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ChapterMergeJobInfo": {
+        "description": "Information about a chapter merge job",
+        "properties": {
+          "completeness": {
+            "description": "Progress (0.0 to 1.0)",
+            "format": "float",
+            "type": "number"
+          },
+          "creationTime": {
+            "description": "Creation time (epoch milliseconds)",
+            "format": "int64",
+            "type": "integer"
+          },
+          "currentTaskName": {
+            "description": "Name of the current task within the job",
+            "type": "string"
+          },
+          "finishTime": {
+            "description": "Finish time (epoch milliseconds, 0 if still running)",
+            "format": "int64",
+            "type": "integer"
+          },
+          "jobId": {
+            "description": "Polarion job id",
+            "type": "string"
+          },
+          "jobName": {
+            "description": "Human-readable job name",
+            "type": "string"
+          },
+          "logUrl": {
+            "description": "Relative URL of the Polarion job log/report page",
+            "type": "string"
+          },
+          "mergeResult": {
+            "$ref": "#/components/schemas/MergeResult"
+          },
+          "resultAvailable": {
+            "description": "Indicates whether this job has already produced a merge result",
+            "type": "boolean"
+          },
+          "startTime": {
+            "description": "Start time (epoch milliseconds, 0 if not started)",
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "description": "Polarion job state",
+            "enum": [
+              "UNSCHEDULED",
+              "ACTIVATING",
+              "WAITING",
+              "RUNNING",
+              "FINISHED",
+              "ABORTED"
+            ],
+            "type": "string"
+          },
+          "statusMessage": {
+            "description": "Status message (failure cause or success summary)",
+            "type": "string"
+          },
+          "statusType": {
+            "description": "Final job status type",
+            "enum": [
+              "OK",
+              "CANCELLED",
+              "FAILED",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ChapterMergeParams": {
+        "description": "Input data of a chapter merge, i.e. copying or moving a part of one document into another one",
+        "properties": {
+          "copyWorkItemLayouts": {
+            "default": true,
+            "description": "Indicates whether work item layouts missing in the target document should be copied from the source one",
+            "type": "boolean"
+          },
+          "insertMode": {
+            "description": "Declares where merged content is placed relatively to the target chapter",
+            "enum": [
+              "UNDER",
+              "AFTER"
+            ],
+            "type": "string"
+          },
+          "mode": {
+            "description": "Declares whether work items of a merged chapter are copied or moved",
+            "enum": [
+              "COPY",
+              "MOVE"
+            ],
+            "type": "string"
+          },
+          "referencedItems": {
+            "default": "KEEP_REFERENCE",
+            "description": "Declares how referenced (external) work items of a merged chapter should be handled",
+            "enum": [
+              "KEEP_REFERENCE",
+              "COPY_AS_NEW",
+              "SKIP"
+            ],
+            "type": "string"
+          },
+          "sourceChapterOutlineNumber": {
+            "description": "Outline number of the chapter to be merged, eg. '2.1.1'",
+            "type": "string"
+          },
+          "sourceDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
+          },
+          "targetChapterOutlineNumber": {
+            "description": "Outline number of the chapter in the target document which is used as an anchor, eg. '3.1'",
+            "type": "string"
+          },
+          "targetDocument": {
+            "$ref": "#/components/schemas/DocumentIdentifier"
+          }
+        },
+        "type": "object"
+      },
+      "ChapterMergePayload": {
+        "description": "Chapter merge operation data",
+        "properties": {
+          "insertedOutlineNumber": {
+            "description": "Outline number the merged chapter got in the target document",
+            "type": "string"
+          },
+          "sourceDocument": {
+            "description": "Document content is taken from, as 'projectId/spaceId/name'",
+            "type": "string"
+          },
+          "sourceOutlineNumber": {
+            "description": "Outline number of the merged chapter in the source document",
+            "type": "string"
+          },
+          "targetDocument": {
+            "description": "Document content is placed into, as 'projectId/spaceId/name'",
+            "type": "string"
+          },
+          "targetOutlineNumber": {
+            "description": "Outline number of the anchor chapter in the target document",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "CollectionsDiff": {
         "description": "Represents the difference between two collections",
         "properties": {
@@ -2697,6 +2986,9 @@
       },
       "MergeReportEntry": {
         "properties": {
+          "chapterMergePayload": {
+            "$ref": "#/components/schemas/ChapterMergePayload"
+          },
           "documentsContentPair": {
             "$ref": "#/components/schemas/DocumentsContentMergePair"
           },
@@ -2733,6 +3025,9 @@
       "MergeResult": {
         "description": "Result of a merge operation",
         "properties": {
+          "chapterMergeInfo": {
+            "$ref": "#/components/schemas/ChapterMergeInfo"
+          },
           "mergeNotAuthorized": {
             "description": "Indicates whether the merge was not authorized",
             "type": "boolean"

@@ -73,25 +73,25 @@ and `src/topics/open{WorkItems,Collections}Diff.ts` open them by literal URL. Do
 `npm run build` is **two** Vite invocations, in this order:
 
 1. `vite build` - the multi-page SPA above, into `dist/app` (`emptyOutDir: true`).
-2. `vite build --config vite.formext.config.js` - library mode, appending the two Document Properties
-   panels as fixed-name modules `dist/app/assets/{diffToolPanel,copyToolPanel}.js`
+2. `vite build --config vite.formext.config.js` - library mode, appending the three Document Properties
+   panels as fixed-name modules `dist/app/assets/{diffToolPanel,copyToolPanel,mergeToolPanel}.js`
    (`emptyOutDir: false`, so it must run second). The names are fixed because the server-rendered
    fragments import them by literal URL and call a named export.
 
-The admin pages and both Document Properties panels are built on the shared **react-sbb-polarion**
+The admin pages and all three Document Properties panels are built on the shared **react-sbb-polarion**
 library (RSP), like the other migrated SBB Polarion extensions; the viewer predates it and does not use
 it. `META-INF/hivemodule.xml` is the source of truth for which extenders point at the React app
 (`.../ui/app/index.html?feature=<id>`); all five now do, and `rest-api` deliberately still points at
 `/polarion/diff-tool/rest/swagger`. See `ui/README.md` for the details, including why the viewer's page
 shell is `.diff-app` rather than `.app`.
 
-Both Document Properties panels are laid out by **one row model**, in `src/formext/formRows.tsx` +
+All three Document Properties panels are laid out by **one row model**, in `src/formext/formRows.tsx` +
 `diff-tool.css`, with `PanelShell.tsx` as the frame they share. It is the row model pdf-exporter and
 docx-exporter lay their export form out with, ported here deliberately: the three extensions each
 contribute a panel to the same properties pane, so a change to one is worth making in the others. A row is
 a three-track grid - a checkbox gutter, a 148px label column, the control - so every checkbox, label and
 control of a panel lands on one of three shared x positions, which the legacy per-row flex lines did not
-do. Neither panel writes `<div className="property-wrapper">` by hand any more. There is no two-column
+do. No panel writes `<div className="property-wrapper">` by hand any more. There is no two-column
 variant of a section: the exporters' form is also an export dialog, these panels are only ever in the
 ~360px pane.
 
@@ -100,16 +100,16 @@ of this extension raises; only what describes a *state* stays in the form (a lis
 loaded, and the document a copy created). Two things a toast in a shadow root needs that an administration
 page does not: its stylesheet has to be inside the root, so `diff-tool.css` imports
 `sonner/dist/styles.css` and Vite inlines it into both roots; and since `toast()` broadcasts to **every**
-mounted `Toaster` and this extension puts two panels on one page, `ToastHost.tsx` makes the newest host
+mounted `Toaster` and this extension puts several panels on one page, `ToastHost.tsx` makes the newest host
 the only one that renders, and empties the queue when the reporting changes hands so one panel's report
-cannot be replayed into the other.
+cannot be replayed into another.
 
 The three navigation topics are React too, since `topics.html` replaced the nav-topic JSPs and the Java
 widget renderers that rendered their tables (`widgets/`, deleted). `ch.sbb.polarion.extension.diff_tool.
 navigation` points each node at `topics.html?topic=<node id>`, and the tables are built in
 `src/topics/` from the plain values `/projects/{id}/{workitems,collections}/search` return. The legacy
 `webapp/diff-tool/{css/common.css,js/*}` went with them; that context now serves only the REST API and the
-two Document Properties fragments.
+three Document Properties fragments.
 
 Playwright browser binaries are not installed by the Maven build; run `npx playwright install` in
 `ui/` once, or build with `-DskipJsE2eTests=true`. CI needs neither: its Maven build runs the Vitest
@@ -148,6 +148,27 @@ mvn test -Dtest=DiffServiceTest#testDiffDocuments
   - EnumReplaceHandler: Optionally compares enums by ID vs name
   - OuterWrapperHandler: Wraps content to fix DaisyDiff edge cases
 - Caches work items per document via DocumentWorkItemsCache for performance
+
+**MergeToolService** (src/main/java/ch/sbb/polarion/extension/diff_tool/service/MergeToolService.java):
+- Copies or moves a chapter of one document, with everything below it, into another document ("Documents Merge" panel)
+- Creates work items the way `MergeService.fixReferencedWorkItem` does - `createWorkItem` + `merge` + `insertNode` -
+  but **never links a copy to its origin**, which is why none of `MergeService`'s own paths can be used: they resolve
+  counterparts by a link role. Counterparts inside the copied chapter come from the context's own id mapping instead
+- Heading levels come from Polarion: `IStructureNode.addChild` gives an attached heading the level of its parent + 1
+- Writes the document page only for the text between work items (`DocumentsContentHandler.copyFreeContent`), which has no
+  API of its own. It is spliced around the anchor it belongs to, so the rest of the page stays byte-identical. Work items
+  themselves go in through the Polarion API
+- Copies comments through `CommentsCopier` (shared with `DocumentCopyService`): the comments of a copied work item and the
+  document comments written on the copied text. Comment IDs change, so the markers which anchor a comment to a piece of
+  text are re-pointed with `CommentUtils.copyCommentMarkers`
+- Runs as a Polarion job (`service/job/ChapterMerge*`), because a big chapter does not fit into one HTTP request. The job
+  asks nothing of the request which scheduled it: the servlet container recycles the request object once the response is
+  written, and Polarion runs the job as the user who scheduled it anyway. Whatever needs the request - the documents
+  cache is keyed by user - is done in `ChapterMergeJobScheduler.schedule`, on the REST thread
+
+**DocumentLayoutSyncService** (src/main/java/ch/sbb/polarion/extension/diff_tool/service/DocumentLayoutSyncService.java):
+- Copies the work item configuration a *document* holds - the rendering layout of a work item type and the document's
+  list of allowed types. Project configuration is never modified
 
 **MergeService** (src/main/java/ch/sbb/polarion/extension/diff_tool/service/MergeService.java):
 - Handles all merge operations (documents, work items, fields, content)
@@ -276,6 +297,7 @@ For development, use: `mvn clean install -P local-install-into-polarion` with `P
    ```xml
    <extension id="diff-tool" label="Documents Comparison" />
    <extension id="copy-tool" label="Documents Copy" />
+   <extension id="merge-tool" label="Documents Merge" />
    ```
 
 2. Navigation Topics:

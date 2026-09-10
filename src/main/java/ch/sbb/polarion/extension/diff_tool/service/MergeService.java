@@ -737,26 +737,69 @@ public class MergeService {
             if (pair != null && !pair.fieldSelectedForMerge(field)) {
                 continue; // Skip processing if field wasn't explicitly or implicitly selected for merge
             }
-
-            Object fieldValue = polarionService.getFieldValue(source, field.getKey());
-            if (IWorkItem.KEY_HYPERLINKS.equals(field.getKey()) && (fieldValue == null || fieldValue instanceof Collection<?>)) {
-                mergeHyperlinks(target, (Collection<?>) fieldValue, context, pair);
-            } else if (IWorkItem.KEY_LINKED_WORK_ITEMS.equals(field.getKey())) {
-                mergeLinkedWorkItems(source, target, context, pair);
-            } else if (KEY_ATTACHMENTS.equals(field.getKey())) {
-                mergeAttachments(source, target, context);
-            } else {
-                validateCustomFieldTypesAccordance(source, target, field);
-
-                if (fieldValue instanceof TestSteps testSteps) {
-                    fieldValue = polarionService.getTrackerService().getDataService().createStructureForTypeId(target, ITestSteps.STRUCTURE_ID, getTestStepsData(testSteps));
-                } else if (fieldValue instanceof Text text) {
-                    fieldValue = new Text(text.getType(), preProcessRichText(source, target, context, text.getContent(), field.getKey()));
-                }
-                polarionService.setFieldValue(target, field.getKey(), fieldValue);
-            }
+            mergeField(source, target, context, pair, field);
         }
         target.save();
+    }
+
+    private void mergeField(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, MergeWorkItemsPair pair, DiffField field) {
+        if (context instanceof IUnpairedCopyContext) {
+            // A copy carries over every field of its origin, not a configured selection of them, so a field which
+            // cannot be written must cost that field only - the work item itself is still worth having.
+            try {
+                mergeFieldValue(source, target, context, pair, field);
+            } catch (Exception e) {
+                logger.error("Could not copy field '%s' of workitem '%s'".formatted(field.getKey(), source.getId()), e);
+                context.reportEntry(WARNING, pair == null ? WorkItemsPair.of(source, target) : pair,
+                        "field '%s' could not be copied: %s".formatted(field.getKey(), e.getMessage()));
+            }
+        } else {
+            mergeFieldValue(source, target, context, pair, field);
+        }
+    }
+
+    private void mergeFieldValue(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, MergeWorkItemsPair pair, DiffField field) {
+        Object fieldValue = polarionService.getFieldValue(source, field.getKey());
+        if (IWorkItem.KEY_HYPERLINKS.equals(field.getKey()) && (fieldValue == null || fieldValue instanceof Collection<?>)) {
+            mergeHyperlinks(target, (Collection<?>) fieldValue, context, pair);
+        } else if (IWorkItem.KEY_LINKED_WORK_ITEMS.equals(field.getKey())) {
+            mergeLinkedWorkItems(source, target, context, pair);
+        } else if (KEY_ATTACHMENTS.equals(field.getKey())) {
+            mergeAttachments(source, target, context);
+        } else if (isListField(target, field.getKey())) {
+            mergeListField(target, field.getKey(), fieldValue);
+        } else {
+            validateCustomFieldTypesAccordance(source, target, field);
+
+            if (fieldValue instanceof TestSteps testSteps) {
+                fieldValue = polarionService.getTrackerService().getDataService().createStructureForTypeId(target, ITestSteps.STRUCTURE_ID, getTestStepsData(testSteps));
+            } else if (fieldValue instanceof Text text) {
+                fieldValue = new Text(text.getType(), preProcessRichText(source, target, context, text.getContent(), field.getKey()));
+            }
+            polarionService.setFieldValue(target, field.getKey(), fieldValue);
+        }
+    }
+
+    @VisibleForTesting
+    boolean isListField(@NotNull IWorkItem workItem, @NotNull String fieldKey) {
+        return workItem.getFieldType(fieldKey) instanceof IListType;
+    }
+
+    /**
+     * Copies the values of a list field. Polarion rejects setting a list field as a whole
+     * ("List fields can never be set"), so its values are put into the list which the field already holds.
+     */
+    @VisibleForTesting
+    @SuppressWarnings("unchecked")
+    void mergeListField(@NotNull IWorkItem target, @NotNull String fieldKey, @Nullable Object sourceValue) {
+        if (!(polarionService.getFieldValue(target, fieldKey) instanceof Collection<?> targetValues)) {
+            return;
+        }
+        Collection<Object> targetList = (Collection<Object>) targetValues;
+        targetList.clear();
+        if (sourceValue instanceof Collection<?> sourceValues) {
+            sourceValues.forEach(targetList::add);
+        }
     }
 
     @VisibleForTesting
@@ -786,17 +829,49 @@ public class MergeService {
     String preProcessRichText(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, String richTextContent, String fieldKey) {
         List<String> commentIds = context instanceof IPreserveCommentsContext preserveCommentsContext && preserveCommentsContext.isPreserveComments() &&
                 polarionService.getFieldValue(target, fieldKey) instanceof Text targetText ? CommentUtils.extractCommentIds(targetText.convertToHTML().getContent()) : List.of();
-        String newContent = polarionService.replaceLinksToPairedWorkItems(source, target, context.getLinkRole(), CommentUtils.removeComments(richTextContent));
-        if (context instanceof DocumentsMergeContext mergeContext && mergeContext.isCopyMissingDocumentAttachments()) {
+        String newContent = resolveWorkItemLinks(source, target, context, resolveComments(context, richTextContent));
+        if (context instanceof ICopyModuleAttachmentsContext attachmentsContext && attachmentsContext.isCopyMissingDocumentAttachments()) {
             copyRequiredModuleAttachments(source, target, newContent);
         }
         return CommentUtils.appendComments(newContent, commentIds);
     }
 
+    /**
+     * Takes the comment markers of the source text out of it, because they name comments of the source work item.
+     * A copy gets comments of its own, so there the markers are pointed at those instead of being dropped.
+     */
+    @VisibleForTesting
+    String resolveComments(SettingsAwareMergeContext context, String richTextContent) {
+        if (context instanceof IUnpairedCopyContext copyContext) {
+            return CommentUtils.remapComments(richTextContent, copyContext.getCommentIdMapping());
+        }
+        return CommentUtils.removeComments(richTextContent);
+    }
+
+    /**
+     * Points work item links of a rich text field to the counterparts of their targets. Counterparts are normally
+     * sought by the link role, but an unpaired copy has no link role: there its own mapping of already copied
+     * items is the only source of counterparts.
+     */
+    @VisibleForTesting
+    String resolveWorkItemLinks(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, String html) {
+        if (context instanceof IUnpairedCopyContext copyContext) {
+            return polarionService.rewriteWorkItemLinks(source, html, workItem -> copyContext.getItemMapping().get(workItem.getId()));
+        }
+        return polarionService.replaceLinksToPairedWorkItems(source, target, context.getLinkRole(), html);
+    }
+
     @VisibleForTesting
     void copyRequiredModuleAttachments(IWorkItem source, IWorkItem target, String content) {
-        IModule sourceModule = source.getModule();
-        IModule targetModule = target.getModule();
+        copyModuleAttachments(source.getModule(), target.getModule(), content);
+    }
+
+    /**
+     * Copies the document attachments a rich text refers to. Content which is placed between work items belongs
+     * to no work item, hence the overload which takes the documents directly.
+     */
+    @VisibleForTesting
+    void copyModuleAttachments(IModule sourceModule, IModule targetModule, String content) {
         RegexMatcher.get("<img[^>]+src=\"attachment:(?<attachmentFilename>[^\"]+)\"").processEntry(content, engine -> {
             String attachmentFilename = engine.group("attachmentFilename");
             if (targetModule.getAttachment(attachmentFilename) == null) {
@@ -894,11 +969,32 @@ public class MergeService {
 
     @VisibleForTesting
     void mergeLinkedWorkItems(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, WorkItemsPair pair) {
+        if (context instanceof IUnpairedCopyContext copyContext) {
+            copyLinkedWorkItemsUnpaired(source, target, copyContext, context);
+            return;
+        }
         Collection<ILinkedWorkItemStruct> srcLinks = filterLinksByRoles(getLinks(source, false), context);
         Collection<ILinkedWorkItemStruct> targetLinks = filterLinksByRoles(getLinks(target, false), context);
 
         LinkedWorkItemsMergeState state = processTargetLinks(source, target, srcLinks, targetLinks, context);
         processSourceLinks(source, target, srcLinks, state, context, pair);
+    }
+
+    /**
+     * Copies the links a source work item has to third party items. A copy is never linked to its origin, so an
+     * unpaired copy has no link role to seek counterparts by: a link to an item which was copied along within the
+     * same operation is pointed to that copy, every other link keeps pointing to the item it pointed to.
+     */
+    @VisibleForTesting
+    void copyLinkedWorkItemsUnpaired(IWorkItem source, IWorkItem target, IUnpairedCopyContext copyContext, SettingsAwareMergeContext context) {
+        for (ILinkedWorkItemStruct srcLink : filterLinksByRoles(getLinks(source, false), context)) {
+            IWorkItem linkedItem = srcLink.getLinkedItem();
+            IWorkItem copiedCounterpart = copyContext.getItemMapping().get(linkedItem.getId());
+            IWorkItem itemToLink = copiedCounterpart != null ? copiedCounterpart : linkedItem;
+            if (!Objects.equals(itemToLink.getId(), target.getId()) || !Objects.equals(itemToLink.getProjectId(), target.getProjectId())) {
+                target.addLinkedItem(itemToLink, srcLink.getLinkRole(), copiedCounterpart != null ? null : srcLink.getRevision(), srcLink.isSuspect());
+            }
+        }
     }
 
     private Collection<ILinkedWorkItemStruct> filterLinksByRoles(Collection<ILinkedWorkItemStruct> links, SettingsAwareMergeContext context) {
@@ -1148,16 +1244,23 @@ public class MergeService {
         } else {
             targetModule.moveIn(List.of(workItem));
         }
+        placeNode(workItem, targetModule, parentNode, destinationIndex, referenced);
+    }
 
-        if (parentNode == null) {
-            parentNode = targetModule.getRootNode().getChildren().getFirst();
-        }
+    /**
+     * Places a work item which the document already contains at a certain position of it. Taking the work item into
+     * the document is a separate step, because {@link IModule#moveIn} is a bulk operation: several work items of one
+     * document are taken over in a single call, and only then placed one by one.
+     */
+    @VisibleForTesting
+    void placeNode(@NotNull IWorkItem workItem, @NotNull IModule targetModule, @Nullable IModule.IStructureNode parentNode, int destinationIndex, boolean referenced) {
+        IModule.IStructureNode destinationParentNode = parentNode == null ? targetModule.getRootNode().getChildren().getFirst() : parentNode;
 
         // getStructureNodeOfWI may return null for items which are placed in recycle bin.
         // the problem basically is that a workitem is still bound to module but not a single node use it
         // so in this case we're adding a new node for it
         IModule.IStructureNode insertedWorkItemNode = Optional.ofNullable(targetModule.getStructureNodeOfWI(workItem)).orElse(createNode(targetModule, workItem, referenced));
-        parentNode.addChild(insertedWorkItemNode, destinationIndex); // Placing inserted work item at required position in document
+        destinationParentNode.addChild(insertedWorkItemNode, destinationIndex); // Placing inserted work item at required position in document
     }
 
     private IModule.IStructureNode createNode(@NotNull IModule targetModule, @NotNull IWorkItem workitem, boolean referenced) {
