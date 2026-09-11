@@ -708,6 +708,13 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         return getModule(documentIdentifier.getProjectId(), documentIdentifier.getSpaceId(), documentIdentifier.getName(), documentIdentifier.getRevision());
     }
 
+    /**
+     * Login of the user the current call runs as.
+     */
+    public @Nullable String getCurrentUser() {
+        return securityService.getCurrentUser();
+    }
+
     public boolean hasSufficientPermissions() {
         return securityService.hasPermission(AdministrationPermission.forAction(AdministrationPermission.ACTION_PROJECT_CREATE), null);
     }

@@ -58,9 +58,15 @@ public class ChapterMergeJobScheduler {
         }
     }
 
-    private final Map<String, MergeResultHolder> results = new LinkedHashMap<>() {
+    /**
+     * A merge this scheduler spawned: the user it was scheduled for, and the result it reports.
+     */
+    private record TrackedMerge(@Nullable String scheduledBy, @NotNull MergeResultHolder resultHolder) {
+    }
+
+    private final Map<String, TrackedMerge> merges = new LinkedHashMap<>() {
         @Override
-        protected boolean removeEldestEntry(Map.Entry<String, MergeResultHolder> eldest) {
+        protected boolean removeEldestEntry(Map.Entry<String, TrackedMerge> eldest) {
             return size() > MAX_KEPT_RESULTS;
         }
     };
@@ -94,14 +100,18 @@ public class ChapterMergeJobScheduler {
         } catch (GenericJobException e) {
             throw new IllegalStateException("Failed to spawn chapter merge job: " + e.getMessage(), e);
         }
-        putResultHolder(job.getId(), resultHolder);
+        trackMerge(job.getId(), new TrackedMerge(polarionService.getCurrentUser(), resultHolder));
         job.schedule();
         return toInfo(job, false);
     }
 
+    /**
+     * The chapter merge jobs of the current user, the most recent one first. A merge names the documents it works
+     * on and reports which work items it created, so a job belongs to the user who scheduled it.
+     */
     public @NotNull List<ChapterMergeJobInfo> listJobs() {
         return jobService.getJobManager().getJobs().stream()
-                .filter(this::isOurJob)
+                .filter(job -> isOurJob(job) && scheduledByCurrentUser(job.getId()))
                 .sorted(Comparator.comparingLong(IJob::getCreationTime).reversed())
                 .map(job -> toInfo(job, false))
                 .toList();
@@ -111,9 +121,12 @@ public class ChapterMergeJobScheduler {
      * Returns a chapter merge job with its merge result, as soon as the job has produced one. A job which is still
      * running is a perfectly normal answer here - it is what the caller of a merge polls to learn that it finished.
      *
-     * @return {@code null} if there is no chapter merge job with that ID
+     * @return {@code null} if the current user has no chapter merge job with that ID
      */
     public @Nullable ChapterMergeJobInfo getJob(@NotNull String jobId) {
+        if (!scheduledByCurrentUser(jobId)) {
+            return null;
+        }
         return jobService.getJobManager().getJobs().stream()
                 .filter(job -> this.isOurJob(job) && jobId.equals(job.getId()))
                 .findFirst()
@@ -123,17 +136,29 @@ public class ChapterMergeJobScheduler {
 
     @VisibleForTesting
     synchronized @Nullable MergeResult readResult(@NotNull String jobId) {
-        MergeResultHolder resultHolder = results.get(jobId);
+        MergeResultHolder resultHolder = resultHolderOf(jobId);
         return resultHolder == null ? null : resultHolder.get();
     }
 
     @VisibleForTesting
     synchronized @Nullable MergeResultHolder resultHolderOf(@NotNull String jobId) {
-        return results.get(jobId);
+        TrackedMerge trackedMerge = merges.get(jobId);
+        return trackedMerge == null ? null : trackedMerge.resultHolder();
     }
 
-    private synchronized void putResultHolder(@NotNull String jobId, @NotNull MergeResultHolder resultHolder) {
-        results.put(jobId, resultHolder);
+    /**
+     * Whether a job was scheduled for the user of the current call. A job this scheduler doesn't know belongs to
+     * nobody: it either never ran here, or its result was dropped long ago.
+     */
+    @VisibleForTesting
+    synchronized boolean scheduledByCurrentUser(@Nullable String jobId) {
+        TrackedMerge trackedMerge = jobId == null ? null : merges.get(jobId);
+        String currentUser = polarionService.getCurrentUser();
+        return trackedMerge != null && currentUser != null && currentUser.equals(trackedMerge.scheduledBy());
+    }
+
+    private synchronized void trackMerge(@NotNull String jobId, @NotNull TrackedMerge trackedMerge) {
+        merges.put(jobId, trackedMerge);
     }
 
 

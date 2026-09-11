@@ -29,6 +29,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -199,7 +200,7 @@ public class MergeInternalController {
                 || mergeParams.getMode() == null || mergeParams.getInsertMode() == null) {
             throw new BadRequestException("Parameters 'sourceDocument', 'targetDocument', 'mode' and 'insertMode' should be provided");
         }
-        if (isBlank(mergeParams.getSourceChapterOutlineNumber()) || isBlank(mergeParams.getTargetChapterOutlineNumber())) {
+        if (StringUtils.isBlank(mergeParams.getSourceChapterOutlineNumber()) || StringUtils.isBlank(mergeParams.getTargetChapterOutlineNumber())) {
             throw new BadRequestException("Parameters 'sourceChapterOutlineNumber' and 'targetChapterOutlineNumber' should be provided");
         }
         return chapterMergeJobScheduler.schedule(mergeParams);
@@ -243,7 +244,4 @@ public class MergeInternalController {
         return jobInfo;
     }
 
-    private static boolean isBlank(String value) {
-        return value == null || value.isBlank();
-    }
 }

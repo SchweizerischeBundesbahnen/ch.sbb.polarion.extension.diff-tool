@@ -63,6 +63,7 @@ class ChapterMergeJobSchedulerTest {
         polarionService = mock(PolarionService.class);
         jobUnitFactory = new ChapterMergeJobUnitFactory();
         lenient().when(jobService.getJobManager()).thenReturn(jobManager);
+        lenient().when(polarionService.getCurrentUser()).thenReturn("jdoe");
         scheduler = new ChapterMergeJobScheduler(jobService, documentsChapterMergeService, polarionService, jobUnitFactory);
 
         // A job is scheduled on the thread which serves the REST request, and takes its context along.
@@ -142,9 +143,29 @@ class ChapterMergeJobSchedulerTest {
 
     @Test
     void testUnknownJobIsNotFound() {
-        when(jobManager.getJobs()).thenReturn(List.of());
+        assertNull(scheduler.getJob("J-1"));
+    }
+
+    @Test
+    void testTheJobsOfAnotherUserAreNeitherListedNorReadable() throws GenericJobException {
+        // a merge names the documents it works on and reports the work items it created, so it is nobody else's
+        IJob job = mockJob("J-1", jobUnitFactory, JobState.STATE_FINISHED, IJobStatus.JobStatusType.STATUS_TYPE_OK, 1000L);
+        when(jobManager.spawnJob(any(ChapterMergeJobUnit.class), eq(null))).thenReturn(job);
+        lenient().when(jobManager.getJobs()).thenReturn(List.of(job));
+        scheduler.schedule(params());
+        scheduler.resultHolderOf("J-1").set(MergeResult.builder().success(true).build());
+
+        when(polarionService.getCurrentUser()).thenReturn("someone.else");
 
         assertNull(scheduler.getJob("J-1"));
+        assertTrue(scheduler.listJobs().isEmpty());
+    }
+
+    @Test
+    void testAJobIsNobodysWhenTheUserOfTheCallIsUnknown() {
+        when(polarionService.getCurrentUser()).thenReturn(null);
+
+        assertFalse(scheduler.scheduledByCurrentUser("J-1"));
     }
 
     @Test
@@ -162,7 +183,7 @@ class ChapterMergeJobSchedulerTest {
     }
 
     @Test
-    void testListJobsKeepsOnlyChapterMergeJobsAndSortsThemNewestFirst() {
+    void testListJobsKeepsOnlyChapterMergeJobsAndSortsThemNewestFirst() throws GenericJobException {
         IJobUnitFactory ours = mock(IJobUnitFactory.class);
         when(ours.getName()).thenReturn(ChapterMergeJobUnitFactory.NAME);
         IJobUnitFactory other = mock(IJobUnitFactory.class);
@@ -171,6 +192,9 @@ class ChapterMergeJobSchedulerTest {
         IJob older = mockJob("OLD", ours, JobState.STATE_FINISHED, IJobStatus.JobStatusType.STATUS_TYPE_OK, 1000L);
         IJob newer = mockJob("NEW", ours, JobState.STATE_RUNNING, null, 5000L);
         IJob foreign = mockJob("FOREIGN", other, JobState.STATE_RUNNING, null, 9000L);
+        when(jobManager.spawnJob(any(ChapterMergeJobUnit.class), eq(null))).thenReturn(older, newer);
+        scheduler.schedule(params());
+        scheduler.schedule(params());
         when(jobManager.getJobs()).thenReturn(List.of(older, foreign, newer));
 
         List<ChapterMergeJobInfo> result = scheduler.listJobs();
