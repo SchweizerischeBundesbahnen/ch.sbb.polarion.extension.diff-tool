@@ -113,8 +113,12 @@ public class DocumentsChapterMergeService {
     }
 
     /**
-     * Merges a chapter. The documents cache is not evicted here: it is keyed by the user of the request, which a
-     * merge running as a job no longer has - the caller evicts it (see {@code ChapterMergeJobScheduler.schedule}).
+     * Merges a chapter, as one write transaction: either the target document holds the whole chapter afterwards, or
+     * it holds none of it. A single work item which cannot be merged is reported and passed over - that is a result,
+     * not a failure of the merge.
+     * <p>
+     * The documents cache is not evicted here: it is keyed by the user of the request, which a merge running as a
+     * job no longer has - the caller evicts it (see {@code ChapterMergeJobScheduler.schedule}).
      */
     public @NotNull MergeResult mergeChapter(@NotNull ChapterMergeParams params, @Nullable ProgressReporter progressReporter) {
         DocumentsChapterMergeContext context = new DocumentsChapterMergeContext(polarionService, params);
@@ -143,14 +147,11 @@ public class DocumentsChapterMergeService {
         InsertionPoint insertionPoint = resolveInsertionPoint(targetChapterNode, params.getInsertMode());
         IWorkItem targetChapterWorkItem = targetChapterNode.getWorkItem();
 
+        // One transaction for the whole merge: a merge which fails half way through would otherwise leave the
+        // work items it already placed behind, and in move mode they would be gone from the source document too.
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
             insertSubtree(context, subtree, insertionPoint, targetChapterWorkItem, progressReporter);
             detachMovedItems(context);
-            return null;
-        });
-
-        TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            context.getTargetModule().update();
             // First the order of the merged work items on the page, then the text which goes between them
             placeMergedItemsUnderTargetChapter(context, targetChapterWorkItem);
             copyFreeContent(context, subtree);
@@ -453,7 +454,7 @@ public class DocumentsChapterMergeService {
                 .filter(key -> polarionService.getFieldValue(workItem, key) != null)
                 .map(key -> DiffField.builder().key(key).build())
                 .toList();
-        return DiffModel.builder().diffFields(new ArrayList<>(diffFields)).build();
+        return DiffModel.builder().diffFields(diffFields).build();
     }
 
     /**

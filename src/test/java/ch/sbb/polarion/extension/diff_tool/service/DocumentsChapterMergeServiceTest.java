@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -49,6 +50,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -624,6 +626,42 @@ class DocumentsChapterMergeServiceTest {
         inTransaction(() -> documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.COPY, ChapterInsertMode.UNDER)));
 
         verify(documentsContentHandler, never()).moveAnchorsBelow(any(), any(), anyString());
+    }
+
+
+    @Test
+    void testTheWholeMergeIsOneTransaction() {
+        chapter(sourceModule, "2", heading("SOURCE-1"));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "heading");
+
+        try (MockedStatic<TransactionalExecutor> transactionalExecutor = mockStatic(TransactionalExecutor.class)) {
+            transactionalExecutor.when(() -> TransactionalExecutor.executeInWriteTransaction(any())).thenAnswer(invocation -> {
+                RunnableInWriteTransaction<?> runnable = invocation.getArgument(0);
+                runnable.run(mock(WriteTransaction.class));
+                return runnable;
+            });
+
+            documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.COPY, ChapterInsertMode.UNDER));
+
+            // Placing the work items and writing the page belong together: a merge which committed the first and
+            // failed at the second would leave workitems behind, and in move mode take them off the source document
+            transactionalExecutor.verify(() -> TransactionalExecutor.executeInWriteTransaction(any()), times(1));
+        }
+    }
+
+    @Test
+    void testAFailureAfterTheWorkItemsWerePlacedFailsTheWholeMerge() {
+        IModule.IStructureNode sourceChapter = chapter(sourceModule, "2", heading("SOURCE-1"));
+        IWorkItem movedItem = workItem("SOURCE-2", "requirement");
+        addChild(sourceChapter, node(movedItem, false));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "heading");
+        when(documentsContentHandler.copyFreeContent(any(), any(), any(), any(), any())).thenThrow(new IllegalStateException("boom"));
+
+        // Nothing is caught here, so the transaction is left to roll everything back
+        assertThrows(IllegalStateException.class,
+                () -> inTransaction(() -> documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.MOVE, ChapterInsertMode.UNDER))));
     }
 
     // -------------------------------------------------------------------------------------------------------------

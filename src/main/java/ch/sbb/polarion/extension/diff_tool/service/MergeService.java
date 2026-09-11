@@ -687,7 +687,6 @@ public class MergeService {
         return workItemToInsert;
     }
 
-    @VisibleForTesting
     void reloadModule(IModule module) {
         ((Module) module).save(false);
         module.update();
@@ -1237,7 +1236,6 @@ public class MergeService {
         }
     }
 
-    @VisibleForTesting
     void insertNode(@NotNull IWorkItem workItem, @NotNull IModule targetModule, @Nullable IModule.IStructureNode parentNode, int destinationIndex, boolean referenced) {
         if (referenced) {
             targetModule.addExternalWorkItem(workItem);
