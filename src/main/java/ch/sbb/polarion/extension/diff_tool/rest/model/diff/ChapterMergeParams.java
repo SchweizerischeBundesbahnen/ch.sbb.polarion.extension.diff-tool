@@ -35,7 +35,9 @@ public class ChapterMergeParams {
     @Schema(description = "Declares how referenced work items should be handled", implementation = ReferencedItemsHandling.class, defaultValue = "KEEP_REFERENCE")
     private ReferencedItemsHandling referencedItems;
 
-    @Schema(description = "Indicates whether work item layouts missing in the target document should be copied from the source one", defaultValue = "true")
+    @Schema(description = "Indicates whether work item layouts missing in the target document should be copied from the source one. "
+            + "Off unless asked for: it changes the configuration of the target document, not its content",
+            defaultValue = "false")
     private boolean copyWorkItemLayouts;
 
     public ReferencedItemsHandling getReferencedItems() {

@@ -149,7 +149,7 @@ mvn test -Dtest=DiffServiceTest#testDiffDocuments
   - OuterWrapperHandler: Wraps content to fix DaisyDiff edge cases
 - Caches work items per document via DocumentWorkItemsCache for performance
 
-**MergeToolService** (src/main/java/ch/sbb/polarion/extension/diff_tool/service/MergeToolService.java):
+**DocumentsChapterMergeService** (src/main/java/ch/sbb/polarion/extension/diff_tool/service/DocumentsChapterMergeService.java):
 - Copies or moves a chapter of one document, with everything below it, into another document ("Documents Merge" panel)
 - Creates work items the way `MergeService.fixReferencedWorkItem` does - `createWorkItem` + `merge` + `insertNode` -
   but **never links a copy to its origin**, which is why none of `MergeService`'s own paths can be used: they resolve
