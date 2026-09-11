@@ -116,6 +116,24 @@ class DocumentsChapterMergeServiceTest {
     }
 
     @Test
+    void testASuccessfulMergeDoesNotReportItsOwnWriteAsAChangeBySomebodyElse() {
+        DocumentIdentifier targetDocument = DocumentIdentifier.builder()
+                .projectId("target").spaceId("space").name("targetDoc").moduleXmlRevision("rev1").build();
+        when(polarionService.getModule(targetDocument)).thenReturn(targetModule);
+        // the revision the document has while the merge is checked, and the one its own save leaves behind
+        when(targetModule.getLastRevision()).thenReturn("rev1", "rev2");
+        chapter(sourceModule, "2", heading("SOURCE-1"));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "heading");
+
+        MergeResult result = inTransaction(() -> documentsChapterMergeService.mergeChapter(
+                params(SOURCE_DOCUMENT, targetDocument, ChapterMergeMode.COPY, ChapterInsertMode.UNDER)));
+
+        assertTrue(result.isSuccess());
+        assertFalse(result.isTargetModuleHasStructuralChanges());
+    }
+
+    @Test
     void testMergeFailsWhenUserIsNotAuthorized() {
         when(polarionService.userAuthorizedForMerge("target")).thenReturn(false);
 

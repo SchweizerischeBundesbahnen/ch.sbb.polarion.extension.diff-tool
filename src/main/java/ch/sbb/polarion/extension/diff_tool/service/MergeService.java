@@ -765,7 +765,11 @@ public class MergeService {
             mergeLinkedWorkItems(source, target, context, pair);
         } else if (KEY_ATTACHMENTS.equals(field.getKey())) {
             mergeAttachments(source, target, context);
-        } else if (isListField(target, field.getKey())) {
+        } else if (context instanceof IUnpairedCopyContext && isListField(target, field.getKey())) {
+            // Only chapter merge takes this way: it writes into a work item created a moment ago, whose standard list
+            // fields Polarion refuses to set as a whole. A merge into an item which already exists keeps setting
+            // its list fields the way it always did, through the converters of the generic PolarionService.
+            validateCustomFieldTypesAccordance(source, target, field);
             mergeListField(target, field.getKey(), fieldValue);
         } else {
             validateCustomFieldTypesAccordance(source, target, field);

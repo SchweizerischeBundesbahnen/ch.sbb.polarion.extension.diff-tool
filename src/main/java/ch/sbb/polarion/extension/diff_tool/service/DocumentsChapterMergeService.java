@@ -319,7 +319,7 @@ public class DocumentsChapterMergeService {
                 .map(sourceNode -> sourceNode.workItem().getType().getId())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         DocumentLayoutSyncService.LayoutSyncResult syncResult = documentLayoutSyncService.copyMissingLayouts(context.getSourceModule(), context.getTargetModule(), typeIds);
-        context.getCopiedLayoutTypeIds().addAll(syncResult.copiedLayoutTypeIds());
+        context.addCopiedLayoutTypeIds(syncResult.copiedLayoutTypeIds());
         syncResult.copiedLayoutTypeIds().forEach(typeId ->
                 context.reportChapterEntry(CREATED, "layout of workitem type '%s' copied into the target document".formatted(typeId)));
         syncResult.allowedTypeIds().forEach(typeId ->
@@ -575,7 +575,6 @@ public class DocumentsChapterMergeService {
                 .success(success)
                 .mergeReport(context.getMergeReport())
                 .chapterMergeInfo(chapterMergeInfo)
-                .targetModuleHasStructuralChanges(targetModuleChangedMeanwhile(context))
                 .build();
     }
 

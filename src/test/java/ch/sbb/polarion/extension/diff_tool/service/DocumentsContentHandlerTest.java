@@ -540,6 +540,18 @@ class DocumentsContentHandlerTest {
     }
 
     @Test
+    void testTheMergedWorkItemsStayOnThePageWhenTheChapterHasNoAnchor() {
+        // the anchor of the chapter is written in a shape which is not recognized, so the block has nowhere to go:
+        // putting the page back without it would take the just merged work items out of the document
+        String documentContent = "<h2 id=\"polarion_wiki macro name=module-workitem;params=id=BB-1\"/>" + anchor("div", "BB-10") + text("existing");
+        IModule targetModule = mock(IModule.class);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(documentContent));
+
+        assertFalse(handler.moveAnchorsBelow(targetModule, List.of("BB-10"), "BB-1"));
+        verify(targetModule, never()).setHomePageContent(any());
+    }
+
+    @Test
     void testCopyFreeContentDoesNothingWhenThereIsNoFreeContent() {
         IModule targetModule = mock(IModule.class);
         when(targetModule.getHomePageContent()).thenReturn(Text.html("""

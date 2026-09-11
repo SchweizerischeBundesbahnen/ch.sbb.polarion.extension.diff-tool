@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -136,10 +137,15 @@ public final class DocumentsChapterMergeContext extends SettingsAwareMergeContex
     }
 
     /**
-     * Returns a defensive copy to avoid exposing internal mutable representation.
+     * Returns a defensive copy to avoid exposing internal mutable representation. Use
+     * {@link #addCopiedLayoutTypeIds(Collection)} to record the layouts a merge copied.
      */
     public List<String> getCopiedLayoutTypeIds() {
         return List.copyOf(copiedLayoutTypeIds);
+    }
+
+    public void addCopiedLayoutTypeIds(@NotNull Collection<String> typeIds) {
+        copiedLayoutTypeIds.addAll(typeIds);
     }
 
     @Override

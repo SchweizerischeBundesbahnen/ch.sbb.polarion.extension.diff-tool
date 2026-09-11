@@ -5,6 +5,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMerge
 import ch.sbb.polarion.extension.diff_tool.util.CommentUtils;
 import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +31,8 @@ import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentConten
 import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentContentAnchor.ContentPosition.BELOW;
 
 class DocumentsContentHandler {
+
+    private static final Logger logger = Logger.getLogger(DocumentsContentHandler.class);
 
     private static final Set<String> HTML_HEADER_TAGS = new HashSet<>(Arrays.asList("h1", "h2", "h3", "h4", "h5", "h6"));
 
@@ -196,6 +199,13 @@ class DocumentsContentHandler {
             return false;
         }
         String newContent = insertAtAnchor(remainingContent, belowWorkItemId, mergedBlock.toString(), BELOW);
+        if (newContent.equals(remainingContent)) {
+            // The chapter itself has no anchor on the page, so the block was taken out of the page and put nowhere.
+            // Leaving the page as it is keeps the merged work items visible where Polarion placed them.
+            logger.warn("Work items %s were left where they are: work item '%s' has no anchor on the page of document '%s'"
+                    .formatted(workItemIds, belowWorkItemId, targetModule.getModuleName()));
+            return false;
+        }
         if (newContent.equals(documentContent)) {
             return false;
         }

@@ -3014,12 +3014,36 @@ class MergeServiceTest {
     }
 
     @Test
-    void testMergeWritesAListFieldThroughTheListItAlreadyHolds() {
+    void testACopyWritesAListFieldThroughTheListItAlreadyHolds() {
         IWorkItem source = mock(IWorkItem.class);
         IWorkItem target = mock(IWorkItem.class);
         when(target.getFieldType("categories")).thenReturn(mock(IListType.class));
+        IPrototype prototype = mock(IPrototype.class);
+        when(prototype.isKeyDefined("categories")).thenReturn(true);
+        when(source.getPrototype()).thenReturn(prototype);
         List<Object> targetValues = new ArrayList<>();
         when(polarionService.getFieldValue(target, "categories")).thenReturn(targetValues);
+        when(polarionService.getFieldValue(source, "categories")).thenReturn(List.of("safety"));
+
+        DocumentsChapterMergeContext context = mock(DocumentsChapterMergeContext.class);
+        when(context.getDiffModel()).thenReturn(DiffModel.builder().diffFields(new ArrayList<>(List.of(DiffField.builder().key("categories").build()))).build());
+
+        mergeService.merge(source, target, context, null);
+
+        assertEquals(List.of("safety"), targetValues);
+        verify(polarionService, never()).setFieldValue(eq(target), eq("categories"), any());
+    }
+
+    @Test
+    void testAMergeOfAnExistingWorkItemSetsAListFieldTheWayItAlwaysDid() {
+        // the list of a work item which already exists is written through the generic PolarionService, which
+        // converts the values into the target project - and the types of the field are checked before that
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        lenient().when(target.getFieldType("categories")).thenReturn(mock(IListType.class));
+        IPrototype prototype = mock(IPrototype.class);
+        when(prototype.isKeyDefined("categories")).thenReturn(true);
+        when(source.getPrototype()).thenReturn(prototype);
         when(polarionService.getFieldValue(source, "categories")).thenReturn(List.of("safety"));
 
         DocumentsMergeContext context = mock(DocumentsMergeContext.class);
@@ -3027,8 +3051,39 @@ class MergeServiceTest {
 
         mergeService.merge(source, target, context, null);
 
-        assertEquals(List.of("safety"), targetValues);
-        verify(polarionService, never()).setFieldValue(eq(target), eq("categories"), any());
+        verify(polarionService).setFieldValue(target, "categories", List.of("safety"));
+    }
+
+    @Test
+    void testAListFieldOfADifferentTypeIsNotCopiedIntoTheTargetProject() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        lenient().when(target.getFieldType("customList")).thenReturn(mock(IListType.class));
+        IPrototype prototype = mock(IPrototype.class);
+        when(prototype.isKeyDefined("customList")).thenReturn(false); // a custom field, so its types are compared
+        when(source.getPrototype()).thenReturn(prototype);
+        CustomField sourceCustomField = mock(CustomField.class);
+        when(sourceCustomField.getType()).thenReturn(mock(IListType.class));
+        CustomField targetCustomField = mock(CustomField.class);
+        when(targetCustomField.getType()).thenReturn(mock(IEnumType.class));
+        CustomFieldsService customFieldsService = mock(CustomFieldsService.class);
+        when(customFieldsService.getCustomField(source, "customList")).thenReturn(sourceCustomField);
+        when(customFieldsService.getCustomField(target, "customList")).thenReturn(targetCustomField);
+        IDataService dataService = mock(IDataService.class);
+        when(dataService.getCustomFieldsService()).thenReturn(customFieldsService);
+        ITrackerService trackerService = mock(ITrackerService.class);
+        when(trackerService.getDataService()).thenReturn(dataService);
+        when(polarionService.getTrackerService()).thenReturn(trackerService);
+        List<Object> targetValues = new ArrayList<>(List.of("kept"));
+        lenient().when(polarionService.getFieldValue(target, "customList")).thenReturn(targetValues);
+
+        DocumentsChapterMergeContext context = mock(DocumentsChapterMergeContext.class);
+        when(context.getDiffModel()).thenReturn(DiffModel.builder().diffFields(new ArrayList<>(List.of(DiffField.builder().key("customList").build()))).build());
+
+        mergeService.merge(source, target, context, null);
+
+        assertEquals(List.of("kept"), targetValues);
+        verify(context).reportEntry(eq(WARNING), any(WorkItemsPair.class), contains("field 'customList' could not be copied"));
     }
 
     @Test
