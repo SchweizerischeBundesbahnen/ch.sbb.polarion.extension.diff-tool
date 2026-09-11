@@ -128,6 +128,9 @@ class DocumentLayoutSyncServiceTest {
     }
 
     private void withProperties(IModule.IRenderingLayoutStruct layout, String... keysAndValues) {
+        if (keysAndValues.length % 2 != 0) {
+            throw new IllegalArgumentException("A property is a key and a value, so an even number of values is expected");
+        }
         List<IStructure> properties = new ArrayList<>();
         for (int i = 0; i < keysAndValues.length; i += 2) {
             IStructure property = mock(IStructure.class);
