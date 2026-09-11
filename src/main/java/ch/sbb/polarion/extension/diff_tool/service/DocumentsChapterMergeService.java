@@ -24,9 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -60,12 +58,12 @@ public class DocumentsChapterMergeService {
      *     <li>what happened to the original work item - approvals, signatures and work records, which are also the
      *     fields Polarion handles through an API of their own (see {@code ListCleanerProvider})</li>
      *     <li>comments, which are objects of their own: they are copied through the comment API, see
-     *     {@link CommentsCopier#copyComments(IWorkItem, IWorkItem, DocumentsChapterMergeContext)}</li>
+     *     {@link CommentsCopier#copyComments(IWorkItem, IWorkItem)}</li>
      * </ul>
      */
-    private static final Set<String> FIELDS_NOT_TO_COPY = new HashSet<>(Arrays.asList(
+    private static final Set<String> FIELDS_NOT_TO_COPY = Set.of(
             IWorkItem.KEY_PROJECT, IWorkItem.KEY_MODULE, IWorkItem.KEY_TYPE, IWorkItem.KEY_OUTLINE_NUMBER, IWorkItem.KEY_ID,
-            IWorkItem.KEY_COMMENTS, IWorkItem.KEY_APPROVALS, IWorkItem.KEY_WORK_RECORDS, IWorkflowObject.KEY_WORKFLOW_SIGNATURES));
+            IWorkItem.KEY_COMMENTS, IWorkItem.KEY_APPROVALS, IWorkItem.KEY_WORK_RECORDS, IWorkflowObject.KEY_WORKFLOW_SIGNATURES);
 
     private final PolarionService polarionService;
     private final MergeService mergeService;
