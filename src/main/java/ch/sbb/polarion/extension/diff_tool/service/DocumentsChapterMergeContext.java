@@ -13,9 +13,11 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ReferencedItemsHandli
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -50,12 +52,13 @@ public final class DocumentsChapterMergeContext extends SettingsAwareMergeContex
     /** Home page content of the source document as it was before the merge started. In move mode the merge modifies it. */
     private final String sourceHomePageContentSnapshot;
 
-
+    @Getter(AccessLevel.NONE)
     private final Map<String, IWorkItem> itemMapping = new LinkedHashMap<>();
     private final Map<String, String> idMapping = new LinkedHashMap<>();
     private final List<IWorkItem> createdItems = new ArrayList<>();
     private final List<IWorkItem> movedItems = new ArrayList<>();
     private final List<IWorkItem> referencedItemsInTarget = new ArrayList<>();
+    @Getter(AccessLevel.NONE)
     private final List<String> copiedLayoutTypeIds = new ArrayList<>();
     private final List<IWorkItem> detachCandidates = new ArrayList<>();
 
@@ -75,6 +78,7 @@ public final class DocumentsChapterMergeContext extends SettingsAwareMergeContex
      * copied, this belongs to one work item at a time.
      */
     @Setter
+    @Getter(AccessLevel.NONE)
     private Map<String, String> commentIdMapping = Map.of();
 
     public DocumentsChapterMergeContext(@NotNull PolarionService polarionService, @NotNull ChapterMergeParams params) {
@@ -129,5 +133,22 @@ public final class DocumentsChapterMergeContext extends SettingsAwareMergeContex
 
     private static @NotNull String documentInfo(@NotNull DocumentIdentifier documentIdentifier) {
         return "%s/%s/%s".formatted(documentIdentifier.getProjectId(), documentIdentifier.getSpaceId(), documentIdentifier.getName());
+    }
+
+    /**
+     * Returns a defensive copy to avoid exposing internal mutable representation.
+     */
+    public List<String> getCopiedLayoutTypeIds() {
+        return List.copyOf(copiedLayoutTypeIds);
+    }
+
+    @Override
+    public @NonNull Map<String, IWorkItem> getItemMapping() {
+        return itemMapping;
+    }
+
+    @Override
+    public @NonNull Map<String, String> getCommentIdMapping() {
+        return commentIdMapping;
     }
 }

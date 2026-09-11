@@ -37,10 +37,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class DocumentCopyService {
 
-    private static final Logger log = Logger.getLogger(DocumentCopyService.class);
+    private static final Predicate<IModuleComment> ALWAYS_TRUE_COMMENT_FILTER = c -> true;
 
     private final PolarionService polarionService;
     private final MergeService mergeService;
@@ -186,7 +187,7 @@ public class DocumentCopyService {
 
     @VisibleForTesting
     void copyModuleComments(@NotNull IModule sourceModule, @NotNull IModule targetModule) {
-        Map<String, String> oldToNewCommentIdMap = commentsCopier.copyComments(sourceModule, targetModule, comment -> true, targetModule.getAuthor());
+        Map<String, String> oldToNewCommentIdMap = commentsCopier.copyComments(sourceModule, targetModule, ALWAYS_TRUE_COMMENT_FILTER, targetModule.getAuthor());
         if (oldToNewCommentIdMap.isEmpty()) {
             return;
         }
