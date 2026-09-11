@@ -52,6 +52,23 @@ public class CommentUtils {
         return RegexMatcher.get(COMMENT_REGEX).removeAll(content);
     }
 
+    /**
+     * Points the markers which anchor a comment to a piece of text at the copies of those comments. A marker naming
+     * a comment which was not copied is removed: it would otherwise anchor to a comment the copy does not have.
+     *
+     * @param idMapping ID of a copied comment mapped to the ID of its copy
+     */
+    public String remapComments(@NotNull String content, @NotNull Map<String, String> idMapping) {
+        Matcher matcher = COMMENT_PATTERN.matcher(content);
+        StringBuilder remapped = new StringBuilder();
+        while (matcher.find()) {
+            String newId = idMapping.get(matcher.group("id"));
+            matcher.appendReplacement(remapped, newId == null ? "" : Matcher.quoteReplacement("<span id=\"polarion-comment:%s\"></span>".formatted(newId)));
+        }
+        matcher.appendTail(remapped);
+        return remapped.toString();
+    }
+
     public Element removeComments(Element element) {
         List<Element> toRemove = new ArrayList<>();
         for (Element child : element.children()) {

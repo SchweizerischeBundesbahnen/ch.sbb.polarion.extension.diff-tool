@@ -23,7 +23,8 @@ or via a collection of documents.
 In case of diffing work items, appropriate counterpart work items (from another document or another project) are always seeking
 by selected link role.
 
-Additionally, the extension provides functionality to make a copy of selected document in other location.
+Additionally, the extension provides functionality to make a copy of selected document in other location, as well as to copy
+or move a chapter of one document, with everything below it, into another document.
 
 > [!IMPORTANT]
 > Starting from version 5.0.0 only latest version of Polarion is supported.
@@ -97,6 +98,14 @@ Repeat the instructions above except that on the step 5 use the following line:
    …
    ```
 
+### Documents merge form to appear on a Document's properties pane
+Repeat the instructions above except that on the step 5 use the following line:
+   ```xml
+   …
+   <extension id="merge-tool" label="Documents Merge" />
+   …
+   ```
+
 ### Nodes for collections and work items diffing to appear in Polarion's navigation tree
 1. Open a project where you wish these nodes to be available
 2. On the top of the project's navigation pane click ⚙ (Actions) ➙ 🔧 Administration. Project's administration page will be opened.
@@ -159,6 +168,22 @@ Polarion must be restarted for these values to take effect — they are read onc
 2. In the toolbar choose Show Sidebar ➙ Document Properties ➙ Documents Copy.
 3. Choose destination of target document, desired options and click `Create Document`.
 4. When document is created you will see success message with a link to it.
+
+### Chapter merge
+1. Open the document into which content should be placed.
+2. In the toolbar choose Show Sidebar ➙ Document Properties ➙ Documents Merge.
+3. Choose the source document and enter the outline number of the chapter to be merged, eg. `2.1.1`.
+4. Choose the copy mode: `copy` creates new work items, `move` moves work items and copies headings.
+5. Enter the outline number of the chapter of the current document which is used as an anchor, eg. `3.1`.
+6. Choose the insert mode: `under` places the content directly under the anchor chapter, `after` makes it a new
+   chapter of the same level. Heading levels and outline numbers are adjusted accordingly, so anchor chapter `3.1`
+   with insert mode `after` and source chapter `2` results in chapter `3.2`.
+7. Click `Merge Chapter`. The merge is executed as a Polarion job. When it has finished, a dialog states what the
+   merge did and links to the job log; closing the dialog reloads the document if the merge changed it.
+
+> [!NOTE]
+> A copied work item is never linked to the work item it was copied from. A work item cannot change its project, so in
+> `move` mode a work item of another project is referenced in the target document and removed from the source one.
 
 ### Work items diffing
 1. In Polarion navigation tree choose Diff Tool ➙ Multiple Work Items.

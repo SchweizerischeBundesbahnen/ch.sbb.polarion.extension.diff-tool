@@ -11,7 +11,8 @@ public class ExtensionBundleActivator extends GenericBundleActivator {
     protected Map<String, IFormExtension> getExtensions() {
         return Map.of(
                 CopyToolFormExtension.DOCUMENTS_COPY_FORM_EXTENSION_ID, new CopyToolFormExtension(),
-                DiffToolFormExtension.DOCUMENTS_COMPARISON_FORM_EXTENSION_ID, new DiffToolFormExtension()
+                DiffToolFormExtension.DOCUMENTS_COMPARISON_FORM_EXTENSION_ID, new DiffToolFormExtension(),
+                MergeToolFormExtension.DOCUMENTS_MERGE_FORM_EXTENSION_ID, new MergeToolFormExtension()
         );
     }
 

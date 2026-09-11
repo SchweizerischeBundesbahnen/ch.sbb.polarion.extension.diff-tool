@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import ToastHost from './ToastHost';
 
 interface PanelShellProps {
-  /** `comparison` or `copy` - the legacy per-panel id prefix, kept so the ids stay recognisable. */
-  prefix: 'comparison' | 'copy';
+  /** `comparison`, `copy` or `merge` - the per-panel id prefix, kept so the ids stay recognisable. */
+  prefix: 'comparison' | 'copy' | 'merge';
   /** Progress message; a non-null value shows the blocking overlay. */
   busy: string | null;
   /**
@@ -18,7 +18,7 @@ interface PanelShellProps {
 }
 
 /**
- * The frame both Document Properties panels share: the query container the rows are laid out against, the
+ * The frame the Document Properties panels share: the query container the rows are laid out against, the
  * blocking progress overlay, the toast host and the alert slot.
  *
  * Ports `GenericMixin.actionInProgress` / `showAlert` / `hideAlerts`, with the DOM poking replaced by

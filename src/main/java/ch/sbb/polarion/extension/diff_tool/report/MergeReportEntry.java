@@ -22,6 +22,8 @@ public class MergeReportEntry {
     private String fieldId;
     @Schema(description = "Document content pair")
     private DocumentsContentMergePair documentsContentPair;
+    @Schema(description = "Chapter merge operation data", implementation = ChapterMergePayload.class)
+    private ChapterMergePayload chapterMergePayload;
     @Schema(description = "Extended description of the operation")
     @JsonIgnore
     private final @NotNull String description;
@@ -55,6 +57,13 @@ public class MergeReportEntry {
     public MergeReportEntry(@NotNull MergeReport.OperationResultType operationResultType, @NotNull DocumentsContentMergePair documentsContentPair, @NotNull String description) {
         this.operationResultType = operationResultType;
         this.documentsContentPair = documentsContentPair;
+        this.description = description;
+        this.operationTime = LocalDateTime.now();
+    }
+
+    public MergeReportEntry(@NotNull MergeReport.OperationResultType operationResultType, @NotNull ChapterMergePayload chapterMergePayload, @NotNull String description) {
+        this.operationResultType = operationResultType;
+        this.chapterMergePayload = chapterMergePayload;
         this.description = description;
         this.operationTime = LocalDateTime.now();
     }

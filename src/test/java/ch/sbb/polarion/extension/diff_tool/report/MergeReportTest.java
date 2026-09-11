@@ -61,6 +61,15 @@ class MergeReportTest {
         assertEquals(expected, entityInfo);
     }
 
+
+    @Test
+    void testGetChapterMergeEntityInfo() {
+        ChapterMergePayload payload = new ChapterMergePayload("source/space/sourceDoc", "target/space/targetDoc", "2", "3.1", "3.2");
+        String entityInfo = mergeReport.getEntityInfo(new MergeReportEntry(MergeReport.OperationResultType.CREATED, payload, "Chapter merged"));
+
+        assertEquals("chapter '2' of 'source/space/sourceDoc' into chapter '3.1' of 'target/space/targetDoc'", entityInfo);
+    }
+
     private MergeReportEntry createEntry(MergeReport.OperationResultType operationResultType, String leftId, String rightId, String description, LocalDateTime operationTime) {
         WorkItem left = new WorkItem();
         left.setId(leftId);

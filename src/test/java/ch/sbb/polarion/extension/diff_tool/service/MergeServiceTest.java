@@ -83,11 +83,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationResultType.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({MockitoExtension.class, CurrentContextExtension.class})
@@ -2893,5 +2895,250 @@ class MergeServiceTest {
         lenient().when(link.isSuspect()).thenReturn(false);
 
         return link;
+    }
+
+    @Test
+    void testResolveWorkItemLinksUsesTheItemMappingForAnUnpairedCopy() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        IWorkItem linkedItem = mock(IWorkItem.class);
+        when(linkedItem.getId()).thenReturn("SOURCE-1");
+        IWorkItem copyOfLinkedItem = mock(IWorkItem.class);
+        DocumentsChapterMergeContext context = mock(DocumentsChapterMergeContext.class);
+        when(context.getItemMapping()).thenReturn(Map.of("SOURCE-1", copyOfLinkedItem));
+        when(polarionService.rewriteWorkItemLinks(eq(source), eq("<p>html</p>"), any())).thenAnswer(invocation -> {
+            // the counterpart of a link is looked up in the mapping the copy collected, not by a link role
+            UnaryOperator<IWorkItem> counterpartResolver = invocation.getArgument(2);
+            assertEquals(copyOfLinkedItem, counterpartResolver.apply(linkedItem));
+            return "<p>rewritten</p>";
+        });
+
+        assertEquals("<p>rewritten</p>", mergeService.resolveWorkItemLinks(source, target, context, "<p>html</p>"));
+        verify(polarionService, never()).replaceLinksToPairedWorkItems(any(), any(), anyString(), anyString());
+    }
+
+    @Test
+    void testResolveWorkItemLinksStillSeeksPairsForADocumentsMerge() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        DocumentsMergeContext context = mock(DocumentsMergeContext.class);
+        when(context.getLinkRole()).thenReturn("relates_to");
+        when(polarionService.replaceLinksToPairedWorkItems(source, target, "relates_to", "<p>html</p>")).thenReturn("<p>paired</p>");
+
+        assertEquals("<p>paired</p>", mergeService.resolveWorkItemLinks(source, target, context, "<p>html</p>"));
+        verify(polarionService, never()).rewriteWorkItemLinks(any(), anyString(), any());
+    }
+
+    @Test
+    void testUnpairedCopyCarriesLinksOverAndPointsThemToCopiesWhereThereAreAny() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        when(target.getId()).thenReturn("TARGET-1");
+
+        IWorkItem linkedCopied = mock(IWorkItem.class);
+        when(linkedCopied.getId()).thenReturn("SOURCE-2");
+        IWorkItem linkedOutside = mock(IWorkItem.class);
+        when(linkedOutside.getId()).thenReturn("SOURCE-3");
+        IWorkItem copyOfLinked = mock(IWorkItem.class);
+        when(copyOfLinked.getId()).thenReturn("TARGET-2");
+
+        ILinkRoleOpt role = mock(ILinkRoleOpt.class);
+        ILinkedWorkItemStruct linkToCopied = mock(ILinkedWorkItemStruct.class);
+        when(linkToCopied.getLinkedItem()).thenReturn(linkedCopied);
+        when(linkToCopied.getLinkRole()).thenReturn(role);
+        ILinkedWorkItemStruct linkOutside = mock(ILinkedWorkItemStruct.class);
+        when(linkOutside.getLinkedItem()).thenReturn(linkedOutside);
+        when(linkOutside.getLinkRole()).thenReturn(role);
+        when(linkOutside.getRevision()).thenReturn("42");
+        when(source.getLinkedWorkItemsStructsDirect()).thenReturn(new PObjectListStub(List.of(linkToCopied, linkOutside)));
+
+        DocumentsChapterMergeContext context = mock(DocumentsChapterMergeContext.class);
+        when(context.getItemMapping()).thenReturn(Map.of("SOURCE-2", copyOfLinked));
+        when(context.getDiffModel()).thenReturn(DiffModel.builder().build());
+
+        mergeService.copyLinkedWorkItemsUnpaired(source, target, context, context);
+
+        verify(target).addLinkedItem(copyOfLinked, role, null, false);
+        verify(target).addLinkedItem(linkedOutside, role, "42", false);
+    }
+
+    @Test
+    void testCopyModuleAttachmentsTakesTheDocumentsDirectly() {
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+        IModuleAttachment sourceAttachment = mock(IModuleAttachment.class);
+        when(sourceAttachment.getFileName()).thenReturn("picture.png");
+        when(sourceAttachment.getTitle()).thenReturn("Picture");
+        when(sourceModule.getAttachment("picture.png")).thenReturn(sourceAttachment);
+        when(targetModule.getAttachment("picture.png")).thenReturn(null);
+        IModuleAttachment createdAttachment = mock(IModuleAttachment.class);
+        when(targetModule.createAttachment(anyString(), anyString(), any())).thenReturn(createdAttachment);
+
+        mergeService.copyModuleAttachments(sourceModule, targetModule, "<img src=\"attachment:picture.png\"/>");
+
+        verify(createdAttachment).save();
+    }
+
+    @Test
+    void testListFieldValuesAreAddedOneByOneBecausePolarionRefusesToSetAListAtOnce() {
+        IWorkItem target = mock(IWorkItem.class);
+        List<Object> targetValues = new ArrayList<>(List.of("old"));
+        when(polarionService.getFieldValue(target, "categories")).thenReturn(targetValues);
+
+        mergeService.mergeListField(target, "categories", List.of("first", "second"));
+
+        assertEquals(List.of("first", "second"), targetValues);
+        // 'List fields can never be set' - the list the field already holds is the one which gets the values
+        verify(polarionService, never()).setFieldValue(eq(target), eq("categories"), any());
+    }
+
+    @Test
+    void testListFieldIsEmptiedWhenTheSourceHasNoValues() {
+        IWorkItem target = mock(IWorkItem.class);
+        List<Object> targetValues = new ArrayList<>(List.of("old"));
+        when(polarionService.getFieldValue(target, "categories")).thenReturn(targetValues);
+
+        mergeService.mergeListField(target, "categories", null);
+
+        assertTrue(targetValues.isEmpty());
+    }
+
+    @Test
+    void testIsListFieldFollowsTheTypeOfTheField() {
+        IWorkItem workItem = mock(IWorkItem.class);
+        when(workItem.getFieldType("categories")).thenReturn(mock(IListType.class));
+        when(workItem.getFieldType("title")).thenReturn(mock(IType.class));
+
+        assertTrue(mergeService.isListField(workItem, "categories"));
+        assertFalse(mergeService.isListField(workItem, "title"));
+    }
+
+    @Test
+    void testACopyWritesAListFieldThroughTheListItAlreadyHolds() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        when(target.getFieldType("categories")).thenReturn(mock(IListType.class));
+        IPrototype prototype = mock(IPrototype.class);
+        when(prototype.isKeyDefined("categories")).thenReturn(true);
+        when(source.getPrototype()).thenReturn(prototype);
+        List<Object> targetValues = new ArrayList<>();
+        when(polarionService.getFieldValue(target, "categories")).thenReturn(targetValues);
+        when(polarionService.getFieldValue(source, "categories")).thenReturn(List.of("safety"));
+
+        DocumentsChapterMergeContext context = mock(DocumentsChapterMergeContext.class);
+        when(context.getDiffModel()).thenReturn(DiffModel.builder().diffFields(new ArrayList<>(List.of(DiffField.builder().key("categories").build()))).build());
+
+        mergeService.merge(source, target, context, null);
+
+        assertEquals(List.of("safety"), targetValues);
+        verify(polarionService, never()).setFieldValue(eq(target), eq("categories"), any());
+    }
+
+    @Test
+    void testAMergeOfAnExistingWorkItemSetsAListFieldTheWayItAlwaysDid() {
+        // the list of a work item which already exists is written through the generic PolarionService, which
+        // converts the values into the target project - and the types of the field are checked before that
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        lenient().when(target.getFieldType("categories")).thenReturn(mock(IListType.class));
+        IPrototype prototype = mock(IPrototype.class);
+        when(prototype.isKeyDefined("categories")).thenReturn(true);
+        when(source.getPrototype()).thenReturn(prototype);
+        when(polarionService.getFieldValue(source, "categories")).thenReturn(List.of("safety"));
+
+        DocumentsMergeContext context = mock(DocumentsMergeContext.class);
+        when(context.getDiffModel()).thenReturn(DiffModel.builder().diffFields(new ArrayList<>(List.of(DiffField.builder().key("categories").build()))).build());
+
+        mergeService.merge(source, target, context, null);
+
+        verify(polarionService).setFieldValue(target, "categories", List.of("safety"));
+    }
+
+    @Test
+    void testAListFieldOfADifferentTypeIsNotCopiedIntoTheTargetProject() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        lenient().when(target.getFieldType("customList")).thenReturn(mock(IListType.class));
+        IPrototype prototype = mock(IPrototype.class);
+        when(prototype.isKeyDefined("customList")).thenReturn(false); // a custom field, so its types are compared
+        when(source.getPrototype()).thenReturn(prototype);
+        CustomField sourceCustomField = mock(CustomField.class);
+        when(sourceCustomField.getType()).thenReturn(mock(IListType.class));
+        CustomField targetCustomField = mock(CustomField.class);
+        when(targetCustomField.getType()).thenReturn(mock(IEnumType.class));
+        CustomFieldsService customFieldsService = mock(CustomFieldsService.class);
+        when(customFieldsService.getCustomField(source, "customList")).thenReturn(sourceCustomField);
+        when(customFieldsService.getCustomField(target, "customList")).thenReturn(targetCustomField);
+        IDataService dataService = mock(IDataService.class);
+        when(dataService.getCustomFieldsService()).thenReturn(customFieldsService);
+        ITrackerService trackerService = mock(ITrackerService.class);
+        when(trackerService.getDataService()).thenReturn(dataService);
+        when(polarionService.getTrackerService()).thenReturn(trackerService);
+        List<Object> targetValues = new ArrayList<>(List.of("kept"));
+        lenient().when(polarionService.getFieldValue(target, "customList")).thenReturn(targetValues);
+
+        DocumentsChapterMergeContext context = mock(DocumentsChapterMergeContext.class);
+        when(context.getDiffModel()).thenReturn(DiffModel.builder().diffFields(new ArrayList<>(List.of(DiffField.builder().key("customList").build()))).build());
+
+        mergeService.merge(source, target, context, null);
+
+        assertEquals(List.of("kept"), targetValues);
+        verify(context).reportEntry(eq(WARNING), any(WorkItemsPair.class), contains("field 'customList' could not be copied"));
+    }
+
+    @Test
+    void testAFieldWhichCannotBeCopiedCostsThatFieldOnlyWhenCopyingWithoutPairs() {
+        IWorkItem source = mock(IWorkItem.class);
+        when(source.getId()).thenReturn("SOURCE-1");
+        IWorkItem target = mock(IWorkItem.class);
+        IPrototype prototype = mock(IPrototype.class);
+        when(prototype.isKeyDefined("title")).thenReturn(true); // a standard field, so no custom field check is due
+        when(source.getPrototype()).thenReturn(prototype);
+        when(polarionService.getFieldValue(source, "broken")).thenThrow(new IllegalStateException("no such field"));
+        when(polarionService.getFieldValue(source, "title")).thenReturn("Title of the copied item");
+
+        DocumentsChapterMergeContext context = mock(DocumentsChapterMergeContext.class);
+        when(context.getDiffModel()).thenReturn(DiffModel.builder()
+                .diffFields(new ArrayList<>(List.of(DiffField.builder().key("broken").build(), DiffField.builder().key("title").build())))
+                .build());
+
+        mergeService.merge(source, target, context, null);
+
+        // the item keeps the fields which could be copied...
+        verify(polarionService).setFieldValue(target, "title", "Title of the copied item");
+        verify(target).save();
+        // ...and the one which could not is reported
+        verify(context).reportEntry(eq(WARNING), any(WorkItemsPair.class), contains("field 'broken' could not be copied"));
+    }
+
+    @Test
+    void testAFieldWhichCannotBeMergedStillFailsAPairedMerge() {
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        when(polarionService.getFieldValue(source, "broken")).thenThrow(new IllegalStateException("no such field"));
+
+        DocumentsMergeContext context = mock(DocumentsMergeContext.class);
+        when(context.getDiffModel()).thenReturn(DiffModel.builder().diffFields(new ArrayList<>(List.of(DiffField.builder().key("broken").build()))).build());
+
+        assertThrows(IllegalStateException.class, () -> mergeService.merge(source, target, context, null));
+    }
+
+    @Test
+    void testTheCommentMarkersOfACopyArePointedAtTheCopiedComments() {
+        DocumentsChapterMergeContext context = mock(DocumentsChapterMergeContext.class);
+        when(context.getCommentIdMapping()).thenReturn(Map.of("5", "17"));
+
+        String resolved = mergeService.resolveComments(context, "<p>Commented<span id=\"polarion-comment:5\"></span> text</p>");
+
+        assertEquals("<p>Commented<span id=\"polarion-comment:17\"></span> text</p>", resolved);
+    }
+
+    @Test
+    void testTheCommentMarkersOfAPairedMergeAreStillRemoved() {
+        DocumentsMergeContext context = mock(DocumentsMergeContext.class);
+
+        String resolved = mergeService.resolveComments(context, "<p>Commented<span id=\"polarion-comment:5\"></span> text</p>");
+
+        assertEquals("<p>Commented text</p>", resolved);
     }
 }

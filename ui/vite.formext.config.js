@@ -44,6 +44,7 @@ export default defineConfig({
       entry: {
         diffToolPanel: fileURLToPath(new URL('./src/formext/mountDiffToolPanel.tsx', import.meta.url)),
         copyToolPanel: fileURLToPath(new URL('./src/formext/mountCopyToolPanel.tsx', import.meta.url)),
+        mergeToolPanel: fileURLToPath(new URL('./src/formext/mountMergeToolPanel.tsx', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, entryName) => `${entryName}.js`,

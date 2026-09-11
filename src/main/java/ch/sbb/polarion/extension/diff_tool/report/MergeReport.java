@@ -107,6 +107,12 @@ public class MergeReport {
             return "left WI '%s', right WI '%s'".formatted(
                     entry.getDocumentsContentPair().getLeftWorkItemId(),
                     entry.getDocumentsContentPair().getRightWorkItemId());
+        } else if (entry.getChapterMergePayload() != null) {
+            return "chapter '%s' of '%s' into chapter '%s' of '%s'".formatted(
+                    entry.getChapterMergePayload().sourceOutlineNumber(),
+                    entry.getChapterMergePayload().sourceDocument(),
+                    entry.getChapterMergePayload().targetOutlineNumber(),
+                    entry.getChapterMergePayload().targetDocument());
         } else {
             return "UNKNOWN";
         }
