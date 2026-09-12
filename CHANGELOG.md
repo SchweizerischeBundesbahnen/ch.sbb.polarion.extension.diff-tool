@@ -1,5 +1,25 @@
 # Changelog
 
+## [9.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.2.1...v9.3.0) (2026-09-12)
+
+
+### Features
+
+* improve layout of side pane forms + implement errors and warnings as toasts ([#664](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/664)) ([a4050f3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/a4050f3e6411c786c7a60095e9eaf92b25ff3ee9))
+* upgrade authorization settings page where roles selection is implemented as dropdowns instead of checkboxes ([#652](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/652)) ([72493f6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/72493f6d1e18e34d98863087395c38c1382d3f57))
+
+
+### Bug Fixes
+
+* **deps:** update dependency @types/react-dom to v19.2.7 ([#660](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/660)) ([d672052](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d672052b42356129c9a318ce4be49a0e6c89b3cd))
+* **deps:** update dependency eslint to v10.10.0 ([#667](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/667)) ([6b9dc07](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/6b9dc075329ebb5a326a498b376590f891098788))
+* **deps:** update dependency globals to v17.12.0 ([#658](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/658)) ([538a54c](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/538a54c338fa95a6d9300f2ac8ab69e4dab068ab))
+* **deps:** update dependency typescript-eslint to v8.69.0 ([#654](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/654)) ([3b0bb3b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/3b0bb3b9aef0ccce00d913c0ff69ba393c1854c2))
+* **deps:** update dependency typescript-eslint to v8.70.0 ([#674](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/674)) ([91f2628](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/91f2628196434083aa9d6b0d687a707971207675))
+* **deps:** update playwright monorepo to v1.63.0 ([#668](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/668)) ([2374d0d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2374d0de6793600564bf8064f1c522fabf6f5b8d))
+* reject failed requests with an Error, not a pending Promise ([#666](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/666)) ([5b97140](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/5b97140e014b9b8e3b389fb5b64919e893a1bdba)), closes [#665](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/665)
+* stop offering the document's structure link role in both side panels ([#672](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/672)) ([3006918](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/30069187482e27230423e3396140e4c38509df76)), closes [#671](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/671)
+
 ## [9.2.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.2.0...v9.2.1) (2026-09-01)
 
 
