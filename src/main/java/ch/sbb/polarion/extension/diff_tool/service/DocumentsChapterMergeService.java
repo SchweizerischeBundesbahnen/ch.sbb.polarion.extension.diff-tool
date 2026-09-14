@@ -10,6 +10,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeWorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ReferencedItemsHandling;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
+import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.model.IModule;
@@ -62,7 +63,7 @@ public class DocumentsChapterMergeService {
      * </ul>
      */
     private static final Set<String> FIELDS_NOT_TO_COPY = Set.of(
-            IWorkItem.KEY_PROJECT, IWorkItem.KEY_MODULE, IWorkItem.KEY_TYPE, IWorkItem.KEY_OUTLINE_NUMBER, IWorkItem.KEY_ID,
+            IUniqueObject.KEY_PROJECT, IWorkItem.KEY_MODULE, IWorkflowObject.KEY_TYPE, IWorkItem.KEY_OUTLINE_NUMBER, IUniqueObject.KEY_ID,
             IWorkItem.KEY_COMMENTS, IWorkItem.KEY_APPROVALS, IWorkItem.KEY_WORK_RECORDS, IWorkflowObject.KEY_WORKFLOW_SIGNATURES);
 
     private final PolarionService polarionService;
@@ -227,10 +228,7 @@ public class DocumentsChapterMergeService {
             return;
         }
         nodes.add(new SourceNode(workItem, parentId, isHeading(sourceModule, workItem), node.isExternal()));
-        List<IModule.IStructureNode> children = node.getChildren();
-        if (children != null) {
-            children.forEach(child -> collectSubtree(sourceModule, child, workItem.getId(), nodes));
-        }
+        node.getChildren().forEach(child -> collectSubtree(sourceModule, child, workItem.getId(), nodes));
     }
 
     @VisibleForTesting
@@ -257,7 +255,7 @@ public class DocumentsChapterMergeService {
             return new InsertionPoint(null, 0);
         }
         List<IModule.IStructureNode> children = parentNode.getChildren();
-        int index = children == null ? 0 : Math.min(children.indexOf(targetChapterNode) + 1, children.size());
+        int index = Math.min(children.indexOf(targetChapterNode) + 1, children.size());
         return new InsertionPoint(parentNode.getWorkItem(), index);
     }
 
@@ -337,7 +335,7 @@ public class DocumentsChapterMergeService {
     }
 
     private int childrenCount(@Nullable IModule.IStructureNode parentNode) {
-        return parentNode == null || parentNode.getChildren() == null ? 0 : parentNode.getChildren().size();
+        return parentNode == null ? 0 : parentNode.getChildren().size();
     }
 
     /**
@@ -466,9 +464,8 @@ public class DocumentsChapterMergeService {
         if (context.getDetachCandidates().isEmpty()) {
             return;
         }
-        List<IWorkItem> reversed = new ArrayList<>(context.getDetachCandidates());
-        Collections.reverse(reversed);
-        for (IWorkItem workItem : reversed) {
+        List<IWorkItem> detachCandidates = new ArrayList<>(context.getDetachCandidates());
+        for (IWorkItem workItem : detachCandidates.reversed()) {
             if (context.getSourceModule().getExternalWorkItems().contains(workItem)) {
                 context.getSourceModule().unreference(workItem);
             } else {
@@ -543,7 +540,7 @@ public class DocumentsChapterMergeService {
             boolean modified = false;
             for (DiffField field : fieldsToCopy(createdWorkItem, context.getTargetModule()).getDiffFields()) {
                 Object value = polarionService.getFieldValue(createdWorkItem, field.getKey());
-                if (value instanceof Text text && text.getContent() != null) {
+                if (value instanceof Text text) {
                     String rewritten = polarionService.rewriteWorkItemLinks(createdWorkItem, text.getContent(),
                             workItem -> context.getItemMapping().get(workItem.getId()));
                     if (!rewritten.equals(text.getContent())) {

@@ -142,6 +142,8 @@ class CommentsCopierTest {
         T comment = mock(commentClass);
         when(comment.getId()).thenReturn(id);
         when(comment.getText()).thenReturn(Text.plain(text));
+        // a comment without replies has an empty list of them, the way Polarion answers for a list field
+        when(comment.getChildComments()).thenReturn(new PObjectListStub(List.of()));
         return comment;
     }
 }

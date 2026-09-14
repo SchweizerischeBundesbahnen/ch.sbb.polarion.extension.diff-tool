@@ -94,6 +94,10 @@ public class MergeService {
     private static final String NEW_WORKITEM_CREATED_MESSAGE = "new workitem '%s' based on source workitem '%s' created";
 
     private static final CompareOptions MERGE_OPTION = CompareOptions.create().forMerge(true).build();
+
+    /** The layout parameter Polarion sometimes writes into the anchor of a work item. */
+    private static final Pattern LAYOUT_PARAMETER = Pattern.compile("\\|layout=\\d+");
+
     private final PolarionService polarionService;
 
     public MergeService(PolarionService polarionService) {
@@ -524,7 +528,6 @@ public class MergeService {
                 ? sourceNumberWithinParent : targetDestinationParentNode.getOutlineNumber() + sourceNumberWithinParent;
     }
 
-    @VisibleForTesting
     IModule.IStructureNode getNodeByOutlineNumber(IModule module, String outlineNumber) {
         for (IWorkItem workItem : module.getAllWorkItems()) {
             if (outlineNumber.equals(module.getOutlineNumberOfWorkitem(workItem))) {
@@ -706,9 +709,9 @@ public class MergeService {
         StringBuilder buf = new StringBuilder();
         while (matcher.find()) {
             String tag = matcher.group();
-            String replacementTag = tag.replace("<div", "<h" + headingLevel)
-                    .replace("</div", "</h" + headingLevel)
-                    .replaceAll("\\|layout=\\d+", ""); // not sure why sometimes it adds layout entry and how it affects the result - so let's remove it
+            // not sure why sometimes it adds layout entry and how it affects the result - so let's remove it
+            String replacementTag = LAYOUT_PARAMETER.matcher(tag.replace("<div", "<h" + headingLevel)
+                    .replace("</div", "</h" + headingLevel)).replaceAll("");
             matcher.appendReplacement(buf, replacementTag);
         }
         matcher.appendTail(buf);
@@ -730,7 +733,6 @@ public class MergeService {
         module.save();
     }
 
-    @VisibleForTesting
     void merge(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, MergeWorkItemsPair pair) {
         for (DiffField field : orderForMerge(context.getDiffModel().getDiffFields())) {
             if (pair != null && !pair.fieldSelectedForMerge(field)) {
@@ -1254,7 +1256,6 @@ public class MergeService {
      * the document is a separate step, because {@link IModule#moveIn} is a bulk operation: several work items of one
      * document are taken over in a single call, and only then placed one by one.
      */
-    @VisibleForTesting
     void placeNode(@NotNull IWorkItem workItem, @NotNull IModule targetModule, @Nullable IModule.IStructureNode parentNode, int destinationIndex, boolean referenced) {
         IModule.IStructureNode destinationParentNode = parentNode == null ? targetModule.getRootNode().getChildren().getFirst() : parentNode;
 

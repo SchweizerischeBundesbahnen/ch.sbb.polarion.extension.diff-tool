@@ -725,7 +725,8 @@ class DocumentsChapterMergeServiceTest {
         when(headingType.getId()).thenReturn("targetHeading");
         when(module.getHeadingWorkItemType()).thenReturn(headingType);
         ITrackerProject project = mock(ITrackerProject.class);
-        when(project.getContextId()).thenReturn(mock(IContextId.class));
+        IContextId contextId = mock(IContextId.class);
+        when(project.getContextId()).thenReturn(contextId);
         when(module.getProject()).thenReturn(project);
         return module;
     }

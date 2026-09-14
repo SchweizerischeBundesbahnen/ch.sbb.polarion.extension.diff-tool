@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Spawns and tracks chapter merge jobs. A Polarion job reports only a status, so the merge result of a job is
@@ -43,18 +44,19 @@ public class ChapterMergeJobScheduler {
 
     /**
      * A job unit doesn't know the ID of its job while it is being constructed, so it reports its result into a
-     * holder which is registered under the job ID as soon as the job is spawned.
+     * holder which is registered under the job ID as soon as the job is spawned. The job thread writes the result
+     * once, when its merge has finished; the threads which serve the polling of that job read it.
      */
     static final class MergeResultHolder {
-        private volatile MergeResult mergeResult;
+        private final AtomicReference<MergeResult> mergeResult = new AtomicReference<>();
 
         void set(@NotNull MergeResult mergeResult) {
-            this.mergeResult = mergeResult;
+            this.mergeResult.set(mergeResult);
         }
 
         @Nullable
         MergeResult get() {
-            return mergeResult;
+            return mergeResult.get();
         }
     }
 

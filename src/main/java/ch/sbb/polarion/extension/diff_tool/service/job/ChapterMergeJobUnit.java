@@ -24,7 +24,7 @@ public class ChapterMergeJobUnit extends AbstractJobUnit {
 
     private final ChapterMergeParams params;
     private final DocumentsChapterMergeService documentsChapterMergeService;
-    private final transient Consumer<MergeResult> resultConsumer;
+    private final Consumer<MergeResult> resultConsumer;
 
     public ChapterMergeJobUnit(@NotNull ChapterMergeParams params, @NotNull DocumentsChapterMergeService documentsChapterMergeService,
                                @NotNull Consumer<MergeResult> resultConsumer, @NotNull IJobUnitFactory factory) {

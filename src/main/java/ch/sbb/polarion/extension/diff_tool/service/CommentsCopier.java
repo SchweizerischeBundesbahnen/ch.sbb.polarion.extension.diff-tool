@@ -95,9 +95,6 @@ public class CommentsCopier {
     private <T extends ICommentBase<T>> void copyChildComments(@NotNull T sourceParent, @NotNull T targetParent,
                                                                @NotNull Map<String, String> idMapping, @Nullable IUser fallbackAuthor) {
         List<T> children = sourceParent.getChildComments();
-        if (children == null) {
-            return;
-        }
         for (T sourceChild : children) {
             T newChild = targetParent.createChildComment(sourceChild.getText());
             copyMetadata(sourceChild, newChild, fallbackAuthor);

@@ -3006,8 +3006,10 @@ class MergeServiceTest {
     @Test
     void testIsListFieldFollowsTheTypeOfTheField() {
         IWorkItem workItem = mock(IWorkItem.class);
-        when(workItem.getFieldType("categories")).thenReturn(mock(IListType.class));
-        when(workItem.getFieldType("title")).thenReturn(mock(IType.class));
+        IListType listType = mock(IListType.class);
+        IType singleValueType = mock(IType.class);
+        when(workItem.getFieldType("categories")).thenReturn(listType);
+        when(workItem.getFieldType("title")).thenReturn(singleValueType);
 
         assertTrue(mergeService.isListField(workItem, "categories"));
         assertFalse(mergeService.isListField(workItem, "title"));
@@ -3017,7 +3019,8 @@ class MergeServiceTest {
     void testACopyWritesAListFieldThroughTheListItAlreadyHolds() {
         IWorkItem source = mock(IWorkItem.class);
         IWorkItem target = mock(IWorkItem.class);
-        when(target.getFieldType("categories")).thenReturn(mock(IListType.class));
+        IListType listType = mock(IListType.class);
+        when(target.getFieldType("categories")).thenReturn(listType);
         IPrototype prototype = mock(IPrototype.class);
         when(prototype.isKeyDefined("categories")).thenReturn(true);
         when(source.getPrototype()).thenReturn(prototype);
@@ -3040,7 +3043,8 @@ class MergeServiceTest {
         // converts the values into the target project - and the types of the field are checked before that
         IWorkItem source = mock(IWorkItem.class);
         IWorkItem target = mock(IWorkItem.class);
-        lenient().when(target.getFieldType("categories")).thenReturn(mock(IListType.class));
+        IListType listType = mock(IListType.class);
+        lenient().when(target.getFieldType("categories")).thenReturn(listType);
         IPrototype prototype = mock(IPrototype.class);
         when(prototype.isKeyDefined("categories")).thenReturn(true);
         when(source.getPrototype()).thenReturn(prototype);
@@ -3058,14 +3062,17 @@ class MergeServiceTest {
     void testAListFieldOfADifferentTypeIsNotCopiedIntoTheTargetProject() {
         IWorkItem source = mock(IWorkItem.class);
         IWorkItem target = mock(IWorkItem.class);
-        lenient().when(target.getFieldType("customList")).thenReturn(mock(IListType.class));
+        IListType listType = mock(IListType.class);
+        lenient().when(target.getFieldType("customList")).thenReturn(listType);
         IPrototype prototype = mock(IPrototype.class);
         when(prototype.isKeyDefined("customList")).thenReturn(false); // a custom field, so its types are compared
         when(source.getPrototype()).thenReturn(prototype);
         CustomField sourceCustomField = mock(CustomField.class);
-        when(sourceCustomField.getType()).thenReturn(mock(IListType.class));
+        IListType sourceFieldType = mock(IListType.class);
+        when(sourceCustomField.getType()).thenReturn(sourceFieldType);
         CustomField targetCustomField = mock(CustomField.class);
-        when(targetCustomField.getType()).thenReturn(mock(IEnumType.class));
+        IEnumType targetFieldType = mock(IEnumType.class);
+        when(targetCustomField.getType()).thenReturn(targetFieldType);
         CustomFieldsService customFieldsService = mock(CustomFieldsService.class);
         when(customFieldsService.getCustomField(source, "customList")).thenReturn(sourceCustomField);
         when(customFieldsService.getCustomField(target, "customList")).thenReturn(targetCustomField);
