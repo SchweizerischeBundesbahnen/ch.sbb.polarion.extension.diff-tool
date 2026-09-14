@@ -49,11 +49,24 @@ test.describe('data fetch failing', () => {
   });
 
   test('collections data fetch fails', async ({ page }) => {
+    // CollectionsDiff also loads the target project's configuration names, which the route above does not
+    // match ('*' cannot cross the '/' in 'rest/internal/settings/diff/names'). That request 404s on the
+    // dev server and the component's catch opens a native alert. This suite mocks nothing on purpose, so
+    // the alert is consumed here rather than mocked away. Left unhandled, Playwright auto-dismisses it and
+    // the dismissal can race the page teardown.
+    const alertMessage = new Promise(resolve => page.once('dialog', async dialog => {
+      const message = dialog.message();
+      await dialog.dismiss();
+      resolve(message);
+    }));
+
     await page.goto('/collections?sourceProjectId=project1&sourceCollectionId=collection1&targetProjectId=project2&targetCollectionId=collection2');
 
     await expect(page.locator('.app-header .app-title')).toHaveText("Diff/merge of Polarion Collections");
     await expect(page.getByTestId('app-alert-title')).toHaveText("Error occurred loading diff data!");
     await expect(page.getByTestId('app-alert-message')).toHaveText("Network error occurred when attempting to fetch a resource. Be sure Polarion is started and accessible.");
+
+    expect(await alertMessage).toContain('Error occurred loading setting names of target project');
   });
 
 });

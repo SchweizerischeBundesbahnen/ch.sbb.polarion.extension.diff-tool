@@ -8,6 +8,9 @@ test.describe("page of diffing Collections c", () => {
     await mockApi.mockEndpoint({url: '**/extension/info', fixtureFile: 'version-info.json'});
     await mockApi.mockEndpoint({url: '**/communication/settings', fixtureFile: 'communication-settings.json'});
     await mockApi.mockEndpoint({url: '**/settings/diff/names?scope=project/elibrary/', fixtureFile: 'configs.json'});
+    // CollectionsDiff loads the *target* project's configuration names too; unmocked it 404s and the
+    // component's catch opens a native alert, which Playwright then auto-dismisses mid-test.
+    await mockApi.mockEndpoint({url: '**/settings/diff/names?scope=project/Project2/', fixtureFile: 'configs.json'});
     await mockApi.mockEndpoint({url: '**/diff/collections', fixtureFile: 'collections.json'});
     await mockApi.mockEndpoint({url: '**/diff/documents', fixtureFile: 'documents-from-collection.json', method: 'POST'});
     await mockApi.mockEndpoint({url: '**/duplicate', fixtureFile: 'duplicate.json', method: 'POST'});
