@@ -41,8 +41,6 @@ import java.util.function.Predicate;
 
 public class DocumentCopyService {
 
-    private static final Predicate<IModuleComment> ALWAYS_TRUE_COMMENT_FILTER = c -> true;
-
     private final PolarionService polarionService;
     private final MergeService mergeService;
     private final CommentsCopier commentsCopier;
@@ -187,7 +185,7 @@ public class DocumentCopyService {
 
     @VisibleForTesting
     void copyModuleComments(@NotNull IModule sourceModule, @NotNull IModule targetModule) {
-        Map<String, String> oldToNewCommentIdMap = commentsCopier.copyComments(sourceModule, targetModule, ALWAYS_TRUE_COMMENT_FILTER, targetModule.getAuthor());
+        Map<String, String> oldToNewCommentIdMap = commentsCopier.copyComments(sourceModule, targetModule, c -> true, targetModule.getAuthor());
         if (oldToNewCommentIdMap.isEmpty()) {
             return;
         }
