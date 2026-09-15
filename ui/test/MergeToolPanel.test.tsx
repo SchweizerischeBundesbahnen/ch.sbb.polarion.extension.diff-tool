@@ -72,18 +72,21 @@ async function fillForm(shadow: ShadowRoot) {
 
 const mergeButton = (shadow: ShadowRoot) => $<HTMLButtonElement>(shadow, '#merge-chapter');
 
-/** What the confirmation dialog says, empty while it is not open. */
+/** What the dialog says at the stage it is at, empty while it is not open. */
+const dialogText = (shadow: ShadowRoot) => shadow.querySelector('.merge-dialog')?.textContent ?? '';
+
+/** What the confirmation stage says, empty while the dialog is at another stage or closed. */
 const confirmationText = (shadow: ShadowRoot) => shadow.querySelector('#merge-confirmation')?.textContent ?? '';
+
+/** What the result stage says, empty while the dialog is at another stage or closed. */
+const resultText = (shadow: ShadowRoot) => shadow.querySelector('#merge-result')?.textContent ?? '';
 
 /** Clicks Merge and confirms, which is what starts a merge. */
 async function startMerge(shadow: ShadowRoot) {
   mergeButton(shadow).click();
   await vi.waitFor(() => expect(shadow.querySelector('#merge-confirmation')).not.toBeNull());
-  $<HTMLButtonElement>(shadow, '.rsp-modal-footer .sbb-btn--primary').click();
+  $<HTMLButtonElement>(shadow, '#merge-confirm').click();
 }
-
-/** What the result dialog says, empty while it is not open. */
-const dialogText = (shadow: ShadowRoot) => shadow.querySelector('.merge-result-dialog')?.textContent ?? '';
 
 afterEach(() => {
   panel?.unmount();
@@ -126,6 +129,22 @@ describe('MergeToolPanel', () => {
 
     setFieldValue($<HTMLInputElement>(shadow, '#merge-target-chapter-input'), '3.1');
     await vi.waitFor(() => expect(mergeButton(shadow).disabled).toBe(false));
+  });
+
+  it('copies the missing workitem layouts unless that is switched off', async () => {
+    const { shadow, fetchMock } = await open();
+    await fillForm(shadow);
+    await vi.waitFor(() => expect(mergeButton(shadow).disabled).toBe(false));
+    expect($<HTMLInputElement>(shadow, '#merge-copy-layouts-checkbox').checked).toBe(true);
+
+    $<HTMLInputElement>(shadow, '#merge-copy-layouts-checkbox').click();
+    await startMerge(shadow);
+
+    await vi.waitFor(() => {
+      const post = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST');
+      const body = JSON.parse(String(post![1]!.body)) as Record<string, unknown>;
+      expect(body.copyWorkItemLayouts).toBe(false);
+    });
   });
 
   it('rejects anything which is not an outline number', async () => {
@@ -193,7 +212,7 @@ describe('MergeToolPanel', () => {
 
     mergeButton(shadow).click();
     await vi.waitFor(() => expect(confirmationText(shadow)).not.toBe(''));
-    $<HTMLButtonElement>(shadow, '.rsp-modal-footer .sbb-btn--secondary').click();
+    $<HTMLButtonElement>(shadow, '#merge-cancel').click();
 
     await vi.waitFor(() => expect(confirmationText(shadow)).toBe(''));
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false);
@@ -219,7 +238,7 @@ describe('MergeToolPanel', () => {
         sourceChapterOutlineNumber: '2',
         targetChapterOutlineNumber: '3.1',
         referencedItems: 'KEEP_REFERENCE',
-        copyWorkItemLayouts: false,
+        copyWorkItemLayouts: true,
       });
     });
   });
@@ -243,7 +262,7 @@ describe('MergeToolPanel', () => {
     });
   });
 
-  it('states in a dialog what the merge did, and reloads the document only once it is closed', async () => {
+  it('states in the same dialog what the merge did, and reloads the document only once it is closed', async () => {
     const { shadow } = await open();
     await fillForm(shadow);
     await vi.waitFor(() => expect(mergeButton(shadow).disabled).toBe(false));
@@ -251,18 +270,20 @@ describe('MergeToolPanel', () => {
     await startMerge(shadow);
 
     await vi.waitFor(() => expect(dialogText(shadow)).toContain('Chapter merged'));
-    expect(dialogText(shadow)).toContain('Merged as chapter 3.2');
-    expect(dialogText(shadow)).toContain('2 workitem(s) created');
-    expect(dialogText(shadow)).toContain('1 workitem layout(s) copied');
+    // the dialog the merge was confirmed in is the one showing the result: its stage changed, not the dialog
+    expect(confirmationText(shadow)).toBe('');
+    expect(resultText(shadow)).toContain('Merged as chapter 3.2');
+    expect(resultText(shadow)).toContain('2 workitem(s) created');
+    expect(resultText(shadow)).toContain('1 workitem layout(s) copied');
     // the merge report itself, whose entries carry no text of their own
-    expect(dialogText(shadow)).toContain("workitem 'DP-100' created");
+    expect(resultText(shadow)).toContain("workitem 'DP-100' created");
     // The document is reloaded when the user acknowledges the result, not from under them.
     expect(vi.mocked(reloadDocument)).not.toHaveBeenCalled();
 
-    $<HTMLButtonElement>(shadow, '#merge-result-ok').click();
+    $<HTMLButtonElement>(shadow, '#merge-close').click();
 
     await vi.waitFor(() => expect(vi.mocked(reloadDocument)).toHaveBeenCalled());
-    expect(shadow.querySelector('.merge-result-dialog')).toBeNull();
+    expect(shadow.querySelector('.merge-dialog')).toBeNull();
   });
 
   it('does not reload the document when the merge put nothing into it', async () => {
@@ -283,9 +304,9 @@ describe('MergeToolPanel', () => {
     await startMerge(shadow);
 
     await vi.waitFor(() => expect(dialogText(shadow)).toContain('Chapter not merged'));
-    $<HTMLButtonElement>(shadow, '#merge-result-ok').click();
+    $<HTMLButtonElement>(shadow, '#merge-close').click();
 
-    await vi.waitFor(() => expect(shadow.querySelector('.merge-result-dialog')).toBeNull());
+    await vi.waitFor(() => expect(shadow.querySelector('.merge-dialog')).toBeNull());
     expect(vi.mocked(reloadDocument)).not.toHaveBeenCalled();
   });
 
@@ -391,7 +412,8 @@ describe('MergeToolPanel', () => {
     await startMerge(shadow);
 
     expect(await toasted(shadow, 'error')).toBe('Chapter merge failed: boom');
-    expect(shadow.querySelector('.merge-result-dialog')).toBeNull();
+    // nothing to acknowledge: the merge never got as far as a result of its own
+    expect(shadow.querySelector('.merge-dialog')).toBeNull();
   });
 
   it('falls back to a generic message when the failure body is not the expected JSON', async () => {
@@ -414,7 +436,7 @@ describe('MergeToolPanel', () => {
     expect(await toasted(shadow, 'error')).toBe('Error merging chapter');
   });
 
-  it('shows the progress overlay while the merge runs', async () => {
+  it('spins in the dialog the merge was confirmed in, which cannot be closed meanwhile', async () => {
     // The result is not there on the first ask, so the panel is still waiting for it while this is asserted
     const { shadow } = await open(
       installFetchMock(
@@ -432,7 +454,15 @@ describe('MergeToolPanel', () => {
 
     await startMerge(shadow);
 
-    await vi.waitFor(() => expect($(shadow, '#merge-in-progress-message').textContent).toContain('Merging chapter 2'));
+    await vi.waitFor(() => expect($(shadow, '#merge-progress').textContent).toContain('Merging chapter 2'));
+    expect(shadow.querySelector('#merge-progress .sbb-spinner')).not.toBeNull();
+    // the question is answered and the merge is under way: nothing here can be dismissed
+    expect(confirmationText(shadow)).toBe('');
+    expect(shadow.querySelector('.merge-dialog-close')).toBeNull();
+    expect($<HTMLButtonElement>(shadow, '#merge-close').disabled).toBe(true);
+    // Escape is refused too
+    $<HTMLDialogElement>(shadow, '.merge-dialog').dispatchEvent(new Event('cancel', { cancelable: true }));
+    expect(shadow.querySelector('.merge-dialog')).not.toBeNull();
     expect(mergeButton(shadow).disabled).toBe(true);
   });
 

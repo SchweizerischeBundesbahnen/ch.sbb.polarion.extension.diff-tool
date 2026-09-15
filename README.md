@@ -178,8 +178,11 @@ Polarion must be restarted for these values to take effect — they are read onc
 6. Choose the insert mode: `under` places the content directly under the anchor chapter, `after` makes it a new
    chapter of the same level. Heading levels and outline numbers are adjusted accordingly, so anchor chapter `3.1`
    with insert mode `after` and source chapter `2` results in chapter `3.2`.
-7. Click `Merge Chapter`. The merge is executed as a Polarion job. When it has finished, a dialog states what the
-   merge did and links to the job log; closing the dialog reloads the document if the merge changed it.
+7. Click `Merge Chapter`. A dialog states what the merge will do and waits to be confirmed.
+8. Confirm. The merge is executed as a Polarion job, and the dialog it was confirmed in shows its progress. It cannot
+   be closed while the merge runs.
+9. When the merge has finished, the same dialog states what it did and links to the job log. Closing it reloads the
+   document if the merge changed it.
 
 > [!NOTE]
 > A copied work item is never linked to the work item it was copied from. A work item cannot change its project, so in

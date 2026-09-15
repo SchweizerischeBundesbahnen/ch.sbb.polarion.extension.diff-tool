@@ -308,13 +308,14 @@
   font-weight: normal;
 }
 
-/* --- Merge result dialog -------------------------------------------------------------------------- */
+/* --- Chapter merge dialog ------------------------------------------------------------------------- */
 
-/* What a chapter merge did, acknowledged rather than timed out - see MergeResultDialog.tsx. The chrome
-   follows react-sbb-polarion's own modal (dark header, teal primary button from the shared `.sbb-btn`
-   system), which is in the stylesheet this shadow root already carries. Only the box and the log area
-   are local: the dialog is opened from the ~360px properties pane but belongs to the whole window. */
-.merge-result-dialog {
+/* The dialog a chapter merge is carried out in - what it will do, that it is running, what it did; see
+   ChapterMergeDialog.tsx. The chrome follows react-sbb-polarion's own modal (dark header, teal primary
+   button from the shared `.sbb-btn` system), which is in the stylesheet this shadow root already carries.
+   Only the box, the progress line and the log area are local: the dialog is opened from the ~360px
+   properties pane but belongs to the whole window. */
+.merge-dialog {
   width: min(640px, 90vw);
   max-height: 80vh;
   padding: 0;
@@ -326,11 +327,11 @@
   font-size: inherit;
 }
 
-.merge-result-dialog::backdrop {
+.merge-dialog::backdrop {
   background: rgb(0 0 0 / 35%);
 }
 
-.merge-result-dialog > header {
+.merge-dialog > header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -340,13 +341,13 @@
   color: #fff;
 }
 
-.merge-result-dialog > header h2 {
+.merge-dialog > header h2 {
   margin: 0;
   font-size: 14px;
   font-weight: bold;
 }
 
-.merge-result-close {
+.merge-dialog-close {
   border: none;
   background: none;
   color: inherit;
@@ -355,23 +356,23 @@
   cursor: pointer;
 }
 
-.merge-result-content {
+.merge-dialog-content {
   max-height: 55vh;
   padding: 12px 16px;
   overflow: auto;
 }
 
-.merge-result-content ul {
+.merge-dialog-content ul {
   margin: 0;
   padding-left: 18px;
 }
 
-.merge-result-content p {
+.merge-dialog-content p {
   margin: 10px 0 0;
 }
 
 /* The merge report, which is a log: its own lines, not wrapped into the prose above it. */
-.merge-result-logs {
+.merge-dialog-logs {
   max-height: 30vh;
   margin: 10px 0 0;
   padding: 8px;
@@ -383,9 +384,24 @@
   word-break: break-word;
 }
 
-.merge-result-dialog > footer {
+/* While the merge runs: the spinner beside its message, on the line the result takes afterwards. */
+.merge-dialog-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.merge-dialog-progress .sbb-spinner {
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+
+.merge-dialog > footer {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   padding: 10px 16px;
   border-top: 1px solid #ddd;
 }

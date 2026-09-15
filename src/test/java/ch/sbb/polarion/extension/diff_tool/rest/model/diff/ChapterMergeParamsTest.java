@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ChapterMergeParamsTest {
 
@@ -21,10 +21,10 @@ class ChapterMergeParamsTest {
     }
 
     @Test
-    void testWorkItemLayoutsAreCopiedOnlyWhenTheyAreAskedFor() {
-        // copying them changes the configuration of the target document, not its content
-        assertFalse(new ChapterMergeParams().isCopyWorkItemLayouts());
-        assertFalse(ChapterMergeParams.builder().build().isCopyWorkItemLayouts());
+    void testWorkItemLayoutsAreCopiedUnlessTheyAreSwitchedOff() {
+        // a copy is rendered by the layout its type has in the document it lands in, whichever way it is built
+        assertTrue(new ChapterMergeParams().isCopyWorkItemLayouts());
+        assertTrue(ChapterMergeParams.builder().build().isCopyWorkItemLayouts());
     }
 
     private String documentedDefault(String fieldName) throws NoSuchFieldException {

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
+import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
 import { sendRequest } from '../services/useRemote';
-import MergeResultDialog, { type MergeOutcome } from './MergeResultDialog';
+import ChapterMergeDialog, { type MergeOutcome, type MergeStage } from './ChapterMergeDialog';
 import PanelShell from './PanelShell';
 import { reloadDocument } from './documentReload';
 import { FieldCell, FieldRow, SwitchRow } from './formRows';
@@ -112,13 +112,13 @@ export default function MergeToolPanel({ props }: { props: PanelProps }) {
   const [referencedItems, setReferencedItems] = useState('KEEP_REFERENCE');
   const [sourceChapter, setSourceChapter] = useState('');
   const [targetChapter, setTargetChapter] = useState('');
-  // Off by default: it is the one option which changes the configuration of the target document rather than
-  // its content, and a document whose layout cannot be resolved is one Polarion refuses to open.
-  const [copyWorkItemLayouts, setCopyWorkItemLayouts] = useState(false);
+  // On by default: a work item is rendered by the layout its type has in the document it lands in, so a copy
+  // whose type the target document has no layout for is not shown the way it was in the source document.
+  const [copyWorkItemLayouts, setCopyWorkItemLayouts] = useState(true);
 
-  const [confirming, setConfirming] = useState(false);
-  const [merging, setMerging] = useState<string | null>(null);
-  const [outcome, setOutcome] = useState<MergeOutcome | null>(null);
+  // Where the merge stands, from the question it asks to the result it reports. The dialog it is carried
+  // out in reads it; `null` means there is no merge and no dialog.
+  const [stage, setStage] = useState<MergeStage | null>(null);
 
   const spaces = useRemoteList<SpaceInfo>({
     url: projectId ? `/projects/${encode(projectId)}/spaces` : null,
@@ -148,7 +148,8 @@ export default function MergeToolPanel({ props }: { props: PanelProps }) {
 
   const sourceDocumentTitle = documents.items.find((document) => document.id === documentId)?.title ?? documentId;
 
-  const busy = merging ?? firstLoading(spaces, documents);
+  // The merge has a progress of its own, inside its dialog: this is the overlay of the lists the form offers.
+  const busy = firstLoading(spaces, documents);
   const loadError = firstError(spaces, documents);
 
   // Both chapters are mandatory, and both are outline numbers of the documents they belong to.
@@ -156,31 +157,26 @@ export default function MergeToolPanel({ props }: { props: PanelProps }) {
     OUTLINE_NUMBER_PATTERN.test(sourceChapter.trim()) && OUTLINE_NUMBER_PATTERN.test(targetChapter.trim());
   const canMerge = Boolean(projectId && spaceId && documentId && mode && insertMode) && chaptersValid;
 
-  const confirm = () => {
-    setConfirming(false);
-    void merge();
-  };
-
+  /** Runs the merge in the dialog which asked for it: its stages are what that dialog shows. */
   const merge = async () => {
-    setMerging('Merging chapter');
+    setStage({ kind: 'running', message: 'Merging chapter' });
     clearReports();
     try {
       const jobInfo = await scheduleMerge();
-      setMerging(`Merging chapter ${sourceChapter.trim()}, this can take a while`);
+      setStage({ kind: 'running', message: `Merging chapter ${sourceChapter.trim()}, this can take a while` });
       const finishedJob = await awaitResult(jobInfo.jobId);
-      setOutcome(outcomeOf(finishedJob));
+      setStage({ kind: 'result', outcome: outcomeOf(finishedJob) });
     } catch (caught) {
       // The merge never got as far as a result of its own, so there is nothing to show but what went wrong
+      setStage(null);
       reportFailure((caught as Error).message || MERGE_ERROR);
-    } finally {
-      setMerging(null);
     }
   };
 
-  /** The dialog is the user's acknowledgement, so the document is reloaded once it is closed - if it changed. */
-  const closeOutcome = () => {
-    const merged = outcome?.merged ?? false;
-    setOutcome(null);
+  /** Closing the result is the user's acknowledgement, so the document is reloaded then - if it changed. */
+  const closeDialog = () => {
+    const merged = stage?.kind === 'result' && stage.outcome.merged;
+    setStage(null);
     if (merged) {
       reloadDocument();
     }
@@ -354,40 +350,37 @@ export default function MergeToolPanel({ props }: { props: PanelProps }) {
         <button
           type="button"
           id="merge-chapter"
-          disabled={!canMerge || busy !== null}
-          onClick={() => setConfirming(true)}
+          disabled={!canMerge || busy !== null || stage !== null}
+          onClick={() => setStage({ kind: 'confirm' })}
         >
           <span className="sbb-icon-table-plus" role="img" aria-label="Merge" />
           Merge Chapter
         </button>
       </div>
 
-      {/* What the merge is about to do. A merge changes two documents and cannot be undone from here, so it is
-          stated in the user's own terms and waits to be confirmed. */}
-      <Modal
-        open={confirming}
-        title="Merge chapter"
-        okText="Confirm"
-        cancelText="Cancel"
-        onOk={confirm}
-        onCancel={() => setConfirming(false)}
-      >
-        <div id="merge-confirmation">
-          <p>
-            Chapter <strong>{sourceChapter.trim()}</strong> of <strong>{sourceDocumentTitle}</strong> ({projectId} /{' '}
-            {spaceId}) will be <strong>{mode === 'MOVE' ? 'moved' : 'copied'}</strong>{' '}
-            <strong>{insertMode === 'AFTER' ? 'after' : 'under'}</strong> chapter{' '}
-            <strong>{targetChapter.trim()}</strong> of <strong>{props.sourceDocumentTitle}</strong>.
-          </p>
-          {mode === 'MOVE' ? (
-            <p>The workitems leave the source document. Chapter headings are copied, not moved.</p>
-          ) : null}
-          <p>Do you want to proceed?</p>
-        </div>
-      </Modal>
-
-      {/* What the merge did. Closing it reloads the document when the merge changed it - see closeOutcome. */}
-      <MergeResultDialog outcome={outcome} onClose={closeOutcome} />
+      {/* The whole merge, in one dialog: what it is about to do - a merge changes two documents and cannot be
+          undone from here - then its progress, then what it did. Closing the result reloads the document when
+          the merge changed it, see closeDialog. */}
+      <ChapterMergeDialog
+        stage={stage}
+        summary={
+          <>
+            <p>
+              Chapter <strong>{sourceChapter.trim()}</strong> of <strong>{sourceDocumentTitle}</strong> ({projectId} /{' '}
+              {spaceId}) will be <strong>{mode === 'MOVE' ? 'moved' : 'copied'}</strong>{' '}
+              <strong>{insertMode === 'AFTER' ? 'after' : 'under'}</strong> chapter{' '}
+              <strong>{targetChapter.trim()}</strong> of <strong>{props.sourceDocumentTitle}</strong>.
+            </p>
+            {mode === 'MOVE' ? (
+              <p>The workitems leave the source document. Chapter headings are copied, not moved.</p>
+            ) : null}
+            <p>Do you want to proceed?</p>
+          </>
+        }
+        onConfirm={() => void merge()}
+        onCancel={() => setStage(null)}
+        onClose={closeDialog}
+      />
     </PanelShell>
   );
 }
