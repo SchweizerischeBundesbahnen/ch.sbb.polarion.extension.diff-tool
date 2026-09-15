@@ -66,6 +66,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -176,6 +177,7 @@ class PolarionServiceTest {
     void testReplaceLinksToPairedWorkItems() {
         PolarionService service = mock(PolarionService.class);
         when(service.replaceLinksToPairedWorkItems(any(IWorkItem.class), any(IWorkItem.class), anyString(), anyString())).thenCallRealMethod();
+        when(service.rewriteWorkItemLinks(any(IWorkItem.class), anyString(), any())).thenCallRealMethod();
 
         IWorkItem a1 = mock(IWorkItem.class);
         when(service.getWorkItem(eq("projectIdA"), eq("A-1"), isNull())).thenReturn(a1);
@@ -1182,5 +1184,39 @@ class PolarionServiceTest {
 
         when(securityService.hasPermission(any(AdministrationPermission.class), eq(null))).thenReturn(false);
         assertFalse(polarionService.hasSufficientPermissions());
+    }
+
+    @Test
+    void testRewriteWorkItemLinksPointsMappedItemsToTheirCopies() {
+        PolarionService service = mock(PolarionService.class);
+        when(service.rewriteWorkItemLinks(any(IWorkItem.class), anyString(), any())).thenCallRealMethod();
+
+        IWorkItem a1 = mock(IWorkItem.class);
+        when(a1.getId()).thenReturn("A-1");
+        when(service.getWorkItem(eq("projectIdA"), eq("A-1"), isNull())).thenReturn(a1);
+        IWorkItem a2 = mock(IWorkItem.class);
+        when(a2.getId()).thenReturn("A-2");
+        when(service.getWorkItem(eq("projectIdA"), eq("A-2"), isNull())).thenReturn(a2);
+
+        IWorkItem copyOfA1 = mock(IWorkItem.class);
+        when(copyOfA1.getId()).thenReturn("B-1");
+        Map<String, IWorkItem> itemMapping = Map.of("A-1", copyOfA1);
+
+        IWorkItem from = mock(IWorkItem.class);
+        when(from.getProjectId()).thenReturn("projectIdA");
+
+        String result = service.rewriteWorkItemLinks(from, """
+                a link to an item which was copied along
+                <span data-type="workItem" id="fake" data-item-id="A-1" data-option-id="short" class="polarion-rte-link"></span>
+                a link which leaves the copied chapter
+                <span data-type="workItem" id="fake" data-item-id="A-2" data-option-id="short" class="polarion-rte-link"></span>
+                """, workItem -> itemMapping.get(workItem.getId()));
+
+        assertEquals("""
+                a link to an item which was copied along
+                <span data-type="workItem" id="fake" data-item-id="B-1" data-option-id="short" class="polarion-rte-link"></span>
+                a link which leaves the copied chapter
+                <span data-type="workItem" id="fake" data-item-id="A-2" data-scope="projectIdA" data-option-id="short" class="polarion-rte-link"></span>
+                """, result);
     }
 }

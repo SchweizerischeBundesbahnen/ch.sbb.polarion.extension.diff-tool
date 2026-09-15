@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -23,6 +24,14 @@ import static org.mockito.Mockito.*;
 class DocumentsContentHandlerTest {
 
     DocumentsContentHandler handler = new DocumentsContentHandler();
+
+    private static String anchor(String tag, String workItemId) {
+        return "<%s id=\"polarion_wiki macro name=module-workitem;params=id=%s\"></%s>".formatted(tag, workItemId, tag);
+    }
+
+    private static String text(String content) {
+        return "<p id=\"polarion_1\">%s</p>".formatted(content);
+    }
 
     @Test
     void testParseAnchors() {
@@ -354,5 +363,206 @@ class DocumentsContentHandlerTest {
             <div id="polarion_wiki macro name=module-workitem;params=id=AA-4"></div>
             <p>Paragraph below the last</p>
         """);
+    }
+
+    @Test
+    void testCopyFreeContentOfMergedWorkItems() {
+        String sourceContent = """
+            <h2 id="polarion_wiki macro name=module-workitem;params=id=AA-1"></h2>
+            <p>Text below the chapter</p>
+            <div id="polarion_wiki macro name=module-workitem;params=id=AA-2"></div>
+            <p>Text below the last item</p>
+        """;
+
+        IModule targetModule = mock(IModule.class);
+        String targetContent = """
+            <h2 id="polarion_wiki macro name=module-workitem;params=id=BB-1"></h2>
+            <div id="polarion_wiki macro name=module-workitem;params=id=BB-2|layout=0"></div>
+        """;
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(targetContent));
+
+        boolean modified = handler.copyFreeContent(sourceContent, targetModule, List.of("AA-1", "AA-2"), Map.of("AA-1", "BB-1", "AA-2", "BB-2"), Map.of());
+
+        assertTrue(modified);
+        ArgumentCaptor<Text> contentCaptor = ArgumentCaptor.forClass(Text.class);
+        verify(targetModule).setHomePageContent(contentCaptor.capture());
+        String newContent = contentCaptor.getValue().getContent();
+        assertTrue(newContent.contains("<p>Text below the chapter</p>"));
+        assertTrue(newContent.contains("<p>Text below the last item</p>"));
+        assertTrue(newContent.indexOf("Text below the chapter") < newContent.indexOf("id=BB-2"));
+        // Everything the merge did not touch stays exactly as the editor wrote it - the page is not re-serialized
+        assertTrue(newContent.contains("""
+            <div id="polarion_wiki macro name=module-workitem;params=id=BB-2|layout=0"></div>"""));
+        assertEquals(targetContent, newContent
+                .replace("<p>Text below the chapter</p>", "")
+                .replace("<p>Text below the last item</p>", ""));
+    }
+
+    @Test
+    void testContentIsPlacedAroundTheAnchorItBelongsTo() {
+        String anchor = "<div id=\"polarion_wiki macro name=module-workitem;params=id=BB-1\"></div>";
+
+        assertEquals("<p>above</p>" + anchor,
+                handler.insertAtAnchor(anchor, "BB-1", "<p>above</p>", DocumentContentAnchor.ContentPosition.ABOVE));
+        assertEquals(anchor + "<p>below</p>",
+                handler.insertAtAnchor(anchor, "BB-1", "<p>below</p>", DocumentContentAnchor.ContentPosition.BELOW));
+    }
+
+    @Test
+    void testContentOfAWorkItemWhichIsNotOnThePageIsNotPlacedAnywhere() {
+        String content = "<div id=\"polarion_wiki macro name=module-workitem;params=id=BB-1\"></div>";
+
+        assertEquals(content, handler.insertAtAnchor(content, "BB-2", "<p>orphan</p>", DocumentContentAnchor.ContentPosition.BELOW));
+        assertEquals(content, handler.insertAtAnchor(content, "BB-1", null, DocumentContentAnchor.ContentPosition.BELOW));
+    }
+
+    @Test
+    void testAnchorOfAnotherWorkItemWithASimilarIdIsNotTakenForIt() {
+        String content = "<div id=\"polarion_wiki macro name=module-workitem;params=id=BB-11\"></div>";
+
+        assertEquals(content, handler.insertAtAnchor(content, "BB-1", "<p>content</p>", DocumentContentAnchor.ContentPosition.BELOW));
+    }
+
+
+    @Test
+    void testTheRestOfThePageIsLeftExactlyAsPolarionWroteIt() {
+        // The page is written by Polarion's own editor and read back by its own parser. A merge inserts the text
+        // it copies and touches nothing else - it does not re-serialize, re-indent or re-escape the page.
+        String targetContent = "<h1 id=\"polarion_wiki macro name=module-workitem;params=id=BB-1\"></h1>"
+                + "<p id=\"polarion_1\">Text with a\u00a0non-breaking space and <b>markup</b></p>"
+                + "<div id=\"polarion_wiki macro name=module-workitem;params=id=BB-2|layout=2\">BB-2</div>";
+        IModule targetModule = mock(IModule.class);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(targetContent));
+
+        handler.copyFreeContent("""
+            <div id="polarion_wiki macro name=module-workitem;params=id=AA-2"></div>
+            <p>Copied text</p>
+        """, targetModule, List.of("AA-2"), Map.of("AA-2", "BB-2"), Map.of());
+
+        ArgumentCaptor<Text> contentCaptor = ArgumentCaptor.forClass(Text.class);
+        verify(targetModule).setHomePageContent(contentCaptor.capture());
+        String newContent = contentCaptor.getValue().getContent();
+        assertEquals(targetContent, newContent.replace("<p>Copied text</p>", ""));
+        // the anchor Polarion wrote with the workitem ID as its text is left as Polarion wrote it
+        assertTrue(newContent.contains("params=id=BB-2|layout=2\">BB-2</div>"));
+    }
+
+
+    @Test
+    void testACommentOfTheCopiedTextIsPointedAtTheCopiedComment() {
+        String sourceContent = "<h2 id=\"polarion_wiki macro name=module-workitem;params=id=AA-1\"></h2>"
+                + "<p id=\"polarion_7\">A commented paragraph<span id=\"polarion-comment:5\"></span> of the chapter</p>"
+                + "<div id=\"polarion_wiki macro name=module-workitem;params=id=AA-2\"></div>";
+        IModule targetModule = mock(IModule.class);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(
+                "<h2 id=\"polarion_wiki macro name=module-workitem;params=id=BB-1\"></h2>"
+                        + "<div id=\"polarion_wiki macro name=module-workitem;params=id=BB-2\"></div>"));
+
+        handler.copyFreeContent(sourceContent, targetModule, List.of("AA-1", "AA-2"),
+                Map.of("AA-1", "BB-1", "AA-2", "BB-2"), Map.of("5", "17"));
+
+        ArgumentCaptor<Text> contentCaptor = ArgumentCaptor.forClass(Text.class);
+        verify(targetModule).setHomePageContent(contentCaptor.capture());
+        String newContent = contentCaptor.getValue().getContent();
+        assertTrue(newContent.contains("<span id=\"polarion-comment:17\"></span>"));
+        assertFalse(newContent.contains("polarion-comment:5"));
+    }
+
+    @Test
+    void testTheCommentsWrittenOnTheTextAreTheOnesTheMergeHasToCopy() {
+        String sourceContent = "<h2 id=\"polarion_wiki macro name=module-workitem;params=id=AA-1\"></h2>"
+                + "<p>Commented<span id=\"polarion-comment:5\"></span></p>"
+                + "<div id=\"polarion_wiki macro name=module-workitem;params=id=AA-2\"></div>"
+                + "<p>Also commented<span id=\"polarion-comment:9\"></span></p>";
+
+        assertEquals(Set.of("5", "9"), handler.freeContentCommentIds(sourceContent, List.of("AA-1", "AA-2")));
+        // both paragraphs belong to AA-2: the text before a work item is the text above it, see parse()
+        assertEquals(Set.of("5", "9"), handler.freeContentCommentIds(sourceContent, List.of("AA-2")));
+        // a comment on text which is not being copied is none of the merge's business
+        assertEquals(Set.of(), handler.freeContentCommentIds(sourceContent, List.of("AA-1")));
+    }
+
+    @Test
+    void testAMarkerOfACommentWhichWasNotCopiedIsDropped() {
+        // it would otherwise anchor to a comment the target document does not have
+        assertEquals("<p>text</p>", handler.contentToInsert("<p>text<span id=\"polarion-comment:9\"></span></p>", Map.of("5", "17")));
+    }
+
+
+    @Test
+    void testMergedWorkItemsArePlacedUnderTheChapterAboveWhatItAlreadyHeld() {
+        // as Polarion leaves the page: the merged items scattered among the text and the items of the chapter
+        String documentContent = anchor("h2", "BB-1") + anchor("h3", "BB-10") + text("existing")
+                + anchor("div", "BB-9") + anchor("div", "BB-11") + text("more existing") + anchor("div", "BB-12");
+        IModule targetModule = mock(IModule.class);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(documentContent));
+
+        assertTrue(handler.moveAnchorsBelow(targetModule, List.of("BB-10", "BB-11", "BB-12"), "BB-1"));
+
+        ArgumentCaptor<Text> contentCaptor = ArgumentCaptor.forClass(Text.class);
+        verify(targetModule).setHomePageContent(contentCaptor.capture());
+        String newContent = contentCaptor.getValue().getContent();
+        assertEquals(anchor("h2", "BB-1") + anchor("h3", "BB-10") + anchor("div", "BB-11") + anchor("div", "BB-12")
+                + text("existing") + anchor("div", "BB-9") + text("more existing"), newContent);
+    }
+
+    @Test
+    void testMergedWorkItemsWhichAreAlreadyInPlaceAreNotMoved() {
+        String documentContent = anchor("h2", "BB-1") + anchor("h3", "BB-10") + anchor("div", "BB-11")
+                + text("existing") + anchor("div", "BB-9");
+        IModule targetModule = mock(IModule.class);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(documentContent));
+
+        assertFalse(handler.moveAnchorsBelow(targetModule, List.of("BB-10", "BB-11"), "BB-1"));
+        verify(targetModule, never()).setHomePageContent(any());
+    }
+
+    @Test
+    void testWorkItemsWhichAreNotOnThePageArePassedOver() {
+        String documentContent = anchor("h2", "BB-1") + text("existing") + anchor("div", "BB-10");
+        IModule targetModule = mock(IModule.class);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(documentContent));
+
+        assertTrue(handler.moveAnchorsBelow(targetModule, List.of("BB-10", "BB-404"), "BB-1"));
+
+        ArgumentCaptor<Text> contentCaptor = ArgumentCaptor.forClass(Text.class);
+        verify(targetModule).setHomePageContent(contentCaptor.capture());
+        assertEquals(anchor("h2", "BB-1") + anchor("div", "BB-10") + text("existing"), contentCaptor.getValue().getContent());
+    }
+
+    @Test
+    void testNothingIsMovedWhenNoneOfTheWorkItemsIsOnThePage() {
+        IModule targetModule = mock(IModule.class);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(anchor("h2", "BB-1")));
+
+        assertFalse(handler.moveAnchorsBelow(targetModule, List.of("BB-404"), "BB-1"));
+        verify(targetModule, never()).setHomePageContent(any());
+    }
+
+    @Test
+    void testTheMergedWorkItemsStayOnThePageWhenTheChapterHasNoAnchor() {
+        // the anchor of the chapter is written in a shape which is not recognized, so the block has nowhere to go:
+        // putting the page back without it would take the just merged work items out of the document
+        String documentContent = "<h2 id=\"polarion_wiki macro name=module-workitem;params=id=BB-1\"/>" + anchor("div", "BB-10") + text("existing");
+        IModule targetModule = mock(IModule.class);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html(documentContent));
+
+        assertFalse(handler.moveAnchorsBelow(targetModule, List.of("BB-10"), "BB-1"));
+        verify(targetModule, never()).setHomePageContent(any());
+    }
+
+    @Test
+    void testCopyFreeContentDoesNothingWhenThereIsNoFreeContent() {
+        IModule targetModule = mock(IModule.class);
+        when(targetModule.getHomePageContent()).thenReturn(Text.html("""
+            <div id="polarion_wiki macro name=module-workitem;params=id=BB-1"></div>
+        """));
+
+        boolean modified = handler.copyFreeContent("""
+            <div id="polarion_wiki macro name=module-workitem;params=id=AA-1"></div>
+        """, targetModule, List.of("AA-1"), Map.of("AA-1", "BB-1"), Map.of());
+
+        assertFalse(modified);
+        verify(targetModule, never()).setHomePageContent(any());
     }
 }

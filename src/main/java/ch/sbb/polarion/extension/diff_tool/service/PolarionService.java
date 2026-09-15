@@ -83,6 +83,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -103,6 +104,12 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             IWorkItem.KEY_OUTLINE_NUMBER,
             IWorkItem.KEY_RESOLUTION
     ));
+
+    /** The attributes of a work item link which a rewritten link gets anew, and the spaces they leave behind. */
+    private static final Pattern DATA_SCOPE_ATTRIBUTE = Pattern.compile("data-scope=\"[^\"]+?\"");
+    private static final Pattern DATA_REVISION_ATTRIBUTE = Pattern.compile("data-revision=\"[^\"]+?\"");
+    private static final Pattern DATA_ITEM_ID_ATTRIBUTE = Pattern.compile("data-item-id=\"[^\"]+?\"");
+    private static final Pattern REPEATED_SPACES = Pattern.compile("( )+");
 
     @Getter
     private final DocumentWorkItemsCache documentWorkItemsCache = DocumentWorkItemsCache.getInstance();
@@ -529,7 +536,19 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         if (Objects.equals(from.getProjectId(), to.getProjectId())) {
             return html; // do not modify links when copying data between same project work items
         }
+        return rewriteWorkItemLinks(from, html, workItem -> getPairedWorkItems(workItem, to.getProjectId(), linkRole).stream().findFirst().orElse(null));
+    }
 
+    /**
+     * Rewrites work item links of a rich text field, replacing every link whose target has a counterpart in the target
+     * project with a link to that counterpart. Links without a counterpart keep pointing to the original work item and
+     * get an explicit 'data-scope', otherwise they would be broken in the target project.
+     *
+     * @param from                work item the rich text belongs to, its project is the default scope of a link without an explicit one
+     * @param counterpartResolver resolves the counterpart of a linked work item, returning {@code null} if there is none
+     */
+    @NotNull
+    public String rewriteWorkItemLinks(@NotNull IWorkItem from, @NotNull String html, @NotNull UnaryOperator<IWorkItem> counterpartResolver) {
         Pattern pattern = Pattern.compile(LinksHandler.LINK_REGEX);
         Matcher matcher = pattern.matcher(html);
 
@@ -546,7 +565,7 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                 logger.error("Cannot get work item %s/%s/%s".formatted(projectId, workItemId, revision), e);
                 continue;
             }
-            IWorkItem pairedWorkItem = getPairedWorkItems(workItem, to.getProjectId(), linkRole).stream().findFirst().orElse(null);
+            IWorkItem pairedWorkItem = counterpartResolver.apply(workItem);
             if (pairedWorkItem != null) {
                 projectId = ""; // when we place link to the wi from target project there's no need to set 'data-scope' explicitly
                 workItemId = pairedWorkItem.getId();
@@ -562,11 +581,11 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
             if (!StringUtils.isEmpty(revision)) {
                 idEntry = idEntry + " data-revision=\"%s\"".formatted(revision);
             }
-            matcher.appendReplacement(buf, match
-                    .replaceAll("data-scope=\"[^\"]+?\"", "")    // cleanup revision & scope, new attributes will be set below if needed
-                    .replaceAll("data-revision=\"[^\"]+?\"", "")
-                    .replaceAll("( )+", " ")                     // cleanup duplicated spaces
-                    .replaceAll("data-item-id=\"[^\"]+?\"", idEntry));
+            // cleanup revision & scope (the new attributes are part of 'idEntry') and the spaces they leave behind
+            String rewrittenLink = DATA_SCOPE_ATTRIBUTE.matcher(match).replaceAll("");
+            rewrittenLink = DATA_REVISION_ATTRIBUTE.matcher(rewrittenLink).replaceAll("");
+            rewrittenLink = REPEATED_SPACES.matcher(rewrittenLink).replaceAll(" ");
+            matcher.appendReplacement(buf, DATA_ITEM_ID_ATTRIBUTE.matcher(rewrittenLink).replaceAll(idEntry));
         }
         matcher.appendTail(buf);
         return buf.toString();
@@ -693,6 +712,13 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
 
     public IModule getModule(@NotNull DocumentIdentifier documentIdentifier) {
         return getModule(documentIdentifier.getProjectId(), documentIdentifier.getSpaceId(), documentIdentifier.getName(), documentIdentifier.getRevision());
+    }
+
+    /**
+     * Login of the user the current call runs as.
+     */
+    public @Nullable String getCurrentUser() {
+        return securityService.getCurrentUser();
     }
 
     public boolean hasSufficientPermissions() {

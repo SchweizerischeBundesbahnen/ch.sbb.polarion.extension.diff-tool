@@ -13,7 +13,7 @@ class ExtensionBundleActivatorTest {
 
     @Test
     void testBundleActivator() {
-        assertTrue(new ExtensionBundleActivator().getExtensions().keySet().containsAll(List.of("diff-tool", "copy-tool")));
+        assertTrue(new ExtensionBundleActivator().getExtensions().keySet().containsAll(List.of("diff-tool", "copy-tool", "merge-tool")));
     }
 
 }

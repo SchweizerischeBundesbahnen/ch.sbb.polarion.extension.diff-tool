@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 @Accessors(chain = true)
-public final class DocumentsMergeContext extends SettingsAwareMergeContext implements IPreserveCommentsContext {
+public final class DocumentsMergeContext extends SettingsAwareMergeContext implements IPreserveCommentsContext, ICopyModuleAttachmentsContext {
     final DocumentIdentifier leftDocumentIdentifier;
     final DocumentIdentifier rightDocumentIdentifier;
     final IModule leftModule;

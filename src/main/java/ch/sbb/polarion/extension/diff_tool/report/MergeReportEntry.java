@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Getter
 @EqualsAndHashCode
@@ -22,6 +23,8 @@ public class MergeReportEntry {
     private String fieldId;
     @Schema(description = "Document content pair")
     private DocumentsContentMergePair documentsContentPair;
+    @Schema(description = "Chapter merge operation data", implementation = ChapterMergePayload.class)
+    private ChapterMergePayload chapterMergePayload;
     @Schema(description = "Extended description of the operation")
     @JsonIgnore
     private final @NotNull String description;
@@ -33,14 +36,14 @@ public class MergeReportEntry {
         this.operationResultType = operationResultType;
         this.workItemsPair = workItemsPair;
         this.description = description;
-        this.operationTime = LocalDateTime.now();
+        this.operationTime = operationTime();
     }
 
     public MergeReportEntry(@NotNull MergeReport.OperationResultType operationResultType, @NotNull String fieldId, @NotNull String description) {
         this.operationResultType = operationResultType;
         this.fieldId = fieldId;
         this.description = description;
-        this.operationTime = LocalDateTime.now();
+        this.operationTime = operationTime();
     }
 
     @VisibleForTesting
@@ -56,7 +59,22 @@ public class MergeReportEntry {
         this.operationResultType = operationResultType;
         this.documentsContentPair = documentsContentPair;
         this.description = description;
-        this.operationTime = LocalDateTime.now();
+        this.operationTime = operationTime();
+    }
+
+    public MergeReportEntry(@NotNull MergeReport.OperationResultType operationResultType, @NotNull ChapterMergePayload chapterMergePayload, @NotNull String description) {
+        this.operationResultType = operationResultType;
+        this.chapterMergePayload = chapterMergePayload;
+        this.description = description;
+        this.operationTime = operationTime();
+    }
+
+    /**
+     * When an entry was written, in the time zone of the server which wrote it: a merge report is read next to the
+     * log of the job which produced it, and that log is stamped in the server's own time.
+     */
+    private static @NotNull LocalDateTime operationTime() {
+        return LocalDateTime.now(ZoneId.systemDefault());
     }
 
 }

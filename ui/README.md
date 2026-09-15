@@ -11,12 +11,13 @@ app, one HTML entry per Polarion entry point.
 | `collections.html` | `/polarion/diff-tool-app/ui/app/collections.html`        | `src/topics/openCollectionsDiff.ts`                                      |
 | `workitems.html`   | `/polarion/diff-tool-app/ui/app/workitems.html`          | `src/topics/openWorkItemsDiff.ts`                                        |
 
-Plus a second, library-mode build for the two Document Properties side panels:
+Plus a second, library-mode build for the three Document Properties side panels:
 
 | Module                    | Served at                                                | Imported by                            |
 | ------------------------- | -------------------------------------------------------- | -------------------------------------- |
 | `assets/diffToolPanel.js` | `/polarion/diff-tool-app/ui/app/assets/diffToolPanel.js` | `webapp/diff-tool/html/diff-tool.html` |
 | `assets/copyToolPanel.js` | `/polarion/diff-tool-app/ui/app/assets/copyToolPanel.js` | `webapp/diff-tool/html/copy-tool.html` |
+| `assets/mergeToolPanel.js` | `/polarion/diff-tool-app/ui/app/assets/mergeToolPanel.js` | `webapp/diff-tool/html/merge-tool.html` |
 
 The three viewer filenames are a **public contract** - the callers above open them by literal URL and pass
 extra state through `localStorage`. Do not rename them.
@@ -46,11 +47,12 @@ entry, so the two never share a stylesheet at runtime - but they do share the do
 
 **The Document Properties panels** (`src/formext/`) are not part of the SPA at all. They are built by
 `vite.formext.config.js` in **library mode**, which is what guarantees the fixed filenames and the
-preserved named exports (`mountDiffToolPanel` / `mountCopyToolPanel`) the server-rendered fragments call.
+preserved named exports (`mountDiffToolPanel` / `mountCopyToolPanel` / `mountMergeToolPanel`) the
+server-rendered fragments call.
 `emptyOutDir: false`, so this build must run _after_ the SPA build - hence the two-step `npm run build`.
 
 Each panel mounts into a **shadow root** on the fragment's div (`src/formext/shadowMount.ts`). The
-Document Properties pane is one page shared by several extensions' panels - and by both of these - so
+Document Properties pane is one page shared by several extensions' panels - and by all of these - so
 plain global CSS would collide. RSP's stylesheet and `src/formext/diff-tool.css` - the row layout both
 panels share, plus the toast styles a shadow root cannot see - are injected _inside_ the shadow (via
 `?inline`), which also means nothing has to be `<link>`ed from a Polarion-served URL and the panels can be
@@ -159,7 +161,7 @@ src/services/    REST access (useRemote), diff/merge orchestration, PDF export
 src/router/      navigation.ts - the useSearchParams/usePathname/useRouter shim
 src/admin/       the RSP admin pages (pages/, components/, dev/ scaffolding)
 src/topics/      the three navigation topics: the ?topic=<id> registry, the two pickers and their table
-src/formext/     the two Document Properties panels, their shared row layout and their entry points
+src/formext/     the three Document Properties panels, their shared row layout and their entry points
 src/features.tsx the ?feature=<id> registry, ids matching hivemodule.xml
 src/styles/      globals.css
 test/            Vitest component + visual tests

@@ -1,0 +1,13 @@
+<!-- "Documents Merge" Document Properties panel. Polarion (MergeToolFormExtension -> BaseFormExtension)
+  injects this fragment into the editor's Document Properties pane and substitutes {PANEL_PROPS} with the
+  panel's data as HTML-attribute-escaped JSON.
+
+  Same arrangement as html/copy-tool.html: the <link> to the empty css/starter.css only exists so its
+  onload handler can import the React panel bundle, which then mounts into a SHADOW ROOT on the div below
+  and injects its own encapsulated styles (see ui/src/formext/mountMergeToolPanel.tsx). -->
+<link href='/polarion/diff-tool/ui/css/starter.css' rel='stylesheet'
+      onload='import("/polarion/diff-tool-app/ui/app/assets/mergeToolPanel.js")
+                .then(module => module.mountMergeToolPanel("#merge-tool-panel"))
+                .catch(console.error);'>
+
+<div id="merge-tool-panel" class="merge form-wrapper" data-props='{PANEL_PROPS}'></div>

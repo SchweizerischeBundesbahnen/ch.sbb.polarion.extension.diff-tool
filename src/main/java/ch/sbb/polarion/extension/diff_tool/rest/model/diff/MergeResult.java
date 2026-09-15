@@ -25,4 +25,7 @@ public class MergeResult {
 
     @Schema(description = "Merge report with detailed information about the merge operation", implementation = MergeReport.class)
     private MergeReport mergeReport;
+
+    @Schema(description = "Summary of a chapter merge operation, set only by the chapter merge", implementation = ChapterMergeInfo.class)
+    private ChapterMergeInfo chapterMergeInfo;
 }

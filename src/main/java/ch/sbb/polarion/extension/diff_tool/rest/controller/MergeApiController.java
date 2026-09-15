@@ -1,5 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeJobInfo;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
@@ -9,6 +11,8 @@ import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Path;
+
+import java.util.List;
 
 @Singleton
 @Secured
@@ -32,5 +36,20 @@ public class MergeApiController extends MergeInternalController {
     @Override
     public MergeResult mergeWorkItems(WorkItemsMergeParams mergeParams) {
         return polarionService.callPrivileged(() -> super.mergeWorkItems(mergeParams));
+    }
+
+    @Override
+    public ChapterMergeJobInfo mergeChapter(ChapterMergeParams mergeParams) {
+        return polarionService.callPrivileged(() -> super.mergeChapter(mergeParams));
+    }
+
+    @Override
+    public List<ChapterMergeJobInfo> listChapterMergeJobs() {
+        return polarionService.callPrivileged(super::listChapterMergeJobs);
+    }
+
+    @Override
+    public ChapterMergeJobInfo getChapterMergeJob(String jobId) {
+        return polarionService.callPrivileged(() -> super.getChapterMergeJob(jobId));
     }
 }

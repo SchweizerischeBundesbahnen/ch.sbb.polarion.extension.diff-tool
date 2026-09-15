@@ -19,7 +19,10 @@ public class CommentUtils {
 
     private static final String COMMENT_REGEX = "<span id=[\"']polarion-comment:(?<id>\\d+)[\"'][^>]*>(?:</span>)?";
     private static final Pattern COMMENT_PATTERN = Pattern.compile(COMMENT_REGEX);
+    /** The ID a comment marker carries as the ID of its span element. */
+    private static final Pattern COMMENT_MARKER_ID_PATTERN = Pattern.compile("polarion-comment:\\d+");
     private static final int CONTEXT_WINDOW = 50;
+    private static final String POLARION_COMMENT = "<span id=\"polarion-comment:%s\"></span>";
 
     public List<String> extractCommentIds(@Nullable String content) {
         List<String> commentIds = new ArrayList<>();
@@ -30,7 +33,7 @@ public class CommentUtils {
 
     public List<String> extractCommentIds(Element element) {
         List<String> result = new ArrayList<>();
-        if ("span".equals(element.tagName()) && element.id().matches("polarion-comment:\\d+")) {
+        if ("span".equals(element.tagName()) && COMMENT_MARKER_ID_PATTERN.matcher(element.id()).matches()) {
             result.add(element.id().substring("polarion-comment:".length()));
         } else {
             for (Element child : element.children()) {
@@ -41,7 +44,7 @@ public class CommentUtils {
     }
 
     public String appendComments(@NotNull String content, List<String> commentIds) {
-        return content + commentIds.stream().map("<span id=\"polarion-comment:%s\"></span>"::formatted).collect(Collectors.joining());
+        return content + commentIds.stream().map(POLARION_COMMENT::formatted).collect(Collectors.joining());
     }
 
     public void appendComments(@NotNull List<Element> elements, @NotNull List<String> commentIds) {
@@ -52,10 +55,27 @@ public class CommentUtils {
         return RegexMatcher.get(COMMENT_REGEX).removeAll(content);
     }
 
+    /**
+     * Points the markers which anchor a comment to a piece of text at the copies of those comments. A marker naming
+     * a comment which was not copied is removed: it would otherwise anchor to a comment the copy does not have.
+     *
+     * @param idMapping ID of a copied comment mapped to the ID of its copy
+     */
+    public String remapComments(@NotNull String content, @NotNull Map<String, String> idMapping) {
+        Matcher matcher = COMMENT_PATTERN.matcher(content);
+        StringBuilder remapped = new StringBuilder();
+        while (matcher.find()) {
+            String newId = idMapping.get(matcher.group("id"));
+            matcher.appendReplacement(remapped, newId == null ? "" : Matcher.quoteReplacement(POLARION_COMMENT.formatted(newId)));
+        }
+        matcher.appendTail(remapped);
+        return remapped.toString();
+    }
+
     public Element removeComments(Element element) {
         List<Element> toRemove = new ArrayList<>();
         for (Element child : element.children()) {
-            if ("span".equals(child.tagName()) && child.id().matches("polarion-comment:\\d+")) {
+            if ("span".equals(child.tagName()) && COMMENT_MARKER_ID_PATTERN.matcher(child.id()).matches()) {
                 toRemove.add(child);
             } else {
                 removeComments(child);
@@ -84,7 +104,7 @@ public class CommentUtils {
 
             String cleanBefore = extractCleanContext(sourceHtmlWithMarkers, Math.max(0, matcher.start() - CONTEXT_WINDOW), matcher.start());
             String cleanAfter = extractCleanContext(sourceHtmlWithMarkers, matcher.end(), Math.min(sourceHtmlWithMarkers.length(), matcher.end() + CONTEXT_WINDOW));
-            String newMarker = "<span id=\"polarion-comment:%s\"></span>".formatted(newId);
+            String newMarker = POLARION_COMMENT.formatted(newId);
 
             int position = findInsertPosition(targetHtmlWithoutMarkers, cleanBefore, cleanAfter);
             if (position >= 0) {
