@@ -308,9 +308,11 @@ For development, use: `mvn clean install -P local-install-into-polarion` with `P
 ### Performance Tuning
 
 In `polarion.properties`:
+
 ```properties
 ch.sbb.polarion.extension.diff-tool.chunk.size=2
 ```
+
 Increase for faster processing, but may overload server.
 
 ## Code Quality
