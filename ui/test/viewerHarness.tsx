@@ -90,6 +90,22 @@ export async function shoot(name: string): Promise<void> {
   await expect(page.elementLocator(app)).toMatchScreenshot(name);
 }
 
+/**
+ * Waits for one of the viewer's dialogs to be on screen, named by its title.
+ *
+ * Modal.jsx keeps every dialog mounted and toggles an inline `display`, so "is it open" is a computed
+ * style rather than a presence check, and not every one of them carries a testId.
+ */
+export async function openDialog(title: string): Promise<void> {
+  await vi.waitFor(() => {
+    const shown = [...document.querySelectorAll<HTMLElement>('.modal')].filter(
+      (modal) => getComputedStyle(modal).display !== 'none',
+    );
+    expect(shown).toHaveLength(1);
+    expect(shown[0].querySelector('.modal-title')?.textContent).toBe(title);
+  });
+}
+
 /** Opens the configuration pane, the control #684 turned from an svg with an onClick into a button. */
 export async function openControlPane(): Promise<void> {
   (document.querySelector('.control-pane .expand-button') as HTMLButtonElement).click();
