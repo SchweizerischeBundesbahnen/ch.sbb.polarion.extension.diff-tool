@@ -44,7 +44,10 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
   }, [pairSelectionTrigger])
 
   useEffect(() => {
-    if (workItemsPair) {
+    // WorkItemsPairDiff attaches fieldsToMerge to the pair once its diff data arrives, and only for a pair
+    // which has diffs at all. Swapping the documents hands this component a new pair object, which can
+    // reach here before that attachment. There is nothing to record until it does.
+    if (workItemsPair?.fieldsToMerge) {
       const fieldToMerge = workItemsPair.fieldsToMerge.find(fieldToMerge => fieldToMerge.id === fieldId);
       if (fieldToMerge) {
         fieldToMerge.selected = selected;
@@ -70,7 +73,7 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
 
   return (
       <div className={`container-fluid g-0 diff-wrapper ${selected ? "selected" : ""} ${display ? "d-block" : "d-none"}`} data-testid={fieldName}>
-        {workItemsPair && context.state.individualFieldsSelection && <FieldMergeTicker selected={selected} changeSelectionCallback={changeSelected} />}
+        {workItemsPair && context.state.individualFieldsSelection && <FieldMergeTicker fieldName={fieldName} selected={selected} changeSelectionCallback={changeSelected} />}
         <div className={`diff-header ${issues && issues.length > 0 ? "diff-issues" : ""}`} ref={refs.setReference} {...getReferenceProps()} >
           {fieldName}
         </div>

@@ -181,7 +181,8 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
         <div className="wi-diff row g-0" key={index} style={{position: 'relative'}} data-testid={`${diff.id}-field-diff`}>
           <div className="merge-ticker">
             <div className="form-check">
-              <input className="form-check-input" type="checkbox" checked={mergingContext.isIndexSelected(index)} onChange={changeSelected(diff.id)}/>
+              <input className="form-check-input" type="checkbox" checked={mergingContext.isIndexSelected(index)} onChange={changeSelected(diff.id)}
+                     aria-label={`Select field ${diff.name} for merge`}/>
             </div>
           </div>
           <FieldsDiff fieldId={diff.id} fieldName={diff.name} oldValue={diff.oldValue} newValue={diff.newValue} issues={diff.issues}/>
