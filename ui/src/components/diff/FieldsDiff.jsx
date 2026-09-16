@@ -1,7 +1,7 @@
 import {useContext, useEffect, useRef, useState} from "react";
 import AppContext from "@/components/AppContext";
 import DiffViewer from "@/components/diff/DiffViewer";
-import {FloatingArrow, arrow, useFloating, offset, useInteractions, useHover, useFocus, flip} from '@floating-ui/react';
+import {FloatingArrow, arrow, useFloating, offset, useInteractions, useHover, useFocus, useRole, useDismiss, flip} from '@floating-ui/react';
 import FieldMergeTicker from "@/components/merge/FieldMergeTicker";
 
 const ARROW_HEIGHT = 7;
@@ -32,9 +32,16 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
   // A pointer is not the only way to reach the issues of a field. useFocus opens the same popup from
   // the keyboard, which needs the reference to be focusable: hence tabIndex on the header below.
   const focus = useFocus(floatingContext);
+  // Opening it is not enough. useRole marks the popup as a tooltip and points the header at it with
+  // aria-describedby, so a screen reader reads the issues rather than the field name alone, and
+  // useDismiss closes it on Escape, which WCAG 1.4.13 asks of content shown on focus.
+  const role = useRole(floatingContext, {role: 'tooltip'});
+  const dismiss = useDismiss(floatingContext);
   const {getReferenceProps, getFloatingProps} = useInteractions([
     hover,
     focus,
+    role,
+    dismiss,
   ]);
 
   useEffect(() => {
