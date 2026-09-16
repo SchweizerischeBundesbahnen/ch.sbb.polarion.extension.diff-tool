@@ -112,7 +112,15 @@ function FragmentRow({
         className="row-clickable"
         data-job-id={job.jobId}
         aria-expanded={expanded}
+        tabIndex={0}
         onClick={() => onToggle(job.jobId)}
+        onKeyDown={(event) => {
+          // The row is the disclosure control, so it answers the two keys a button answers.
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onToggle(job.jobId);
+          }
+        }}
       >
         <td>
           <div>

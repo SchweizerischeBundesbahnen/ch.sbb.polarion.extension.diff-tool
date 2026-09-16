@@ -214,9 +214,10 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
 
             {diffs && diffs.length > 0
                 && (!workItemsPair.rightWorkItem || !workItemsPair.rightWorkItem.movedOutlineNumber)
-                && <FloatingButton fontAwesomeIcon={expanded ? faChevronDown : faChevronUp} clickHandler={expandHandler}/>}
-            {(!diffs || diffs.length === 0) && !error && <FloatingButton fontAwesomeIcon={faEquals} disabled={true}/>}
-            {(!diffs || diffs.length === 0) && error && <FloatingButton fontAwesomeIcon={faQuestion} disabled={true}/>}
+                && <FloatingButton fontAwesomeIcon={expanded ? faChevronDown : faChevronUp} clickHandler={expandHandler}
+                                   expanded={expanded} label={expanded ? "Collapse the differences" : "Expand the differences"}/>}
+            {(!diffs || diffs.length === 0) && !error && <FloatingButton fontAwesomeIcon={faEquals} disabled={true} label="No differences"/>}
+            {(!diffs || diffs.length === 0) && error && <FloatingButton fontAwesomeIcon={faQuestion} disabled={true} label="Differences could not be determined"/>}
 
             <WorkItemHeader workItem={workItemsPair.rightWorkItem} side={RIGHT} />
           </div>

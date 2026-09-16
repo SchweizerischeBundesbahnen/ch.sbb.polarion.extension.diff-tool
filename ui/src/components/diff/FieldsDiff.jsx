@@ -1,7 +1,7 @@
 import {useContext, useEffect, useRef, useState} from "react";
 import AppContext from "@/components/AppContext";
 import DiffViewer from "@/components/diff/DiffViewer";
-import {FloatingArrow, arrow, useFloating, offset, useInteractions, useHover, flip} from '@floating-ui/react';
+import {FloatingArrow, arrow, useFloating, offset, useInteractions, useHover, useFocus, flip} from '@floating-ui/react';
 import FieldMergeTicker from "@/components/merge/FieldMergeTicker";
 
 const ARROW_HEIGHT = 7;
@@ -29,8 +29,12 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
     ],
   });
   const hover = useHover(floatingContext);
+  // A pointer is not the only way to reach the issues of a field. useFocus opens the same popup from
+  // the keyboard, which needs the reference to be focusable: hence tabIndex on the header below.
+  const focus = useFocus(floatingContext);
   const {getReferenceProps, getFloatingProps} = useInteractions([
     hover,
+    focus,
   ]);
 
   useEffect(() => {
@@ -74,7 +78,8 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
   return (
       <div className={`container-fluid g-0 diff-wrapper ${selected ? "selected" : ""} ${display ? "d-block" : "d-none"}`} data-testid={fieldName}>
         {workItemsPair && context.state.individualFieldsSelection && <FieldMergeTicker fieldName={fieldName} selected={selected} changeSelectionCallback={changeSelected} />}
-        <div className={`diff-header ${issues && issues.length > 0 ? "diff-issues" : ""}`} ref={refs.setReference} {...getReferenceProps()} >
+        <div className={`diff-header ${issues && issues.length > 0 ? "diff-issues" : ""}`} ref={refs.setReference}
+             tabIndex={issues && issues.length > 0 ? 0 : undefined} {...getReferenceProps()} >
           {fieldName}
         </div>
         {popupVisible && issues && issues.length > 0 &&

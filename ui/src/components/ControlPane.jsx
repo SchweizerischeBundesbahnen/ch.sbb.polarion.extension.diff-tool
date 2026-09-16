@@ -162,8 +162,12 @@ export default function ControlPane({diff_type}) {
           right: "5px"
         }}>
           {context.state.controlPaneAccessible
-              && <FontAwesomeIcon icon={context.state.controlPaneExpanded ? faAnglesLeft : faAnglesRight} className="expand-button"
-                           onClick={() => context.state.setControlPaneExpanded(!context.state.controlPaneExpanded)}/>
+              && <button type="button" className="expand-button"
+                         aria-expanded={context.state.controlPaneExpanded}
+                         aria-label={context.state.controlPaneExpanded ? "Collapse the configuration pane" : "Expand the configuration pane"}
+                         onClick={() => context.state.setControlPaneExpanded(!context.state.controlPaneExpanded)}>
+                <FontAwesomeIcon icon={context.state.controlPaneExpanded ? faAnglesLeft : faAnglesRight}/>
+              </button>
           }
         </div>
         <div className="controls">
