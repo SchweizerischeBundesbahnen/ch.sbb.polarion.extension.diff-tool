@@ -96,6 +96,7 @@ export default function MergePane({rightContext, diff_type, mergingContext, merg
                                           {id: LINK_ROLE_DIRECTION_REVERSE, name: "Reverse"}]} />
             </label>}
             <MergeButton fontAwesomeIcon={faArrowRightLong} clickHandler={() => confirmMerge(LEFT_TO_RIGHT)}
+                         title="Merge selected items into the target document"
                          style={{justifyContent: "right"}} disabled={mergeDisabled || mergingContext.selectionCount === 0} />
           </div>
           <div className="col collapsed-border merge-button-container">

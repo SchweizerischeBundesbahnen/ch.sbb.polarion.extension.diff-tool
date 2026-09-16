@@ -6,7 +6,7 @@ export default function MergeButton({fontAwesomeIcon, clickHandler, style, disab
         opacity: disabled ? '.5' : '1',
         ...style
       }} className="merge-button" onClick={() => !disabled && clickHandler()}>
-        <button className="btn btn-secondary btn-xs" disabled={disabled} title={title}>
+        <button className="btn btn-secondary btn-xs" disabled={disabled} title={title} aria-label={title}>
           <FontAwesomeIcon icon={fontAwesomeIcon} />
         </button>
       </div>

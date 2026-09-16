@@ -34,6 +34,8 @@ export default function ContentAnchorsDiff({ anchorsPair, currentIndex, mergingC
     setBelowDiffSelected(mergingContext.isIndexSelected(belowDiffIndex));
   }, [mergingContext.selectionRegistry]);
 
+  const anchorId = (anchorsPair.leftAnchor || anchorsPair.rightAnchor)?.id;
+
   const changeDiffSelected = (contentPosition) => {
     const index = contentPosition === CONTENT_ABOVE ? aboveDiffIndex : belowDiffIndex;
     const newValue = !(contentPosition === CONTENT_ABOVE ? aboveDiffSelected : belowDiffSelected);
@@ -42,7 +44,7 @@ export default function ContentAnchorsDiff({ anchorsPair, currentIndex, mergingC
 
   return <div className={`wi-diff container-fluid g-0`} data-testid={`${anchorsPair.leftAnchor ? anchorsPair.leftAnchor.id : "NONE"}_${anchorsPair.rightAnchor ? anchorsPair.rightAnchor.id : "NONE"}`}>
     {(leftDiffAbove || rightDiffAbove)
-        && <ContentBlocksDiff oldValue={leftDiffAbove} newValue={rightDiffAbove} selected={aboveDiffSelected} selectedCallback={() => changeDiffSelected(CONTENT_ABOVE)} />
+        && <ContentBlocksDiff label={`Select the document text above ${anchorId} for merge`} oldValue={leftDiffAbove} newValue={rightDiffAbove} selected={aboveDiffSelected} selectedCallback={() => changeDiffSelected(CONTENT_ABOVE)} />
     }
     <div style={{
       backgroundColor: "#f6f6f6",
@@ -52,7 +54,7 @@ export default function ContentAnchorsDiff({ anchorsPair, currentIndex, mergingC
       <WorkItemHeader workItem={anchorsPair.rightAnchor} side={RIGHT} asHeaderInDocument={asHeaderInDocument}/>
     </div>
     {(leftDiffBelow || rightDiffBelow)
-        && <ContentBlocksDiff oldValue={leftDiffBelow} newValue={rightDiffBelow} selected={belowDiffSelected} selectedCallback={() => changeDiffSelected(CONTENT_BELOW)}/>
+        && <ContentBlocksDiff label={`Select the document text below ${anchorId} for merge`} oldValue={leftDiffBelow} newValue={rightDiffBelow} selected={belowDiffSelected} selectedCallback={() => changeDiffSelected(CONTENT_BELOW)}/>
     }
   </div>
 }
