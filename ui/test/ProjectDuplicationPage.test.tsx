@@ -229,7 +229,10 @@ describe('ProjectDuplicationPage', () => {
     row.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     await vi.waitFor(() => expect(document.querySelector('iframe.job-log-frame')).not.toBeNull());
 
+    // Space acts on the way up, the way a native button does, so holding it cannot auto-repeat.
     row.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    expect(document.querySelector('iframe.job-log-frame')).not.toBeNull();
+    row.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true }));
     await vi.waitFor(() => expect(document.querySelector('iframe.job-log-frame')).toBeNull());
   });
 
