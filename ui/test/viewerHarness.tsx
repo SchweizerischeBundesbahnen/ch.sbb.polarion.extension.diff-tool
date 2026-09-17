@@ -45,6 +45,10 @@ const SHARED_ROUTES: Route[] = [
   { method: 'GET', match: /\/settings\/diff\/names/, json: fixture('configs.json') ?? [] },
 ];
 
+/** The viewport every capture is measured from, so the measurement cannot inherit the last one. */
+const MEASURE_WIDTH = 1280;
+const MEASURE_HEIGHT = 400;
+
 const origUrl = window.location.pathname + window.location.search;
 
 /** Put back whatever URL the file started on, so one viewer's query string cannot leak into the next. */
@@ -82,10 +86,22 @@ export async function shoot(name: string): Promise<void> {
   }
 
   const app = document.querySelector('.diff-app') as HTMLElement;
+
+  // Measure from a fixed viewport, never from whatever the previous capture left behind.
+  //
+  // `.diff-app` is `height: 100vh` (globals.css), so its scrollHeight is max(content, viewport). Sizing
+  // the viewport from that and then leaving it set made every capture inherit the one before it: the
+  // collections references came out 720, 760, 800, 840, a +40 staircase that had nothing to do with
+  // their content, and adding a single test shifted every later reference by 66px. Resetting first
+  // makes each capture depend on its own content alone, whatever order the file runs in.
+  await page.viewport(MEASURE_WIDTH, MEASURE_HEIGHT);
   await settleLayout();
+  const height = Math.max(Math.ceil(app.scrollHeight) + 40, MEASURE_HEIGHT);
+
   // No cap on the height: assertNotResampled in visualHelpers fails the capture if the page outgrows the
   // window, which names the fix instead of silently clipping or downscaling the reference.
-  await page.viewport(1280, Math.ceil(app.scrollHeight) + 40);
+  await page.viewport(MEASURE_WIDTH, height);
+  await settleLayout();
   await settleBeforeCapture();
   await expect(page.elementLocator(app)).toMatchScreenshot(name);
 }
@@ -108,6 +124,14 @@ export async function openDialog(title: string): Promise<void> {
 
 /** Opens the configuration pane, the control #684 turned from an svg with an onClick into a button. */
 export async function openControlPane(): Promise<void> {
-  (document.querySelector('.control-pane .expand-button') as HTMLButtonElement).click();
+  // Waited for, not assumed: the toggle renders only once `controlPaneAccessible` has arrived, which is
+  // a second round trip after the pairs. Taking it straight worked only because this was never the
+  // first capture in its file.
+  const toggle = await vi.waitFor(() => {
+    const found = document.querySelector<HTMLButtonElement>('.control-pane .expand-button');
+    expect(found).not.toBeNull();
+    return found!;
+  });
+  toggle.click();
   await vi.waitFor(() => expect(document.querySelectorAll('.control-pane.expanded')).toHaveLength(1));
 }

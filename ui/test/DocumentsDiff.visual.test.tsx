@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-react';
 import DocumentsPage from '../src/pages/DocumentsPage';
+import { jsonResponse } from './mockFetch';
 import { fixture, openControlPane, openDialog, pairDiff, renderViewer, restoreUrl, shoot } from './viewerHarness';
 
 // Docker-only snapshots of the documents diff viewer: the work item pairs with their merge tickers and
@@ -16,6 +17,40 @@ function renderDocuments() {
     [
       { method: 'POST', match: /\/diff\/documents$/, json: fixture('documents-diff.json') ?? {} },
       { method: 'POST', match: /\/diff\/document-workitems$/, respond: pairDiff },
+    ],
+    <DocumentsPage />,
+  );
+}
+
+/**
+ * One pair answered with field issues on its Description.
+ *
+ * No fixture in e2e/fixtures carries an issue on any field, so the whole diff-issues state, the red
+ * header and the popup listing the reasons, has never been rendered by any suite. The server does
+ * return them, so the state is real; the sample data simply has none. Synthesized here rather than
+ * added to e2e/fixtures, so the Playwright suite keeps asserting exactly what it asserts today.
+ */
+function pairDiffWithFieldIssues(url: string, init?: RequestInit): Response {
+  const body = JSON.parse((init?.body as string) ?? '{}');
+  if (body.leftWorkItem?.id !== 'EL-4977') {
+    return pairDiff(url, init);
+  }
+  const data = structuredClone(fixture('EL-4977_DP-11559.json')) as {
+    fieldDiffs: { id: string; issues: string[] }[];
+  };
+  data.fieldDiffs.find((field) => field.id === 'description')!.issues = [
+    'Referenced work item EL-90001 has no counterpart in the target project.',
+    'An image in the rich text is not attached to the target document.',
+  ];
+  return jsonResponse(data);
+}
+
+function renderDocumentsWithFieldIssues() {
+  renderViewer(
+    DOCUMENTS_URL,
+    [
+      { method: 'POST', match: /\/diff\/documents$/, json: fixture('documents-diff.json') ?? {} },
+      { method: 'POST', match: /\/diff\/document-workitems$/, respond: pairDiffWithFieldIssues },
     ],
     <DocumentsPage />,
   );
@@ -76,6 +111,24 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents diff viewer visual', () => {
 
     await openDialog('Merge confirmation');
     await shoot('documents-diff-merge-confirmation');
+  });
+
+  it('a field with issues, and the popup a keyboard user opens on it', async () => {
+    renderDocumentsWithFieldIssues();
+    await loaded();
+
+    // useFocus opens the same popup the pointer does, which is the half of #684 that had no reference.
+    const header = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLElement>('[data-testid="EL-4977_DP-11559"] .diff-header[tabindex]');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    header.focus();
+    await vi.waitFor(() => expect(document.querySelector('.tooltip-container')).not.toBeNull());
+    // Both issues are listed, not just the first: the popup is the only place they are readable.
+    expect(document.querySelectorAll('.tooltip-container li')).toHaveLength(2);
+
+    await shoot('documents-diff-field-issues');
   });
 
   // The "Swap documents" dialog is deliberately not covered. DocumentsDiff only raises it above
