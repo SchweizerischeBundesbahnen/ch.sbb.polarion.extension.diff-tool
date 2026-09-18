@@ -11,6 +11,7 @@ import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService.J
 import ch.sbb.polarion.extension.diff_tool.service.queue.QueueFullException;
 import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
 import com.polarion.platform.security.ISecurityService;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 
@@ -306,19 +308,32 @@ class ChapterMergeJobsServiceTest {
             return MergeResult.builder().success(true).build();
         });
 
+        AtomicInteger mergesStarted = new AtomicInteger();
         try {
-            QueueFullException refused = assertThrows(QueueFullException.class, () -> {
-                // one more than the merges which run and the merges which wait for their turn
-                for (int merge = 0; merge <= ChapterMergeJobsService.CONCURRENT_MERGES + ChapterMergeJobsService.QUEUED_MERGES; merge++) {
-                    jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
-                }
-            });
+            QueueFullException refused = assertThrows(QueueFullException.class, () -> startMergesBeyondWhatTheServerTakes(mergesStarted));
 
             assertTrue(refused.getMessage().contains("Too many chapter merges"));
             // the merges which were taken are running or waiting, and the refused one left nothing behind
-            assertEquals(ChapterMergeJobsService.CONCURRENT_MERGES + ChapterMergeJobsService.QUEUED_MERGES, jobsService.getAllJobsStates().size());
+            assertEquals(mergesStarted.get(), jobsService.getAllJobsStates().size());
+            assertTrue(mergesStarted.get() <= ChapterMergeJobsService.CONCURRENT_MERGES + ChapterMergeJobsService.QUEUED_MERGES);
         } finally {
             releaseMerges.countDown();
+            // The merge threads are shared by every test in this class, and this one filled them: they are given
+            // back before the next test asks for one of them.
+            await().atMost(Duration.ofSeconds(10))
+                    .until(() -> jobsService.getAllJobsStates().values().stream().allMatch(JobState::isDone));
+        }
+    }
+
+    /**
+     * Asks for one merge more than the server takes at once: the merges which run, the merges which wait for their
+     * turn, and one beyond them. Counts the merges which were taken, so that a caller can tell what the refusal
+     * left behind.
+     */
+    private void startMergesBeyondWhatTheServerTakes(@NotNull AtomicInteger mergesStarted) {
+        for (int merge = 0; merge <= ChapterMergeJobsService.CONCURRENT_MERGES + ChapterMergeJobsService.QUEUED_MERGES; merge++) {
+            jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
+            mergesStarted.incrementAndGet();
         }
     }
 
@@ -331,10 +346,8 @@ class ChapterMergeJobsServiceTest {
         CountDownLatch releaseMerge = new CountDownLatch(1);
         when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenAnswer(invocation -> {
             BooleanSupplier abortRequested = invocation.getArgument(2);
-            // what the merge does between two work items
-            while (!abortRequested.getAsBoolean()) {
-                Thread.sleep(10);
-            }
+            // the merge goes on, and asks between two work items whether it still should
+            await().atMost(Duration.ofSeconds(10)).until(abortRequested::getAsBoolean);
             releaseMerge.countDown();
             throw new CancellationException("Chapter merge was asked to stop before it merged the whole chapter");
         });
@@ -358,9 +371,7 @@ class ChapterMergeJobsServiceTest {
         CountDownLatch releaseMerge = new CountDownLatch(1);
         when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenAnswer(invocation -> {
             BooleanSupplier abortRequested = invocation.getArgument(2);
-            while (!abortRequested.getAsBoolean()) {
-                Thread.sleep(10);
-            }
+            await().atMost(Duration.ofSeconds(10)).until(abortRequested::getAsBoolean);
             // a merge which is past its last work item: what is left is the write, which it goes through with
             askedToStop.countDown();
             releaseMerge.await();

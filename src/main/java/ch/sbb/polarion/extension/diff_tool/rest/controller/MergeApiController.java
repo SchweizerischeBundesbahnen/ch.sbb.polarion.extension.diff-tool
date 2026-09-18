@@ -15,7 +15,6 @@ import jakarta.inject.Singleton;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.VisibleForTesting;
 
 @Singleton
 @Secured
