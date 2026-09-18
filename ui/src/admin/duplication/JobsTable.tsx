@@ -112,7 +112,26 @@ function FragmentRow({
         className="row-clickable"
         data-job-id={job.jobId}
         aria-expanded={expanded}
+        tabIndex={0}
         onClick={() => onToggle(job.jobId)}
+        onKeyDown={(event) => {
+          // The row is the disclosure control, so it answers the two keys a button answers, and in the
+          // way a button answers them: Enter on the way down, Space on the way up. Acting on Space here
+          // would auto-repeat while the key is held.
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            onToggle(job.jobId);
+          } else if (event.key === ' ') {
+            // Swallow the page scroll now, act on the way up.
+            event.preventDefault();
+          }
+        }}
+        onKeyUp={(event) => {
+          if (event.key === ' ') {
+            event.preventDefault();
+            onToggle(job.jobId);
+          }
+        }}
       >
         <td>
           <div>

@@ -1,7 +1,7 @@
 import {useContext, useEffect, useRef, useState} from "react";
 import AppContext from "@/components/AppContext";
 import DiffViewer from "@/components/diff/DiffViewer";
-import {FloatingArrow, arrow, useFloating, offset, useInteractions, useHover, flip} from '@floating-ui/react';
+import {FloatingArrow, arrow, useFloating, offset, useInteractions, useHover, useFocus, useRole, useDismiss, flip} from '@floating-ui/react';
 import FieldMergeTicker from "@/components/merge/FieldMergeTicker";
 
 const ARROW_HEIGHT = 7;
@@ -29,8 +29,19 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
     ],
   });
   const hover = useHover(floatingContext);
+  // A pointer is not the only way to reach the issues of a field. useFocus opens the same popup from
+  // the keyboard, which needs the reference to be focusable: hence tabIndex on the header below.
+  const focus = useFocus(floatingContext);
+  // Opening it is not enough. useRole marks the popup as a tooltip and points the header at it with
+  // aria-describedby, so a screen reader reads the issues rather than the field name alone, and
+  // useDismiss closes it on Escape, which WCAG 1.4.13 asks of content shown on focus.
+  const role = useRole(floatingContext, {role: 'tooltip'});
+  const dismiss = useDismiss(floatingContext);
   const {getReferenceProps, getFloatingProps} = useInteractions([
     hover,
+    focus,
+    role,
+    dismiss,
   ]);
 
   useEffect(() => {
@@ -44,7 +55,10 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
   }, [pairSelectionTrigger])
 
   useEffect(() => {
-    if (workItemsPair) {
+    // WorkItemsPairDiff attaches fieldsToMerge to the pair once its diff data arrives, and only for a pair
+    // which has diffs at all. Swapping the documents hands this component a new pair object, which can
+    // reach here before that attachment. There is nothing to record until it does.
+    if (workItemsPair?.fieldsToMerge) {
       const fieldToMerge = workItemsPair.fieldsToMerge.find(fieldToMerge => fieldToMerge.id === fieldId);
       if (fieldToMerge) {
         fieldToMerge.selected = selected;
@@ -70,8 +84,9 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
 
   return (
       <div className={`container-fluid g-0 diff-wrapper ${selected ? "selected" : ""} ${display ? "d-block" : "d-none"}`} data-testid={fieldName}>
-        {workItemsPair && context.state.individualFieldsSelection && <FieldMergeTicker selected={selected} changeSelectionCallback={changeSelected} />}
-        <div className={`diff-header ${issues && issues.length > 0 ? "diff-issues" : ""}`} ref={refs.setReference} {...getReferenceProps()} >
+        {workItemsPair && context.state.individualFieldsSelection && <FieldMergeTicker fieldName={fieldName} selected={selected} changeSelectionCallback={changeSelected} />}
+        <div className={`diff-header ${issues && issues.length > 0 ? "diff-issues" : ""}`} ref={refs.setReference}
+             tabIndex={issues && issues.length > 0 ? 0 : undefined} {...getReferenceProps()} >
           {fieldName}
         </div>
         {popupVisible && issues && issues.length > 0 &&

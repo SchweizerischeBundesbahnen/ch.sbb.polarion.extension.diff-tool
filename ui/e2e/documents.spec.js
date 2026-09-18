@@ -178,7 +178,10 @@ test.describe("page of diffing documents' WorkItems", () => {
       <path fill=\"currentColor\" d=\"M201.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 338.7 54.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z\"></path>
     `));
 
-    await collapseButton.click();
+    // Pressed rather than clicked: a click alone passed against the <div> this control used to be,
+    // so only a key press pins the keyboard reachability.
+    await collapseButton.focus();
+    await collapseButton.press('Enter');
 
     collapseButtonIcon = collapseButton.locator("svg");
     collapseButtonIconHtml = await collapseButtonIcon.innerHTML();
@@ -194,7 +197,9 @@ test.describe("page of diffing documents' WorkItems", () => {
 
     const expandButton = page.locator('.control-pane .expand-button');
     await expect(expandButton).toBeVisible({visible: true});
-    await expandButton.click();
+    // Pressed rather than clicked, for the same reason as the pair toggle above.
+    await expandButton.focus();
+    await expandButton.press('Enter');
     expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
 
     const perFieldMergeCheckbox = page.getByTestId('per-field-merge-selection');

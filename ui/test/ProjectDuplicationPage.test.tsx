@@ -221,6 +221,21 @@ describe('ProjectDuplicationPage', () => {
     await vi.waitFor(() => expect(document.querySelector('iframe.job-log-frame')).toBeNull());
   });
 
+  it('opens and closes a job log from the keyboard, not the pointer alone', async () => {
+    await renderPage();
+    await vi.waitFor(() => expect(document.querySelector('[data-job-id="job-0"]')).not.toBeNull());
+    const row = document.querySelector<HTMLElement>('[data-job-id="job-0"]')!;
+
+    row.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await vi.waitFor(() => expect(document.querySelector('iframe.job-log-frame')).not.toBeNull());
+
+    // Space acts on the way up, the way a native button does, so holding it cannot auto-repeat.
+    row.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    expect(document.querySelector('iframe.job-log-frame')).not.toBeNull();
+    row.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true }));
+    await vi.waitFor(() => expect(document.querySelector('iframe.job-log-frame')).toBeNull());
+  });
+
   it('keeps a finished job log at a stable URL so it does not reload under the user', async () => {
     await renderPage();
     await vi.waitFor(() => expect(document.querySelector('[data-job-id="job-0"]')).not.toBeNull());

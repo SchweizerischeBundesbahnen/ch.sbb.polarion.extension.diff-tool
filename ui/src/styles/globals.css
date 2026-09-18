@@ -166,7 +166,12 @@ a:hover {
   align-items: center;
 }
 
+/* Rendered as a <button> when it toggles a pair and as a <div> when it reports a state, so the
+   properties a button would otherwise take from the user agent are stated here. */
 .floating-button {
+  padding: 0;
+  font-family: inherit;
+  appearance: none;
   display: flex;
   position: absolute;
   top: 50%;
@@ -280,11 +285,18 @@ a:hover {
   left: 0;
 }
 
+/* A <button> wrapping the chevron icon, so the same reset applies as on .floating-button. */
 .control-pane .expand-button {
   color: #cccccc;
   padding: 5px;
   border-radius: 5px;
   cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 0;
+  appearance: none;
 }
 
 .control-pane .expand-button:hover {

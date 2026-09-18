@@ -7,6 +7,8 @@ export default function PairMergeTicker({workItemsPair, diffs, selected, pairSel
   const searchParams = useSearchParams();
   const branchedDocuments = useMemo(() => searchParams.get('branched') === "true", [searchParams]);
 
+  const workItemId = workItemsPair.leftWorkItem?.id || workItemsPair.rightWorkItem?.id;
+
   const changeSelected = (event) => {
     event.stopPropagation();
     if (diffs && diffs.length > 0) {
@@ -17,7 +19,8 @@ export default function PairMergeTicker({workItemsPair, diffs, selected, pairSel
   return (
       <div className="merge-ticker" onClick={changeSelected}>
         {diffService.diffsExist(workItemsPair, diffs, branchedDocuments) && <div className="form-check" onClick={changeSelected}>
-          <input className="form-check-input" type="checkbox" checked={selected} onChange={changeSelected} />
+          <input className="form-check-input" type="checkbox" checked={selected} onChange={changeSelected}
+                 aria-label={`Select work item ${workItemId} for merge`} />
         </div>}
       </div>
   );
