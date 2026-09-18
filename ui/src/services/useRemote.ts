@@ -17,6 +17,24 @@ export type SendRequest = (options: SendRequestOptions) => Promise<Response>;
  * it callable straight from a test.
  */
 export const sendRequest: SendRequest = ({ method, url, body, contentType }) => {
+  const bearerToken = import.meta.env.VITE_BEARER_TOKEN;
+  const apiPath = bearerToken ? '/api' : '/internal';
+  return sendAbsoluteRequest({
+    method: method,
+    url: `${REST_PATH}${apiPath}${url}`,
+    body: body,
+    contentType: contentType,
+  });
+};
+
+/**
+ * Call a URL the server handed out, with the same authentication as {@link sendRequest}.
+ *
+ * The chapter merge endpoint answers a started merge with a `Location` header and expects it to be polled as
+ * given, so that URL cannot go through the REST base - but it still needs the bearer token when one is
+ * configured, which a bare `fetch` would leave out.
+ */
+export const sendAbsoluteRequest: SendRequest = ({ method, url, body, contentType }) => {
   const headers: Record<string, string> = {};
   if (contentType) {
     headers['Content-Type'] = contentType;
@@ -26,12 +44,10 @@ export const sendRequest: SendRequest = ({ method, url, body, contentType }) => 
     headers['Authorization'] = `Bearer ${bearerToken}`;
   }
 
-  const apiPath = bearerToken ? '/api' : '/internal';
-
   // Always same-origin: inside Polarion the app is served from the same host, and in `vite dev` the
   // dev-server proxy forwards /polarion/diff-tool/rest to VITE_BASE_URL. That replaces the old
   // NEXT_PUBLIC_BASE_URL prefixing, which needed CORS.
-  return fetch(`${REST_PATH}${apiPath}${url}`, {
+  return fetch(url, {
     method: method,
     mode: 'cors', // no-cors, *cors, same-origin
     cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached

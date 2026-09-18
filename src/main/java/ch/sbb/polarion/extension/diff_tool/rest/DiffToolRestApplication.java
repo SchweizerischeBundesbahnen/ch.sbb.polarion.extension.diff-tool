@@ -14,6 +14,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.controller.SearchApiController;
 import ch.sbb.polarion.extension.diff_tool.rest.controller.SearchInternalController;
 import ch.sbb.polarion.extension.diff_tool.rest.controller.UtilityApiController;
 import ch.sbb.polarion.extension.diff_tool.rest.controller.UtilityInternalController;
+import ch.sbb.polarion.extension.diff_tool.rest.exception.NoSuchElementExceptionMapper;
 import ch.sbb.polarion.extension.diff_tool.rest.exception.QueueFullExceptionMapper;
 import ch.sbb.polarion.extension.diff_tool.service.queue.ExecutionQueueMonitor;
 import ch.sbb.polarion.extension.diff_tool.service.queue.ExecutionQueueService;
@@ -91,6 +92,6 @@ public class DiffToolRestApplication extends GenericRestApplication {
 
     @Override
     protected @NotNull Set<Object> getExtensionExceptionMapperSingletons() {
-        return Set.of(new QueueFullExceptionMapper());
+        return Set.of(new QueueFullExceptionMapper(), new NoSuchElementExceptionMapper());
     }
 }
