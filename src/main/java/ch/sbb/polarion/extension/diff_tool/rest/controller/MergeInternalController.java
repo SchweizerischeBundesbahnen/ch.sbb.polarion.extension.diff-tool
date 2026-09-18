@@ -1,14 +1,16 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
-import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeJobInfo;
+import ch.sbb.polarion.extension.diff_tool.properties.DiffToolExtensionConfiguration;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.jobs.ChapterMergeJobDetails;
+import ch.sbb.polarion.extension.diff_tool.rest.model.jobs.ChapterMergeJobStatus;
 import ch.sbb.polarion.extension.diff_tool.service.MergeService;
-import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobScheduler;
+import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,31 +25,53 @@ import jakarta.inject.Singleton;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.List;
+import java.net.URI;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Singleton
 @Hidden
 @Path("/internal")
 @Tag(name = "Merge")
 public class MergeInternalController {
-    protected final PolarionService polarionService = new PolarionService();
-    protected final MergeService mergeService = new MergeService(polarionService);
-    protected final ChapterMergeJobScheduler chapterMergeJobScheduler;
+    protected final PolarionService polarionService;
+    protected final MergeService mergeService;
+    protected final ChapterMergeJobsService chapterMergeJobsService;
+
+    @Context
+    private UriInfo uriInfo;
 
     public MergeInternalController() {
-        this(new ChapterMergeJobScheduler());
+        this(new PolarionService());
     }
 
-    public MergeInternalController(ChapterMergeJobScheduler chapterMergeJobScheduler) {
-        this.chapterMergeJobScheduler = chapterMergeJobScheduler;
+    public MergeInternalController(@NotNull PolarionService polarionService) {
+        this(polarionService, new ChapterMergeJobsService(polarionService));
+    }
+
+    @VisibleForTesting
+    MergeInternalController(@NotNull PolarionService polarionService, @NotNull ChapterMergeJobsService chapterMergeJobsService) {
+        this.polarionService = polarionService;
+        this.mergeService = new MergeService(polarionService);
+        this.chapterMergeJobsService = chapterMergeJobsService;
+    }
+
+    @VisibleForTesting
+    void setUriInfo(UriInfo uriInfo) {
+        this.uriInfo = uriInfo;
     }
 
     @POST
@@ -177,25 +201,21 @@ public class MergeInternalController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Copies or moves a chapter of one Document into another one",
-            description = "Merging a chapter can take long, so it is executed as a Polarion job: this method returns as soon as "
-                    + "the job is scheduled, its result is delivered by GET /merge/chapter/jobs/{jobId}",
+            description = "Merging a chapter can take long, so it is carried out in the background: this method returns as soon as "
+                    + "the merge is started, and the Location header names the job which delivers its result",
             requestBody = @RequestBody(
                     required = true,
                     content = @Content(schema = @Schema(implementation = ChapterMergeParams.class))
             ),
             responses = {
                     @ApiResponse(
-                            responseCode = "200",
-                            description = "Information about the scheduled chapter merge job",
-                            content = @Content(
-                                    mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(implementation = ChapterMergeJobInfo.class)
-                            )
+                            responseCode = "202",
+                            description = "The merge is started, the job URI is returned in the Location header"
                     ),
                     @ApiResponse(responseCode = "400", description = "Mandatory parameters are missing")
             }
     )
-    public ChapterMergeJobInfo mergeChapter(ChapterMergeParams mergeParams) {
+    public Response mergeChapter(ChapterMergeParams mergeParams) {
         if (mergeParams == null || mergeParams.getSourceDocument() == null || mergeParams.getTargetDocument() == null
                 || mergeParams.getMode() == null || mergeParams.getInsertMode() == null) {
             throw new BadRequestException("Parameters 'sourceDocument', 'targetDocument', 'mode' and 'insertMode' should be provided");
@@ -203,45 +223,107 @@ public class MergeInternalController {
         if (StringUtils.isBlank(mergeParams.getSourceChapterOutlineNumber()) || StringUtils.isBlank(mergeParams.getTargetChapterOutlineNumber())) {
             throw new BadRequestException("Parameters 'sourceChapterOutlineNumber' and 'targetChapterOutlineNumber' should be provided");
         }
-        return chapterMergeJobScheduler.schedule(mergeParams);
+        String jobId = chapterMergeJobsService.startJob(mergeParams, DiffToolExtensionConfiguration.getInstance().getChapterMergeTimeout());
+
+        URI jobUri = UriBuilder.fromUri(uriInfo.getRequestUri().getPath()).path("jobs").path(jobId).build();
+        return Response.accepted().location(jobUri).build();
     }
 
     @GET
     @Path("/merge/chapter/jobs")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Lists chapter merge jobs, the most recent one first",
+    @Operation(summary = "Returns the states of all chapter merge jobs of the current user",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Chapter merge jobs", useReturnTypeSchema = true)
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Chapter merge jobs, by job ID",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(type = "object", additionalPropertiesSchema = ChapterMergeJobDetails.class))
+                    )
             }
     )
-    public List<ChapterMergeJobInfo> listChapterMergeJobs() {
-        return chapterMergeJobScheduler.listJobs();
+    public Response getAllChapterMergeJobs() {
+        Map<String, ChapterMergeJobDetails> jobsDetails = chapterMergeJobsService.getAllJobsStates().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> toJobDetails(entry.getValue())));
+        return Response.ok(jobsDetails).build();
     }
 
     @GET
     @Path("/merge/chapter/jobs/{jobId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Returns a certain chapter merge job, with its merge result as soon as it has one",
+    @Operation(summary = "Returns the state of a chapter merge job",
             description = "This is what a caller of a chapter merge polls to learn that the merge has finished: "
-                    + "a job which is still running is answered with its state and no merge result",
+                    + "a merge which is still running is answered with 202, a finished one redirects to its result",
             responses = {
+                    // The media types of the 303 and 202 responses are generic, so that SwaggerUI follows the redirect
                     @ApiResponse(
-                            responseCode = "200",
-                            description = "The chapter merge job",
-                            content = @Content(
-                                    mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(implementation = ChapterMergeJobInfo.class)
-                            )
+                            responseCode = "303",
+                            description = "The merge has finished, the Location header contains the URL of its result",
+                            content = @Content(mediaType = "application/*", schema = @Schema(implementation = ChapterMergeJobDetails.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "202",
+                            description = "The merge is still running",
+                            content = @Content(mediaType = "application/*", schema = @Schema(implementation = ChapterMergeJobDetails.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "409",
+                            description = "The merge failed and produced no result of its own",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ChapterMergeJobDetails.class))
                     ),
                     @ApiResponse(responseCode = "404", description = "There is no chapter merge job with this ID")
             }
     )
-    public ChapterMergeJobInfo getChapterMergeJob(@Parameter(description = "ID of the chapter merge job") @PathParam("jobId") String jobId) {
-        ChapterMergeJobInfo jobInfo = chapterMergeJobScheduler.getJob(jobId);
-        if (jobInfo == null) {
-            throw new NotFoundException("No chapter merge job '%s' could be found".formatted(jobId));
+    public Response getChapterMergeJob(@Parameter(description = "ID of the chapter merge job") @PathParam("jobId") String jobId) {
+        ChapterMergeJobsService.JobState jobState = chapterMergeJobsService.getJobState(jobId);
+        ChapterMergeJobDetails jobDetails = toJobDetails(jobState);
+
+        Response.ResponseBuilder responseBuilder = switch (jobDetails.getStatus()) {
+            case IN_PROGRESS -> Response.accepted();
+            case SUCCESSFULLY_FINISHED -> Response.status(Response.Status.SEE_OTHER)
+                    .location(UriBuilder.fromUri(uriInfo.getRequestUri().getPath()).path("result").build());
+            case FAILED -> Response.status(Response.Status.CONFLICT);
+        };
+        return responseBuilder.entity(jobDetails).build();
+    }
+
+    @GET
+    @Path("/merge/chapter/jobs/{jobId}/result")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Returns the result of a chapter merge job",
+            description = "A merge which did not do what was asked of it reports that in its result too, so an "
+                    + "unsuccessful merge result is answered with 200 like any other",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "The merge result",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = MergeResult.class))
+                    ),
+                    @ApiResponse(responseCode = "204", description = "The merge is still running"),
+                    @ApiResponse(responseCode = "409", description = "The merge failed and produced no result of its own"),
+                    @ApiResponse(responseCode = "404", description = "There is no chapter merge job with this ID")
+            }
+    )
+    public Response getChapterMergeJobResult(@Parameter(description = "ID of the chapter merge job") @PathParam("jobId") String jobId) {
+        return chapterMergeJobsService.getJobResult(jobId)
+                .map(mergeResult -> Response.ok(mergeResult).build())
+                .orElseGet(() -> Response.noContent().build());
+    }
+
+    private @NotNull ChapterMergeJobDetails toJobDetails(ChapterMergeJobsService.@NotNull JobState jobState) {
+        ChapterMergeJobStatus status;
+        if (!jobState.isDone()) {
+            status = ChapterMergeJobStatus.IN_PROGRESS;
+        } else if (jobState.isFailed()) {
+            status = ChapterMergeJobStatus.FAILED;
+        } else {
+            status = ChapterMergeJobStatus.SUCCESSFULLY_FINISHED;
         }
-        return jobInfo;
+        return ChapterMergeJobDetails.builder()
+                .status(status)
+                .progressMessage(status == ChapterMergeJobStatus.IN_PROGRESS ? jobState.progressMessage() : null)
+                .errorMessage(jobState.errorMessage())
+                .build();
     }
 
 }

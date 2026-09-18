@@ -320,6 +320,65 @@ class DocumentsChapterMergeServiceTest {
         verify(mergeService).placeNode(eq(second), eq(targetModule), any(), anyInt(), eq(false));
     }
 
+    /**
+     * moveIn takes a work item over with everything below it, so a work item whose parent is moved along with it
+     * is in the target document, under that parent, before it is its turn. Placing it a second time is refused by
+     * Polarion with "Node has been added before.", which used to fail the whole merge.
+     */
+    @Test
+    void testAnItemMovedAlongWithItsParentIsLeftWhereThatMovePutIt() {
+        when(targetModule.getProjectId()).thenReturn("source"); // same project as the source document
+
+        IModule.IStructureNode sourceChapter = chapter(sourceModule, "2", heading("SOURCE-1"));
+        IWorkItem parent = workItem("SOURCE-2", "requirement");
+        IWorkItem child = workItem("SOURCE-3", "requirement");
+        IModule.IStructureNode parentSourceNode = node(parent, false);
+        addChild(sourceChapter, parentSourceNode);
+        addChild(parentSourceNode, node(child, false));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "type");
+
+        // what the target document holds once moveIn has taken the two of them over
+        IModule.IStructureNode parentTargetNode = node(parent, false);
+        IModule.IStructureNode childTargetNode = node(child, false);
+        when(childTargetNode.getParent()).thenReturn(parentTargetNode);
+        when(targetModule.getStructureNodeOfWI(parent)).thenReturn(parentTargetNode);
+        when(targetModule.getStructureNodeOfWI(child)).thenReturn(childTargetNode);
+
+        MergeResult result = inTransaction(() -> documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.MOVE, ChapterInsertMode.UNDER)));
+
+        verify(targetModule).moveIn(List.of(parent, child));
+        // the parent is given its position, the child keeps the one the move of its parent gave it
+        verify(mergeService).placeNode(eq(parent), eq(targetModule), any(), anyInt(), eq(false));
+        verify(mergeService, never()).placeNode(eq(child), any(), any(), anyInt(), anyBoolean());
+        // both of them moved, whoever placed them
+        assertEquals(List.of("SOURCE-2", "SOURCE-3"), result.getChapterMergeInfo().getMovedWorkItemIds());
+    }
+
+    @Test
+    void testAnItemIsPlacedUnlessItAlreadySitsUnderThatVeryParent() {
+        IWorkItem workItem = workItem("SOURCE-2", "requirement");
+        IModule.IStructureNode parentNode = node(workItem("SOURCE-1", "requirement"), false);
+        IModule.IStructureNode targetNode = node(workItem, false);
+        IModule.IStructureNode anotherParentNode = node(workItem("SOURCE-9", "requirement"), false);
+        IModule.IStructureNode sameParentNode = node(workItem("SOURCE-1", "requirement"), false);
+        when(targetModule.getStructureNodeOfWI(workItem)).thenReturn(targetNode);
+
+        // not in the target document yet
+        assertFalse(documentsChapterMergeService.alreadyPlacedUnder(targetModule, workItem, parentNode));
+
+        // in the target document, but somewhere else
+        when(targetNode.getParent()).thenReturn(anotherParentNode);
+        assertFalse(documentsChapterMergeService.alreadyPlacedUnder(targetModule, workItem, parentNode));
+
+        // where the merge wants it, put there by the move of its parent
+        when(targetNode.getParent()).thenReturn(sameParentNode);
+        assertTrue(documentsChapterMergeService.alreadyPlacedUnder(targetModule, workItem, parentNode));
+
+        // a chapter merged at the top of a document has no parent work item to sit under
+        assertFalse(documentsChapterMergeService.alreadyPlacedUnder(targetModule, workItem, null));
+    }
+
     @Test
     void testHeadingsAndReferencedItemsAreNotTakenOverAsMovedOnes() {
         when(targetModule.getProjectId()).thenReturn("source");

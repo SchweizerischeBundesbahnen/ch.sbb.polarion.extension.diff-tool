@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mountMergeToolPanel } from '../src/formext/mountMergeToolPanel';
 import { $, forgetRememberedSelections, mountPanel, selectOption, setFieldValue, waitForPanel } from './formextHelpers';
 import { type FetchMock, type Route, installFetchMock, jsonResponse } from './mockFetch';
-import { clearToasts, toasted } from './toasts';
+import { clearToasts } from './toasts';
 
 // Behaviour of the "Documents Merge" panel, mounted the way Polarion mounts it: into a shadow root on a
 // div carrying `data-props`. The open document is the *target* of the merge, the picked one is the source.
@@ -32,24 +32,29 @@ const MERGED = {
   mergeReport: { warnings: [], logs: "2026-01-01 00:00:00: 'CREATED' -- chapter '2' -- workitem 'DP-100' created" },
 };
 
-/** A job which has produced its result, i.e. what polling answers with once the merge is over. */
-const finishedJob = (mergeResult: unknown) => ({
-  jobId: 'J-1',
-  state: 'FINISHED',
-  logUrl: '/polarion/job-report?jobId=J-1',
-  mergeResult: mergeResult,
-});
+/** Where the server says the result of a started merge is asked for. */
+const JOB_URL = '/polarion/diff-tool/rest/internal/merge/chapter/jobs/J-1';
 
-/** A job which is still running, i.e. what polling answers with in the meantime. */
-const RUNNING_JOB = { jobId: 'J-1', state: 'RUNNING', logUrl: '/polarion/job-report?jobId=J-1' };
+/** What starting a merge answers with: the job it is polled by, named in the Location header. */
+const startedJob = () => new Response(null, { status: 202, headers: { Location: JOB_URL } });
+
+/**
+ * What polling answers with once the merge is over: the browser follows the redirect to the result of the
+ * merge, so the answer the panel sees is that result.
+ */
+const finishedJob = (mergeResult: unknown) => jsonResponse(mergeResult);
+
+/** What polling answers with while the merge is still running. */
+const runningJob = (progressMessage?: string) =>
+  jsonResponse({ status: 'IN_PROGRESS', progressMessage: progressMessage }, 202);
 
 function routes(overrides: Route[] = []): Route[] {
   return [
     ...overrides,
     { method: 'GET', match: /\/projects\/[^/]+\/spaces$/, json: SPACES },
     { method: 'GET', match: /\/documents$/, json: DOCUMENTS },
-    { method: 'POST', match: /\/merge\/chapter$/, json: { jobId: 'J-1', logUrl: '/polarion/job-report?jobId=J-1' } },
-    { method: 'GET', match: /\/merge\/chapter\/jobs\/J-1$/, json: finishedJob(MERGED) },
+    { method: 'POST', match: /\/merge\/chapter$/, respond: () => startedJob() },
+    { method: 'GET', match: /\/merge\/chapter\/jobs\/J-1$/, respond: () => finishedJob(MERGED) },
   ];
 }
 
@@ -293,7 +298,7 @@ describe('MergeToolPanel', () => {
           {
             method: 'GET',
             match: /\/merge\/chapter\/jobs\/J-1$/,
-            json: finishedJob({ success: false, mergeReport: { prohibited: [], logs: 'chapter not found' } }),
+            respond: () => finishedJob({ success: false, mergeReport: { prohibited: [], logs: 'chapter not found' } }),
           },
         ]),
       ),
@@ -318,8 +323,8 @@ describe('MergeToolPanel', () => {
           {
             method: 'GET',
             match: /\/merge\/chapter\/jobs\/J-1$/,
-            // a running job is a normal answer, not an error - it must not be a 404
-            respond: () => (attempts++ === 0 ? jsonResponse(RUNNING_JOB) : jsonResponse(finishedJob(MERGED))),
+            // a running merge is a normal answer, not an error - it must not be a 404
+            respond: () => (attempts++ === 0 ? runningJob() : finishedJob(MERGED)),
           },
         ]),
       ),
@@ -332,6 +337,64 @@ describe('MergeToolPanel', () => {
     await vi.waitFor(() => expect(attempts).toBeGreaterThan(1), { timeout: 10000 });
     await vi.waitFor(() => expect(dialogText(shadow)).toContain('Chapter merged'));
   }, 15000);
+
+  it('asks for the result where the server said the merge is polled', async () => {
+    // The started merge names its job in the Location header, and that URL is asked as given - it is an
+    // absolute path, not one relative to the REST base.
+    const { shadow, fetchMock } = await open();
+    await fillForm(shadow);
+    await vi.waitFor(() => expect(mergeButton(shadow).disabled).toBe(false));
+
+    await startMerge(shadow);
+
+    await vi.waitFor(() => expect(dialogText(shadow)).toContain('Chapter merged'));
+    expect(fetchMock.mock.calls.some(([url]) => String(url) === JOB_URL)).toBe(true);
+  });
+
+  it('says what the merge is doing while it does it', async () => {
+    // The merge report is written when the merge is over, so what it is doing right now is all the user has
+    let attempts = 0;
+    const { shadow } = await open(
+      installFetchMock(
+        routes([
+          {
+            method: 'GET',
+            match: /\/merge\/chapter\/jobs\/J-1$/,
+            respond: () => (attempts++ < 2 ? runningJob("Merged workitem 'DP-100'") : finishedJob(MERGED)),
+          },
+        ]),
+      ),
+    );
+    await fillForm(shadow);
+    await vi.waitFor(() => expect(mergeButton(shadow).disabled).toBe(false));
+
+    await startMerge(shadow);
+
+    await vi.waitFor(() => expect($(shadow, '#merge-progress').textContent).toContain("Merged workitem 'DP-100'"), {
+      timeout: 10000,
+    });
+    await vi.waitFor(() => expect(dialogText(shadow)).toContain('Chapter merged'), { timeout: 10000 });
+  }, 15000);
+
+  it('reports a merge which was started without a job to ask for its result', async () => {
+    const { shadow } = await open(
+      installFetchMock(
+        routes([
+          {
+            method: 'POST',
+            match: /\/merge\/chapter$/,
+            respond: () => new Response(null, { status: 202 }),
+          },
+        ]),
+      ),
+    );
+    await fillForm(shadow);
+    await vi.waitFor(() => expect(mergeButton(shadow).disabled).toBe(false));
+
+    await startMerge(shadow);
+
+    await vi.waitFor(() => expect(resultText(shadow)).toContain('without a job to ask for its result'));
+  });
 
   it('reports what the server said when the merge could not be scheduled', async () => {
     const { shadow } = await open(
@@ -350,7 +413,9 @@ describe('MergeToolPanel', () => {
 
     await startMerge(shadow);
 
-    expect(await toasted(shadow, 'error')).toBe("Parameter 'sourceDocument' should be provided");
+    // in the dialog which was spinning a moment ago: a merge must not vanish without a word
+    await vi.waitFor(() => expect(resultText(shadow)).toContain("Parameter 'sourceDocument' should be provided"));
+    expect(dialogText(shadow)).toContain('Chapter not merged');
     expect(vi.mocked(reloadDocument)).not.toHaveBeenCalled();
   });
 
@@ -361,7 +426,7 @@ describe('MergeToolPanel', () => {
           {
             method: 'GET',
             match: /\/merge\/chapter\/jobs\/J-1$/,
-            json: finishedJob({ success: false, mergeNotAuthorized: true }),
+            respond: () => finishedJob({ success: false, mergeNotAuthorized: true }),
           },
         ]),
       ),
@@ -381,7 +446,7 @@ describe('MergeToolPanel', () => {
           {
             method: 'GET',
             match: /\/merge\/chapter\/jobs\/J-1$/,
-            json: finishedJob({ success: false, targetModuleHasStructuralChanges: true }),
+            respond: () => finishedJob({ success: false, targetModuleHasStructuralChanges: true }),
           },
         ]),
       ),
@@ -394,14 +459,16 @@ describe('MergeToolPanel', () => {
     await vi.waitFor(() => expect(dialogText(shadow)).toContain('changed meanwhile'));
   });
 
-  it('reports a job which finished without a result as a failure of its own', async () => {
+  it('names what Polarion raised when the merge failed on it', async () => {
+    // A merge which failed on something Polarion raised has no result of its own: what went wrong is in the
+    // state of its job, and is the only thing the user can act on.
     const { shadow } = await open(
       installFetchMock(
         routes([
           {
             method: 'GET',
             match: /\/merge\/chapter\/jobs\/J-1$/,
-            json: { jobId: 'J-1', state: 'FINISHED', statusMessage: 'Chapter merge failed: boom' },
+            respond: () => jsonResponse({ status: 'FAILED', errorMessage: 'Node has been added before.' }, 409),
           },
         ]),
       ),
@@ -411,9 +478,9 @@ describe('MergeToolPanel', () => {
 
     await startMerge(shadow);
 
-    expect(await toasted(shadow, 'error')).toBe('Chapter merge failed: boom');
-    // nothing to acknowledge: the merge never got as far as a result of its own
-    expect(shadow.querySelector('.merge-dialog')).toBeNull();
+    await vi.waitFor(() => expect(resultText(shadow)).toContain('Node has been added before.'));
+    expect(dialogText(shadow)).toContain('Chapter not merged');
+    expect(vi.mocked(reloadDocument)).not.toHaveBeenCalled();
   });
 
   it('falls back to a generic message when the failure body is not the expected JSON', async () => {
@@ -433,7 +500,7 @@ describe('MergeToolPanel', () => {
 
     await startMerge(shadow);
 
-    expect(await toasted(shadow, 'error')).toBe('Error merging chapter');
+    await vi.waitFor(() => expect(resultText(shadow)).toContain('Error merging chapter'));
   });
 
   it('spins in the dialog the merge was confirmed in, which cannot be closed meanwhile', async () => {
@@ -444,7 +511,7 @@ describe('MergeToolPanel', () => {
           {
             method: 'GET',
             match: /\/merge\/chapter\/jobs\/J-1$/,
-            respond: () => jsonResponse(RUNNING_JOB),
+            respond: () => runningJob(),
           },
         ]),
       ),

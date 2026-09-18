@@ -405,8 +405,11 @@ public class DocumentsChapterMergeService {
     @NotNull
     IWorkItem moveWorkItem(@NotNull IWorkItem sourceWorkItem, @NotNull DocumentsChapterMergeContext context, @Nullable IModule.IStructureNode parentNode, int index) {
         if (context.sameProject()) {
-            // Already taken over by takeMovedItemsOver, so it only has to be given its position
-            mergeService.placeNode(sourceWorkItem, context.getTargetModule(), parentNode, index, false);
+            // Already taken over by takeMovedItemsOver, so it only has to be given its position - unless it was
+            // given one there, which is what happens to a work item moved along with the one it sits below
+            if (!alreadyPlacedUnder(context.getTargetModule(), sourceWorkItem, parentNode)) {
+                mergeService.placeNode(sourceWorkItem, context.getTargetModule(), parentNode, index, false);
+            }
             context.getMovedItems().add(sourceWorkItem);
             context.reportChapterEntry(MOVED, "workitem '%s' moved into the target document".formatted(sourceWorkItem.getId()));
         } else {
@@ -419,6 +422,27 @@ public class DocumentsChapterMergeService {
                     .formatted(sourceWorkItem.getId(), context.getSourceModule().getProjectId(), context.getTargetModule().getProjectId()));
         }
         return sourceWorkItem;
+    }
+
+    /**
+     * Whether a work item already sits where this merge wants to put it.
+     * <p>
+     * {@link IModule#moveIn} takes a work item over with everything below it, so a work item whose parent is moved
+     * along with it arrives in the target document attached to that parent already. Placing it a second time is
+     * refused by Polarion with "Node has been added before.": {@code addChild} detaches the node it is given from
+     * its parent first, and a node which is its own parent's child cannot be detached from it and added to it in
+     * one step. Its position among its siblings is the one the source document gave it, which is the one the merge
+     * wants, so such a node is left where it is.
+     */
+    @VisibleForTesting
+    boolean alreadyPlacedUnder(@NotNull IModule targetModule, @NotNull IWorkItem workItem, @Nullable IModule.IStructureNode parentNode) {
+        if (parentNode == null || parentNode.getWorkItem() == null) {
+            return false;
+        }
+        IModule.IStructureNode node = targetModule.getStructureNodeOfWI(workItem);
+        IModule.IStructureNode currentParent = node == null ? null : node.getParent();
+        return currentParent != null && currentParent.getWorkItem() != null
+                && Objects.equals(currentParent.getWorkItem().getId(), parentNode.getWorkItem().getId());
     }
 
     private @NotNull String resolveTargetTypeId(@NotNull IWorkItem sourceWorkItem, @NotNull DocumentsChapterMergeContext context) {

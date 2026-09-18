@@ -8,8 +8,6 @@ export interface MergeOutcome {
   lines: string[];
   /** The merge report as the server logged it, shown as it is because its entries carry no text of their own. */
   logs?: string | null;
-  /** Where the Polarion job report of this merge can be read. */
-  logUrl?: string | null;
 }
 
 /** Where a chapter merge stands: what it is about to do, that it is doing it, and what it did. */
@@ -132,7 +130,7 @@ export default function ChapterMergeDialog({ stage, summary, onConfirm, onCancel
   );
 }
 
-/** What the merge did: its counts first, then the merge report it wrote and where the job log of it is. */
+/** What the merge did: its counts first, then the merge report it wrote. */
 function Result({ outcome }: { outcome: MergeOutcome }) {
   return (
     <div id="merge-result">
@@ -143,14 +141,6 @@ function Result({ outcome }: { outcome: MergeOutcome }) {
       </ul>
 
       {outcome.logs ? <pre className="merge-dialog-logs">{outcome.logs}</pre> : null}
-
-      {outcome.logUrl ? (
-        <p>
-          <a href={outcome.logUrl} target="_blank" rel="noreferrer">
-            Open the job log
-          </a>
-        </p>
-      ) : null}
     </div>
   );
 }

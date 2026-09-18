@@ -721,6 +721,14 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         return securityService.getCurrentUser();
     }
 
+    /**
+     * Subject of the user the current call runs as. Work handed to a job takes it along: a job thread carries no
+     * subject of its own, and Polarion answers a call of nobody with unresolvable objects.
+     */
+    public @Nullable Subject getCurrentSubject() {
+        return securityService.getCurrentSubject();
+    }
+
     public boolean hasSufficientPermissions() {
         return securityService.hasPermission(AdministrationPermission.forAction(AdministrationPermission.ACTION_PROJECT_CREATE), null);
     }

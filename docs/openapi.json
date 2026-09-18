@@ -494,7 +494,7 @@
     },
     "/api/merge/chapter": {
       "post": {
-        "description": "Merging a chapter can take long, so it is executed as a Polarion job: this method returns as soon as the job is scheduled, its result is delivered by GET /merge/chapter/jobs/{jobId}",
+        "description": "Merging a chapter can take long, so it is carried out in the background: this method returns as soon as the merge is started, and the Location header names the job which delivers its result",
         "operationId": "mergeChapter",
         "requestBody": {
           "content": {
@@ -507,15 +507,8 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ChapterMergeJobInfo"
-                }
-              }
-            },
-            "description": "Information about the scheduled chapter merge job"
+          "202": {
+            "description": "The merge is started, the job URI is returned in the Location header"
           },
           "400": {
             "description": "Mandatory parameters are missing"
@@ -529,23 +522,23 @@
     },
     "/api/merge/chapter/jobs": {
       "get": {
-        "operationId": "listChapterMergeJobs",
+        "operationId": "getAllChapterMergeJobs",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/ChapterMergeJobInfo"
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/ChapterMergeJobDetails"
                   },
-                  "type": "array"
+                  "type": "object"
                 }
               }
             },
-            "description": "Chapter merge jobs"
+            "description": "Chapter merge jobs, by job ID"
           }
         },
-        "summary": "Lists chapter merge jobs, the most recent one first",
+        "summary": "Returns the states of all chapter merge jobs of the current user",
         "tags": [
           "Merge"
         ]
@@ -553,8 +546,64 @@
     },
     "/api/merge/chapter/jobs/{jobId}": {
       "get": {
-        "description": "This is what a caller of a chapter merge polls to learn that the merge has finished: a job which is still running is answered with its state and no merge result",
+        "description": "This is what a caller of a chapter merge polls to learn that the merge has finished: a merge which is still running is answered with 202, a finished one redirects to its result",
         "operationId": "getChapterMergeJob",
+        "parameters": [
+          {
+            "description": "ID of the chapter merge job",
+            "in": "path",
+            "name": "jobId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterMergeJobDetails"
+                }
+              }
+            },
+            "description": "The merge is still running"
+          },
+          "303": {
+            "content": {
+              "application/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterMergeJobDetails"
+                }
+              }
+            },
+            "description": "The merge has finished, the Location header contains the URL of its result"
+          },
+          "404": {
+            "description": "There is no chapter merge job with this ID"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterMergeJobDetails"
+                }
+              }
+            },
+            "description": "The merge failed and produced no result of its own"
+          }
+        },
+        "summary": "Returns the state of a chapter merge job",
+        "tags": [
+          "Merge"
+        ]
+      }
+    },
+    "/api/merge/chapter/jobs/{jobId}/result": {
+      "get": {
+        "description": "A merge which did not do what was asked of it reports that in its result too, so an unsuccessful merge result is answered with 200 like any other",
+        "operationId": "getChapterMergeJobResult",
         "parameters": [
           {
             "description": "ID of the chapter merge job",
@@ -571,17 +620,23 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ChapterMergeJobInfo"
+                  "$ref": "#/components/schemas/MergeResult"
                 }
               }
             },
-            "description": "The chapter merge job"
+            "description": "The merge result"
+          },
+          "204": {
+            "description": "The merge is still running"
           },
           "404": {
             "description": "There is no chapter merge job with this ID"
+          },
+          "409": {
+            "description": "The merge failed and produced no result of its own"
           }
         },
-        "summary": "Returns a certain chapter merge job, with its merge result as soon as it has one",
+        "summary": "Returns the result of a chapter merge job",
         "tags": [
           "Merge"
         ]
@@ -1804,76 +1859,25 @@
         },
         "type": "object"
       },
-      "ChapterMergeJobInfo": {
-        "description": "Information about a chapter merge job",
+      "ChapterMergeJobDetails": {
+        "description": "State of a chapter merge job: where it stands, and what went wrong if it failed",
         "properties": {
-          "completeness": {
-            "description": "Progress (0.0 to 1.0)",
-            "format": "float",
-            "type": "number"
-          },
-          "creationTime": {
-            "description": "Creation time (epoch milliseconds)",
-            "format": "int64",
-            "type": "integer"
-          },
-          "currentTaskName": {
-            "description": "Name of the current task within the job",
+          "errorMessage": {
+            "description": "Error message if the merge failed",
             "type": "string"
           },
-          "finishTime": {
-            "description": "Finish time (epoch milliseconds, 0 if still running)",
-            "format": "int64",
-            "type": "integer"
-          },
-          "jobId": {
-            "description": "Polarion job id",
+          "progressMessage": {
+            "description": "What the merge is doing right now, as long as it is running",
             "type": "string"
           },
-          "jobName": {
-            "description": "Human-readable job name",
-            "type": "string"
-          },
-          "logUrl": {
-            "description": "Relative URL of the Polarion job log/report page",
-            "type": "string"
-          },
-          "mergeResult": {
-            "$ref": "#/components/schemas/MergeResult"
-          },
-          "resultAvailable": {
-            "description": "Indicates whether this job has already produced a merge result",
-            "type": "boolean"
-          },
-          "startTime": {
-            "description": "Start time (epoch milliseconds, 0 if not started)",
-            "format": "int64",
-            "type": "integer"
-          },
-          "state": {
-            "description": "Polarion job state",
+          "status": {
+            "description": "Status of a chapter merge job",
             "enum": [
-              "UNSCHEDULED",
-              "ACTIVATING",
-              "WAITING",
-              "RUNNING",
-              "FINISHED",
-              "ABORTED"
+              "IN_PROGRESS",
+              "SUCCESSFULLY_FINISHED",
+              "FAILED"
             ],
-            "type": "string"
-          },
-          "statusMessage": {
-            "description": "Status message (failure cause or success summary)",
-            "type": "string"
-          },
-          "statusType": {
-            "description": "Final job status type",
-            "enum": [
-              "OK",
-              "CANCELLED",
-              "FAILED",
-              "UNKNOWN"
-            ],
+            "example": "IN_PROGRESS",
             "type": "string"
           }
         },

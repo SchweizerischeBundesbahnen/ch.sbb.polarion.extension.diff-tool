@@ -130,6 +130,18 @@ ch.sbb.polarion.extension.diff-tool.chunk.size=2
 
 Default value is `2`. Increasing this value may speed up the process but can also overload your Polarion server.
 
+### Chapter merge timeouts
+
+A chapter merge runs in the background and is polled by the panel which started it. How long a merge may run, and how
+long its result is kept for the panel to pick up, can be configured in `polarion.properties` file:
+
+```properties
+ch.sbb.polarion.extension.diff-tool.chapter.merge.timeout=60
+ch.sbb.polarion.extension.diff-tool.chapter.merge.result.timeout=30
+```
+
+Both values are minutes. A merge which runs longer than `chapter.merge.timeout` is given up on.
+
 ### Project duplication on large projects
 
 Duplicating a project goes through Polarion's `IProjectLifecycleManager.createProject` API, which has to be wrapped in a single write transaction (this is the pattern Polarion's own "Create Project from Template" wizard uses). For very large source projects the long phase `[4/5] Creating project … from template` can run for tens of minutes inside that one transaction.
@@ -179,10 +191,10 @@ Polarion must be restarted for these values to take effect — they are read onc
    chapter of the same level. Heading levels and outline numbers are adjusted accordingly, so anchor chapter `3.1`
    with insert mode `after` and source chapter `2` results in chapter `3.2`.
 7. Click `Merge Chapter`. A dialog states what the merge will do and waits to be confirmed.
-8. Confirm. The merge is executed as a Polarion job, and the dialog it was confirmed in shows its progress. It cannot
+8. Confirm. The merge runs in the background, and the dialog it was confirmed in shows what it is doing. It cannot
    be closed while the merge runs.
-9. When the merge has finished, the same dialog states what it did and links to the job log. Closing it reloads the
-   document if the merge changed it.
+9. When the merge has finished, the same dialog states what it did. Closing it reloads the document if the merge
+   changed it.
 
 > [!NOTE]
 > A copied work item is never linked to the work item it was copied from. A work item cannot change its project, so in
