@@ -11,6 +11,7 @@ import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService;
 import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService.JobState;
 import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import org.junit.jupiter.api.AfterEach;
@@ -28,6 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -60,6 +62,7 @@ class MergeApiControllerTest {
         configuration = mockStatic(DiffToolExtensionConfiguration.class);
         configuration.when(DiffToolExtensionConfiguration::getInstance).thenReturn(extensionConfiguration);
 
+        lenient().when(polarionService.userAuthorizedForMerge(any())).thenReturn(true);
         lenient().when(polarionService.callPrivileged(any(Callable.class)))
                 .thenAnswer(invocation -> ((Callable<?>) invocation.getArgument(0)).call());
 
@@ -92,6 +95,32 @@ class MergeApiControllerTest {
         assertEquals(Response.Status.ACCEPTED.getStatusCode(), response.getStatus());
         verify(request).setAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, Boolean.TRUE);
         verify(request, never()).removeAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT);
+    }
+
+    /**
+     * The flag has to be set before the merge is started, since that is where it is read. A call which never gets as
+     * far as a running merge therefore gives the session back: nothing else would end it.
+     */
+    @Test
+    void testAMergeWhichNeverStartedGivesTheSessionBack() {
+        ChapterMergeParams withoutChapters = params();
+        withoutChapters.setSourceChapterOutlineNumber(null);
+
+        assertThrows(BadRequestException.class, () -> controller.mergeChapter(withoutChapters));
+
+        verify(request).setAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, Boolean.TRUE);
+        verify(request).removeAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT);
+    }
+
+    @Test
+    void testAMergeWhichCouldNotBeStartedGivesTheSessionBack() {
+        // eg. a document of the merge which cannot be read, which the documents cache eviction runs into
+        when(chapterMergeJobsService.startJob(any(), any(Integer.class))).thenThrow(new IllegalStateException("Project 'ELIBRARY' not found"));
+        ChapterMergeParams params = params();
+
+        assertThrows(IllegalStateException.class, () -> controller.mergeChapter(params));
+
+        verify(request).removeAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT);
     }
 
     @Test

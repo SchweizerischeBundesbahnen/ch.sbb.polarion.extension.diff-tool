@@ -166,9 +166,22 @@ mvn test -Dtest=DiffServiceTest#testDiffDocuments
   text are re-pointed with `CommentUtils.copyCommentMarkers`
 - Runs in the background (`service/job/ChapterMergeJobsService`), because a big chapter does not fit into one HTTP
   request. It is this extension's own job service, built like the pdf-exporter's `PdfConverterJobsService`: a
-  `CompletableFuture` on a static cached thread pool, the merges kept in a static map by job ID, and a hard limit on
-  how long one may run (`chapter.merge.timeout`, 60 minutes by default). Polarion's own job API is not used for it -
-  `ProjectDuplication*` still is
+  `CompletableFuture` on a static thread pool, the merges kept in a static map by job ID, and a hard limit on how long
+  one may run (`chapter.merge.timeout`, 60 minutes by default, counted from the moment the merge is handed over, so it
+  covers the wait for a thread). Polarion's own job API is not used for it - `ProjectDuplication*` still is
+- The deadline **asks the merge to stop** rather than declaring it over. `DocumentsChapterMergeService` takes an
+  `abortRequested` supplier and checks it between work items, where nothing of the merge is in the target document
+  yet: it throws out of the write transaction, which is rolled back, and only then is the merge reported as failed.
+  Declaring a merge over while its thread keeps writing (what `CompletableFuture.orTimeout` does) would have this
+  service report "not merged" of a document which is about to change. Past the last work item the merge is no longer
+  asked: what is left is the write itself, which is the result the caller wanted
+- What the server takes at once is bounded, unlike the cached pool this started out with: `CONCURRENT_MERGES` merges
+  run and `QUEUED_MERGES` wait, and one beyond that is answered with 429 (`QueueFullException`, the same refusal the
+  execution queue uses). A merge is a long write operation on two documents, and a caller can ask for them faster than
+  they finish
+- Whether the caller may merge at all is decided by `MergeInternalController` before the merge is handed over, and
+  answered with 403. `DocumentsChapterMergeService` checks it again, but only once it has a thread and has read both
+  documents - by then an unauthorized caller has already taken a place in the queue
 - The merge asks nothing of the request which started it: the servlet container recycles the request object once the
   response is written. Whatever needs that request is done in `startJob`, on the REST thread - the documents cache is
   keyed by user, and so is the user the merge runs as
@@ -179,13 +192,18 @@ mvn test -Dtest=DiffServiceTest#testDiffDocuments
   XSRF token and shares the session of that UI, which is not the merge's to end. A call which authenticated itself got
   a session of its own, which `LogoutFilter` would end with the response of the request that started the merge, so
   `MergeApiController` asks for it to be kept (`RequestContextUtil.keepSessionAlive`, the `ASYNC_SKIP_LOGOUT` flag the
-  exporter extensions use for their async exports) and the merge ends it when it is over
+  exporter extensions use for their async exports) and the merge ends it when it is over. The flag is set before the
+  merge is started, since `startJob` is where it is read, so a call which never gets that far - refused parameters, a
+  document which cannot be read - gives the session back (`RequestContextUtil.releaseSession`): the merge which was to
+  end it is not running
 - The REST contract is the pdf-exporter's: `POST /merge/chapter` answers 202 with the job in the `Location` header,
   polling that job answers 202 while it runs (with what the merge is doing right now) and redirects to
   `.../result` once it is over, and 409 names what went wrong if there is no result. A merge which did not do what was
   asked of it reports that in its `MergeResult`, so only a merge which threw is a failed job
 - `ChapterMergeJobsCleaner`, started and stopped by `ExtensionBundleActivator`, drops the results of finished merges
-  after `chapter.merge.result.timeout` (30 minutes by default)
+  `chapter.merge.result.timeout` (30 minutes by default) after the merge was **over**, not after it was asked for: a
+  merge which ran longer than that would otherwise be expired the moment it finished, and that is the merge whose
+  result took the longest to produce
 
 **DocumentLayoutSyncService** (src/main/java/ch/sbb/polarion/extension/diff_tool/service/DocumentLayoutSyncService.java):
 - Copies the work item configuration a *document* holds - the rendering layout of a work item type and the document's

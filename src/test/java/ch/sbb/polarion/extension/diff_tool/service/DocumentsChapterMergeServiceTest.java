@@ -30,6 +30,7 @@ import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.Map;
 import java.util.Set;
 
@@ -203,6 +204,32 @@ class DocumentsChapterMergeServiceTest {
 
         assertFalse(result.isSuccess());
         assertEquals(1, result.getMergeReport().getProhibited().size());
+    }
+
+    /**
+     * A merge which is asked to stop does so between two work items, before it has put anything into the target
+     * document: it throws out of the write transaction it runs in, and that transaction is rolled back.
+     */
+    @Test
+    void testAMergeAskedToStopLeavesTheTargetDocumentAsItWas() {
+        chapter(sourceModule, "2", heading("SOURCE-1"));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "heading");
+        ChapterMergeParams params = params(ChapterMergeMode.COPY, ChapterInsertMode.UNDER);
+
+        try (MockedStatic<TransactionalExecutor> transactionalExecutor = mockStatic(TransactionalExecutor.class)) {
+            transactionalExecutor.when(() -> TransactionalExecutor.executeInWriteTransaction(any())).thenAnswer(invocation -> {
+                RunnableInWriteTransaction<?> runnable = invocation.getArgument(0);
+                runnable.run(mock(WriteTransaction.class));
+                return runnable;
+            });
+
+            assertThrows(CancellationException.class, () -> documentsChapterMergeService.mergeChapter(params, null, () -> true));
+        }
+
+        // nothing of the chapter was created, and nothing was written to the document page
+        verify(trackerProject, never()).createWorkItem(any());
+        verify(targetModule, never()).save();
     }
 
     // -------------------------------------------------------------------------------------------------------------

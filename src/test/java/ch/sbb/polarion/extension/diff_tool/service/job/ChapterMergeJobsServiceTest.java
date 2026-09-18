@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.service.DocumentsChapterMergeService;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService.JobState;
+import ch.sbb.polarion.extension.diff_tool.service.queue.QueueFullException;
 import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
 import com.polarion.platform.security.ISecurityService;
 import org.junit.jupiter.api.AfterEach;
@@ -22,23 +23,23 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.security.auth.Subject;
 import java.security.PrivilegedAction;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -92,7 +93,7 @@ class ChapterMergeJobsServiceTest {
     @Test
     void testAFinishedMergeDeliversItsResult() {
         MergeResult mergeResult = MergeResult.builder().success(true).build();
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenReturn(mergeResult);
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(mergeResult);
 
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
 
@@ -114,7 +115,7 @@ class ChapterMergeJobsServiceTest {
     @Test
     void testAnUnsuccessfulMergeResultIsAResultLikeAnyOther() {
         MergeResult mergeResult = MergeResult.builder().success(false).mergeNotAuthorized(true).build();
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenReturn(mergeResult);
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(mergeResult);
 
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
 
@@ -127,7 +128,7 @@ class ChapterMergeJobsServiceTest {
     void testAMergeWhichIsStillRunningHasNoResultYet() {
         CountDownLatch mergeStarted = new CountDownLatch(1);
         CountDownLatch releaseMerge = new CountDownLatch(1);
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenAnswer(invocation -> {
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenAnswer(invocation -> {
             mergeStarted.countDown();
             releaseMerge.await();
             return MergeResult.builder().success(true).build();
@@ -147,7 +148,7 @@ class ChapterMergeJobsServiceTest {
 
     @Test
     void testAFailedMergeReportsWhatWentWrong() {
-        doThrow(new IllegalStateException("Node has been added before.")).when(documentsChapterMergeService).mergeChapter(any(), any());
+        doThrow(new IllegalStateException("Node has been added before.")).when(documentsChapterMergeService).mergeChapter(any(), any(), any());
 
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
 
@@ -167,7 +168,7 @@ class ChapterMergeJobsServiceTest {
     void testTheMergeReportsWhatItIsDoing() {
         CountDownLatch progressReported = new CountDownLatch(1);
         CountDownLatch releaseMerge = new CountDownLatch(1);
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenAnswer(invocation -> {
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenAnswer(invocation -> {
             DocumentsChapterMergeService.ProgressReporter reporter = invocation.getArgument(1);
             reporter.report("Merged workitem 'EL-42'");
             progressReported.countDown();
@@ -192,7 +193,7 @@ class ChapterMergeJobsServiceTest {
     @Test
     @SuppressWarnings("unchecked")
     void testTheMergeRunsAsTheUserWhoStartedIt() {
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenReturn(MergeResult.builder().success(true).build());
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(MergeResult.builder().success(true).build());
 
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
 
@@ -208,7 +209,7 @@ class ChapterMergeJobsServiceTest {
     @SuppressWarnings("unchecked")
     void testAMergeStartedWithoutASubjectRunsAsItIs() {
         when(polarionService.getCurrentSubject()).thenReturn(null);
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenReturn(MergeResult.builder().success(true).build());
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(MergeResult.builder().success(true).build());
 
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
 
@@ -225,7 +226,7 @@ class ChapterMergeJobsServiceTest {
     @Test
     void testTheDocumentsCacheIsEvictedWhileTheRequestIsStillAlive() {
         CountDownLatch releaseMerge = new CountDownLatch(1);
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenAnswer(invocation -> {
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenAnswer(invocation -> {
             releaseMerge.await();
             return MergeResult.builder().success(true).build();
         });
@@ -248,7 +249,7 @@ class ChapterMergeJobsServiceTest {
     @Test
     void testAMergeEndsTheSessionItWasHandedToKeep() {
         when(requestAttributes.getAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.TRUE);
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenReturn(MergeResult.builder().success(true).build());
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(MergeResult.builder().success(true).build());
 
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
 
@@ -259,7 +260,7 @@ class ChapterMergeJobsServiceTest {
     @Test
     void testAFailedMergeEndsThatSessionToo() {
         when(requestAttributes.getAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.TRUE);
-        doThrow(new IllegalStateException("boom")).when(documentsChapterMergeService).mergeChapter(any(), any());
+        doThrow(new IllegalStateException("boom")).when(documentsChapterMergeService).mergeChapter(any(), any(), any());
 
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
 
@@ -274,7 +275,7 @@ class ChapterMergeJobsServiceTest {
     @Test
     void testAMergeNeverEndsTheSessionOfTheUiItWasStartedFrom() {
         when(requestAttributes.getAttribute(LogoutFilter.XSRF_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST)).thenReturn(Boolean.TRUE);
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenReturn(MergeResult.builder().success(true).build());
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(MergeResult.builder().success(true).build());
 
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
 
@@ -285,7 +286,7 @@ class ChapterMergeJobsServiceTest {
     @Test
     void testAMergeStartedOutsideOfARequestEndsNoSession() {
         RequestContextHolder.resetRequestAttributes();
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenReturn(MergeResult.builder().success(true).build());
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(MergeResult.builder().success(true).build());
 
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
 
@@ -294,13 +295,74 @@ class ChapterMergeJobsServiceTest {
     }
 
     /**
-     * A merge which runs longer than it may is given up on, so that a merge nobody polls any more does not keep a
-     * thread of this service forever.
+     * A merge holds a thread for as long as it takes, and a caller can ask for them faster than they finish. What
+     * the server takes at once is bounded, and a merge beyond that bound is refused rather than started.
      */
     @Test
-    void testAMergeWhichRunsTooLongIsGivenUpOn() {
+    void testAMergeBeyondWhatTheServerTakesAtOnceIsRefused() {
+        CountDownLatch releaseMerges = new CountDownLatch(1);
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenAnswer(invocation -> {
+            releaseMerges.await();
+            return MergeResult.builder().success(true).build();
+        });
+
+        try {
+            QueueFullException refused = assertThrows(QueueFullException.class, () -> {
+                // one more than the merges which run and the merges which wait for their turn
+                for (int merge = 0; merge <= ChapterMergeJobsService.CONCURRENT_MERGES + ChapterMergeJobsService.QUEUED_MERGES; merge++) {
+                    jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
+                }
+            });
+
+            assertTrue(refused.getMessage().contains("Too many chapter merges"));
+            // the merges which were taken are running or waiting, and the refused one left nothing behind
+            assertEquals(ChapterMergeJobsService.CONCURRENT_MERGES + ChapterMergeJobsService.QUEUED_MERGES, jobsService.getAllJobsStates().size());
+        } finally {
+            releaseMerges.countDown();
+        }
+    }
+
+    /**
+     * A merge which runs longer than it may is asked to stop, and stops between two work items - before it has put
+     * anything into the target document, so the document is left as it was and the caller is told so.
+     */
+    @Test
+    void testAMergeWhichRunsTooLongIsAskedToStop() {
         CountDownLatch releaseMerge = new CountDownLatch(1);
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenAnswer(invocation -> {
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenAnswer(invocation -> {
+            BooleanSupplier abortRequested = invocation.getArgument(2);
+            // what the merge does between two work items
+            while (!abortRequested.getAsBoolean()) {
+                Thread.sleep(10);
+            }
+            releaseMerge.countDown();
+            throw new CancellationException("Chapter merge was asked to stop before it merged the whole chapter");
+        });
+
+        String jobId = jobsService.startJob(params(), 0);
+
+        await().atMost(Duration.ofSeconds(10)).until(() -> releaseMerge.getCount() == 0);
+        awaitDone(jobId);
+        JobState jobState = jobsService.getJobState(jobId);
+        assertTrue(jobState.isFailed());
+        assertEquals("Timeout after 0 min", jobState.errorMessage());
+    }
+
+    /**
+     * A merge which has run out of time but is still writing is still running, and is not reported as failed: its
+     * caller would otherwise be told that nothing was merged while the merge is about to change their document.
+     */
+    @Test
+    void testAMergeWhichHasNotStoppedYetIsStillRunning() {
+        CountDownLatch askedToStop = new CountDownLatch(1);
+        CountDownLatch releaseMerge = new CountDownLatch(1);
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenAnswer(invocation -> {
+            BooleanSupplier abortRequested = invocation.getArgument(2);
+            while (!abortRequested.getAsBoolean()) {
+                Thread.sleep(10);
+            }
+            // a merge which is past its last work item: what is left is the write, which it goes through with
+            askedToStop.countDown();
             releaseMerge.await();
             return MergeResult.builder().success(true).build();
         });
@@ -308,13 +370,18 @@ class ChapterMergeJobsServiceTest {
         String jobId = jobsService.startJob(params(), 0);
 
         try {
-            await().atMost(Duration.ofSeconds(10)).until(() -> jobsService.getJobState(jobId).isDone());
+            await().atMost(Duration.ofSeconds(10)).until(() -> askedToStop.getCount() == 0);
             JobState jobState = jobsService.getJobState(jobId);
-            assertTrue(jobState.isFailed());
-            assertEquals("Timeout after 0 min", jobState.errorMessage());
+            assertFalse(jobState.isDone());
+            assertFalse(jobState.isFailed());
+            assertEquals(Optional.empty(), jobsService.getJobResult(jobId));
         } finally {
             releaseMerge.countDown();
         }
+
+        // ...and the result it went through with is the one its caller is given
+        awaitDone(jobId);
+        assertTrue(jobsService.getJobResult(jobId).orElseThrow().isSuccess());
     }
 
     /**
@@ -323,7 +390,7 @@ class ChapterMergeJobsServiceTest {
      */
     @Test
     void testTheMergesOfAnotherUserAreNeitherListedNorReadable() {
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenReturn(MergeResult.builder().success(true).build());
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(MergeResult.builder().success(true).build());
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
         awaitDone(jobId);
 
@@ -341,7 +408,7 @@ class ChapterMergeJobsServiceTest {
 
     @Test
     void testAllMergesOfTheCurrentUserAreListed() {
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenReturn(MergeResult.builder().success(true).build());
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(MergeResult.builder().success(true).build());
         String first = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
         String second = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
         awaitDone(first);
@@ -355,13 +422,40 @@ class ChapterMergeJobsServiceTest {
     }
 
     /**
+     * The cleaner runs on a thread of its own, so it can drop a merge while the listing is being built. That merge
+     * is gone from the listing or in it, but it never takes the whole listing with it - which is what looking each
+     * job up by its ID would do, since a job this service doesn't know is a 404.
+     */
+    @Test
+    void testTheListingSurvivesAMergeDroppedWhileItIsBuilt() {
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(MergeResult.builder().success(true).build());
+        String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
+        awaitDone(jobId);
+
+        // the cleaner, running while the listing goes through the merges it holds
+        AtomicBoolean cleanerDue = new AtomicBoolean(true);
+        when(polarionService.getCurrentUser()).thenAnswer(invocation -> {
+            if (cleanerDue.compareAndSet(true, false)) {
+                ChapterMergeJobsService.cleanupExpiredJobs(0);
+            }
+            return USER;
+        });
+
+        Map<String, JobState> states = assertDoesNotThrow(() -> jobsService.getAllJobsStates());
+
+        // whether the dropped merge is still in the listing depends on where the cleaner caught it; what the listing
+        // must not do is report it as a merge of nobody
+        assertTrue(states.isEmpty() || states.get(jobId).isDone());
+    }
+
+    /**
      * A result is read right after its merge is over, so nothing is kept for the sake of keeping it. A merge which
      * is still running is kept however long it takes.
      */
     @Test
     void testOnlyTheResultsOfFinishedMergesExpire() {
         CountDownLatch releaseMerge = new CountDownLatch(1);
-        when(documentsChapterMergeService.mergeChapter(any(), any()))
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any()))
                 .thenReturn(MergeResult.builder().success(true).build())
                 .thenAnswer(invocation -> {
                     releaseMerge.await();
@@ -381,9 +475,48 @@ class ChapterMergeJobsServiceTest {
         }
     }
 
+    /**
+     * A merge which took longer than its result is kept would be expired the moment it finished if its age were
+     * counted from the moment it was asked for - and that is the merge whose result took the longest to produce.
+     */
+    @Test
+    void testAResultAgesFromTheMomentItsMergeWasOver() {
+        Instant now = Instant.now();
+        ChapterMergeJobsService.JobDetails longRunningMerge = finishedJob(now.minus(Duration.ofMinutes(50)), now);
+
+        assertFalse(ChapterMergeJobsService.expired(longRunningMerge, 30, now));
+        assertFalse(ChapterMergeJobsService.expired(longRunningMerge, 30, now.plus(Duration.ofMinutes(29))));
+        assertTrue(ChapterMergeJobsService.expired(longRunningMerge, 30, now.plus(Duration.ofMinutes(31))));
+    }
+
+    @Test
+    void testAMergeWhichIsStillRunningNeverExpires() {
+        Instant now = Instant.now();
+        ChapterMergeJobsService.JobDetails runningMerge = ChapterMergeJobsService.JobDetails.builder()
+                .future(new CompletableFuture<>())
+                .user(USER)
+                .startingTime(now.minus(Duration.ofHours(5)))
+                .finishTime(new AtomicReference<>())
+                .progressMessage(new AtomicReference<>())
+                .build();
+
+        assertFalse(ChapterMergeJobsService.expired(runningMerge, 30, now));
+    }
+
+    /**
+     * A merge whose future is done but whose completion has not been recorded yet has just this moment finished.
+     */
+    @Test
+    void testAMergeWhichJustFinishedIsNotExpiredBeforeItsFinishIsRecorded() {
+        Instant now = Instant.now();
+        ChapterMergeJobsService.JobDetails justFinished = finishedJob(now.minus(Duration.ofHours(5)), null);
+
+        assertFalse(ChapterMergeJobsService.expired(justFinished, 0, now));
+    }
+
     @Test
     void testAResultIsKeptAsLongAsItsTimeoutSays() {
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenReturn(MergeResult.builder().success(true).build());
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(MergeResult.builder().success(true).build());
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
         awaitDone(jobId);
 
@@ -419,7 +552,7 @@ class ChapterMergeJobsServiceTest {
                 MergeResult.builder().success(true).build(),
                 MergeResult.builder().success(false).build()));
         AtomicReference<MergeResult> first = new AtomicReference<>();
-        when(documentsChapterMergeService.mergeChapter(any(), any())).thenAnswer(invocation -> {
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenAnswer(invocation -> {
             MergeResult result = results.poll();
             first.compareAndSet(null, result);
             return result;
@@ -431,7 +564,17 @@ class ChapterMergeJobsServiceTest {
         awaitDone(secondJob);
 
         assertEquals(first.get(), jobsService.getJobResult(firstJob).orElseThrow());
-        assertFalse(jobsService.getJobResult(secondJob).orElseThrow().equals(jobsService.getJobResult(firstJob).orElseThrow()));
+        assertNotEquals(jobsService.getJobResult(secondJob).orElseThrow(), jobsService.getJobResult(firstJob).orElseThrow());
+    }
+
+    private ChapterMergeJobsService.JobDetails finishedJob(Instant startingTime, Instant finishTime) {
+        return ChapterMergeJobsService.JobDetails.builder()
+                .future(CompletableFuture.completedFuture(MergeResult.builder().success(true).build()))
+                .user(USER)
+                .startingTime(startingTime)
+                .finishTime(new AtomicReference<>(finishTime))
+                .progressMessage(new AtomicReference<>())
+                .build();
     }
 
     private void awaitDone(String jobId) {

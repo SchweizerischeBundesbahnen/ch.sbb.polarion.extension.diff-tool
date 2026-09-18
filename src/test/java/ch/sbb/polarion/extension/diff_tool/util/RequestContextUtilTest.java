@@ -58,7 +58,18 @@ class RequestContextUtilTest {
     }
 
     @Test
+    void shouldGiveTheSessionBackWhenThereIsNothingToKeepItFor() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        RequestContextUtil.releaseSession();
+
+        verify(request).removeAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT);
+    }
+
+    @Test
     void shouldKeepNoSessionOutsideOfARequest() {
         assertThatNoException().isThrownBy(RequestContextUtil::keepSessionAlive);
+        assertThatNoException().isThrownBy(RequestContextUtil::releaseSession);
     }
 }

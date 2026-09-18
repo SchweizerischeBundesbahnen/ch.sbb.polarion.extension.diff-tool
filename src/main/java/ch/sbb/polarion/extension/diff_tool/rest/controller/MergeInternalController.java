@@ -1,6 +1,7 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
 import ch.sbb.polarion.extension.diff_tool.properties.DiffToolExtensionConfiguration;
+import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeMode;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeParams;
@@ -24,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -212,7 +214,9 @@ public class MergeInternalController {
                             responseCode = "202",
                             description = "The merge is started, the job URI is returned in the Location header"
                     ),
-                    @ApiResponse(responseCode = "400", description = "Mandatory parameters are missing")
+                    @ApiResponse(responseCode = "400", description = "Mandatory parameters are missing"),
+                    @ApiResponse(responseCode = "403", description = "The current user is not authorized to merge into these documents"),
+                    @ApiResponse(responseCode = "429", description = "Too many chapter merges are running or waiting for their turn")
             }
     )
     public Response mergeChapter(ChapterMergeParams mergeParams) {
@@ -223,6 +227,8 @@ public class MergeInternalController {
         if (StringUtils.isBlank(mergeParams.getSourceChapterOutlineNumber()) || StringUtils.isBlank(mergeParams.getTargetChapterOutlineNumber())) {
             throw new BadRequestException("Parameters 'sourceChapterOutlineNumber' and 'targetChapterOutlineNumber' should be provided");
         }
+        checkAuthorizedForMerge(mergeParams);
+
         String jobId = chapterMergeJobsService.startJob(mergeParams, DiffToolExtensionConfiguration.getInstance().getChapterMergeTimeout());
 
         URI jobUri = UriBuilder.fromUri(uriInfo.getRequestUri().getPath()).path("jobs").path(jobId).build();
@@ -308,6 +314,23 @@ public class MergeInternalController {
         return chapterMergeJobsService.getJobResult(jobId)
                 .map(mergeResult -> Response.ok(mergeResult).build())
                 .orElseGet(() -> Response.noContent().build());
+    }
+
+    /**
+     * Turns a caller away who may not merge into the documents they named, before their merge takes a place in the
+     * queue of the merges waiting for a thread. The merge itself refuses them too, but only once it has that thread
+     * and has read both documents - by then the work of an unauthorized caller has already been queued.
+     */
+    private void checkAuthorizedForMerge(@NotNull ChapterMergeParams mergeParams) {
+        String targetProjectId = mergeParams.getTargetDocument().getProjectId();
+        if (!polarionService.userAuthorizedForMerge(targetProjectId)) {
+            throw new ForbiddenException("You are not authorized to merge into project '%s'".formatted(targetProjectId));
+        }
+        // a move takes the work items out of the source document, which changes that document too
+        String sourceProjectId = mergeParams.getSourceDocument().getProjectId();
+        if (mergeParams.getMode() == ChapterMergeMode.MOVE && !polarionService.userAuthorizedForMerge(sourceProjectId)) {
+            throw new ForbiddenException("You are not authorized to move work items out of project '%s'".formatted(sourceProjectId));
+        }
     }
 
     private @NotNull ChapterMergeJobDetails toJobDetails(ChapterMergeJobsService.@NotNull JobState jobState) {

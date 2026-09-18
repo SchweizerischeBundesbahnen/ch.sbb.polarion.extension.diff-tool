@@ -37,4 +37,16 @@ public final class RequestContextUtil {
             requestAttributes.setAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, Boolean.TRUE, RequestAttributes.SCOPE_REQUEST);
         }
     }
+
+    /**
+     * Gives the session of the current user back to {@link LogoutFilter}, for a request whose scheduling of the work
+     * it wanted to keep that session for came to nothing. Nothing else would end that session: the work which was to
+     * end it is not running.
+     */
+    public static void releaseSession() {
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (requestAttributes != null) {
+            requestAttributes.removeAttribute(LogoutFilter.ASYNC_SKIP_LOGOUT, RequestAttributes.SCOPE_REQUEST);
+        }
+    }
 }

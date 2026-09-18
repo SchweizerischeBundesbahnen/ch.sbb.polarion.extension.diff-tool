@@ -12,6 +12,7 @@ import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService;
 import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService.JobState;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import org.junit.jupiter.api.AfterEach;
@@ -30,10 +31,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +47,7 @@ class MergeInternalControllerTest {
     private static final String JOBS_PATH = "/polarion/diff-tool/rest/internal/merge/chapter";
 
     private ChapterMergeJobsService chapterMergeJobsService;
+    private PolarionService polarionService;
     private UriInfo uriInfo;
     private MockedStatic<DiffToolExtensionConfiguration> configuration;
     private MergeInternalController controller;
@@ -51,6 +55,8 @@ class MergeInternalControllerTest {
     @BeforeEach
     void setUp() {
         chapterMergeJobsService = mock(ChapterMergeJobsService.class);
+        polarionService = mock(PolarionService.class);
+        lenient().when(polarionService.userAuthorizedForMerge(any())).thenReturn(true);
         uriInfo = mock(UriInfo.class);
 
         DiffToolExtensionConfiguration extensionConfiguration = mock(DiffToolExtensionConfiguration.class);
@@ -58,7 +64,7 @@ class MergeInternalControllerTest {
         configuration = mockStatic(DiffToolExtensionConfiguration.class);
         configuration.when(DiffToolExtensionConfiguration::getInstance).thenReturn(extensionConfiguration);
 
-        controller = new MergeInternalController(mock(PolarionService.class), chapterMergeJobsService);
+        controller = new MergeInternalController(polarionService, chapterMergeJobsService);
         controller.setUriInfo(uriInfo);
     }
 
@@ -93,6 +99,38 @@ class MergeInternalControllerTest {
         ChapterMergeParams withoutChapter = params();
         withoutChapter.setSourceChapterOutlineNumber(" ");
         assertThrows(BadRequestException.class, () -> controller.mergeChapter(withoutChapter));
+    }
+
+    /**
+     * A caller who may not merge is turned away before their merge takes a place in the queue: the merge itself
+     * refuses them too, but only once it has a thread and has read both documents.
+     */
+    @Test
+    void testAMergeOfAUserWhoMayNotMergeIsNeverStarted() {
+        when(polarionService.userAuthorizedForMerge("target")).thenReturn(false);
+        ChapterMergeParams params = params();
+
+        assertThrows(ForbiddenException.class, () -> controller.mergeChapter(params));
+
+        verify(chapterMergeJobsService, never()).startJob(any(), anyInt());
+    }
+
+    /**
+     * A move takes the work items out of the source document, which changes that document too.
+     */
+    @Test
+    void testAMoveIsRefusedWhenTheSourceDocumentIsNotTheUsersToChange() {
+        when(polarionService.userAuthorizedForMerge("source")).thenReturn(false);
+        ChapterMergeParams copy = params();
+        ChapterMergeParams move = params();
+        move.setMode(ChapterMergeMode.MOVE);
+
+        // a copy leaves the source document alone, so it is none of that project's business
+        when(uriInfo.getRequestUri()).thenReturn(URI.create(JOBS_PATH));
+        when(chapterMergeJobsService.startJob(any(), eq(60))).thenReturn(JOB_ID);
+        assertEquals(Response.Status.ACCEPTED.getStatusCode(), controller.mergeChapter(copy).getStatus());
+
+        assertThrows(ForbiddenException.class, () -> controller.mergeChapter(move));
     }
 
     @Test

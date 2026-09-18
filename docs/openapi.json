@@ -512,6 +512,12 @@
           },
           "400": {
             "description": "Mandatory parameters are missing"
+          },
+          "403": {
+            "description": "The current user is not authorized to merge into these documents"
+          },
+          "429": {
+            "description": "Too many chapter merges are running or waiting for their turn"
           }
         },
         "summary": "Copies or moves a chapter of one Document into another one",

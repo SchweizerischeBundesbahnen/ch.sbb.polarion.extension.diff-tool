@@ -17,6 +17,7 @@ public class NoSuchElementExceptionMapper implements ExceptionMapper<NoSuchEleme
 
     private static final Logger logger = Logger.getLogger(NoSuchElementExceptionMapper.class);
 
+    @Override
     public Response toResponse(NoSuchElementException e) {
         logger.error("Unknown element: " + e.getMessage(), e);
         return Response.status(Response.Status.NOT_FOUND.getStatusCode())

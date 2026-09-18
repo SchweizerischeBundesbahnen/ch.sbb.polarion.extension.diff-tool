@@ -27,7 +27,6 @@ public class MergeApiController extends MergeInternalController {
         super();
     }
 
-    @VisibleForTesting
     MergeApiController(@NotNull PolarionService polarionService, @NotNull ChapterMergeJobsService chapterMergeJobsService) {
         super(polarionService, chapterMergeJobsService);
     }
@@ -56,11 +55,20 @@ public class MergeApiController extends MergeInternalController {
      * A chapter merge outlives the request which starts it, and so must the session it runs in: this call
      * authenticated itself, so it got a session of its own which the logout filter would end with this response.
      * The merge ends that session itself when it is over.
+     * <p>
+     * The flag has to be set before the merge is started, since that is where it is read, so a call which never
+     * gets as far as a running merge - refused parameters, a document which cannot be read - gives the session
+     * back: nothing else would end it, the merge which was to end it is not running.
      */
     @Override
     public Response mergeChapter(ChapterMergeParams mergeParams) {
         RequestContextUtil.keepSessionAlive();
-        return polarionService.callPrivileged(() -> super.mergeChapter(mergeParams));
+        try {
+            return polarionService.callPrivileged(() -> super.mergeChapter(mergeParams));
+        } catch (Exception e) {
+            RequestContextUtil.releaseSession();
+            throw e;
+        }
     }
 
     @Override
