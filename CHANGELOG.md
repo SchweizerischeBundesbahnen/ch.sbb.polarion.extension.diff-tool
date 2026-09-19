@@ -1,5 +1,15 @@
 # Changelog
 
+## [9.3.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.3.0...v9.3.1) (2026-09-19)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @types/node to v25.9.7 ([#699](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/699)) ([0e36f9f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/0e36f9f33ef19719492c5873a29a71e5e39456f9))
+* **deps:** update vitest monorepo to v5.0.1 ([#698](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/698)) ([6149861](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/614986142111506a5b31d17555f7aec42a78b272))
+* give the merge trigger and the selection checkboxes an accessible name ([#693](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/693)) ([6d548f7](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/6d548f7c3de7e800bb6c2fb96e4b84f61e4d1090)), closes [#683](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/683)
+* make the expand toggles and the field-issue hints reachable by keyboard ([#695](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/695)) ([7e20905](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/7e20905707580d010c9d974cc97e644a6d50660a)), closes [#684](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/684)
+
 ## [9.3.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.2.1...v9.3.0) (2026-09-15)
 
 
