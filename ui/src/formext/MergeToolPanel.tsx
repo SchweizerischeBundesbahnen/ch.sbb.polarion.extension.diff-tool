@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
-import { sendRequest } from '../services/useRemote';
+import { sendAbsoluteRequest, sendRequest } from '../services/useRemote';
 import ChapterMergeDialog, { type MergeOutcome, type MergeStage } from './ChapterMergeDialog';
 import PanelShell from './PanelShell';
 import { reloadDocument } from './documentReload';
 import { FieldCell, FieldRow, SwitchRow } from './formRows';
 import type { PanelProps } from './panelProps';
 import { rememberedIfOffered, useAdoptRemembered, useRemembering } from './rememberedSelection';
-import { clearReports, reportFailure } from './reporting';
+import { clearReports } from './reporting';
 import useRemoteList, { firstError, firstLoading } from './useRemoteList';
 
 interface SpaceInfo {
@@ -20,13 +20,11 @@ interface DocumentInfo {
   title: string;
 }
 
-/** What `POST /merge/chapter` returns, and what polling the job answers with. */
-interface ChapterMergeJobInfo {
-  jobId: string;
-  state?: string | null;
-  statusMessage?: string | null;
-  logUrl?: string | null;
-  mergeResult?: MergeResult | null;
+/** What polling a merge answers with while it is still running, and what a failed one answers with. */
+interface ChapterMergeJobDetails {
+  status?: string | null;
+  progressMessage?: string | null;
+  errorMessage?: string | null;
 }
 
 interface ChapterMergeInfo {
@@ -69,9 +67,13 @@ const MERGE_ERROR = 'Error merging chapter';
 /** An outline number as the document shows it, eg. `2` or `2.1.1`. */
 const OUTLINE_NUMBER_PATTERN = /^\d+(\.\d+)*$/;
 
-/** How often the panel asks whether its merge job has finished, and for how long it keeps asking. */
+/**
+ * How often the panel asks whether its merge has finished, and how long it keeps asking. The budget outlasts
+ * the server's own limit on a merge (`chapter.merge.timeout`, 60 minutes by default), which answers a merge
+ * that runs longer with a failure of its own.
+ */
 const POLL_INTERVAL_MS = 2000;
-const POLL_ATTEMPTS = 450;
+const POLL_ATTEMPTS = 2000;
 
 const MODES = [
   { id: 'COPY', name: 'copy - create new workitems' },
@@ -98,8 +100,8 @@ const sleep = (milliseconds: number) => new Promise((resolve) => setTimeout(reso
  * Note the direction. The open document, which the server injects as the `source*` properties every panel
  * gets, is here the **target** of the operation, and the document the user picks is the source.
  *
- * A merge can take long, so the server carries it out as a Polarion job: this panel schedules the job and
- * then asks for its result until it is there.
+ * A merge can take long, so the server carries it out in the background: this panel starts it and then asks
+ * the job it was handed for the result until it is there.
  */
 export default function MergeToolPanel({ props }: { props: PanelProps }) {
   const projectIds = useMemo(() => props.projects.map((project) => project.id), [props.projects]);
@@ -162,14 +164,15 @@ export default function MergeToolPanel({ props }: { props: PanelProps }) {
     setStage({ kind: 'running', message: 'Merging chapter' });
     clearReports();
     try {
-      const jobInfo = await scheduleMerge();
+      const jobUrl = await startMerge();
       setStage({ kind: 'running', message: `Merging chapter ${sourceChapter.trim()}, this can take a while` });
-      const finishedJob = await awaitResult(jobInfo.jobId);
-      setStage({ kind: 'result', outcome: outcomeOf(finishedJob) });
+      const mergeResult = await awaitResult(jobUrl, (progress) => setStage({ kind: 'running', message: progress }));
+      setStage({ kind: 'result', outcome: outcomeOf(mergeResult) });
     } catch (caught) {
-      // The merge never got as far as a result of its own, so there is nothing to show but what went wrong
-      setStage(null);
-      reportFailure((caught as Error).message || MERGE_ERROR);
+      // The merge never got as far as a result of its own. The dialog says so where it was spinning a moment
+      // ago: a merge which vanishes without a word leaves the user to work out for themselves whether their
+      // document was touched.
+      setStage({ kind: 'result', outcome: failureOutcome((caught as Error).message || MERGE_ERROR) });
     }
   };
 
@@ -182,7 +185,8 @@ export default function MergeToolPanel({ props }: { props: PanelProps }) {
     }
   };
 
-  const scheduleMerge = async (): Promise<ChapterMergeJobInfo> => {
+  /** Starts the merge and returns the URL of the job which delivers its result, as the server named it. */
+  const startMerge = async (): Promise<string> => {
     const response = await sendRequest({
       method: 'POST',
       url: '/merge/chapter',
@@ -202,32 +206,42 @@ export default function MergeToolPanel({ props }: { props: PanelProps }) {
         copyWorkItemLayouts: copyWorkItemLayouts,
       }),
     });
-    const text = await response.text();
     if (!response.ok) {
-      throw new Error(messageFrom(text));
+      throw new Error(messageFrom(await response.text()));
     }
-    return JSON.parse(text) as ChapterMergeJobInfo;
+    const jobUrl = response.headers.get('Location');
+    if (!jobUrl) {
+      throw new Error('The merge was started without a job to ask for its result');
+    }
+    return jobUrl;
   };
 
-  /** Asks the merge job whether it has finished until it has. A job which never answers is given up on. */
-  const awaitResult = async (jobId: string): Promise<ChapterMergeJobInfo> => {
+  /**
+   * Asks the merge whether it has finished until it has, and reports what it is doing in the meantime.
+   *
+   * A merge which is still running is answered with 202; a finished one redirects to its result, which the
+   * browser follows, so the answer this sees is the result itself. A merge which is still running when the
+   * budget is used up is left to finish on the server.
+   */
+  const awaitResult = async (jobUrl: string, onProgress: (message: string) => void): Promise<MergeResult> => {
     for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
       if (attempt > 0) {
         await sleep(POLL_INTERVAL_MS);
       }
-      const response = await sendRequest({ method: 'GET', url: `/merge/chapter/jobs/${encode(jobId)}` });
+      const response = await sendAbsoluteRequest({ method: 'GET', url: jobUrl });
+      if (response.status === 202) {
+        const jobDetails = (await response.json()) as ChapterMergeJobDetails;
+        if (jobDetails.progressMessage) {
+          onProgress(jobDetails.progressMessage);
+        }
+        continue;
+      }
       if (!response.ok) {
         throw new Error(messageFrom(await response.text()));
       }
-      const jobInfo = (await response.json()) as ChapterMergeJobInfo;
-      if (jobInfo.mergeResult) {
-        return jobInfo;
-      }
-      if (jobInfo.state === 'FINISHED') {
-        throw new Error(jobInfo.statusMessage || 'The merge finished without a result, see the job log');
-      }
+      return (await response.json()) as MergeResult;
     }
-    throw new Error(`The merge is still running, see the job log at /polarion/job-report?jobId=${jobId}`);
+    throw new Error('The merge is still running, reload the document later to see what it did');
   };
 
   return (
@@ -386,8 +400,7 @@ export default function MergeToolPanel({ props }: { props: PanelProps }) {
 }
 
 /** What the merge did, or why it did not happen, as the dialog states it. */
-function outcomeOf(jobInfo: ChapterMergeJobInfo): MergeOutcome {
-  const mergeResult = jobInfo.mergeResult!;
+function outcomeOf(mergeResult: MergeResult): MergeOutcome {
   const info = mergeResult.chapterMergeInfo;
   const created = info?.createdWorkItemIds?.length ?? 0;
   const moved = info?.movedWorkItemIds?.length ?? 0;
@@ -429,11 +442,22 @@ function outcomeOf(jobInfo: ChapterMergeJobInfo): MergeOutcome {
     title: mergeResult.success ? 'Chapter merged' : 'Chapter not merged',
     lines: lines,
     logs: mergeResult.mergeReport?.logs,
-    logUrl: jobInfo.logUrl,
   };
 }
 
-/** Why the merge did not happen, in the words the server used where it had any. */
+/** A merge which produced no result of its own: what went wrong, in the words the server used. */
+function failureOutcome(message: string): MergeOutcome {
+  return {
+    merged: false,
+    title: 'Chapter not merged',
+    lines: [message],
+  };
+}
+
+/**
+ * Why the merge did not happen, in the terms the user can act on: a merge reports what stopped it in its
+ * own result.
+ */
 function failureMessage(mergeResult: MergeResult): string {
   if (mergeResult.mergeNotAuthorized) {
     return 'You are not authorized to merge into this document';
@@ -445,14 +469,16 @@ function failureMessage(mergeResult: MergeResult): string {
 }
 
 /**
- * The server's error text. The endpoints answer with `{ "message": "..." }`, but a failure upstream of
- * the resource (a proxy, a session timeout) can answer with anything, so a non-JSON body falls back to a
- * generic message rather than showing the user raw HTML.
+ * The server's error text. A failed merge answers with `{ "errorMessage": "..." }` and the endpoints answer
+ * with `{ "message": "..." }`, but a failure upstream of the resource (a proxy, a session timeout) can answer
+ * with anything, so a non-JSON body falls back to a generic message rather than showing the user raw HTML.
  */
 function messageFrom(body: string): string {
   try {
-    const parsed = JSON.parse(body) as { message?: unknown };
-    return typeof parsed.message === 'string' && parsed.message ? parsed.message : MERGE_ERROR;
+    const parsed = JSON.parse(body) as { errorMessage?: unknown; message?: unknown };
+    const message =
+      typeof parsed.errorMessage === 'string' && parsed.errorMessage ? parsed.errorMessage : parsed.message;
+    return typeof message === 'string' && message ? message : MERGE_ERROR;
   } catch {
     return MERGE_ERROR;
   }

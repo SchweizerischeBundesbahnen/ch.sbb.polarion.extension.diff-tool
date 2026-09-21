@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationResultType.CREATED;
@@ -112,15 +114,27 @@ public class DocumentsChapterMergeService {
         return mergeChapter(params, null);
     }
 
+    public @NotNull MergeResult mergeChapter(@NotNull ChapterMergeParams params, @Nullable ProgressReporter progressReporter) {
+        return mergeChapter(params, progressReporter, null);
+    }
+
     /**
      * Merges a chapter, as one write transaction: either the target document holds the whole chapter afterwards, or
      * it holds none of it. A single work item which cannot be merged is reported and passed over - that is a result,
      * not a failure of the merge.
      * <p>
-     * The documents cache is not evicted here: it is keyed by the user of the request, which a merge running as a
-     * job no longer has - the caller evicts it (see {@code ChapterMergeJobScheduler.schedule}).
+     * The documents cache is not evicted here: it is keyed by the user of the request, which a merge running in the
+     * background no longer has - the caller evicts it (see {@code ChapterMergeJobsService.startJob}).
+     *
+     * @param abortRequested asked between work items whether the merge should still go on, so that a caller which
+     *                       has stopped waiting for it can have it stopped. A merge which stops this way throws
+     *                       before it commits, and the target document is left as it was. Once the last work item is
+     *                       merged it is no longer asked: what is left is the write itself, which is quick and is
+     *                       the result the caller wanted.
+     * @throws CancellationException if the merge was asked to stop
      */
-    public @NotNull MergeResult mergeChapter(@NotNull ChapterMergeParams params, @Nullable ProgressReporter progressReporter) {
+    public @NotNull MergeResult mergeChapter(@NotNull ChapterMergeParams params, @Nullable ProgressReporter progressReporter,
+                                             @Nullable BooleanSupplier abortRequested) {
         DocumentsChapterMergeContext context = new DocumentsChapterMergeContext(polarionService, params);
 
         // The revision is checked only if the caller provided it: a caller which doesn't track the document's
@@ -150,7 +164,7 @@ public class DocumentsChapterMergeService {
         // One transaction for the whole merge: a merge which fails half way through would otherwise leave the
         // work items it already placed behind, and in move mode they would be gone from the source document too.
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
-            insertSubtree(context, subtree, insertionPoint, targetChapterWorkItem, progressReporter);
+            insertSubtree(context, subtree, insertionPoint, targetChapterWorkItem, progressReporter, abortRequested);
             detachMovedItems(context);
             // First the order of the merged work items on the page, then the text which goes between them
             placeMergedItemsUnderTargetChapter(context, targetChapterWorkItem);
@@ -259,12 +273,16 @@ public class DocumentsChapterMergeService {
     }
 
     private void insertSubtree(@NotNull DocumentsChapterMergeContext context, @NotNull List<SourceNode> subtree,
-                               @NotNull InsertionPoint insertionPoint, @NotNull IWorkItem targetChapterWorkItem, @Nullable ProgressReporter progressReporter) {
+                               @NotNull InsertionPoint insertionPoint, @NotNull IWorkItem targetChapterWorkItem,
+                               @Nullable ProgressReporter progressReporter, @Nullable BooleanSupplier abortRequested) {
         if (context.isCopyWorkItemLayouts()) {
             copyLayouts(context, subtree);
         }
         takeMovedItemsOver(context, subtree);
         for (SourceNode sourceNode : subtree) {
+            // Between two work items: nothing of this merge is in the target document yet, so a merge which stops
+            // here leaves it as it was - the transaction this runs in is rolled back by the exception.
+            checkStillWanted(abortRequested);
             IModule.IStructureNode parentNode = resolveParentNode(context, sourceNode, insertionPoint, targetChapterWorkItem);
             if (sourceNode.parentId() != null && parentNode == null) {
                 // Its parent didn't make it into the target document, so placing this item would tear the chapter apart
@@ -405,8 +423,11 @@ public class DocumentsChapterMergeService {
     @NotNull
     IWorkItem moveWorkItem(@NotNull IWorkItem sourceWorkItem, @NotNull DocumentsChapterMergeContext context, @Nullable IModule.IStructureNode parentNode, int index) {
         if (context.sameProject()) {
-            // Already taken over by takeMovedItemsOver, so it only has to be given its position
-            mergeService.placeNode(sourceWorkItem, context.getTargetModule(), parentNode, index, false);
+            // Already taken over by takeMovedItemsOver, so it only has to be given its position - unless it was
+            // given one there, which is what happens to a work item moved along with the one it sits below
+            if (!alreadyPlacedUnder(context.getTargetModule(), sourceWorkItem, parentNode)) {
+                mergeService.placeNode(sourceWorkItem, context.getTargetModule(), parentNode, index, false);
+            }
             context.getMovedItems().add(sourceWorkItem);
             context.reportChapterEntry(MOVED, "workitem '%s' moved into the target document".formatted(sourceWorkItem.getId()));
         } else {
@@ -419,6 +440,27 @@ public class DocumentsChapterMergeService {
                     .formatted(sourceWorkItem.getId(), context.getSourceModule().getProjectId(), context.getTargetModule().getProjectId()));
         }
         return sourceWorkItem;
+    }
+
+    /**
+     * Whether a work item already sits where this merge wants to put it.
+     * <p>
+     * {@link IModule#moveIn} takes a work item over with everything below it, so a work item whose parent is moved
+     * along with it arrives in the target document attached to that parent already. Placing it a second time is
+     * refused by Polarion with "Node has been added before.": {@code addChild} detaches the node it is given from
+     * its parent first, and a node which is its own parent's child cannot be detached from it and added to it in
+     * one step. Its position among its siblings is the one the source document gave it, which is the one the merge
+     * wants, so such a node is left where it is.
+     */
+    @VisibleForTesting
+    boolean alreadyPlacedUnder(@NotNull IModule targetModule, @NotNull IWorkItem workItem, @Nullable IModule.IStructureNode parentNode) {
+        if (parentNode == null || parentNode.getWorkItem() == null) {
+            return false;
+        }
+        IModule.IStructureNode node = targetModule.getStructureNodeOfWI(workItem);
+        IModule.IStructureNode currentParent = node == null ? null : node.getParent();
+        return currentParent != null && currentParent.getWorkItem() != null
+                && Objects.equals(currentParent.getWorkItem().getId(), parentNode.getWorkItem().getId());
     }
 
     private @NotNull String resolveTargetTypeId(@NotNull IWorkItem sourceWorkItem, @NotNull DocumentsChapterMergeContext context) {
@@ -582,6 +624,12 @@ public class DocumentsChapterMergeService {
     private @Nullable String insertedOutlineNumber(@NotNull DocumentsChapterMergeContext context) {
         IWorkItem chapterCopy = context.getItemMapping().values().stream().findFirst().orElse(null);
         return chapterCopy == null ? null : context.getTargetModule().getOutlineNumberOfWorkitem(chapterCopy);
+    }
+
+    private void checkStillWanted(@Nullable BooleanSupplier abortRequested) {
+        if (abortRequested != null && abortRequested.getAsBoolean()) {
+            throw new CancellationException("Chapter merge was asked to stop before it merged the whole chapter");
+        }
     }
 
     private void report(@Nullable ProgressReporter progressReporter, @NotNull String message) {
