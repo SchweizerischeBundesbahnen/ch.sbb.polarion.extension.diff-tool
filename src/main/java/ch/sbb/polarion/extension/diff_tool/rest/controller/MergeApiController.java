@@ -15,6 +15,7 @@ import jakarta.inject.Singleton;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 @Singleton
 @Secured
@@ -26,7 +27,12 @@ public class MergeApiController extends MergeInternalController {
         super();
     }
 
-    public MergeApiController(@NotNull PolarionService polarionService, @NotNull ChapterMergeJobsService chapterMergeJobsService) {
+    /**
+     * Only tests build this controller themselves - JAX-RS builds the one above - so this hands the services on to
+     * the constructor of the superclass which exists for the same reason.
+     */
+    @VisibleForTesting
+    MergeApiController(@NotNull PolarionService polarionService, @NotNull ChapterMergeJobsService chapterMergeJobsService) {
         super(polarionService, chapterMergeJobsService);
     }
 
