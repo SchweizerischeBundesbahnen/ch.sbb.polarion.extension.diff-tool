@@ -64,8 +64,7 @@ public class MergeInternalController {
         this(polarionService, new ChapterMergeJobsService(polarionService));
     }
 
-    @VisibleForTesting
-    MergeInternalController(@NotNull PolarionService polarionService, @NotNull ChapterMergeJobsService chapterMergeJobsService) {
+    protected MergeInternalController(@NotNull PolarionService polarionService, @NotNull ChapterMergeJobsService chapterMergeJobsService) {
         this.polarionService = polarionService;
         this.mergeService = new MergeService(polarionService);
         this.chapterMergeJobsService = chapterMergeJobsService;
