@@ -220,13 +220,7 @@ public class MergeInternalController {
             }
     )
     public Response mergeChapter(ChapterMergeParams mergeParams) {
-        if (mergeParams == null || mergeParams.getSourceDocument() == null || mergeParams.getTargetDocument() == null
-                || mergeParams.getMode() == null || mergeParams.getInsertMode() == null) {
-            throw new BadRequestException("Parameters 'sourceDocument', 'targetDocument', 'mode' and 'insertMode' should be provided");
-        }
-        if (StringUtils.isBlank(mergeParams.getSourceChapterOutlineNumber()) || StringUtils.isBlank(mergeParams.getTargetChapterOutlineNumber())) {
-            throw new BadRequestException("Parameters 'sourceChapterOutlineNumber' and 'targetChapterOutlineNumber' should be provided");
-        }
+        checkMergeParams(mergeParams);
         checkAuthorizedForMerge(mergeParams);
 
         String jobId = chapterMergeJobsService.startJob(mergeParams, DiffToolExtensionConfiguration.getInstance().getChapterMergeTimeout());
@@ -314,6 +308,19 @@ public class MergeInternalController {
         return chapterMergeJobsService.getJobResult(jobId)
                 .map(mergeResult -> Response.ok(mergeResult).build())
                 .orElseGet(() -> Response.noContent().build());
+    }
+
+    /**
+     * Refuses a merge which does not say what to merge where.
+     */
+    private void checkMergeParams(ChapterMergeParams mergeParams) {
+        if (mergeParams == null || mergeParams.getSourceDocument() == null || mergeParams.getTargetDocument() == null
+                || mergeParams.getMode() == null || mergeParams.getInsertMode() == null) {
+            throw new BadRequestException("Parameters 'sourceDocument', 'targetDocument', 'mode' and 'insertMode' should be provided");
+        }
+        if (StringUtils.isBlank(mergeParams.getSourceChapterOutlineNumber()) || StringUtils.isBlank(mergeParams.getTargetChapterOutlineNumber())) {
+            throw new BadRequestException("Parameters 'sourceChapterOutlineNumber' and 'targetChapterOutlineNumber' should be provided");
+        }
     }
 
     /**

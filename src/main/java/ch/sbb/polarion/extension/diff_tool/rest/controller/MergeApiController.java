@@ -26,7 +26,7 @@ public class MergeApiController extends MergeInternalController {
         super();
     }
 
-    MergeApiController(@NotNull PolarionService polarionService, @NotNull ChapterMergeJobsService chapterMergeJobsService) {
+    public MergeApiController(@NotNull PolarionService polarionService, @NotNull ChapterMergeJobsService chapterMergeJobsService) {
         super(polarionService, chapterMergeJobsService);
     }
 
