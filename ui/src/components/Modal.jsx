@@ -12,7 +12,7 @@ export default function Modal({title, cancelButtonTitle, actionButtonTitle, acti
         backgroundColor: 'rgba(255,255,255,0.7)',
         alignItems: 'center'
       }} onClick={(event) => event.target === event.currentTarget && closeModal()}
-         onKeyDown={(event) => event.key === 'Escape' && closeModal()}>
+         onKeyDown={(event) => event.key === 'Escape' && !event.defaultPrevented && closeModal()}>
         <div className="modal-dialog modal-dialog-scrollable">
           <div className="modal-content">
             <div className="modal-header">

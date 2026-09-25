@@ -110,6 +110,38 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Collections diff viewer visual', () => {
 });
 
 // Not Docker-only, unlike the visual suite above: an accessibility scan compares no pixels.
+describe('Collections diff viewer, document configuration dialog', () => {
+  const escape = (target: Element) =>
+    target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  const modalShown = () =>
+    getComputedStyle(document.querySelector<HTMLElement>('[data-testid="target-configuration-modal"]')!).display !==
+    'none';
+
+  // The dropdown consumes the Escape that closes its list (preventDefault) but lets it bubble, so the dialog
+  // must skip a handled Escape: otherwise one key press closes the list and the dialog together.
+  it('closes an open configuration list on the first Escape and the dialog only on the second', async () => {
+    renderCollections(UNPAIRED_URL, fixture('collections.json'), fixture('documents-from-collection.json'));
+    await headerLoaded();
+    await createOffered();
+    document.querySelector<HTMLButtonElement>('[data-testid="create-document-button"]')!.click();
+    await openDialog('Choose document configuration');
+    const trigger = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLElement>('#target-configuration + .searchable-dropdown .sd-trigger');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    trigger.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    await vi.waitFor(() => expect(trigger.closest('.searchable-dropdown')!.classList.contains('open')).toBe(true));
+
+    escape(trigger);
+    await vi.waitFor(() => expect(trigger.closest('.searchable-dropdown')!.classList.contains('open')).toBe(false));
+    expect(modalShown()).toBe(true);
+
+    escape(trigger);
+    await vi.waitFor(() => expect(modalShown()).toBe(false));
+  });
+});
+
 describe('Collections diff viewer, accessibility', () => {
   it('has no WCAG A/AA violations with a paired document shown', async () => {
     renderPaired();
