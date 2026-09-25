@@ -5,10 +5,14 @@ export default function Modal({title, cancelButtonTitle, actionButtonTitle, acti
   const closeButtonRef = useRef(null);
 
   // Escape is handled by the modal's own onKeyDown, which the button that opened it, outside the modal, never reaches.
+  // The focus goes back to that button on close: the hidden close button would drop it to <body>.
   useEffect(() => {
-    if (visible) {
-      closeButtonRef.current?.focus();
+    if (!visible) {
+      return undefined;
     }
+    const opener = document.activeElement;
+    closeButtonRef.current?.focus();
+    return () => opener?.focus?.();
   }, [visible]);
 
   const closeModal = () => {

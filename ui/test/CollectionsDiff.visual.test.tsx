@@ -117,18 +117,22 @@ describe('Collections diff viewer, document configuration dialog', () => {
     getComputedStyle(document.querySelector<HTMLElement>('[data-testid="target-configuration-modal"]')!).display !==
     'none';
 
-  // The dialog handles Escape from inside itself, so it has to take the focus from the button that opened it.
-  it('takes the focus when it opens, so a first Escape closes it', async () => {
+  // The dialog handles Escape from inside itself, so it has to take the focus from the button that opened it,
+  // and it gives the focus back on close, so the next Tab continues from that button.
+  it('takes the focus when it opens, so a first Escape closes it, and gives it back to its opener', async () => {
     renderCollections(UNPAIRED_URL, fixture('collections.json'), fixture('documents-from-collection.json'));
     await headerLoaded();
     await createOffered();
-    document.querySelector<HTMLButtonElement>('[data-testid="create-document-button"]')!.click();
+    const opener = document.querySelector<HTMLButtonElement>('[data-testid="create-document-button"]')!;
+    opener.focus();
+    opener.click();
     await openDialog('Choose document configuration');
     const modal = document.querySelector('[data-testid="target-configuration-modal"]')!;
     await vi.waitFor(() => expect(modal.contains(document.activeElement)).toBe(true));
 
     escape(document.activeElement!);
     await vi.waitFor(() => expect(modalShown()).toBe(false));
+    expect(document.activeElement).toBe(opener);
   });
 
   // The dropdown consumes the Escape that closes its list (preventDefault) but lets it bubble, so the dialog
