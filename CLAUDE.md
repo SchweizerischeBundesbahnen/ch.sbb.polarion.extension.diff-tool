@@ -81,9 +81,18 @@ and `src/topics/open{WorkItems,Collections}Diff.ts` open them by literal URL. Do
 The admin pages and all three Document Properties panels are built on the shared **react-sbb-polarion**
 library (RSP), like the other migrated SBB Polarion extensions; the viewer predates it and does not use
 it. `META-INF/hivemodule.xml` is the source of truth for which extenders point at the React app
-(`.../ui/app/index.html?feature=<id>`); all five now do, and `rest-api` deliberately still points at
+(`.../ui/app/index.html?feature=<id>`); all six now do, and `rest-api` deliberately still points at
 `/polarion/diff-tool/rest/swagger`. See `ui/README.md` for the details, including why the viewer's page
 shell is `.diff-app` rather than `.app`.
+
+The **Documentation** entry opens a documentation site built on RSP's `DocPage` (sidebar, search, breadcrumb,
+prev/next, "on this page"), the same setup as pdf-exporter and docx-exporter. Its articles are the markdown files
+of `ui/src/docs/docs.config.json` (Quick Start, User Guide, Configuration, Velocity API), each rendered by its own
+markdown2html execution in the pom into `webapp/diff-tool-app/html/` next to `about.html` - all in
+`generate-sources`, one phase before the frontend build, because `npm run build` builds the documentation search
+index from that HTML and fails when an article is missing. The index (`ui/src/docs/search-index.json`) is
+generated, not committed. An article added to the manifest needs its own markdown2html execution, or the build
+fails. See [`ui/README.md`](ui/README.md#the-documentation-site).
 
 All three Document Properties panels are laid out by **one row model**, in `src/formext/formRows.tsx` +
 `diff-tool.css`, with `PanelShell.tsx` as the frame they share. It is the row model pdf-exporter and

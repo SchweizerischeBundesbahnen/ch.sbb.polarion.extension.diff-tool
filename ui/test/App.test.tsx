@@ -115,3 +115,28 @@ describe('App router', () => {
     expect(document.querySelector('.page > h1')!.textContent).toBe('Merge Authorization');
   });
 });
+
+describe('documentation articles', () => {
+  it('renders a manifest article inside the documentation-site frame', async () => {
+    // DocPage fetches the generated html/<id>.html next to the app; the frame around it comes from the manifest.
+    const fetchMock = installFetchMock([
+      {
+        match: /\/html\/configuration\.html$/,
+        respond: () => new Response('<h1>Configuration</h1><h2 id="tuning">Tuning</h2><p>Body</p>', { status: 200 }),
+      },
+    ]);
+    window.history.replaceState({}, '', '?feature=configuration&embedded=true');
+    render(<App />);
+
+    await vi.waitFor(() => expect(document.querySelector('article.markdown-body')).not.toBeNull());
+    expect(document.body.textContent).toContain('Body');
+    expect(document.querySelector('.docs-nav-link-active')?.textContent).toBe('Configuration');
+    expect(Array.from(document.querySelectorAll('.docs-nav-link')).map((a) => a.textContent)).toEqual([
+      'Quick Start',
+      'User Guide',
+      'Configuration',
+      'Velocity API',
+    ]);
+    expect(String(fetchMock.mock.calls[0][0])).toMatch(/\/html\/configuration\.html$/);
+  });
+});
