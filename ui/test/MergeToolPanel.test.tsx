@@ -1,3 +1,4 @@
+import { a11yViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mountMergeToolPanel } from '../src/formext/mountMergeToolPanel';
 import { $, forgetRememberedSelections, mountPanel, selectOption, setFieldValue, waitForPanel } from './formextHelpers';
@@ -543,5 +544,48 @@ describe('MergeToolPanel', () => {
     await selectOption(shadow, 'merge-project-selector', 'drivepilot');
 
     await vi.waitFor(() => expect($(shadow, '.alert-error').textContent).toContain('spaces'));
+  });
+});
+
+// A panel lives in a shadow root that its mount already gives `.sbb-ui`, so it is scanned through its host.
+describe('MergeToolPanel, accessibility', () => {
+  it('has no WCAG A/AA violations as opened', async () => {
+    await open();
+    expect(await a11yViolations(panel!.host)).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the form filled in', async () => {
+    const { shadow } = await open();
+    await fillForm(shadow);
+    expect(await a11yViolations(panel!.host)).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the merge waiting to be confirmed', async () => {
+    const { shadow } = await open();
+    await fillForm(shadow);
+    await vi.waitFor(() => expect(mergeButton(shadow).disabled).toBe(false));
+    mergeButton(shadow).click();
+    await vi.waitFor(() => expect(confirmationText(shadow)).toContain('Do you want to proceed?'));
+    expect(await a11yViolations(panel!.host)).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations while the merge runs', async () => {
+    const { shadow } = await open(
+      installFetchMock(routes([{ method: 'GET', match: /\/merge\/chapter\/jobs\/J-1$/, respond: () => runningJob() }])),
+    );
+    await fillForm(shadow);
+    await vi.waitFor(() => expect(mergeButton(shadow).disabled).toBe(false));
+    await startMerge(shadow);
+    await vi.waitFor(() => expect(shadow.querySelector('#merge-progress .sbb-spinner')).not.toBeNull());
+    expect(await a11yViolations(panel!.host)).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the result of the merge shown', async () => {
+    const { shadow } = await open();
+    await fillForm(shadow);
+    await vi.waitFor(() => expect(mergeButton(shadow).disabled).toBe(false));
+    await startMerge(shadow);
+    await vi.waitFor(() => expect(resultText(shadow)).toContain("workitem 'DP-100' created"));
+    expect(await a11yViolations(panel!.host)).toEqual([]);
   });
 });

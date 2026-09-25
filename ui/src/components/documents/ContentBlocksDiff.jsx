@@ -6,12 +6,12 @@ export default function ContentBlocksDiff({label, oldValue, newValue, selected, 
       <div className="diff-viewer" style={{
         position: "relative"
       }}>
-        <div className="merge-ticker" onClick={selectedCallback}>
-          <div className="form-check">
+        <label className="merge-ticker">
+          <span className="form-check">
             <input className="form-check-input" type="checkbox" checked={selected} onChange={selectedCallback}
                    aria-label={label} />
-          </div>
-        </div>
+          </span>
+        </label>
         <DiffLeaf htmlDiff={oldValue} diffSide={DIFF_SIDES.LEFT}/>
         <DiffLeaf htmlDiff={newValue} diffSide={DIFF_SIDES.RIGHT}/>
       </div>

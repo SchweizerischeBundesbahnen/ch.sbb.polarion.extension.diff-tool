@@ -88,13 +88,13 @@ export default function MergePane({rightContext, diff_type, mergingContext, merg
             </div>
             {(!rightContext || rightContext.revision) && <span>Target document not in HEAD, which locks merging into it</span>}
             {rightContext && !rightContext.authorizedForMerge && <span>You are not authorized to merge into target project</span>}
-            {!mergeDisabled && (diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.WORK_ITEMS_DIFF) && <label className="link-role-direction-label">
-              <span className="link-role-direction-text">Link role direction for created WorkItems:</span>
+            {!mergeDisabled && (diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.WORK_ITEMS_DIFF) && <div className="link-role-direction-label">
+              <label className="link-role-direction-text" htmlFor="link-role-direction">Link role direction for created WorkItems:</label>
               <SearchableSelect id="link-role-direction" value={linkRoleDirection} onChange={setLinkRoleDirection}
                                 searchable={false}
                                 options={[{id: LINK_ROLE_DIRECTION_DIRECT, name: "Direct"},
                                           {id: LINK_ROLE_DIRECTION_REVERSE, name: "Reverse"}]} />
-            </label>}
+            </div>}
             <MergeButton fontAwesomeIcon={faArrowRightLong} clickHandler={() => confirmMerge(LEFT_TO_RIGHT)}
                          title="Merge selected items into the target document"
                          style={{justifyContent: "right"}} disabled={mergeDisabled || mergingContext.selectionCount === 0} />

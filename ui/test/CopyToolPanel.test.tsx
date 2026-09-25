@@ -1,3 +1,4 @@
+import { a11yViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createdDocumentLink } from '../src/formext/CopyToolPanel';
 import { mountCopyToolPanel } from '../src/formext/mountCopyToolPanel';
@@ -343,5 +344,39 @@ describe('remembered selections', () => {
     const reopened = await reopen();
 
     expect($<HTMLInputElement>(reopened, '#copy-comments-checkbox').checked).toBe(false);
+  });
+});
+
+// A panel lives in a shadow root that its mount already gives `.sbb-ui`, so it is scanned through its host.
+describe('CopyToolPanel, accessibility', () => {
+  it('has no WCAG A/AA violations as opened', async () => {
+    await open();
+    expect(await a11yViolations(panel!.host)).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the form filled in', async () => {
+    const { shadow } = await open();
+    await fillForm(shadow);
+    expect(await a11yViolations(panel!.host)).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the link to the created document shown', async () => {
+    const { shadow } = await open();
+    await fillForm(shadow);
+    await vi.waitFor(() => expect(createButton(shadow).disabled).toBe(false));
+    createButton(shadow).click();
+    await vi.waitFor(() => expect(shadow.querySelector('#creation-success a')).not.toBeNull());
+    expect(await a11yViolations(panel!.host)).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the alert of a list that could not be loaded', async () => {
+    const { shadow } = await open(
+      installFetchMock(
+        routes([{ method: 'GET', match: /\/spaces$/, respond: () => jsonResponse({ message: 'boom' }, 500) }]),
+      ),
+    );
+    await selectOption(shadow, 'copy-project-selector', 'drivepilot');
+    await vi.waitFor(() => expect(shadow.querySelector('.notifications .alert-error')).not.toBeNull());
+    expect(await a11yViolations(panel!.host)).toEqual([]);
   });
 });

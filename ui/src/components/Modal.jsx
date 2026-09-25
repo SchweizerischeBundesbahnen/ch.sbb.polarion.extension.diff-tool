@@ -6,12 +6,13 @@ export default function Modal({title, cancelButtonTitle, actionButtonTitle, acti
   }
 
   return (
-      <div className={`modal fade ${className}`} data-testid={testId} tabIndex="-1" style={{
+      <div className={`modal fade ${className}`} data-testid={testId} tabIndex="-1" role="presentation" style={{
         display: visible ? 'flex' : 'none',
         opacity: visible ? 1 : 0,
         backgroundColor: 'rgba(255,255,255,0.7)',
         alignItems: 'center'
-      }} onClick={(event) => event.target === event.currentTarget && closeModal()}>
+      }} onClick={(event) => event.target === event.currentTarget && closeModal()}
+         onKeyDown={(event) => event.key === 'Escape' && closeModal()}>
         <div className="modal-dialog modal-dialog-scrollable">
           <div className="modal-content">
             <div className="modal-header">

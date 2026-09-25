@@ -53,7 +53,7 @@ server-rendered fragments call.
 
 Each panel mounts into a **shadow root** on the fragment's div (`src/formext/shadowMount.ts`). The
 Document Properties pane is one page shared by several extensions' panels - and by all of these - so
-plain global CSS would collide. RSP's stylesheet and `src/formext/diff-tool.css` - the row layout both
+plain global CSS would collide. RSP's stylesheet and `src/formext/diff-tool.css` - the row layout all three
 panels share, plus the toast styles a shadow root cannot see - are injected _inside_ the shadow (via
 `?inline`), which also means nothing has to be `<link>`ed from a Polarion-served URL and the panels can be
 tested with `ui/` alone.
@@ -131,7 +131,7 @@ editing a markdown file, render it again (a Maven build, or its markdown2html ex
 | `npm run dev:e2e`                 | dev server as the E2E suite runs it: loads `.env.e2e`, no proxy                           |
 | `npm run build`                   | production build to `dist/app`, both Vite passes (copied into the extension jar by Maven) |
 | `npm run typecheck`               | `tsc --noEmit`                                                                            |
-| `npm run lint` / `lint:fix`       | ESLint                                                                                    |
+| `npm run lint` / `lint:fix`       | ESLint, on RSP's shared config (with the `jsx-a11y` rules)                                |
 | `npm run format` / `format:check` | Prettier (`**/*.{ts,tsx,css,html}`)                                                       |
 | `npm run e2e`                     | Playwright E2E suite (interactive)                                                        |
 | `npm run e2e:headless`            | Playwright E2E suite (list reporter)                                                      |
@@ -150,7 +150,10 @@ Two layers, deliberately:
   layout; REST is mocked at the global `fetch` boundary (`test/mockFetch.ts`), so no Polarion is
   needed. Visual references live in `test/expected/<Component>/` and **must** be generated inside the
   pinned Playwright Docker image (`npm run test:update:docker`) so any dev machine and Linux CI
-  produce identical pixels.
+  produce identical pixels. Each page's own test file also has an `accessibility` block that scans its
+  states with axe-core (`pageViolations()` from `@sbb-polarion/react-sbb-polarion/testing`; the panels
+  through their shadow host with `a11yViolations()`). HTML the server renders into the viewer is left out
+  (`SERVER_RENDERED` in `test/viewerHarness.tsx`).
 - **`e2e/`** - the Playwright end-to-end suite for the diff/merge viewer and the two picker topics: 12
   specs across chromium/firefox/webkit, driving the real dev server with every REST call stubbed from
   `e2e/fixtures/` (`topics-pickers.spec.js` stubs its four responses inline).

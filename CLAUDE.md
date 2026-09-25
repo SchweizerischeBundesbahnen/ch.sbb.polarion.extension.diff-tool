@@ -325,9 +325,9 @@ When merging rich text fields containing work item links:
 
 - Unit tests use mocked Polarion services (ITrackerService, IProjectService, etc.)
 - Integration tests require Polarion dependencies extracted via [polarion-artifacts-deployer](https://github.com/SchweizerischeBundesbahnen/polarion-artifacts-deployer)
-- Frontend has two layers: Vitest browser mode (real Chromium via Playwright) for components and
-  visual regression, and Playwright specs in `ui/e2e/` for the viewer end-to-end. Only the Vitest layer
-  runs in the Maven `test` phase; see `ui/README.md`
+- Frontend has two layers: Vitest browser mode (real Chromium via Playwright) for components, visual
+  regression and axe-core accessibility scans, and Playwright specs in `ui/e2e/` for the viewer
+  end-to-end. Only the Vitest layer runs in the Maven `test` phase; see `ui/README.md`
 
 ### Deployment and Installation
 
@@ -446,6 +446,8 @@ minutes: how long a merge may run, and how long its result is kept for the panel
 - Maven plugin configurations already in use
 - JavaScript testing with Vitest + react-sbb-polarion test helpers
 - Shadow-root mounting for form-extension panels (`ui/src/formext/shadowMount.ts`)
+- Accessibility cases in each page's own test file (`pageViolations()`, or `a11yViolations(panel.host)` for a
+  panel), not in a separate `a11y.test.tsx`
 
 ### Project-Specific Review Focus
 

@@ -1,7 +1,17 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-react';
 import CollectionsPage from '../src/pages/CollectionsPage';
-import { fixture, openControlPane, openDialog, pairDiff, renderViewer, restoreUrl, shoot } from './viewerHarness';
+import {
+  SERVER_RENDERED,
+  fixture,
+  openControlPane,
+  openDialog,
+  pairDiff,
+  renderViewer,
+  restoreUrl,
+  shoot,
+} from './viewerHarness';
 
 // Docker-only snapshots of the collections diff viewer, the collections.html entry.
 //
@@ -96,5 +106,31 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Collections diff viewer visual', () => {
 
     await openDialog('Choose document configuration');
     await shoot('collections-diff-target-configuration');
+  });
+});
+
+// Not Docker-only, unlike the visual suite above: an accessibility scan compares no pixels.
+describe('Collections diff viewer, accessibility', () => {
+  it('has no WCAG A/AA violations with a paired document shown', async () => {
+    renderPaired();
+    await headerLoaded();
+    await pairsLoaded();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations while offering to create a missing counterpart', async () => {
+    renderCollections(UNPAIRED_URL, fixture('collections.json'), fixture('documents-from-collection.json'));
+    await headerLoaded();
+    await createOffered();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the document configuration dialog open', async () => {
+    renderCollections(UNPAIRED_URL, fixture('collections.json'), fixture('documents-from-collection.json'));
+    await headerLoaded();
+    await createOffered();
+    document.querySelector<HTMLButtonElement>('[data-testid="create-document-button"]')!.click();
+    await openDialog('Choose document configuration');
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
 });
