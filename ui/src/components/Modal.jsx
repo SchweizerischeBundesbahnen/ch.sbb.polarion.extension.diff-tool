@@ -1,4 +1,15 @@
+import {useEffect, useRef} from "react";
+
 export default function Modal({title, cancelButtonTitle, actionButtonTitle, actionButtonHandler, onClose, visible, setVisible, className, children, testId}) {
+
+  const closeButtonRef = useRef(null);
+
+  // Escape is handled by the modal's own onKeyDown, which the button that opened it, outside the modal, never reaches.
+  useEffect(() => {
+    if (visible) {
+      closeButtonRef.current?.focus();
+    }
+  }, [visible]);
 
   const closeModal = () => {
     setVisible(false);
@@ -17,7 +28,7 @@ export default function Modal({title, cancelButtonTitle, actionButtonTitle, acti
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">{title}</h5>
-              <button type="button" className="btn-close" aria-label="Close" onClick={closeModal}></button>
+              <button type="button" className="btn-close" aria-label="Close" ref={closeButtonRef} onClick={closeModal}></button>
             </div>
             <div className="modal-body">
               {children}
