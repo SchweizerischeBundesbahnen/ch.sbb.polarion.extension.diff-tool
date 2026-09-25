@@ -45,6 +45,13 @@ const args = [
   'PIXEL_REFERENCES=1',
   '-v',
   `${uiDir}:/work`,
+  // The help articles markdown2html renders live outside ui/, so they are mounted read-only and named to
+  // build-docs-index.mjs: the documentation search index is built from them before the suite runs (Vitest
+  // globalSetup), and without them it would be empty in here - in CI too - and its tests would skip.
+  '-v',
+  `${resolve(uiDir, '../src/main/resources/webapp/diff-tool-app/html')}:/rendered-articles:ro`,
+  '-e',
+  'DOCS_SECTION_INDEX_DIR=/rendered-articles',
   // Shadow node_modules so the container's Linux install does not overwrite host binaries.
   '-v',
   '/work/node_modules',
