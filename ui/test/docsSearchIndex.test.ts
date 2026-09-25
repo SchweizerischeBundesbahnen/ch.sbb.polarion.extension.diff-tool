@@ -43,6 +43,13 @@ describe.skipIf(RECORDS.length === 0)('documentation search index', () => {
     }
   });
 
+  it('indexes the introduction of an article, the text before its first section', () => {
+    // Quick Start's installation steps sit under its h1, before any h2: they must be searchable, under the h1's
+    // anchor so the result leads to the top of the article.
+    const intro = RECORDS.find((r) => r.doc === 'quick-start' && r.anchor === 'quick-start');
+    expect(intro?.text).toContain('releases page');
+  });
+
   it('carries the text of code blocks', () => {
     // The chunk.size line exists only inside a <pre> of the articles. A parser setting that treated <pre> as
     // block text would drop every code block, and with them the property keys a reader searches for.

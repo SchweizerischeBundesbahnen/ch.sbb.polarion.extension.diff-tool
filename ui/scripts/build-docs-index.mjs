@@ -6,9 +6,10 @@
 //
 // The plugin renders each article to the shipped `webapp/diff-tool-app/html/<id>.html` in generate-sources
 // (before this frontend build, with the Table of contents excluded); this reads those same shipped files -
-// there is no separate render - parsing each into one record per h2/h3 heading (its anchor id, title and the
-// plain text beneath it, h4-h6 subsections included, up to the next h2/h3) and concatenates them in the
-// docs.config.json reading order into src/docs/search-index.json.
+// there is no separate render - parsing each into one record for its introduction (the text under the h1, before
+// the first h2/h3) and one per h2/h3 heading (its anchor id, title and the plain text beneath it, h4-h6
+// subsections included, up to the next h2/h3), and concatenates them in the docs.config.json reading order into
+// src/docs/search-index.json.
 //
 // Two modes:
 //   --require (used by `prebuild`, i.e. the real Maven/production build): every rendered article MUST be present
@@ -42,7 +43,10 @@ const outFile = resolve(uiDir, 'src/docs/search-index.json');
 const clean = (text) => text.replace(/\s+/g, ' ').trim();
 
 /**
- * One record per h2/h3 heading: its anchor id, title, and the plain text beneath it up to the next h2/h3. An
+ * One record for the article's introduction - the text between the h1 and the first h2/h3, under the h1's anchor
+ * and title, so a search for it leads to the top of the article; none when the article has no such text, since the
+ * article title alone already matches every record of the article - and one per h2/h3 heading: its anchor id,
+ * title, and the plain text beneath it up to the next h2/h3. An
  * h4-h6 subsection is no record of its own - the "on this page" rail and the search both stop at h3 - so its
  * heading and text stay in the enclosing section, and a search for a term in it leads there. The text is kept
  * whole: the search matches on it and never displays it (results show the titles), so a cap would only hide
@@ -64,17 +68,23 @@ function sectionsOf(html) {
       current = { anchor: element.getAttribute('id') ?? '', title: clean(element.text), body: [] };
       sections.push(current);
     } else if (tag === 'h1') {
-      current = null; // the article title: text before the first h2 belongs to no section
+      // the article title: the text under it, before the first h2/h3, is the article's introduction
+      current = { anchor: element.getAttribute('id') ?? '', title: clean(element.text), body: [], intro: true };
+      sections.push(current);
     } else if (current) {
       // h4-h6 headings and every other block: part of the enclosing h2/h3 section
       current.body.push(element.text);
     }
   }
-  return sections.map((section) => ({
-    anchor: section.anchor,
-    title: section.title,
-    text: clean(section.body.join(' ')),
-  }));
+  return sections
+    .map((section) => ({
+      anchor: section.anchor,
+      title: section.title,
+      text: clean(section.body.join(' ')),
+      intro: section.intro === true,
+    }))
+    .filter((section) => !section.intro || section.text !== '')
+    .map(({ anchor, title, text }) => ({ anchor, title, text }));
 }
 
 const missing = config.items.filter((item) => !existsSync(resolve(indexDir, `${item.id}.html`)));
@@ -96,10 +106,10 @@ const problems = [];
 for (const item of config.items) {
   const html = readFileSync(resolve(indexDir, `${item.id}.html`), 'utf8');
   const sections = sectionsOf(html);
-  // A present article that yields nothing searchable (no h2/h3 the parser recognizes), or a section whose
-  // heading carries no id to link to, would ship as a silent gap in the search - so it is checked here.
+  // A present article that yields nothing searchable (no introduction and no h2/h3 the parser recognizes), or a
+  // section whose heading carries no id to link to, would ship as a silent gap in the search - so it is checked here.
   if (sections.length === 0) {
-    problems.push(`${item.id}.html has no h2/h3 section`);
+    problems.push(`${item.id}.html has no searchable section`);
   }
   for (const section of sections.filter((s) => !s.anchor)) {
     problems.push(`${item.id}.html: section "${section.title}" has no heading id`);
