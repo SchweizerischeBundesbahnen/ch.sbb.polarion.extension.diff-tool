@@ -1,3 +1,4 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import CollectionsPickerPage from '../src/topics/CollectionsPickerPage';
@@ -200,5 +201,20 @@ describe('CollectionsPickerPage', () => {
       ),
     );
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/elibrary/collections/search'))).toBe(false);
+  });
+});
+
+describe('CollectionsPickerPage, accessibility', () => {
+  it('has no WCAG A/AA violations as loaded', async () => {
+    await renderPage();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a collection chosen on each side', async () => {
+    await renderPage();
+    radios('source')[0].click();
+    radios('target')[0].click();
+    await vi.waitFor(() => expect(compareButton().disabled).toBe(false));
+    expect(await pageViolations()).toEqual([]);
   });
 });

@@ -1,7 +1,8 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-react';
 import WorkItemsPage from '../src/pages/WorkItemsPage';
-import { fixture, openControlPane, renderViewer, restoreUrl, shoot } from './viewerHarness';
+import { SERVER_RENDERED, fixture, openControlPane, renderViewer, restoreUrl, shoot } from './viewerHarness';
 
 // Docker-only snapshots of the work items diff viewer, the workitems.html entry. It pairs work items
 // selected by a query rather than by their place in a document, and renders its own copy of the pair
@@ -65,5 +66,22 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Work items diff viewer visual', () => {
     await loaded();
     await openControlPane();
     await shoot('workitems-diff-control-pane');
+  });
+});
+
+// Not Docker-only, unlike the visual suite above: an accessibility scan compares no pixels.
+describe('Work items diff viewer, accessibility', () => {
+  it('has no WCAG A/AA violations with the redundancy notice open', async () => {
+    renderWorkItems();
+    await vi.waitFor(() => expect(document.querySelector('[data-testid="redundancy-modal"]')).not.toBeNull(), {
+      timeout: 10000,
+    });
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the paired work items shown', async () => {
+    renderWorkItems();
+    await loaded();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
 });
