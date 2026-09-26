@@ -49,7 +49,7 @@
   "overrides": {
     "postcss": ">=8.5.10"
   },
-  "packageManager": "npm@12.0.2",
+  "packageManager": "npm@12.1.0",
   "private": true,
   "scripts": {
     "docs:index": "node scripts/build-docs-index.mjs",
