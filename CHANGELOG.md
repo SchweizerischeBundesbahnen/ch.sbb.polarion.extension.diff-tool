@@ -1,5 +1,24 @@
 # Changelog
 
+## [9.4.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.3.1...v9.4.0) (2026-09-26)
+
+
+### Features
+
+* documentation site over the shared RSP components ([#712](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/712)) ([514d348](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/514d348b1ab8be393b9b634e4586aa5c53fead2d)), closes [#711](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/711)
+
+
+### Bug Fixes
+
+* **deps:** pin dependency node-html-parser to 9.0.4 ([#715](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/715)) ([d7d8c35](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d7d8c35ca8352ae1e6dcf3b108020336c851c697))
+* **deps:** update dependency @types/node to v25.9.8 ([#707](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/707)) ([a8ef65e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/a8ef65e235f41238281de6b4f078c22eead4adc8))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v13.8.0 ([#716](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/716)) ([a05b3e3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/a05b3e348b30bf00cc7e9671a9aaa444b7acbc91))
+* **deps:** update dependency eslint to v10.11.0 ([#708](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/708)) ([d8105be](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d8105be335bd8c71efb633a0f3535816cc500f24))
+* **deps:** update dependency prettier to v3.9.8 ([#702](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/702)) ([a9dad80](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/a9dad80333d08543171b4081aa931e1214990acc))
+* **deps:** update dependency prettier to v3.9.9 ([#718](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/718)) ([10bac72](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/10bac72e9f037ecf7575a8643df3e8f124da3b8e))
+* **deps:** update dependency typescript-eslint to v8.70.1 ([#709](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/709)) ([296f758](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/296f758ee500e4051128f19586fd82bd47872a80))
+* **deps:** update npm to v12.1.0 ([#717](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/717)) ([e9462c3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/e9462c3774dfa30a63f27bd74f91045c51857a7b))
+
 ## [9.3.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.3.0...v9.3.1) (2026-09-21)
 
 
