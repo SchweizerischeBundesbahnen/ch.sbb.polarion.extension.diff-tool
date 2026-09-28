@@ -4,6 +4,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.queue.CpuLoadEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.StatisticsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry;
+import ch.sbb.polarion.extension.generic.util.NamedDaemonThreadFactory;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.platform.guice.internal.GuicePlatform;
 import org.apache.commons.collections4.queue.CircularFifoQueue;

@@ -7,9 +7,12 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.service.DocumentsChapterMergeService;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
-import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService.JobState;
 import ch.sbb.polarion.extension.diff_tool.service.queue.QueueFullException;
+import ch.sbb.polarion.extension.generic.jobs.JobState;
+import ch.sbb.polarion.extension.generic.jobs.JobsRegistry;
+import ch.sbb.polarion.extension.generic.jobs.TimeoutPolicy;
 import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
+import ch.sbb.polarion.extension.generic.rest.model.jobs.JobStatus;
 import com.polarion.platform.security.ISecurityService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -24,18 +27,14 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.security.auth.Subject;
 import java.security.PrivilegedAction;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
@@ -63,6 +62,7 @@ class ChapterMergeJobsServiceTest {
     private ISecurityService securityService;
     private Subject userSubject;
     private ServletRequestAttributes requestAttributes;
+    private JobsRegistry<ChapterMergeParams, MergeResult> registry;
     private ChapterMergeJobsService jobsService;
 
     @BeforeEach
@@ -76,19 +76,36 @@ class ChapterMergeJobsServiceTest {
         RequestContextHolder.setRequestAttributes(requestAttributes);
 
         lenient().when(polarionService.getSecurityService()).thenReturn(securityService);
-        lenient().when(polarionService.getCurrentUser()).thenReturn(USER);
-        lenient().when(polarionService.getCurrentSubject()).thenReturn(userSubject);
+        lenient().when(securityService.getCurrentUser()).thenReturn(USER);
+        lenient().when(securityService.getCurrentSubject()).thenReturn(userSubject);
         lenient().when(securityService.doAsUser(any(), any(PrivilegedAction.class)))
                 .thenAnswer(invocation -> ((PrivilegedAction<Object>) invocation.getArgument(1)).run());
         // no request asks for its session to be kept unless the test says so
         lenient().when(requestAttributes.getAttribute(anyString(), eq(RequestAttributes.SCOPE_REQUEST))).thenReturn(null);
 
-        jobsService = new ChapterMergeJobsService(documentsChapterMergeService, polarionService);
+        jobsService = jobsService(TimeUnit.MINUTES);
+    }
+
+    /**
+     * A service over a registry of its own, set up as the one of the extension, so that no test leaves merges behind
+     * for the next one. A timeout unit shorter than minutes lets a test see a merge run out of time.
+     */
+    private ChapterMergeJobsService jobsService(TimeUnit timeoutUnit) {
+        if (registry != null) {
+            registry.shutdown();
+        }
+        registry = JobsRegistry.<ChapterMergeParams, MergeResult>builder("Chapter merge")
+                .timeoutPolicy(TimeoutPolicy.COOPERATIVE)
+                .executor(ChapterMergeJobsService.createMergeExecutor())
+                .timeoutUnit(timeoutUnit)
+                .build();
+        return new ChapterMergeJobsService(documentsChapterMergeService, polarionService, registry);
     }
 
     @AfterEach
     void tearDown() {
-        jobsService.cancelJobsAndCleanMap();
+        registry.clear();
+        registry.shutdown();
         RequestContextHolder.resetRequestAttributes();
     }
 
@@ -103,7 +120,7 @@ class ChapterMergeJobsServiceTest {
         awaitDone(jobId);
         JobState jobState = jobsService.getJobState(jobId);
         assertTrue(jobState.isDone());
-        assertFalse(jobState.isFailed());
+        assertFalse(jobState.isCompletedExceptionally());
         assertNull(jobState.errorMessage());
         assertEquals(Optional.of(mergeResult), jobsService.getJobResult(jobId));
         // ...and it stays readable, since polling asks more than once
@@ -122,7 +139,7 @@ class ChapterMergeJobsServiceTest {
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
 
         awaitDone(jobId);
-        assertFalse(jobsService.getJobState(jobId).isFailed());
+        assertFalse(jobsService.getJobState(jobId).isCompletedExceptionally());
         assertEquals(Optional.of(mergeResult), jobsService.getJobResult(jobId));
     }
 
@@ -156,7 +173,7 @@ class ChapterMergeJobsServiceTest {
 
         awaitDone(jobId);
         JobState jobState = jobsService.getJobState(jobId);
-        assertTrue(jobState.isFailed());
+        assertTrue(jobState.isCompletedExceptionally());
         assertEquals("Node has been added before.", jobState.errorMessage());
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> jobsService.getJobResult(jobId));
         assertTrue(exception.getMessage().contains("Node has been added before."));
@@ -210,7 +227,7 @@ class ChapterMergeJobsServiceTest {
     @Test
     @SuppressWarnings("unchecked")
     void testAMergeStartedWithoutASubjectRunsAsItIs() {
-        when(polarionService.getCurrentSubject()).thenReturn(null);
+        when(securityService.getCurrentSubject()).thenReturn(null);
         when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(MergeResult.builder().success(true).build());
 
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
@@ -318,10 +335,6 @@ class ChapterMergeJobsServiceTest {
             assertTrue(mergesStarted.get() <= ChapterMergeJobsService.CONCURRENT_MERGES + ChapterMergeJobsService.QUEUED_MERGES);
         } finally {
             releaseMerges.countDown();
-            // The merge threads are shared by every test in this class, and this one filled them: they are given
-            // back before the next test asks for one of them.
-            await().atMost(Duration.ofSeconds(10))
-                    .until(() -> jobsService.getAllJobsStates().values().stream().allMatch(JobState::isDone));
         }
     }
 
@@ -352,13 +365,15 @@ class ChapterMergeJobsServiceTest {
             throw new CancellationException("Chapter merge was asked to stop before it merged the whole chapter");
         });
 
-        String jobId = jobsService.startJob(params(), 0);
+        jobsService = jobsService(TimeUnit.MILLISECONDS);
+        String jobId = jobsService.startJob(params(), 1);
 
         await().atMost(Duration.ofSeconds(10)).until(() -> releaseMerge.getCount() == 0);
         awaitDone(jobId);
         JobState jobState = jobsService.getJobState(jobId);
-        assertTrue(jobState.isFailed());
-        assertEquals("Timeout after 0 min", jobState.errorMessage());
+        // failed, not cancelled: the merge stopping itself with a CancellationException is its own way to fail
+        assertEquals(JobStatus.FAILED, jobState.status());
+        assertEquals("Timeout after 1 min", jobState.errorMessage());
     }
 
     /**
@@ -378,13 +393,14 @@ class ChapterMergeJobsServiceTest {
             return MergeResult.builder().success(true).build();
         });
 
-        String jobId = jobsService.startJob(params(), 0);
+        jobsService = jobsService(TimeUnit.MILLISECONDS);
+        String jobId = jobsService.startJob(params(), 1);
 
         try {
             await().atMost(Duration.ofSeconds(10)).until(() -> askedToStop.getCount() == 0);
             JobState jobState = jobsService.getJobState(jobId);
             assertFalse(jobState.isDone());
-            assertFalse(jobState.isFailed());
+            assertFalse(jobState.isCompletedExceptionally());
             assertEquals(Optional.empty(), jobsService.getJobResult(jobId));
         } finally {
             releaseMerge.countDown();
@@ -405,7 +421,7 @@ class ChapterMergeJobsServiceTest {
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
         awaitDone(jobId);
 
-        when(polarionService.getCurrentUser()).thenReturn("someone.else");
+        when(securityService.getCurrentUser()).thenReturn("someone.else");
 
         assertThrows(NoSuchElementException.class, () -> jobsService.getJobState(jobId));
         assertThrows(NoSuchElementException.class, () -> jobsService.getJobResult(jobId));
@@ -444,10 +460,10 @@ class ChapterMergeJobsServiceTest {
         awaitDone(jobId);
 
         // the cleaner, running while the listing goes through the merges it holds
-        AtomicBoolean cleanerDue = new AtomicBoolean(true);
-        when(polarionService.getCurrentUser()).thenAnswer(invocation -> {
-            if (cleanerDue.compareAndSet(true, false)) {
-                ChapterMergeJobsService.cleanupExpiredJobs(0);
+        AtomicInteger calls = new AtomicInteger();
+        when(securityService.getCurrentUser()).thenAnswer(invocation -> {
+            if (calls.incrementAndGet() == 1) {
+                registry.cleanupExpiredJobs(0);
             }
             return USER;
         });
@@ -477,52 +493,15 @@ class ChapterMergeJobsServiceTest {
         awaitDone(finished);
 
         try {
-            ChapterMergeJobsService.cleanupExpiredJobs(0);
-
-            assertThrows(NoSuchElementException.class, () -> jobsService.getJobState(finished));
+            // a result expires once it is older than the timeout, which takes a moment even for a timeout of 0
+            await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+                registry.cleanupExpiredJobs(0);
+                assertThrows(NoSuchElementException.class, () -> jobsService.getJobState(finished));
+            });
             assertNotNull(jobsService.getJobState(running));
         } finally {
             releaseMerge.countDown();
         }
-    }
-
-    /**
-     * A merge which took longer than its result is kept would be expired the moment it finished if its age were
-     * counted from the moment it was asked for - and that is the merge whose result took the longest to produce.
-     */
-    @Test
-    void testAResultAgesFromTheMomentItsMergeWasOver() {
-        Instant now = Instant.now();
-        ChapterMergeJobsService.JobDetails longRunningMerge = finishedJob(now.minus(Duration.ofMinutes(50)), now);
-
-        assertFalse(ChapterMergeJobsService.expired(longRunningMerge, 30, now));
-        assertFalse(ChapterMergeJobsService.expired(longRunningMerge, 30, now.plus(Duration.ofMinutes(29))));
-        assertTrue(ChapterMergeJobsService.expired(longRunningMerge, 30, now.plus(Duration.ofMinutes(31))));
-    }
-
-    @Test
-    void testAMergeWhichIsStillRunningNeverExpires() {
-        Instant now = Instant.now();
-        ChapterMergeJobsService.JobDetails runningMerge = ChapterMergeJobsService.JobDetails.builder()
-                .future(new CompletableFuture<>())
-                .user(USER)
-                .startingTime(now.minus(Duration.ofHours(5)))
-                .finishTime(new AtomicReference<>())
-                .progressMessage(new AtomicReference<>())
-                .build();
-
-        assertFalse(ChapterMergeJobsService.expired(runningMerge, 30, now));
-    }
-
-    /**
-     * A merge whose future is done but whose completion has not been recorded yet has just this moment finished.
-     */
-    @Test
-    void testAMergeWhichJustFinishedIsNotExpiredBeforeItsFinishIsRecorded() {
-        Instant now = Instant.now();
-        ChapterMergeJobsService.JobDetails justFinished = finishedJob(now.minus(Duration.ofHours(5)), null);
-
-        assertFalse(ChapterMergeJobsService.expired(justFinished, 0, now));
     }
 
     @Test
@@ -531,26 +510,22 @@ class ChapterMergeJobsServiceTest {
         String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
         awaitDone(jobId);
 
-        ChapterMergeJobsService.cleanupExpiredJobs(30);
+        registry.cleanupExpiredJobs(30);
 
         assertNotNull(jobsService.getJobState(jobId));
     }
 
     /**
-     * A future wraps what was thrown, and the wrapper says only which class it was, which tells the reader nothing
-     * about what went wrong.
+     * The message of what was actually thrown tells the reader what went wrong; where there is none, the class does.
      */
     @Test
-    void testAFailureIsDescribedByWhatWasActuallyThrown() {
-        Throwable thrown = new ExecutionException(new IllegalStateException("Project 'ELIBRARY' not found"));
-
-        assertEquals("Project 'ELIBRARY' not found", ChapterMergeJobsService.describeFailure(thrown));
-        assertTrue(ChapterMergeJobsService.rootReason(thrown) instanceof IllegalStateException);
-    }
-
-    @Test
     void testAFailureWithoutAMessageIsDescribedByItsClass() {
-        assertEquals(TimeoutException.class.getName(), ChapterMergeJobsService.describeFailure(new TimeoutException()));
+        doThrow(new IllegalStateException()).when(documentsChapterMergeService).mergeChapter(any(), any(), any());
+
+        String jobId = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
+
+        awaitDone(jobId);
+        assertEquals(IllegalStateException.class.getName(), jobsService.getJobState(jobId).errorMessage());
     }
 
     /**
@@ -576,16 +551,6 @@ class ChapterMergeJobsServiceTest {
 
         assertEquals(first.get(), jobsService.getJobResult(firstJob).orElseThrow());
         assertNotEquals(jobsService.getJobResult(secondJob).orElseThrow(), jobsService.getJobResult(firstJob).orElseThrow());
-    }
-
-    private ChapterMergeJobsService.JobDetails finishedJob(Instant startingTime, Instant finishTime) {
-        return ChapterMergeJobsService.JobDetails.builder()
-                .future(CompletableFuture.completedFuture(MergeResult.builder().success(true).build()))
-                .user(USER)
-                .startingTime(startingTime)
-                .finishTime(new AtomicReference<>(finishTime))
-                .progressMessage(new AtomicReference<>())
-                .build();
     }
 
     private void awaitDone(String jobId) {

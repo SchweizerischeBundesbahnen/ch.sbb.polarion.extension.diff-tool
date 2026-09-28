@@ -1,6 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool;
 
-import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsCleaner;
+import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService;
 import ch.sbb.polarion.extension.generic.GenericBundleActivator;
 import com.polarion.alm.ui.server.forms.extensions.IFormExtension;
 import com.polarion.core.util.logging.Logger;
@@ -24,7 +24,7 @@ public class ExtensionBundleActivator extends GenericBundleActivator {
     @Override
     protected void onStart(BundleContext context) {
         try {
-            ChapterMergeJobsCleaner.startCleaningJob();
+            ChapterMergeJobsService.startCleaner();
         } catch (Exception e) {
             logger.error("Error during starting of chapter merge jobs cleaner", e);
         }
@@ -32,7 +32,7 @@ public class ExtensionBundleActivator extends GenericBundleActivator {
 
     @Override
     public void stop(BundleContext context) {
-        ChapterMergeJobsCleaner.stopCleaningJob();
+        ChapterMergeJobsService.shutdown();
         super.stop(context);
     }
 

@@ -165,11 +165,14 @@ mvn test -Dtest=DiffServiceTest#testDiffDocuments
   document comments written on the copied text. Comment IDs change, so the markers which anchor a comment to a piece of
   text are re-pointed with `CommentUtils.copyCommentMarkers`
 - Runs in the background (`service/job/ChapterMergeJobsService`), because a big chapter does not fit into one HTTP
-  request. It is this extension's own job service, built like the pdf-exporter's `PdfConverterJobsService`: a
-  `CompletableFuture` on a static thread pool, the merges kept in a static map by job ID, and a hard limit on how long
-  one may run (`chapter.merge.timeout`, 60 minutes by default, counted from the moment the merge is handed over, so it
-  covers the wait for a thread). Polarion's own job API is not used for it - `ProjectDuplication*` still is
-- The deadline **asks the merge to stop** rather than declaring it over. `DocumentsChapterMergeService` takes an
+  request. The job mechanics are generic's `AsyncJobsService` over one static `JobsRegistry` (package
+  `ch.sbb.polarion.extension.generic.jobs`, shared with the exporters and the excel-importer): running as the
+  scheduling user, ending the session, polling, expiring results. `ChapterMergeJobsService` adds only what is particular
+  to a merge: the cache eviction, the bounded executor and the 429. Do not re-implement job mechanics here - change
+  generic. A merge has a hard limit on how long it may run (`chapter.merge.timeout`, 60 minutes by default, counted from
+  the moment the merge is handed over, so it covers the wait for a thread). Polarion's own job API is not used for it -
+  `ProjectDuplication*` still is
+- The deadline **asks the merge to stop** rather than declaring it over (`TimeoutPolicy.COOPERATIVE`). `DocumentsChapterMergeService` takes an
   `abortRequested` supplier and checks it between work items, where nothing of the merge is in the target document
   yet: it throws out of the write transaction, which is rolled back, and only then is the merge reported as failed.
   Declaring a merge over while its thread keeps writing (what `CompletableFuture.orTimeout` does) would have this
@@ -196,11 +199,13 @@ mvn test -Dtest=DiffServiceTest#testDiffDocuments
   merge is started, since `startJob` is where it is read, so a call which never gets that far - refused parameters, a
   document which cannot be read - gives the session back (`RequestContextUtil.releaseSession`): the merge which was to
   end it is not running
-- The REST contract is the pdf-exporter's: `POST /merge/chapter` answers 202 with the job in the `Location` header,
+- The REST contract is the pdf-exporter's, with generic's `JobDetails` / `JobStatus` DTOs and `JobResponses`:
+  `POST /merge/chapter` answers 202 with the job in the `Location` header,
   polling that job answers 202 while it runs (with what the merge is doing right now) and redirects to
   `.../result` once it is over, and 409 names what went wrong if there is no result. A merge which did not do what was
   asked of it reports that in its `MergeResult`, so only a merge which threw is a failed job
-- `ChapterMergeJobsCleaner`, started and stopped by `ExtensionBundleActivator`, drops the results of finished merges
+- The cleaner of the registry, started by `ExtensionBundleActivator` (`ChapterMergeJobsService.startCleaner`, stopped
+  with the merge threads by `ChapterMergeJobsService.shutdown`), drops the results of finished merges
   `chapter.merge.result.timeout` (30 minutes by default) after the merge was **over**, not after it was asked for: a
   merge which ran longer than that would otherwise be expired the moment it finished, and that is the merge whose
   result took the longest to produce
