@@ -486,6 +486,15 @@ describe('DiffToolPanel, accessibility', () => {
     expect(await a11yViolations(panel!.host)).toEqual([]);
   });
 
+  it('has no WCAG A/AA violations with the work items filter on', async () => {
+    const { shadow } = await open();
+    clickCheckbox(shadow, 'use-work-items-filter');
+    await vi.waitFor(() => expect(shadow.querySelector('#work-items-filter-input')).not.toBeNull());
+    expect(await a11yViolations(panel!.host)).toEqual([]);
+    // Axe accepts the placeholder as a name, so the scan alone would not notice the aria-label going.
+    expect($<HTMLInputElement>(shadow, '#work-items-filter-input')).toHaveAttribute('aria-label', 'Work item IDs');
+  });
+
   it('has no WCAG A/AA violations with the alert of a list that could not be loaded', async () => {
     const { shadow } = await open(
       installFetchMock(
