@@ -1,3 +1,4 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
@@ -108,5 +109,30 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documentation site visual', () => {
     mount(() => new Response('', { status: 404 }));
     await vi.waitFor(() => expect(document.body.textContent).toContain('has not been generated'));
     await shot('docs-not-generated');
+  });
+});
+
+// Not Docker-only, unlike the visual suite above: an accessibility scan compares no pixels.
+describe('Documentation site, accessibility', () => {
+  it('has no WCAG A/AA violations on an article', async () => {
+    mount(() => new Response(ARTICLE, { status: 200 }));
+    await vi.waitFor(() => expect(document.querySelector('.docs-onthispage .docs-toc-link')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with search results listed', async () => {
+    mount(() => new Response(ARTICLE, { status: 200 }));
+    await vi.waitFor(() => expect(document.querySelector('article.markdown-body')).not.toBeNull());
+    const input = document.querySelector<HTMLInputElement>('.docs-search-input')!;
+    input.focus();
+    typeInto(input, 'chapter merge');
+    await vi.waitFor(() => expect(document.querySelectorAll('.docs-search-result')).toHaveLength(2));
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations on the "not generated" fallback', async () => {
+    mount(() => new Response('', { status: 404 }));
+    await vi.waitFor(() => expect(document.body.textContent).toContain('has not been generated'));
+    expect(await pageViolations()).toEqual([]);
   });
 });

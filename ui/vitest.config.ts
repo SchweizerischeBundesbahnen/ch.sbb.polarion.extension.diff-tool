@@ -46,6 +46,8 @@ export default defineConfig({
       'chart.js',
       'chartjs-adapter-date-fns',
       'chartjs-plugin-zoom',
+      'axe-core',
+      '@sbb-polarion/react-sbb-polarion/testing',
     ],
   },
   test: {

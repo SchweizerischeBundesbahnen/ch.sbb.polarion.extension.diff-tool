@@ -1,3 +1,4 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import Landing from '../src/admin/dev/Landing';
@@ -118,5 +119,14 @@ describe('dev Landing', () => {
     await vi.waitFor(() => expect(document.querySelector('.alert-error')?.textContent).toContain('VITE_BEARER_TOKEN'));
     // The feature links still work; only the project picker is degraded.
     expect(links()).toEqual(FEATURES.map((feature) => `?feature=${feature.id}`));
+  });
+});
+
+describe('Landing, accessibility', () => {
+  it('has no WCAG A/AA violations with the projects loaded', async () => {
+    installFetchMock(routes());
+    await renderLanding();
+    await vi.waitFor(() => expect(document.querySelectorAll('#dev-scope option').length).toBeGreaterThan(1));
+    expect(await pageViolations()).toEqual([]);
   });
 });

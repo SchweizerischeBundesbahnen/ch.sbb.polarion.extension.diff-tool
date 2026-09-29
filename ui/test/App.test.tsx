@@ -1,3 +1,4 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import App from '../src/App';
@@ -138,5 +139,15 @@ describe('documentation articles', () => {
       'Velocity API',
     ]);
     expect(String(fetchMock.mock.calls[0][0])).toMatch(/\/html\/configuration\.html$/);
+  });
+});
+
+describe('About page, accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    installFetchMock(aboutRoutes());
+    window.history.replaceState({}, '', '?feature=about&embedded=true');
+    render(<App />);
+    await vi.waitFor(() => expect(document.querySelector('article.markdown-body')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
   });
 });

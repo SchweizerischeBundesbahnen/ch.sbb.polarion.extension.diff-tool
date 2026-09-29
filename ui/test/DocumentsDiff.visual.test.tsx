@@ -1,8 +1,18 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-react';
 import DocumentsPage from '../src/pages/DocumentsPage';
 import { jsonResponse } from './mockFetch';
-import { fixture, openControlPane, openDialog, pairDiff, renderViewer, restoreUrl, shoot } from './viewerHarness';
+import {
+  SERVER_RENDERED,
+  fixture,
+  openControlPane,
+  openDialog,
+  pairDiff,
+  renderViewer,
+  restoreUrl,
+  shoot,
+} from './viewerHarness';
 
 // Docker-only snapshots of the documents diff viewer: the work item pairs with their merge tickers and
 // pair toggles, and the same page with the configuration pane open over it.
@@ -54,6 +64,35 @@ function renderDocumentsWithFieldIssues() {
     ],
     <DocumentsPage />,
   );
+}
+
+/** The same two documents compared by their document fields, or by their content (`compareAs`). */
+function renderDocumentsAs(compareAs: 'Fields' | 'Content') {
+  const endpoint = compareAs === 'Fields' ? 'documents-fields' : 'documents-content';
+  renderViewer(
+    `${DOCUMENTS_URL}&config=Default&compareAs=${compareAs}`,
+    [{ method: 'POST', match: new RegExp(`/diff/${endpoint}$`), json: fixture(`${endpoint}.json`) ?? {} }],
+    <DocumentsPage />,
+  );
+}
+
+/** Ticks the pair the merge specs in e2e/ merge, and asks to merge it. */
+async function openMergeConfirmation() {
+  const ticker = await vi.waitFor(() => {
+    const box = document.querySelector<HTMLInputElement>(
+      '[data-testid="EL-4977_DP-11559"] .merge-ticker input[type="checkbox"]',
+    );
+    expect(box).not.toBeNull();
+    return box!;
+  });
+  ticker.click();
+  const merge = await vi.waitFor(() => {
+    const button = document.querySelector<HTMLButtonElement>('.merge-pane .merge-button .btn')!;
+    expect(button.disabled).toBe(false);
+    return button;
+  });
+  merge.click();
+  await openDialog('Merge confirmation');
 }
 
 async function loaded() {
@@ -135,4 +174,102 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents diff viewer visual', () => {
   // PAIRS_COUNT_TO_ASK_SWAP_CONFIRMATION, which is 200, and documents-diff.json holds 19 pairs, so the
   // swap button goes straight through. Reaching it would mean a 200-pair fixture invented for one
   // screenshot, which is a worse trade than leaving that dialog to a behavioural test.
+});
+
+// Not Docker-only, unlike the visual suite above: an accessibility scan compares no pixels.
+describe('Documents diff viewer, accessibility', () => {
+  it('has no WCAG A/AA violations as loaded', async () => {
+    renderDocuments();
+    await loaded();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the configuration pane open', async () => {
+    renderDocuments();
+    await loaded();
+    await openControlPane();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the merge confirmation open', async () => {
+    renderDocuments();
+    await loaded();
+    await openMergeConfirmation();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the merge report and its full log shown', async () => {
+    renderViewer(
+      DOCUMENTS_URL,
+      [
+        { method: 'POST', match: /\/diff\/documents$/, json: fixture('documents-diff.json') ?? {} },
+        { method: 'POST', match: /\/diff\/document-workitems$/, respond: pairDiff },
+        { method: 'POST', match: /\/merge\/documents$/, json: fixture('EL-4977_DP-11559_merge.json') ?? {} },
+      ],
+      <DocumentsPage />,
+    );
+    await loaded();
+    await openMergeConfirmation();
+    document.querySelector<HTMLButtonElement>('[data-testid="merge-confirmation-modal-action-button"]')!.click();
+    await openDialog('Merge Report');
+    document.querySelector<HTMLButtonElement>('[data-testid="see-full-log"]')!.click();
+    await vi.waitFor(() => expect(document.querySelector('[data-testid="merge-result-modal"] pre')).not.toBeNull());
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the alert of a comparison that could not be loaded', async () => {
+    renderViewer(
+      DOCUMENTS_URL,
+      [{ method: 'POST', match: /\/diff\/documents$/, status: 500, json: { message: 'Polarion is not available' } }],
+      <DocumentsPage />,
+    );
+    await vi.waitFor(() => expect(document.querySelector('[data-testid="app-alert-title"]')).not.toBeNull(), {
+      timeout: 10000,
+    });
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations comparing the document fields', async () => {
+    renderDocumentsAs('Fields');
+    await vi.waitFor(
+      () => expect(document.querySelector('[data-testid="version-field-diff"] .diff-viewer')).not.toBeNull(),
+      {
+        timeout: 10000,
+      },
+    );
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations comparing the document content', async () => {
+    renderDocumentsAs('Content');
+    await vi.waitFor(() => expect(document.querySelector('.header .merge-pane')).not.toBeNull(), { timeout: 10000 });
+    await vi.waitFor(() => expect(document.querySelector('.diff-viewer .merge-ticker')).not.toBeNull());
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a field issue popup open', async () => {
+    renderDocumentsWithFieldIssues();
+    await loaded();
+    const header = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLElement>('[data-testid="EL-4977_DP-11559"] .diff-header[tabindex]');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    header.focus();
+    await vi.waitFor(() => expect(document.querySelector('.tooltip-container')).not.toBeNull());
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  // Neither axe nor jsx-a11y would catch a regression here: axe accepts a label that names only the hidden
+  // native <select>, even when react-sbb-polarion's visible trigger ends up without a name.
+  it('names the link role direction combobox after its label', async () => {
+    renderDocuments();
+    await loaded();
+    const trigger = await vi.waitFor(() => {
+      const found = document.querySelector('#link-role-direction + .searchable-dropdown .sd-trigger');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    expect(trigger).toHaveAccessibleName('Link role direction for created WorkItems:');
+  });
 });

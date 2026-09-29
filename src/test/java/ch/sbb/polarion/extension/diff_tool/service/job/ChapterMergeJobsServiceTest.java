@@ -227,8 +227,10 @@ class ChapterMergeJobsServiceTest {
      */
     @Test
     void testTheDocumentsCacheIsEvictedWhileTheRequestIsStillAlive() {
+        CountDownLatch mergeStarted = new CountDownLatch(1);
         CountDownLatch releaseMerge = new CountDownLatch(1);
         when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenAnswer(invocation -> {
+            mergeStarted.countDown();
             releaseMerge.await();
             return MergeResult.builder().success(true).build();
         });
@@ -238,6 +240,8 @@ class ChapterMergeJobsServiceTest {
             jobsService.startJob(params, TIMEOUT_IN_MINUTES);
 
             verify(polarionService).evictDocumentsCache(params.getSourceDocument(), params.getTargetDocument());
+            // Waited for, or the test can end before the merge thread uses the stub, which strict stubbing reports.
+            await().atMost(Duration.ofSeconds(10)).until(() -> mergeStarted.getCount() == 0);
         } finally {
             releaseMerge.countDown();
         }
