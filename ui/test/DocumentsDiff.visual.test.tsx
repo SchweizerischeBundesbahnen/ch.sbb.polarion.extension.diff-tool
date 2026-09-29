@@ -1,6 +1,7 @@
 import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-react';
+import { userEvent } from 'vitest/browser';
 import DocumentsPage from '../src/pages/DocumentsPage';
 import { jsonResponse } from './mockFetch';
 import {
@@ -269,6 +270,22 @@ describe('Documents diff viewer, accessibility', () => {
     expect(dialog).toHaveAttribute('role', 'dialog');
     expect(dialog).toHaveAttribute('aria-modal', 'true');
     expect(dialog).toHaveAccessibleName('Merge confirmation');
+  });
+
+  it('keeps Tab and Shift+Tab inside the merge confirmation', async () => {
+    renderDocuments();
+    await loaded();
+    await openMergeConfirmation();
+    const modal = document.querySelector<HTMLElement>('[data-testid="merge-confirmation-modal"]')!;
+    const close = modal.querySelector<HTMLButtonElement>('.btn-close')!;
+    const merge = modal.querySelector<HTMLButtonElement>('[data-testid="merge-confirmation-modal-action-button"]')!;
+    await vi.waitFor(() => expect(document.activeElement).toBe(close));
+
+    merge.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(close);
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toBe(merge);
   });
 
   it('reports the loading progress it shows', async () => {
