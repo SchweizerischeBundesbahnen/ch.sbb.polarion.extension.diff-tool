@@ -8,8 +8,8 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeP
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService;
-import ch.sbb.polarion.extension.diff_tool.util.RequestContextUtil;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
+import ch.sbb.polarion.extension.generic.util.RequestContextUtil;
 
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Path;

@@ -179,9 +179,11 @@ mvn test -Dtest=DiffServiceTest#testDiffDocuments
   service report "not merged" of a document which is about to change. Past the last work item the merge is no longer
   asked: what is left is the write itself, which is the result the caller wanted
 - What the server takes at once is bounded, unlike the cached pool this started out with: `CONCURRENT_MERGES` merges
-  run and `QUEUED_MERGES` wait, and one beyond that is answered with 429 (`QueueFullException`, the same refusal the
-  execution queue uses). A merge is a long write operation on two documents, and a caller can ask for them faster than
-  they finish
+  run and `QUEUED_MERGES` wait (generic's `JobsRegistry.Builder.maxConcurrentJobs`), and one beyond that is answered
+  with 429 (`QueueFullException`, the same refusal the execution queue uses). A merge is a long write operation on two
+  documents, and a caller can ask for them faster than they finish. A merge which times out or is stopped while it
+  still waits for a thread has written nothing: it is taken out of the queue and never runs. A merge asked for while
+  the extension stops is refused with generic's `JobsRegistryShutDownException` (503), not as a full queue
 - Whether the caller may merge at all is decided by `MergeInternalController` before the merge is handed over, and
   answered with 403. `DocumentsChapterMergeService` checks it again, but only once it has a thread and has read both
   documents - by then an unauthorized caller has already taken a place in the queue
@@ -194,18 +196,20 @@ mvn test -Dtest=DiffServiceTest#testDiffDocuments
 - Who ends that user's session depends on how the call authenticated itself. A call from the Polarion UI carries an
   XSRF token and shares the session of that UI, which is not the merge's to end. A call which authenticated itself got
   a session of its own, which `LogoutFilter` would end with the response of the request that started the merge, so
-  `MergeApiController` asks for it to be kept (`RequestContextUtil.keepSessionAlive`, the `ASYNC_SKIP_LOGOUT` flag the
+  `MergeApiController` asks for it to be kept (generic's `RequestContextUtil.keepSessionAlive`, the `ASYNC_SKIP_LOGOUT` flag the
   exporter extensions use for their async exports) and the merge ends it when it is over. The flag is set before the
   merge is started, since `startJob` is where it is read, so a call which never gets that far - refused parameters, a
   document which cannot be read - gives the session back (`RequestContextUtil.releaseSession`): the merge which was to
-  end it is not running
+  end it is not running. Once the merge has started it owns the session, and a later failure of the request leaves
+  the session to it
 - The REST contract is the pdf-exporter's, with generic's `JobDetails` / `JobStatus` DTOs and `JobResponses`:
   `POST /merge/chapter` answers 202 with the job in the `Location` header,
   polling that job answers 202 while it runs (with what the merge is doing right now) and redirects to
   `.../result` once it is over, and 409 names what went wrong if there is no result. A merge which did not do what was
   asked of it reports that in its `MergeResult`, so only a merge which threw is a failed job
 - The cleaner of the registry, started by `ExtensionBundleActivator` (`ChapterMergeJobsService.startCleaner`, stopped
-  with the merge threads by `ChapterMergeJobsService.shutdown`), drops the results of finished merges
+  with the merge threads by `ChapterMergeJobsService.shutdown`, which asks running merges to stop and never interrupts
+  their threads), drops the results of finished merges
   `chapter.merge.result.timeout` (30 minutes by default) after the merge was **over**, not after it was asked for: a
   merge which ran longer than that would otherwise be expired the moment it finished, and that is the merge whose
   result took the longest to produce

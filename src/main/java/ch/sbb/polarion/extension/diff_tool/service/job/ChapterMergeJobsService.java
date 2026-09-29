@@ -9,16 +9,13 @@ import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.queue.QueueFullException;
 import ch.sbb.polarion.extension.generic.jobs.AsyncJobsService;
 import ch.sbb.polarion.extension.generic.jobs.JobsRegistry;
+import ch.sbb.polarion.extension.generic.jobs.JobsRegistryShutDownException;
 import ch.sbb.polarion.extension.generic.jobs.TimeoutPolicy;
-import ch.sbb.polarion.extension.generic.util.NamedDaemonThreadFactory;
 import com.polarion.core.util.logging.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Runs chapter merges in the background, because merging a big chapter doesn't fit into one HTTP request.
@@ -102,6 +99,8 @@ public class ChapterMergeJobsService extends AsyncJobsService<ChapterMergeParams
      * @param timeoutInMinutes how long the merge may take, waiting for its turn included. A merge which runs longer
      *                         is asked to stop, and stops between two work items - before it has written anything
      * @throws QueueFullException if there is no room for another merge
+     * @throws JobsRegistryShutDownException if the extension is stopping; trying again soon does not help, so it is
+     *                                       not a {@link QueueFullException}
      */
     public @NotNull String startJob(@NotNull ChapterMergeParams params, int timeoutInMinutes) {
         // Here, on the thread which serves the REST request: the cache is keyed by the user of that request, and
@@ -113,24 +112,25 @@ public class ChapterMergeJobsService extends AsyncJobsService<ChapterMergeParams
                 control.reportProgress(message);
                 logger.info("Chapter merge job '%s': %s".formatted(control.jobId(), message));
             }, control::isAbortRequested));
+        } catch (JobsRegistryShutDownException e) {
+            throw e;
         } catch (RejectedExecutionException e) {
             throw new QueueFullException(TOO_MANY_MERGES_MESSAGE, e);
         }
     }
 
     private static @NotNull JobsRegistry<ChapterMergeParams, MergeResult> createRegistry() {
-        return JobsRegistry.<ChapterMergeParams, MergeResult>builder("Chapter merge")
-                .timeoutPolicy(TimeoutPolicy.COOPERATIVE)
-                .executor(createMergeExecutor())
-                .build();
+        return registryBuilder().build();
     }
 
+    /**
+     * A merge writes, so it is asked to stop rather than interrupted, and at most {@link #CONCURRENT_MERGES} run while
+     * {@link #QUEUED_MERGES} wait.
+     */
     @VisibleForTesting
-    static @NotNull ThreadPoolExecutor createMergeExecutor() {
-        return new ThreadPoolExecutor(
-                CONCURRENT_MERGES, CONCURRENT_MERGES,
-                0L, TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<>(QUEUED_MERGES),
-                new NamedDaemonThreadFactory("ChapterMergeThread"));
+    static @NotNull JobsRegistry.Builder<ChapterMergeParams, MergeResult> registryBuilder() {
+        return JobsRegistry.<ChapterMergeParams, MergeResult>builder("Chapter merge")
+                .timeoutPolicy(TimeoutPolicy.COOPERATIVE)
+                .maxConcurrentJobs(CONCURRENT_MERGES, QUEUED_MERGES);
     }
 }

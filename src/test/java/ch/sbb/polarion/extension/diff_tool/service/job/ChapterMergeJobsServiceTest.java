@@ -10,7 +10,7 @@ import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.queue.QueueFullException;
 import ch.sbb.polarion.extension.generic.jobs.JobState;
 import ch.sbb.polarion.extension.generic.jobs.JobsRegistry;
-import ch.sbb.polarion.extension.generic.jobs.TimeoutPolicy;
+import ch.sbb.polarion.extension.generic.jobs.JobsRegistryShutDownException;
 import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
 import ch.sbb.polarion.extension.generic.rest.model.jobs.JobStatus;
 import com.polarion.platform.security.ISecurityService;
@@ -94,11 +94,7 @@ class ChapterMergeJobsServiceTest {
         if (registry != null) {
             registry.shutdown();
         }
-        registry = JobsRegistry.<ChapterMergeParams, MergeResult>builder("Chapter merge")
-                .timeoutPolicy(TimeoutPolicy.COOPERATIVE)
-                .executor(ChapterMergeJobsService.createMergeExecutor())
-                .timeoutUnit(timeoutUnit)
-                .build();
+        registry = ChapterMergeJobsService.registryBuilder().timeoutUnit(timeoutUnit).build();
         return new ChapterMergeJobsService(documentsChapterMergeService, polarionService, registry);
     }
 
@@ -251,13 +247,16 @@ class ChapterMergeJobsServiceTest {
         });
         ChapterMergeParams params = params();
 
+        String jobId;
         try {
-            jobsService.startJob(params, TIMEOUT_IN_MINUTES);
+            jobId = jobsService.startJob(params, TIMEOUT_IN_MINUTES);
 
             verify(polarionService).evictDocumentsCache(params.getSourceDocument(), params.getTargetDocument());
         } finally {
             releaseMerge.countDown();
         }
+        // let the merge thread reach the stubbed merge before the test (and its strict stubbing check) is over
+        awaitDone(jobId);
     }
 
     /**
@@ -336,6 +335,17 @@ class ChapterMergeJobsServiceTest {
         } finally {
             releaseMerges.countDown();
         }
+    }
+
+    /**
+     * A merge asked for while the extension stops is refused as such, not as a full queue: trying again soon does not
+     * help, and the caller is answered with 503 rather than 429.
+     */
+    @Test
+    void testAMergeAskedForWhileTheExtensionStopsIsRefusedAsSuch() {
+        registry.shutdown();
+
+        assertThrows(JobsRegistryShutDownException.class, () -> jobsService.startJob(params(), TIMEOUT_IN_MINUTES));
     }
 
     /**
@@ -488,9 +498,10 @@ class ChapterMergeJobsServiceTest {
                     releaseMerge.await();
                     return MergeResult.builder().success(true).build();
                 });
+        // one after the other: the stubbed answers go by call order, and two merges started together call in any order
         String finished = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
-        String running = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
         awaitDone(finished);
+        String running = jobsService.startJob(params(), TIMEOUT_IN_MINUTES);
 
         try {
             // a result expires once it is older than the timeout, which takes a moment even for a timeout of 0
