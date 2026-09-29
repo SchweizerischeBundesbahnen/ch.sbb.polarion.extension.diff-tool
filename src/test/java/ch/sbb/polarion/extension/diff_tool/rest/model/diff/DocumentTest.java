@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
+import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.platform.persistence.IDataService;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -75,6 +77,19 @@ class DocumentTest {
 
         Document document = Document.from(moduleMock);
         assertEquals("Default Space", document.getSpaceName());
+    }
+
+    @Test
+    void testCreationFromModuleOfDeletedProject() {
+        IModule moduleMock = mock(IModule.class);
+
+        ITrackerProject projectMock = mock(ITrackerProject.class);
+        when(moduleMock.getProject()).thenReturn(projectMock);
+        when(projectMock.isUnresolvable()).thenReturn(true);
+        when(projectMock.getId()).thenReturn("project_id");
+
+        ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class, () -> Document.from(moduleMock));
+        assertEquals("Project 'project_id' not found", exception.getMessage());
     }
 
     private void mockHeadRevision(IModule moduleMock, String revision) {

@@ -23,6 +23,7 @@ import ch.sbb.polarion.extension.diff_tool.service.handler.impl.ImageHandler;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import ch.sbb.polarion.extension.diff_tool.util.OutlineNumberComparator;
 import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
+import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.generic.fields.model.FieldMetadata;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import com.polarion.alm.projects.model.IProject;
@@ -1438,6 +1439,34 @@ class DiffServiceTest {
         // Left doc has no counterpart
         assertNotNull(result.getPairedDocuments().iterator().next().getLeftDocument());
         assertNull(result.getPairedDocuments().iterator().next().getRightDocument());
+    }
+
+    @Test
+    void testGetCollectionsDiffOfDeletedProject() {
+        String projectId = "project";
+
+        IBaselineCollection leftCollection = mock(IBaselineCollection.class);
+        IBaselineCollection rightCollection = mock(IBaselineCollection.class);
+        IProject project = mock(IProject.class);
+
+        when(leftCollection.getProjectId()).thenReturn(projectId);
+        when(leftCollection.getProject()).thenReturn(project);
+        when(project.isUnresolvable()).thenReturn(true);
+        when(project.getId()).thenReturn(projectId);
+
+        when(leftCollection.getElements()).thenReturn(List.of());
+        when(rightCollection.getElements()).thenReturn(List.of());
+
+        when(polarionService.getCollection(projectId, "left")).thenReturn(leftCollection);
+        when(polarionService.getCollection(projectId, "right")).thenReturn(rightCollection);
+
+        CollectionsDiffParams params = new CollectionsDiffParams(
+                DocumentsCollection.builder().projectId(projectId).id("left").build(),
+                DocumentsCollection.builder().projectId(projectId).id("right").build()
+        );
+
+        ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class, () -> diffService.getCollectionsDiff(params));
+        assertEquals("Project 'project' not found", exception.getMessage());
     }
 
     @Test
