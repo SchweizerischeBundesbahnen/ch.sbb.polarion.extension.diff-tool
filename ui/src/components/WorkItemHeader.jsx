@@ -26,6 +26,9 @@ export function WorkItemHeader({workItem, asHeaderInDocument, movedOutlineNumber
               )
       ) : ".75em";
 
+  // Capped at 6 like <h1>-<h6>: screen readers do not agree on a level beyond that.
+  const headingProps = headerLevel > 0 && !movedOutlineNumber ? {role: "heading", "aria-level": Math.min(headerLevel, 6)} : {};
+
   const badgeContent = () => {
     return (
         <a href={`/polarion/#/project/${workItem.projectId}/workitem?id=${workItem.id}${workItem.revision ? "&revision=" + workItem.revision : ""}`}
@@ -61,7 +64,7 @@ export function WorkItemHeader({workItem, asHeaderInDocument, movedOutlineNumber
         paddingLeft: asHeaderInDocument ? "2rem" : "5rem",
         fontWeight: asHeaderInDocument ? "600" : "300",
         fontSize: fontSize
-      }} id={id} className={`wi-header col collapsed-border ${workItem && movedOutlineNumber ? "moved" : ""} ${side}`} data-testid={`${side}-wi`}>
+      }} id={id} {...headingProps} className={`wi-header col collapsed-border ${workItem && movedOutlineNumber ? "moved" : ""} ${side}`} data-testid={`${side}-wi`}>
         {workItem && !movedOutlineNumber && asHeaderInDocument && (workItem.outlineNumber + " " + workItem.title)} {workItem && !movedOutlineNumber && badgeContent()}
         {workItem && !movedOutlineNumber && workItem.referenced && referencedMarker(workItem.externalProjectWorkItem)}
         {workItem && !movedOutlineNumber && workItem.referenced && workItem.revision && !asHeaderInDocument && revisionLabel(workItem.revision)}

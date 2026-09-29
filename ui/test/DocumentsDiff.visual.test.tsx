@@ -1,6 +1,7 @@
 import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-react';
+import { userEvent } from 'vitest/browser';
 import DocumentsPage from '../src/pages/DocumentsPage';
 import { jsonResponse } from './mockFetch';
 import {
@@ -258,6 +259,52 @@ describe('Documents diff viewer, accessibility', () => {
     header.focus();
     await vi.waitFor(() => expect(document.querySelector('.tooltip-container')).not.toBeNull());
     expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  // Axe does not require role="dialog" on a modal, so the scans above pass without it.
+  it('exposes the merge confirmation as a modal dialog named by its title', async () => {
+    renderDocuments();
+    await loaded();
+    await openMergeConfirmation();
+    const dialog = document.querySelector('[data-testid="merge-confirmation-modal"] .modal-dialog');
+    expect(dialog).toHaveAttribute('role', 'dialog');
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(dialog).toHaveAccessibleName('Merge confirmation');
+  });
+
+  it('keeps Tab and Shift+Tab inside the merge confirmation', async () => {
+    renderDocuments();
+    await loaded();
+    await openMergeConfirmation();
+    const modal = document.querySelector<HTMLElement>('[data-testid="merge-confirmation-modal"]')!;
+    const close = modal.querySelector<HTMLButtonElement>('.btn-close')!;
+    const merge = modal.querySelector<HTMLButtonElement>('[data-testid="merge-confirmation-modal-action-button"]')!;
+    await vi.waitFor(() => expect(document.activeElement).toBe(close));
+
+    merge.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(close);
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toBe(merge);
+  });
+
+  it('reports the loading progress it shows', async () => {
+    renderDocuments();
+    await loaded();
+    const progress = document.querySelector('[role="progressbar"]');
+    expect(progress).toHaveAccessibleName('Diff data loading');
+    await vi.waitFor(() => expect(progress).toHaveAttribute('aria-valuenow', '100'));
+  });
+
+  it('exposes a document heading at its outline level, and a work item not at all', async () => {
+    renderDocuments();
+    await loaded();
+    const header = (pair: string) => document.querySelector<HTMLElement>(`[data-testid="${pair}"] .wi-header.left`);
+    await vi.waitFor(() => expect(header('EL-145_DP-11550')).not.toBeNull());
+    expect(header('EL-183_DP-11545')).toHaveAttribute('aria-level', '1');
+    expect(header('EL-145_DP-11550')).toHaveAttribute('role', 'heading');
+    expect(header('EL-145_DP-11550')).toHaveAttribute('aria-level', '2');
+    expect(header('EL-101_DP-11551')).not.toHaveAttribute('role');
   });
 
   // Neither axe nor jsx-a11y would catch a regression here: axe accepts a label that names only the hidden
