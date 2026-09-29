@@ -1,6 +1,9 @@
 import { Toaster } from '@sbb-polarion/react-sbb-polarion';
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
+import { page, userEvent } from 'vitest/browser';
+import App from '../src/App';
 import { formatDuration, formatTime } from '../src/admin/duplication/JobsTable';
 import ProjectDuplicationPage from '../src/admin/pages/ProjectDuplicationPage';
 import { type FetchMock, type Route, installFetchMock, jsonResponse } from './mockFetch';
@@ -221,19 +224,74 @@ describe('ProjectDuplicationPage', () => {
     await vi.waitFor(() => expect(document.querySelector('iframe.job-log-frame')).toBeNull());
   });
 
-  it('opens and closes a job log from the keyboard, not the pointer alone', async () => {
+  it('opens and closes a job log from the keyboard, through a disclosure button named after the job', async () => {
+    await renderPage();
+    const toggle = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLButtonElement>('[data-job-id="job-0"] .expand-arrow');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    expect(toggle).toHaveAccessibleName('Log of job-0');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    toggle.focus();
+    await userEvent.keyboard('{Enter}');
+    await vi.waitFor(() => expect(document.querySelector('iframe.job-log-frame')).not.toBeNull());
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+
+    await userEvent.keyboard(' ');
+    await vi.waitFor(() => expect(document.querySelector('iframe.job-log-frame')).toBeNull());
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('opens a job log once, not twice, when its arrow is clicked', async () => {
     await renderPage();
     await vi.waitFor(() => expect(document.querySelector('[data-job-id="job-0"]')).not.toBeNull());
-    const row = document.querySelector<HTMLElement>('[data-job-id="job-0"]')!;
 
-    row.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    document.querySelector<HTMLButtonElement>('[data-job-id="job-0"] .expand-arrow')!.click();
+
     await vi.waitFor(() => expect(document.querySelector('iframe.job-log-frame')).not.toBeNull());
+  });
 
-    // Space acts on the way up, the way a native button does, so holding it cannot auto-repeat.
-    row.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
-    expect(document.querySelector('iframe.job-log-frame')).not.toBeNull();
-    row.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true }));
-    await vi.waitFor(() => expect(document.querySelector('iframe.job-log-frame')).toBeNull());
+  it('announces the table cells under their column headers', async () => {
+    await renderPage();
+    await vi.waitFor(() => expect(document.querySelector('[data-job-id="job-0"]')).not.toBeNull());
+
+    const headers = Array.from(document.querySelectorAll('.jobs-table thead th'));
+    expect(headers.map((header) => header.getAttribute('scope'))).toEqual(['col', 'col', 'col', 'col', 'col', 'col']);
+    expect(page.getByRole('columnheader', { name: 'State' }).element()).toBeVisible();
+  });
+
+  it('lines the Job header up with the job names, past the disclosure triangles', async () => {
+    await renderPage();
+    await vi.waitFor(() => expect(document.querySelector('[data-job-id="job-0"]')).not.toBeNull());
+
+    // Measured on the text itself, not on its box, since the header cell is indented by padding.
+    const textLeft = (element: Element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return range.getBoundingClientRect().left;
+    };
+    const header = document.querySelector('.jobs-table thead th')!;
+    const name = document.querySelector('[data-job-id="job-0"] strong')!;
+    expect(Math.abs(textLeft(header) - textLeft(name))).toBeLessThan(1);
+  });
+
+  it('keeps the job name level with the other cells, although its triangle is larger than the text', async () => {
+    // Through the app, as Polarion opens the page: its shell brings the production font stack, and the
+    // drop a taller triangle line causes depends on the font's metrics. The bare page does not show it.
+    installFetchMock(routes());
+    render(<App />);
+    await vi.waitFor(() => expect(document.querySelector('[data-job-id="job-0"]')).not.toBeNull());
+    await document.fonts.ready;
+    const textTop = (element: Element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return range.getBoundingClientRect().top;
+    };
+    const name = document.querySelector('[data-job-id="job-0"] strong')!;
+    const state = document.querySelector('[data-job-id="job-0"] td:nth-child(4)')!;
+    expect(Math.abs(textTop(name) - textTop(state))).toBeLessThan(0.5);
   });
 
   it('keeps a finished job log at a stable URL so it does not reload under the user', async () => {
@@ -291,5 +349,28 @@ describe('ProjectDuplicationPage', () => {
     );
 
     await vi.waitFor(() => expect(document.body.textContent).toContain('Failed to load projects'));
+  });
+});
+
+describe('ProjectDuplicationPage, accessibility', () => {
+  it('has no WCAG A/AA violations with the job list loaded', async () => {
+    await renderPage();
+    await vi.waitFor(() => expect(document.querySelector('[data-job-id="job-0"]')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a job log open', async () => {
+    await renderPage();
+    await vi.waitFor(() => expect(document.querySelector('[data-job-id="job-0"]')).not.toBeNull());
+    document.querySelector<HTMLElement>('[data-job-id="job-0"]')!.click();
+    await vi.waitFor(() => expect(document.querySelector('iframe.job-log-frame')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations while naming the missing fields', async () => {
+    await renderPage();
+    startButton().click();
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Please fill in:'));
+    expect(await pageViolations()).toEqual([]);
   });
 });

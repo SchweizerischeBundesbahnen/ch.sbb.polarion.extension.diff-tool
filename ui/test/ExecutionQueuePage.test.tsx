@@ -1,4 +1,5 @@
 import { Toaster } from '@sbb-polarion/react-sbb-polarion';
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import ExecutionQueuePage from '../src/admin/pages/ExecutionQueuePage';
@@ -346,5 +347,42 @@ describe('ExecutionQueuePage', () => {
     await renderPage();
 
     expect(document.querySelector('.quick-help')!.textContent).toContain('1000');
+  });
+});
+
+describe('ExecutionQueuePage, accessibility', () => {
+  it('has no WCAG A/AA violations as loaded', async () => {
+    await renderPage();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the revisions table open', async () => {
+    await renderPage();
+    toolbarButton(3).click();
+    await vi.waitFor(() => expect(document.body.textContent).toContain('4 711'));
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations while asking to confirm Cancel', async () => {
+    await renderPage();
+    toolbarButton(1).click();
+    await vi.waitFor(() => expect(document.querySelector('.rsp-modal')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the other-build warning shown', async () => {
+    await renderPage(
+      installFetchMock(
+        routes([
+          {
+            method: 'GET',
+            match: /\/names\/Default\/content/,
+            json: { ...SAVED, bundleTimestamp: '2020-01-01 00:00' },
+          },
+        ]),
+      ),
+    );
+    await vi.waitFor(() => expect(document.querySelector('.alert-warning')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
   });
 });

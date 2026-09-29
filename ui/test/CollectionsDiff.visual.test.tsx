@@ -1,7 +1,17 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-react';
 import CollectionsPage from '../src/pages/CollectionsPage';
-import { fixture, openControlPane, openDialog, pairDiff, renderViewer, restoreUrl, shoot } from './viewerHarness';
+import {
+  SERVER_RENDERED,
+  fixture,
+  openControlPane,
+  openDialog,
+  pairDiff,
+  renderViewer,
+  restoreUrl,
+  shoot,
+} from './viewerHarness';
 
 // Docker-only snapshots of the collections diff viewer, the collections.html entry.
 //
@@ -96,5 +106,81 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Collections diff viewer visual', () => {
 
     await openDialog('Choose document configuration');
     await shoot('collections-diff-target-configuration');
+  });
+});
+
+// Not Docker-only, unlike the visual suite above: an accessibility scan compares no pixels.
+describe('Collections diff viewer, document configuration dialog', () => {
+  const escape = (target: Element) =>
+    target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  const modalShown = () =>
+    getComputedStyle(document.querySelector<HTMLElement>('[data-testid="target-configuration-modal"]')!).display !==
+    'none';
+
+  // The dialog handles Escape from inside itself, so it has to take the focus from the button that opened it,
+  // and it gives the focus back on close, so the next Tab continues from that button.
+  it('takes the focus when it opens, so a first Escape closes it, and gives it back to its opener', async () => {
+    renderCollections(UNPAIRED_URL, fixture('collections.json'), fixture('documents-from-collection.json'));
+    await headerLoaded();
+    await createOffered();
+    const opener = document.querySelector<HTMLButtonElement>('[data-testid="create-document-button"]')!;
+    opener.focus();
+    opener.click();
+    await openDialog('Choose document configuration');
+    const modal = document.querySelector('[data-testid="target-configuration-modal"]')!;
+    await vi.waitFor(() => expect(modal.contains(document.activeElement)).toBe(true));
+
+    escape(document.activeElement!);
+    await vi.waitFor(() => expect(modalShown()).toBe(false));
+    expect(document.activeElement).toBe(opener);
+  });
+
+  // The dropdown consumes the Escape that closes its list (preventDefault) but lets it bubble, so the dialog
+  // must skip a handled Escape: otherwise one key press closes the list and the dialog together.
+  it('closes an open configuration list on the first Escape and the dialog only on the second', async () => {
+    renderCollections(UNPAIRED_URL, fixture('collections.json'), fixture('documents-from-collection.json'));
+    await headerLoaded();
+    await createOffered();
+    document.querySelector<HTMLButtonElement>('[data-testid="create-document-button"]')!.click();
+    await openDialog('Choose document configuration');
+    const trigger = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLElement>('#target-configuration + .searchable-dropdown .sd-trigger');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    trigger.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    await vi.waitFor(() => expect(trigger.closest('.searchable-dropdown')!.classList.contains('open')).toBe(true));
+
+    escape(trigger);
+    await vi.waitFor(() => expect(trigger.closest('.searchable-dropdown')!.classList.contains('open')).toBe(false));
+    expect(modalShown()).toBe(true);
+
+    escape(trigger);
+    await vi.waitFor(() => expect(modalShown()).toBe(false));
+  });
+});
+
+describe('Collections diff viewer, accessibility', () => {
+  it('has no WCAG A/AA violations with a paired document shown', async () => {
+    renderPaired();
+    await headerLoaded();
+    await pairsLoaded();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations while offering to create a missing counterpart', async () => {
+    renderCollections(UNPAIRED_URL, fixture('collections.json'), fixture('documents-from-collection.json'));
+    await headerLoaded();
+    await createOffered();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the document configuration dialog open', async () => {
+    renderCollections(UNPAIRED_URL, fixture('collections.json'), fixture('documents-from-collection.json'));
+    await headerLoaded();
+    await createOffered();
+    document.querySelector<HTMLButtonElement>('[data-testid="create-document-button"]')!.click();
+    await openDialog('Choose document configuration');
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
 });
