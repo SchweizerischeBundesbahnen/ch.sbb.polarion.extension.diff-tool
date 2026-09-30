@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
+import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.tracker.model.IModule;
@@ -63,6 +64,10 @@ public class Document {
         }
 
         IProject project = module.getProject();
+        // A project deleted mid-request resolves lazily here: without this getName() throws UnresolvableObjectException, mapped to HTTP 500
+        if (project.isUnresolvable()) {
+            throw new ObjectNotFoundException(String.format("Project '%s' not found", project.getId()));
+        }
         return Document.builder()
                 .projectId(project.getId())
                 .projectName(project.getName())
