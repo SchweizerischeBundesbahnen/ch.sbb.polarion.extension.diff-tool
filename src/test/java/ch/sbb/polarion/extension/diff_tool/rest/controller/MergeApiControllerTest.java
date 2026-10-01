@@ -8,7 +8,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService;
-import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService.JobState;
+import ch.sbb.polarion.extension.generic.jobs.JobState;
 import ch.sbb.polarion.extension.generic.rest.filter.LogoutFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.BadRequestException;

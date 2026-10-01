@@ -1,6 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool;
 
-import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsCleaner;
+import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService;
 import ch.sbb.polarion.extension.generic.test_extensions.PlatformContextMockExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,20 +23,20 @@ class ExtensionBundleActivatorTest {
 
     /**
      * Nothing else drops the results of finished chapter merges from memory, so the cleaner runs as long as this
-     * bundle does.
+     * bundle does. When the bundle stops, the merge threads stop with it.
      */
     @Test
-    void testTheChapterMergeJobsCleanerRunsWithTheBundle() {
+    void testTheChapterMergeJobsRunWithTheBundle() {
         BundleContext context = mock(BundleContext.class);
 
-        try (MockedStatic<ChapterMergeJobsCleaner> cleaner = mockStatic(ChapterMergeJobsCleaner.class)) {
+        try (MockedStatic<ChapterMergeJobsService> jobsService = mockStatic(ChapterMergeJobsService.class)) {
             ExtensionBundleActivator activator = new ExtensionBundleActivator();
 
             activator.onStart(context);
             activator.stop(context);
 
-            cleaner.verify(ChapterMergeJobsCleaner::startCleaningJob);
-            cleaner.verify(ChapterMergeJobsCleaner::stopCleaningJob);
+            jobsService.verify(ChapterMergeJobsService::startCleaner);
+            jobsService.verify(ChapterMergeJobsService::shutdown);
         }
     }
 
@@ -48,12 +48,12 @@ class ExtensionBundleActivatorTest {
     void testABundleStartsEvenIfItsCleanerDoesNot() {
         BundleContext context = mock(BundleContext.class);
 
-        try (MockedStatic<ChapterMergeJobsCleaner> cleaner = mockStatic(ChapterMergeJobsCleaner.class)) {
-            cleaner.when(ChapterMergeJobsCleaner::startCleaningJob).thenThrow(new IllegalStateException("boom"));
+        try (MockedStatic<ChapterMergeJobsService> jobsService = mockStatic(ChapterMergeJobsService.class)) {
+            jobsService.when(ChapterMergeJobsService::startCleaner).thenThrow(new IllegalStateException("boom"));
 
             new ExtensionBundleActivator().onStart(context);
 
-            cleaner.verify(ChapterMergeJobsCleaner::startCleaningJob);
+            jobsService.verify(ChapterMergeJobsService::startCleaner);
         }
     }
 

@@ -8,11 +8,11 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsFieldsMergeP
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemsMergeParams;
-import ch.sbb.polarion.extension.diff_tool.rest.model.jobs.ChapterMergeJobDetails;
-import ch.sbb.polarion.extension.diff_tool.rest.model.jobs.ChapterMergeJobStatus;
 import ch.sbb.polarion.extension.diff_tool.service.MergeService;
 import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
+import ch.sbb.polarion.extension.generic.rest.JobResponses;
+import ch.sbb.polarion.extension.generic.rest.model.jobs.JobDetails;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -237,13 +237,13 @@ public class MergeInternalController {
                             responseCode = "200",
                             description = "Chapter merge jobs, by job ID",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(type = "object", additionalPropertiesSchema = ChapterMergeJobDetails.class))
+                                    schema = @Schema(type = "object", additionalPropertiesSchema = JobDetails.class))
                     )
             }
     )
     public Response getAllChapterMergeJobs() {
-        Map<String, ChapterMergeJobDetails> jobsDetails = chapterMergeJobsService.getAllJobsStates().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> toJobDetails(entry.getValue())));
+        Map<String, JobDetails> jobsDetails = chapterMergeJobsService.getAllJobsStates().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> JobDetails.from(entry.getValue())));
         return Response.ok(jobsDetails).build();
     }
 
@@ -258,32 +258,23 @@ public class MergeInternalController {
                     @ApiResponse(
                             responseCode = "303",
                             description = "The merge has finished, the Location header contains the URL of its result",
-                            content = @Content(mediaType = "application/*", schema = @Schema(implementation = ChapterMergeJobDetails.class))
+                            content = @Content(mediaType = "application/*", schema = @Schema(implementation = JobDetails.class))
                     ),
                     @ApiResponse(
                             responseCode = "202",
                             description = "The merge is still running",
-                            content = @Content(mediaType = "application/*", schema = @Schema(implementation = ChapterMergeJobDetails.class))
+                            content = @Content(mediaType = "application/*", schema = @Schema(implementation = JobDetails.class))
                     ),
                     @ApiResponse(
                             responseCode = "409",
                             description = "The merge failed and produced no result of its own",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ChapterMergeJobDetails.class))
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = JobDetails.class))
                     ),
                     @ApiResponse(responseCode = "404", description = "There is no chapter merge job with this ID")
             }
     )
     public Response getChapterMergeJob(@Parameter(description = "ID of the chapter merge job") @PathParam("jobId") String jobId) {
-        ChapterMergeJobsService.JobState jobState = chapterMergeJobsService.getJobState(jobId);
-        ChapterMergeJobDetails jobDetails = toJobDetails(jobState);
-
-        Response.ResponseBuilder responseBuilder = switch (jobDetails.getStatus()) {
-            case IN_PROGRESS -> Response.accepted();
-            case SUCCESSFULLY_FINISHED -> Response.status(Response.Status.SEE_OTHER)
-                    .location(UriBuilder.fromUri(uriInfo.getRequestUri().getPath()).path("result").build());
-            case FAILED -> Response.status(Response.Status.CONFLICT);
-        };
-        return responseBuilder.entity(jobDetails).build();
+        return JobResponses.jobStatus(JobDetails.from(chapterMergeJobsService.getJobState(jobId)), uriInfo);
     }
 
     @GET
@@ -337,22 +328,6 @@ public class MergeInternalController {
         if (mergeParams.getMode() == ChapterMergeMode.MOVE && !polarionService.userAuthorizedForMerge(sourceProjectId)) {
             throw new ForbiddenException("You are not authorized to move work items out of project '%s'".formatted(sourceProjectId));
         }
-    }
-
-    private @NotNull ChapterMergeJobDetails toJobDetails(ChapterMergeJobsService.@NotNull JobState jobState) {
-        ChapterMergeJobStatus status;
-        if (!jobState.isDone()) {
-            status = ChapterMergeJobStatus.IN_PROGRESS;
-        } else if (jobState.isFailed()) {
-            status = ChapterMergeJobStatus.FAILED;
-        } else {
-            status = ChapterMergeJobStatus.SUCCESSFULLY_FINISHED;
-        }
-        return ChapterMergeJobDetails.builder()
-                .status(status)
-                .progressMessage(status == ChapterMergeJobStatus.IN_PROGRESS ? jobState.progressMessage() : null)
-                .errorMessage(jobState.errorMessage())
-                .build();
     }
 
 }

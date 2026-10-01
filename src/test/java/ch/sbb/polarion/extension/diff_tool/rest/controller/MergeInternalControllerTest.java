@@ -6,11 +6,11 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterInsertMode;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeMode;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
-import ch.sbb.polarion.extension.diff_tool.rest.model.jobs.ChapterMergeJobDetails;
-import ch.sbb.polarion.extension.diff_tool.rest.model.jobs.ChapterMergeJobStatus;
 import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService;
-import ch.sbb.polarion.extension.diff_tool.service.job.ChapterMergeJobsService.JobState;
+import ch.sbb.polarion.extension.generic.jobs.JobState;
+import ch.sbb.polarion.extension.generic.rest.model.jobs.JobDetails;
+import ch.sbb.polarion.extension.generic.rest.model.jobs.JobStatus;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.core.Response;
@@ -143,8 +143,8 @@ class MergeInternalControllerTest {
         Response response = controller.getChapterMergeJob(JOB_ID);
 
         assertEquals(Response.Status.ACCEPTED.getStatusCode(), response.getStatus());
-        ChapterMergeJobDetails jobDetails = (ChapterMergeJobDetails) response.getEntity();
-        assertEquals(ChapterMergeJobStatus.IN_PROGRESS, jobDetails.getStatus());
+        JobDetails jobDetails = (JobDetails) response.getEntity();
+        assertEquals(JobStatus.IN_PROGRESS, jobDetails.getStatus());
         assertEquals("Merged workitem 'EL-42'", jobDetails.getProgressMessage());
     }
 
@@ -157,8 +157,8 @@ class MergeInternalControllerTest {
 
         assertEquals(Response.Status.SEE_OTHER.getStatusCode(), response.getStatus());
         assertEquals(URI.create(JOBS_PATH + "/jobs/" + JOB_ID + "/result"), response.getLocation());
-        ChapterMergeJobDetails jobDetails = (ChapterMergeJobDetails) response.getEntity();
-        assertEquals(ChapterMergeJobStatus.SUCCESSFULLY_FINISHED, jobDetails.getStatus());
+        JobDetails jobDetails = (JobDetails) response.getEntity();
+        assertEquals(JobStatus.SUCCESSFULLY_FINISHED, jobDetails.getStatus());
         // what it is doing is of no interest once it is done
         assertNull(jobDetails.getProgressMessage());
     }
@@ -167,15 +167,15 @@ class MergeInternalControllerTest {
     void testAFailedMergeIsAnsweredWithWhatWentWrong() {
         when(chapterMergeJobsService.getJobState(JOB_ID)).thenReturn(JobState.builder()
                 .isDone(true)
-                .isFailed(true)
+                .isCompletedExceptionally(true)
                 .errorMessage("Node has been added before.")
                 .build());
 
         Response response = controller.getChapterMergeJob(JOB_ID);
 
         assertEquals(Response.Status.CONFLICT.getStatusCode(), response.getStatus());
-        ChapterMergeJobDetails jobDetails = (ChapterMergeJobDetails) response.getEntity();
-        assertEquals(ChapterMergeJobStatus.FAILED, jobDetails.getStatus());
+        JobDetails jobDetails = (JobDetails) response.getEntity();
+        assertEquals(JobStatus.FAILED, jobDetails.getStatus());
         assertEquals("Node has been added before.", jobDetails.getErrorMessage());
     }
 
@@ -215,10 +215,10 @@ class MergeInternalControllerTest {
 
         Response response = controller.getAllChapterMergeJobs();
 
-        Map<String, ChapterMergeJobDetails> jobsDetails = (Map<String, ChapterMergeJobDetails>) response.getEntity();
+        Map<String, JobDetails> jobsDetails = (Map<String, JobDetails>) response.getEntity();
         assertEquals(2, jobsDetails.size());
-        assertEquals(ChapterMergeJobStatus.SUCCESSFULLY_FINISHED, jobsDetails.get(JOB_ID).getStatus());
-        assertEquals(ChapterMergeJobStatus.IN_PROGRESS, jobsDetails.get("J-2").getStatus());
+        assertEquals(JobStatus.SUCCESSFULLY_FINISHED, jobsDetails.get(JOB_ID).getStatus());
+        assertEquals(JobStatus.IN_PROGRESS, jobsDetails.get("J-2").getStatus());
         assertEquals("Merging", jobsDetails.get("J-2").getProgressMessage());
     }
 
