@@ -34,6 +34,7 @@ import ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import ch.sbb.polarion.extension.diff_tool.util.OutlineNumberComparator;
 import ch.sbb.polarion.extension.diff_tool.util.RequestContextUtil;
+import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.generic.fields.model.FieldMetadata;
 import ch.sbb.polarion.extension.generic.util.ObjectUtils;
 import com.polarion.alm.projects.model.IProject;
@@ -558,18 +559,26 @@ public class DiffService {
         return CollectionsDiff.builder()
                 .leftCollection(DocumentsCollection.builder()
                         .projectId(leftCollection.getProjectId())
-                        .projectName(leftCollection.getProject().getName())
+                        .projectName(getProjectName(leftCollection))
                         .id(leftCollection.getId())
                         .name(leftCollection.getName())
                         .build())
                 .rightCollection(DocumentsCollection.builder()
                         .projectId(rightCollection.getProjectId())
-                        .projectName(rightCollection.getProject().getName())
+                        .projectName(getProjectName(rightCollection))
                         .id(rightCollection.getId())
                         .name(rightCollection.getName())
                         .build())
                 .pairedDocuments(pairedDocuments)
                 .build();
+    }
+
+    private @NotNull String getProjectName(@NotNull IBaselineCollection collection) {
+        IProject project = collection.getProject();
+        if (project.isUnresolvable()) {
+            throw new ObjectNotFoundException(String.format("Project '%s' not found", project.getId()));
+        }
+        return project.getName();
     }
 
     public WorkItemsPairDiff getDocumentWorkItemsPairDiff(@NotNull DocumentWorkItemsPairDiffParams documentWorkItemsPairDiffParams) {
