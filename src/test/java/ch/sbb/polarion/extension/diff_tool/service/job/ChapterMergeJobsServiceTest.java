@@ -351,8 +351,9 @@ class ChapterMergeJobsServiceTest {
     @Test
     void testAMergeAskedForWhileTheExtensionStopsIsRefusedAsSuch() {
         registry.shutdown();
+        ChapterMergeParams params = params();
 
-        assertThrows(JobsRegistryShutDownException.class, () -> jobsService.startJob(params(), TIMEOUT_IN_MINUTES));
+        assertThrows(JobsRegistryShutDownException.class, () -> jobsService.startJob(params, TIMEOUT_IN_MINUTES));
     }
 
     /**
@@ -370,12 +371,13 @@ class ChapterMergeJobsServiceTest {
             configurationStatic.when(DiffToolExtensionConfiguration::getInstance).thenReturn(configuration);
 
             ChapterMergeJobsService.shutdown();
-            assertThrows(JobsRegistryShutDownException.class,
-                    () -> new ChapterMergeJobsService(documentsChapterMergeService, polarionService).startJob(params(), TIMEOUT_IN_MINUTES));
+            ChapterMergeJobsService stoppedService = new ChapterMergeJobsService(documentsChapterMergeService, polarionService);
+            ChapterMergeParams params = params();
+            assertThrows(JobsRegistryShutDownException.class, () -> stoppedService.startJob(params, TIMEOUT_IN_MINUTES));
 
             ChapterMergeJobsService.startCleaner();
             ChapterMergeJobsService restartedService = new ChapterMergeJobsService(documentsChapterMergeService, polarionService);
-            String jobId = restartedService.startJob(params(), TIMEOUT_IN_MINUTES);
+            String jobId = restartedService.startJob(params, TIMEOUT_IN_MINUTES);
 
             await().atMost(Duration.ofSeconds(10)).until(() -> restartedService.getJobState(jobId).isDone());
             assertEquals(Optional.of(mergeResult), restartedService.getJobResult(jobId));
