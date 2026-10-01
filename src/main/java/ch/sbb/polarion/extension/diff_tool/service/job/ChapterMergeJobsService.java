@@ -50,8 +50,10 @@ public class ChapterMergeJobsService extends AsyncJobsService<ChapterMergeParams
 
     private static final String TOO_MANY_MERGES_MESSAGE = "Too many chapter merges are running or waiting for their turn, please try again later";
 
-    // Static, so that the jobs survive the controller instance which started them
-    private static final JobsRegistry<ChapterMergeParams, MergeResult> REGISTRY = createRegistry();
+    // Static, so that the jobs survive the controller instance which started them. Not final: a registry which is
+    // shut down refuses every merge, and a bundle which is stopped and started again keeps its classes
+    private static JobsRegistry<ChapterMergeParams, MergeResult> registry = createRegistry();
+    private static boolean registryShutDown;
 
     private final DocumentsChapterMergeService documentsChapterMergeService;
     private final PolarionService polarionService;
@@ -61,7 +63,7 @@ public class ChapterMergeJobsService extends AsyncJobsService<ChapterMergeParams
     }
 
     public ChapterMergeJobsService(@NotNull DocumentsChapterMergeService documentsChapterMergeService, @NotNull PolarionService polarionService) {
-        this(documentsChapterMergeService, polarionService, REGISTRY);
+        this(documentsChapterMergeService, polarionService, registry);
     }
 
     @VisibleForTesting
@@ -76,16 +78,23 @@ public class ChapterMergeJobsService extends AsyncJobsService<ChapterMergeParams
      * Starts dropping the results of finished chapter merges from memory, so that a server which merges all day does
      * not keep every merge report it ever produced. A result is read right after its merge is over, so it is kept only
      * as long as {@code chapter.merge.result.timeout} says.
+     * <p>
+     * Called when the bundle starts. If the bundle was stopped before, its registry is shut down and replaced first.
      */
-    public static void startCleaner() {
-        REGISTRY.startCleaner(DiffToolExtensionConfiguration.getInstance().getChapterMergeResultTimeout());
+    public static synchronized void startCleaner() {
+        if (registryShutDown) {
+            registry = createRegistry();
+            registryShutDown = false;
+        }
+        registry.startCleaner(DiffToolExtensionConfiguration.getInstance().getChapterMergeResultTimeout());
     }
 
     /**
      * Stops the cleaner and the merge threads. Called when the bundle stops.
      */
-    public static void shutdown() {
-        REGISTRY.shutdown();
+    public static synchronized void shutdown() {
+        registry.shutdown();
+        registryShutDown = true;
     }
 
     /**
@@ -102,7 +111,7 @@ public class ChapterMergeJobsService extends AsyncJobsService<ChapterMergeParams
      * @throws JobsRegistryShutDownException if the extension is stopping; trying again soon does not help, so it is
      *                                       not a {@link QueueFullException}
      */
-    public @NotNull String startJob(@NotNull ChapterMergeParams params, int timeoutInMinutes) {
+    public @NotNull String startJob(@NotNull ChapterMergeParams params, int timeoutInMinutes) throws JobsRegistryShutDownException {
         // Here, on the thread which serves the REST request: the cache is keyed by the user of that request, and
         // the request object is recycled by the servlet container as soon as the response is written.
         polarionService.evictDocumentsCache(params.getSourceDocument(), params.getTargetDocument());

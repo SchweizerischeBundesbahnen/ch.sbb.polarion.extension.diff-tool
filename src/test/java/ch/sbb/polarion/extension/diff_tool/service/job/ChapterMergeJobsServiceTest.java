@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.service.job;
 
+import ch.sbb.polarion.extension.diff_tool.properties.DiffToolExtensionConfiguration;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterInsertMode;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeMode;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -47,6 +49,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -350,6 +353,33 @@ class ChapterMergeJobsServiceTest {
         registry.shutdown();
 
         assertThrows(JobsRegistryShutDownException.class, () -> jobsService.startJob(params(), TIMEOUT_IN_MINUTES));
+    }
+
+    /**
+     * A bundle which is stopped and started again keeps its classes, and so the registry it shut down. The start
+     * replaces that registry, so merges are taken again rather than refused with 503.
+     */
+    @Test
+    void testAMergeIsTakenAgainAfterTheBundleIsStoppedAndStarted() {
+        MergeResult mergeResult = MergeResult.builder().success(true).build();
+        when(documentsChapterMergeService.mergeChapter(any(), any(), any())).thenReturn(mergeResult);
+        DiffToolExtensionConfiguration configuration = mock(DiffToolExtensionConfiguration.class);
+        when(configuration.getChapterMergeResultTimeout()).thenReturn(TIMEOUT_IN_MINUTES);
+
+        try (MockedStatic<DiffToolExtensionConfiguration> configurationStatic = mockStatic(DiffToolExtensionConfiguration.class)) {
+            configurationStatic.when(DiffToolExtensionConfiguration::getInstance).thenReturn(configuration);
+
+            ChapterMergeJobsService.shutdown();
+            assertThrows(JobsRegistryShutDownException.class,
+                    () -> new ChapterMergeJobsService(documentsChapterMergeService, polarionService).startJob(params(), TIMEOUT_IN_MINUTES));
+
+            ChapterMergeJobsService.startCleaner();
+            ChapterMergeJobsService restartedService = new ChapterMergeJobsService(documentsChapterMergeService, polarionService);
+            String jobId = restartedService.startJob(params(), TIMEOUT_IN_MINUTES);
+
+            await().atMost(Duration.ofSeconds(10)).until(() -> restartedService.getJobState(jobId).isDone());
+            assertEquals(Optional.of(mergeResult), restartedService.getJobResult(jobId));
+        }
     }
 
     /**
