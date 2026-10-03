@@ -54,7 +54,7 @@
       "eslint": "$eslint"
     }
   },
-  "packageManager": "npm@12.1.0",
+  "packageManager": "npm@12.2.0",
   "private": true,
   "scripts": {
     "docs:index": "node scripts/build-docs-index.mjs",
