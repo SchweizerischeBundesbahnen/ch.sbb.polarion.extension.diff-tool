@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "1.64.0",
     "@testing-library/jest-dom": "7.0.1",
     "@trivago/prettier-plugin-sort-imports": "6.0.2",
     "@types/node": "25.9.9",
@@ -34,7 +34,7 @@
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.13.0",
     "node-html-parser": "9.0.4",
-    "playwright": "1.63.0",
+    "playwright": "1.64.0",
     "prettier": "3.9.9",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.0",
