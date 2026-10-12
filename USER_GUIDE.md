@@ -46,3 +46,8 @@ the project first, see [Configuration](CONFIGURATION.md).
 3. Select one collection from left table and one collection from right table, preliminary filtering them to show ones you need.
 4. Choose link role by which work items to be linked, then click Compare button.
 5. Another tab will be opened in browser listing documents differences. You can change documents from collections to be compared in side pane. Later you can select certain differences and merge them from left to right document.
+
+## Diff colors
+The diff view shows removed content in red and added content in green.
+To swap the two colors, select `Swap diff colors` in the control pane.
+The choice is kept in the page URL as `swapColors=true`, so a reload or a shared link keeps it.

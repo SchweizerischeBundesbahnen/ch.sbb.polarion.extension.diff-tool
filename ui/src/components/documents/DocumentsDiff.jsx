@@ -1,5 +1,6 @@
 import {useContext, useEffect, useMemo, useState} from "react";
-import {useSearchParams} from "@/router/navigation";
+import {useDataSearchParams} from "@/router/navigation";
+import useSwapColors from "@/utils/useSwapColors";
 import AppContext from "../AppContext";
 import AppAlert from "@/components/AppAlert";
 import Loading from "@/components/loading/Loading";
@@ -38,7 +39,8 @@ const PAIRS_COUNT_TO_ASK_SWAP_CONFIRMATION = 200; // Threshold above which a dif
 
 export default function DocumentsDiff({ enclosingCollections }) {
   const context = useContext(AppContext);
-  const searchParams = useSearchParams();
+  const searchParams = useDataSearchParams();
+  const [swapColors] = useSwapColors();
   const diffService = useDiffService();
   const swapDocuments = useSwapDocuments();
 
@@ -233,7 +235,7 @@ export default function DocumentsDiff({ enclosingCollections }) {
                       : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
   }
 
-  return <div id="diff-body" className={`doc-diff ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
+  return <div id="diff-body" className={`doc-diff ${swapColors ? "swap-colors" : ""} ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
     <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>
 
       <div className="row g-0">
