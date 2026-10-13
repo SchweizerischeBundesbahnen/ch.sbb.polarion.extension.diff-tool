@@ -7,6 +7,7 @@ import useRemote from "@/services/useRemote";
 import {responseError} from "@/services/responseError";
 import usePdf from "@/services/usePdf";
 import * as DiffTypes from "@/DiffTypes";
+import * as DiffViewModes from "@/DiffViewModes";
 import Modal from "@/components/Modal";
 import {SearchableSelect} from "@sbb-polarion/react-sbb-polarion";
 import useSwapColors from "@/utils/useSwapColors";
@@ -209,6 +210,15 @@ export default function ControlPane({diff_type}) {
                                   options={configurations.map((configuration) => ({id: configuration, name: configuration}))} />
               </div>
           }
+          <div style={{
+            marginBottom: "6px"
+          }} className="select-set">
+            <label htmlFor="diff-view">
+              Diff view:
+            </label>
+            <SearchableSelect id="diff-view" value={context.state.diffViewMode} onChange={context.state.setDiffViewMode} searchable={false}
+                              options={[{id: DiffViewModes.SIDE_BY_SIDE, name: "Side by side"}, {id: DiffViewModes.UNIFIED, name: "Unified"}]} />
+          </div>
           {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.COLLECTIONS_DIFF) &&
               <div className="form-check">
                 <input className="form-check-input" type="checkbox" value="" id="outline-numbers"

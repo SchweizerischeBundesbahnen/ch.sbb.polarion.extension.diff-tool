@@ -1,7 +1,7 @@
 import {useContext, useEffect, useState} from "react";
 import AppContext from "@/components/AppContext";
 import {useDataSearchParams} from "@/router/navigation";
-import useSwapColors from "@/utils/useSwapColors";
+import useDiffBodyClassName from "@/utils/useDiffBodyClassName";
 import {v4 as uuidv4} from "uuid";
 import ProjectHeader from "@/components/workitems/ProjectHeader";
 import Loading from "@/components/loading/Loading";
@@ -23,7 +23,7 @@ const REQUIRED_PARAMS = ['sourceProjectId', 'targetProjectId', 'linkRole', 'ids'
 export default function WorkItemsDiff() {
   const context = useContext(AppContext);
   const searchParams = useDataSearchParams();
-  const [swapColors] = useSwapColors();
+  const diffBodyClassName = useDiffBodyClassName();
   const diffService = useDiffService();
 
   const loadingContext = useLoadingContext();
@@ -105,7 +105,7 @@ export default function WorkItemsDiff() {
                       : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
   }
 
-  return <div id="diff-body" className={`doc-diff ${swapColors ? "swap-colors" : ""} ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
+  return <div id="diff-body" className={diffBodyClassName}>
     <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`} data-testid="diff-header">
       <div className="row g-0" data-testid="project-header-row">
         <ProjectHeader project={workItemsData.leftProject} />

@@ -1,10 +1,12 @@
 import {useEffect, useState} from "react";
+import * as DiffViewModes from "@/DiffViewModes";
 
 export function useAppContext(){
   const [headerPinned, setHeaderPinned] = useState(false);
   const [controlPaneAccessible, setControlPaneAccessible] = useState(false);
   const [controlPaneExpanded, setControlPaneExpanded] = useState(false);
   const [pairedDocuments, setPairedDocuments] = useState([]);
+  const [diffViewMode, setDiffViewMode] = useState(DiffViewModes.SIDE_BY_SIDE);
   const [showOutlineNumbersDiff, setShowOutlineNumbersDiff] = useState(false);
   const [syncStructure, setSyncStructure] = useState(true);
   const [counterpartWorkItemsDiffer, setCounterpartWorkItemsDiffer] = useState(false);
@@ -72,6 +74,8 @@ export function useAppContext(){
     setControlPaneExpanded,
     pairedDocuments,
     setPairedDocuments,
+    diffViewMode,
+    setDiffViewMode,
     showOutlineNumbersDiff,
     setShowOutlineNumbersDiff,
     syncStructure,

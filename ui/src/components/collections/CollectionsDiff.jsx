@@ -1,7 +1,7 @@
 import {useContext, useEffect, useMemo, useState} from "react";
 import AppContext from "@/components/AppContext";
 import {useDataSearchParams} from "@/router/navigation";
-import useSwapColors from "@/utils/useSwapColors";
+import useDiffBodyClassName from "@/utils/useDiffBodyClassName";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faSquarePlus} from "@fortawesome/free-solid-svg-icons";
 import Loading from "@/components/loading/Loading";
@@ -23,7 +23,7 @@ const REQUIRED_PARAMS = ['sourceProjectId', 'sourceCollectionId', 'targetProject
 export default function CollectionsDiff() {
   const context = useContext(AppContext);
   const searchParams = useDataSearchParams();
-  const [swapColors] = useSwapColors();
+  const diffBodyClassName = useDiffBodyClassName();
   const diffService = useDiffService();
   const remote = useRemote();
 
@@ -117,7 +117,7 @@ export default function CollectionsDiff() {
   }
 
   if (!selectedDocumentsPair.rightDocument) {
-    return <div id="diff-body" className={`doc-diff ${swapColors ? "swap-colors" : ""} ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
+    return <div id="diff-body" className={diffBodyClassName}>
       <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>
         <div className="row g-0">
           <CollectionHeader collection={collectionsData.leftCollection} side={DIFF_SIDES.LEFT} />

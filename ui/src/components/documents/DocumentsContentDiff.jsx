@@ -1,7 +1,7 @@
 import {useContext, useEffect, useState} from "react";
 import AppContext from "@/components/AppContext";
 import {useDataSearchParams} from "@/router/navigation";
-import useSwapColors from "@/utils/useSwapColors";
+import useDiffBodyClassName from "@/utils/useDiffBodyClassName";
 import useDiffService from "@/services/useDiffService";
 import useLoadingContext from "@/components/loading/useLoadingContext";
 import CollectionHeader from "@/components/collections/CollectionHeader";
@@ -28,7 +28,7 @@ const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', '
 export default function DocumentsContentDiff({ enclosingCollections }) {
   const context = useContext(AppContext);
   const searchParams = useDataSearchParams();
-  const [swapColors] = useSwapColors();
+  const diffBodyClassName = useDiffBodyClassName();
   const diffService = useDiffService();
   const swapDocuments = useSwapDocuments();
 
@@ -130,7 +130,7 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
                          : "Data wasn't loaded, please contact system administrator to diagnose the problem"} />;
   }
 
-  return <div id="diff-body" className={`doc-diff ${swapColors ? "swap-colors" : ""} ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
+  return <div id="diff-body" className={diffBodyClassName}>
     <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>
 
       <div className="row g-0">
