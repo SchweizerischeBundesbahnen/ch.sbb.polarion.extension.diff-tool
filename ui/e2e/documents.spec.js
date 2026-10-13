@@ -113,6 +113,9 @@ test.describe("page of diffing documents' WorkItems", () => {
     await expect(page.locator(".control-pane .controls label[for='preserve-comments']")).toHaveText("Preserve comments");
     await expect(page.locator("#preserve-comments")).toBeChecked({checked: false});
 
+    await expect(page.locator(".control-pane .controls label[for='swap-colors']")).toHaveText("Swap diff colors");
+    await expect(page.locator("#swap-colors")).toBeChecked({checked: false});
+
     await expect(page.locator(".control-pane .controls label[for='paper-size']")).toHaveText("Paper size:");
     await expect(page.locator("#paper-size")).toHaveValue("A4");
 
@@ -311,6 +314,47 @@ test.describe("page of diffing documents' WorkItems", () => {
     expect(url.searchParams.get('targetProjectId')).toBe('elibrary');
     expect(url.searchParams.get('targetSpaceId')).toBe('Specification');
     expect(url.searchParams.get('targetDocument')).toBe('Catalog Specification');
+  });
+
+  test('swap diff colors', async ({ page }) => {
+    const GREEN = 'rgb(204, 255, 204)';
+    const RED = 'rgb(253, 198, 198)';
+    const added = page.locator('.diff-leaf.right .diff-html-added').first();
+    const removed = page.locator('.diff-leaf.left .diff-html-removed').first();
+
+    await expect(page.locator(".progress span")).toHaveText("Data loaded successfully", { timeout: 10_000 });
+    await expect(added).toHaveCSS('background-color', GREEN);
+    await expect(removed).toHaveCSS('background-color', RED);
+
+    // The colors are a view option: toggling them must not request the diff again.
+    let diffRequests = 0;
+    page.on('request', request => {
+      if (request.url().includes('/diff/')) {
+        diffRequests++;
+      }
+    });
+
+    await page.locator('.control-pane .expand-button').click();
+    await page.locator('#swap-colors').check();
+    await expect(page).toHaveURL(/swapColors=true/);
+    await expect(added).toHaveCSS('background-color', RED);
+    await expect(removed).toHaveCSS('background-color', GREEN);
+
+    await page.locator('#swap-colors').uncheck();
+    await expect(page).not.toHaveURL(/swapColors/);
+    await expect(added).toHaveCSS('background-color', GREEN);
+    await expect(removed).toHaveCSS('background-color', RED);
+    expect(diffRequests).toBe(0);
+  });
+
+  test('swap diff colors from URL', async ({ page }) => {
+    await page.goto(page.url() + '&swapColors=true');
+    await expect(page.locator(".progress span")).toHaveText("Data loaded successfully", { timeout: 10_000 });
+
+    await expect(page.locator('#diff-body')).toHaveClass(/swap-colors/);
+    await expect(page.locator('.diff-leaf.right .diff-html-added').first()).toHaveCSS('background-color', 'rgb(253, 198, 198)');
+    await page.locator('.control-pane .expand-button').click();
+    await expect(page.locator('#swap-colors')).toBeChecked();
   });
 
   test('select single field', async ({ page }) => {

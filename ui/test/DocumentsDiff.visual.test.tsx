@@ -121,6 +121,32 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents diff viewer visual', () => {
     await shoot('documents-diff-control-pane');
   });
 
+  // The same page as 'documents-diff-control-pane' with "Swap diff colors" ticked, so the two references
+  // differ only in the highlight colors and the checkbox.
+  it('diff colors swapped from the configuration pane', async () => {
+    renderDocuments();
+    await loaded();
+    await openControlPane();
+
+    const GREEN = 'rgb(204, 255, 204)';
+    const RED = 'rgb(253, 198, 198)';
+    const background = (selector: string) => {
+      const element = document.querySelector(selector);
+      expect(element).not.toBeNull();
+      return getComputedStyle(element!).backgroundColor;
+    };
+    const added = '.diff-leaf.right .diff-html-added';
+    const removed = '.diff-leaf.left .diff-html-removed';
+    await vi.waitFor(() => expect(background(added)).toBe(GREEN));
+    expect(background(removed)).toBe(RED);
+
+    document.querySelector<HTMLInputElement>('#swap-colors')!.click();
+    await vi.waitFor(() => expect(background(added)).toBe(RED));
+    expect(background(removed)).toBe(GREEN);
+
+    await shoot('documents-diff-swapped-colors');
+  });
+
   // The auxiliary dialogs, each over the page that raises it rather than on its own. What a dialog looks
   // like is only half of it: the other half is the backdrop over the page underneath, which is where a
   // change to the shared Modal shows up.

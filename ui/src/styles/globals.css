@@ -691,15 +691,23 @@ a.wi-badge:hover {
   padding: 2px;
   border-radius: 4px;
 }
+.doc-diff {
+  --diff-added-bg: #ccffcc;
+  --diff-removed-bg: #fdc6c6;
+}
+.doc-diff.swap-colors {
+  --diff-added-bg: #fdc6c6;
+  --diff-removed-bg: #ccffcc;
+}
 .word-diff.added,
 .diff-leaf.right ins,
 .diff-leaf.right .diff-html-added {
-  background: #ccffcc;
+  background: var(--diff-added-bg, #ccffcc);
 }
 .word-diff.removed,
 .diff-leaf.left del,
 .diff-leaf.left .diff-html-removed {
-  background: #fdc6c6;
+  background: var(--diff-removed-bg, #fdc6c6);
 }
 
 .diff-lwi-container,

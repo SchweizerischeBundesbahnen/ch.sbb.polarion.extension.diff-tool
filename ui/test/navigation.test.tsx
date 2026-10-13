@@ -2,7 +2,7 @@ import { type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { type Router, usePathname, useRouter, useSearchParams } from '../src/router/navigation';
+import { type Router, useDataSearchParams, usePathname, useRouter, useSearchParams } from '../src/router/navigation';
 
 // The next/navigation replacement. What matters is the contract the call sites rely on: a reactive,
 // reference-stable URLSearchParams, and a soft push() that re-renders subscribers without remounting.
@@ -120,6 +120,48 @@ describe('useSearchParams', () => {
     flushSync(() => window.dispatchEvent(new PopStateEvent('popstate')));
 
     expect(probeText()).toBe('C');
+  });
+});
+
+describe('useDataSearchParams', () => {
+  function collectDataParams(seen: URLSearchParams[]) {
+    return function Collect() {
+      seen.push(useDataSearchParams());
+      capturedRouter = useRouter();
+      return null;
+    };
+  }
+
+  it('drops the view-only params', () => {
+    window.history.replaceState(null, '', '/documents?config=A&swapColors=true');
+    const seen: URLSearchParams[] = [];
+    const Collect = collectDataParams(seen);
+    render(<Collect />);
+
+    expect(seen.at(-1)!.toString()).toBe('config=A');
+  });
+
+  it('keeps the same reference when only a view-only param changes', () => {
+    // The diff components load their data in effects keyed by these params: a swapped color must not reload the diff.
+    window.history.replaceState(null, '', '/documents?config=A');
+    const seen: URLSearchParams[] = [];
+    const Collect = collectDataParams(seen);
+    render(<Collect />);
+    flushSync(() => capturedRouter.replace('/documents?config=A&swapColors=true'));
+
+    expect(seen.length).toBeGreaterThanOrEqual(2);
+    expect(seen.every((params) => params === seen[0])).toBe(true);
+  });
+
+  it('returns a new reference when a data param changes', () => {
+    window.history.replaceState(null, '', '/documents?config=A&swapColors=true');
+    const seen: URLSearchParams[] = [];
+    const Collect = collectDataParams(seen);
+    render(<Collect />);
+    flushSync(() => capturedRouter.replace('/documents?config=B&swapColors=true'));
+
+    expect(seen.at(-1)).not.toBe(seen[0]);
+    expect(seen.at(-1)!.get('config')).toBe('B');
   });
 });
 
