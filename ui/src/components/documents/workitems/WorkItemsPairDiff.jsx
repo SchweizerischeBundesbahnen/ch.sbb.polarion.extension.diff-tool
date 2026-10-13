@@ -126,6 +126,8 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
         name: fieldDiff.name,
         oldValue: imageUtils.fixImagesPathInDocumentWorkItem(fieldDiff.diffLeft, workItemsPair.leftWorkItem, leftDocument),
         newValue: imageUtils.fixImagesPathInDocumentWorkItem(fieldDiff.diffRight, workItemsPair.rightWorkItem, rightDocument),
+        unifiedValue: imageUtils.unifiedDocumentWorkItemsDiff(fieldDiff.diffLeft, fieldDiff.diffRight,
+            workItemsPair.leftWorkItem, leftDocument, workItemsPair.rightWorkItem, rightDocument),
         issues: fieldDiff.issues
       });
     });

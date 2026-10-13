@@ -2,7 +2,8 @@ import {useEffect, useRef} from "react";
 
 const DIFF_SIDES = {
   LEFT: "LEFT",
-  RIGHT: "RIGHT"
+  RIGHT: "RIGHT",
+  UNIFIED: "UNIFIED" // Both sides in one leaf: the unified diff view
 }
 
 function DiffLeaf({htmlDiff, diffSide}) {

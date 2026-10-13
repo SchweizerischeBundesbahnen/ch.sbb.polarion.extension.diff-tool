@@ -97,6 +97,7 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
         name: fieldDiff.name,
         oldValue: imageUtils.fixImagesPathInDetachedWorkItem(fieldDiff.diffLeft, workItemsPair.leftWorkItem),
         newValue: imageUtils.fixImagesPathInDetachedWorkItem(fieldDiff.diffRight, workItemsPair.rightWorkItem),
+        unifiedValue: imageUtils.unifiedDetachedWorkItemsDiff(fieldDiff.diffLeft, fieldDiff.diffRight, workItemsPair.leftWorkItem, workItemsPair.rightWorkItem),
         issues: fieldDiff.issues
       });
     });

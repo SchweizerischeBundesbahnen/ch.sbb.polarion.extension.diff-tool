@@ -701,13 +701,35 @@ a.wi-badge:hover {
 }
 .word-diff.added,
 .diff-leaf.right ins,
-.diff-leaf.right .diff-html-added {
+.diff-leaf.right .diff-html-added,
+.diff-leaf.unified ins,
+.diff-leaf.unified .diff-html-added {
   background: var(--diff-added-bg, #ccffcc);
 }
 .word-diff.removed,
 .diff-leaf.left del,
-.diff-leaf.left .diff-html-removed {
+.diff-leaf.left .diff-html-removed,
+.diff-leaf.unified del,
+.diff-leaf.unified .diff-html-removed {
   background: var(--diff-removed-bg, #fdc6c6);
+}
+
+/* The unified view: one leaf with the removed and the added parts next to each other. The strikethrough
+   tells them apart without relying on the color alone (WCAG 1.4.1), and keeps working with swapped colors. */
+.diff-leaf.unified {
+  width: 100%;
+}
+.diff-leaf.unified del,
+.diff-leaf.unified .diff-html-removed {
+  text-decoration: line-through;
+}
+/* DaisyDiff marks an enum change with an empty span on the other side, which a side-by-side leaf hides
+   along with that side. Here it would show as a sliver of padding. */
+.diff-leaf.unified ins:empty,
+.diff-leaf.unified del:empty,
+.diff-leaf.unified .diff-html-added:empty,
+.diff-leaf.unified .diff-html-removed:empty {
+  display: none;
 }
 
 .diff-lwi-container,

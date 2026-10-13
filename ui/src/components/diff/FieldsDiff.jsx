@@ -7,7 +7,7 @@ import FieldMergeTicker from "@/components/merge/FieldMergeTicker";
 const ARROW_HEIGHT = 7;
 const GAP = 2;
 
-export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTrigger, pairSelectedCallback, fieldId, fieldName, oldValue, newValue, issues}) {
+export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTrigger, pairSelectedCallback, fieldId, fieldName, oldValue, newValue, unifiedValue, issues}) {
   const context = useContext(AppContext);
 
   const [display, setDisplay] = useState(true);
@@ -101,7 +101,7 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
               </ul>
             </div>
         }
-        <DiffViewer oldValue={oldValue} newValue={newValue}/>
+        <DiffViewer oldValue={oldValue} newValue={newValue} unifiedValue={unifiedValue}/>
       </div>
   );
 }

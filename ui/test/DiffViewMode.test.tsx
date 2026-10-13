@@ -123,3 +123,75 @@ describe('Diff view switch', () => {
     expect(trigger).toHaveAccessibleName('Diff view:');
   });
 });
+
+async function switchToUnified() {
+  await openControlPane();
+  setFieldValue(viewSelect(), 'unified');
+  await vi.waitFor(() => expect(diffBody()).toHaveClass('diff-view-unified'));
+}
+
+const leaves = (scope: string) => [...document.querySelectorAll<HTMLElement>(`${scope} .diff-leaf`)];
+
+describe('Unified field diff', () => {
+  it('shows each field in one leaf, with the removed and the added parts', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    await switchToUnified();
+
+    const pair = '[data-testid="EL-4977_DP-11559"] [data-testid="Description"]';
+    await vi.waitFor(() => expect(leaves(pair)).toHaveLength(1));
+    const leaf = leaves(pair)[0];
+    expect(leaf).toHaveClass('unified');
+    expect(leaf).toHaveTextContent('Some new Modified requirement');
+
+    const removed = leaf.querySelector('.diff-html-removed')!;
+    const added = leaf.querySelector('.diff-html-added')!;
+    expect(getComputedStyle(removed).display).not.toBe('none');
+    expect(getComputedStyle(added).display).not.toBe('none');
+    // Removed and added differ by more than their color.
+    expect(getComputedStyle(removed).textDecorationLine).toBe('line-through');
+    expect(getComputedStyle(added).textDecorationLine).toBe('none');
+  });
+
+  it('shows a work item missing in the target from its source diff', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    await switchToUnified();
+
+    const pair = '[data-testid="EL-11600_NONE"] [data-testid="Title"]';
+    await vi.waitFor(() => expect(leaves(pair)).toHaveLength(1));
+    expect(leaves(pair)[0]).toHaveTextContent('Very important requirement');
+  });
+
+  it('goes back to two leaves side by side', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    await switchToUnified();
+
+    setFieldValue(viewSelect(), 'side-by-side');
+
+    const pair = '[data-testid="EL-4977_DP-11559"] [data-testid="Description"]';
+    await vi.waitFor(() => expect(leaves(pair)).toHaveLength(2));
+    expect(leaves(pair)[0]).toHaveClass('left');
+    expect(leaves(pair)[0]).toHaveTextContent('Some new requirement');
+    expect(leaves(pair)[1]).toHaveClass('right');
+    expect(leaves(pair)[1]).toHaveTextContent('Modified requirement');
+  });
+
+  it('shows the document content blocks in one leaf, keeping their merge tickers', async () => {
+    renderViewer(
+      `${DOCUMENTS_URL}&config=Default&compareAs=Content`,
+      [{ method: 'POST', match: /\/diff\/documents-content$/, json: fixture('documents-content.json') ?? {} }],
+      <DocumentsPage />,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.diff-viewer .merge-ticker')).not.toBeNull(), {
+      timeout: 10000,
+    });
+    const viewers = document.querySelectorAll('.diff-viewer').length;
+    await switchToUnified();
+
+    await vi.waitFor(() => expect(document.querySelectorAll('.diff-leaf.unified')).toHaveLength(viewers));
+    expect(document.querySelectorAll('.diff-leaf.left, .diff-leaf.right')).toHaveLength(0);
+    expect(document.querySelectorAll('.diff-viewer .merge-ticker')).toHaveLength(viewers);
+  });
+});

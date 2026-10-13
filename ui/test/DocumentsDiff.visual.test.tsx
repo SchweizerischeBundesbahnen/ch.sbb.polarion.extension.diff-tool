@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
 import DocumentsPage from '../src/pages/DocumentsPage';
+import { setFieldValue } from './formextHelpers';
 import { jsonResponse } from './mockFetch';
 import {
   SERVER_RENDERED,
@@ -96,6 +97,15 @@ async function openMergeConfirmation() {
   await openDialog('Merge confirmation');
 }
 
+/** Picks the unified view in the configuration pane, and closes the pane again. */
+async function switchToUnified() {
+  await openControlPane();
+  setFieldValue(document.querySelector<HTMLSelectElement>('#diff-view')!, 'unified');
+  await vi.waitFor(() => expect(document.querySelector('#diff-body')).toHaveClass('diff-view-unified'));
+  document.querySelector<HTMLButtonElement>('.control-pane .expand-button')!.click();
+  await vi.waitFor(() => expect(document.querySelectorAll('.control-pane.expanded')).toHaveLength(0));
+}
+
 async function loaded() {
   await vi.waitFor(() => expect(document.querySelector('.header .merge-pane')).not.toBeNull(), { timeout: 10000 });
   await vi.waitFor(() => expect(document.querySelectorAll('.wi-diff').length).toBeGreaterThan(0));
@@ -145,6 +155,13 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents diff viewer visual', () => {
     expect(background(removed)).toBe(GREEN);
 
     await shoot('documents-diff-swapped-colors');
+  });
+
+  it('unified view, the configuration pane closed again', async () => {
+    renderDocuments();
+    await loaded();
+    await switchToUnified();
+    await shoot('documents-diff-unified');
   });
 
   // The auxiliary dialogs, each over the page that raises it rather than on its own. What a dialog looks
@@ -208,6 +225,13 @@ describe('Documents diff viewer, accessibility', () => {
   it('has no WCAG A/AA violations as loaded', async () => {
     renderDocuments();
     await loaded();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations in the unified view', async () => {
+    renderDocuments();
+    await loaded();
+    await switchToUnified();
     expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
 
