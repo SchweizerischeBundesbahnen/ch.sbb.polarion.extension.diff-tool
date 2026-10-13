@@ -54,12 +54,18 @@ class ProjectDuplicationInternalControllerTest {
     @Test
     void noArgConstructorLooksUpServicesViaPlatformContext() {
         IPlatform platform = mock(IPlatform.class);
-        when(platform.lookupService(IProjectService.class)).thenReturn(mock(IProjectService.class));
-        when(platform.lookupService(ITrackerService.class)).thenReturn(mock(ITrackerService.class));
-        when(platform.lookupService(IRepositoryService.class)).thenReturn(mock(IRepositoryService.class));
-        when(platform.lookupService(ISecurityService.class)).thenReturn(mock(ISecurityService.class));
-        when(platform.lookupService(IPlatformService.class)).thenReturn(mock(IPlatformService.class));
-        when(platform.lookupService(IJobService.class)).thenReturn(mock(IJobService.class));
+        IProjectService projectService = mock(IProjectService.class);
+        when(platform.lookupService(IProjectService.class)).thenReturn(projectService);
+        ITrackerService trackerService = mock(ITrackerService.class);
+        when(platform.lookupService(ITrackerService.class)).thenReturn(trackerService);
+        IRepositoryService repositoryService = mock(IRepositoryService.class);
+        when(platform.lookupService(IRepositoryService.class)).thenReturn(repositoryService);
+        ISecurityService securityService = mock(ISecurityService.class);
+        when(platform.lookupService(ISecurityService.class)).thenReturn(securityService);
+        IPlatformService platformService = mock(IPlatformService.class);
+        when(platform.lookupService(IPlatformService.class)).thenReturn(platformService);
+        IJobService jobService = mock(IJobService.class);
+        when(platform.lookupService(IJobService.class)).thenReturn(jobService);
         try (MockedStatic<PlatformContext> mocked = mockStatic(PlatformContext.class)) {
             mocked.when(PlatformContext::getPlatform).thenReturn(platform);
             assertNotNull(new ProjectDuplicationInternalController());

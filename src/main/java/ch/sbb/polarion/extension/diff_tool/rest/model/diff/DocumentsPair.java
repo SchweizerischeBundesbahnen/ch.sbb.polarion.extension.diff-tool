@@ -22,7 +22,7 @@ public class DocumentsPair {
     private Document rightDocument;
 
     public static DocumentsPair of(@NotNull IModule leftDocument, @Nullable IModule rightDocument) {
-        return DocumentsPair.builder().leftDocument(Document.from(leftDocument)).rightDocument(Document.from(rightDocument)).build();
+        return DocumentsPair.builder().leftDocument(Document.from(leftDocument)).rightDocument(rightDocument != null ? Document.from(rightDocument) : null).build();
     }
 
 }

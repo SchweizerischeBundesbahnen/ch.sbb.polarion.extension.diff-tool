@@ -153,11 +153,16 @@ class ProjectDuplicationJobSchedulerTest {
     void noArgConstructorLooksUpJobServiceViaPlatformContext() {
         IPlatform platform = mock(IPlatform.class);
         lenient().when(platform.lookupService(IJobService.class)).thenReturn(jobService);
-        lenient().when(platform.lookupService(IProjectService.class)).thenReturn(mock(IProjectService.class));
-        lenient().when(platform.lookupService(ITrackerService.class)).thenReturn(mock(ITrackerService.class));
-        lenient().when(platform.lookupService(IRepositoryService.class)).thenReturn(mock(IRepositoryService.class));
-        lenient().when(platform.lookupService(ISecurityService.class)).thenReturn(mock(ISecurityService.class));
-        lenient().when(platform.lookupService(IPlatformService.class)).thenReturn(mock(IPlatformService.class));
+        IProjectService projectService = mock(IProjectService.class);
+        lenient().when(platform.lookupService(IProjectService.class)).thenReturn(projectService);
+        ITrackerService trackerService = mock(ITrackerService.class);
+        lenient().when(platform.lookupService(ITrackerService.class)).thenReturn(trackerService);
+        IRepositoryService repositoryService = mock(IRepositoryService.class);
+        lenient().when(platform.lookupService(IRepositoryService.class)).thenReturn(repositoryService);
+        ISecurityService securityService = mock(ISecurityService.class);
+        lenient().when(platform.lookupService(ISecurityService.class)).thenReturn(securityService);
+        IPlatformService platformService = mock(IPlatformService.class);
+        lenient().when(platform.lookupService(IPlatformService.class)).thenReturn(platformService);
         when(PlatformContext.getPlatform()).thenReturn(platform);
 
         assertNotNull(new ProjectDuplicationJobScheduler());
