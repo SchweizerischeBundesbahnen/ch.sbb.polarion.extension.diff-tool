@@ -252,3 +252,39 @@ describe('Unified pair header', () => {
     }
   });
 });
+
+describe('Unified moved items', () => {
+  it('shows the diff at the source position, with a link to the target position', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    await switchToUnified();
+
+    const pair = '[data-testid="EL-157_DP-11562_direct"]';
+    const header = unifiedHeader('EL-157_DP-11562_direct')!;
+    expect(header).not.toHaveClass('moved-placeholder');
+    expect([...header.querySelectorAll('.wi-badge')].map((badge) => badge.textContent)).toEqual(['EL-157', 'DP-11562']);
+    const moved = header.querySelector<HTMLAnchorElement>('a.wi-tag.moved')!;
+    expect(moved).toHaveTextContent('Moved to 2.2-2');
+    expect(moved.getAttribute('href')).toBe('#right2.2-2');
+    expect(document.querySelector(`${pair} .merge-ticker`)).not.toBeNull();
+    await vi.waitFor(() => expect(document.querySelector(`${pair} .diff-leaf.unified`)).not.toBeNull());
+  });
+
+  it('shows the target position as a slim placeholder, linked back', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    await switchToUnified();
+
+    const pair = '[data-testid="EL-158_DP-11563_reverse"]';
+    const header = unifiedHeader('EL-158_DP-11563_reverse')!;
+    expect(header).toHaveClass('moved-placeholder');
+    expect(header).not.toHaveAttribute('role');
+    expect(header.querySelector('.wi-title')).toHaveTextContent('2.4 Performance Requirements');
+    expect(header.querySelector('#right2\\.4')).not.toBeNull();
+    expect(header.querySelector('a.wi-tag.moved')).toHaveTextContent('Moved to 2.3');
+    expect(header.querySelector('a.wi-tag.moved')!.getAttribute('href')).toBe('#left2.3');
+    expect(document.querySelector(`${pair} .merge-ticker input`)).toBeNull();
+    expect(document.querySelector(`${pair} .floating-button`)).toBeNull();
+    expect(document.querySelector(`${pair} .diff-leaf`)).toBeNull();
+  });
+});

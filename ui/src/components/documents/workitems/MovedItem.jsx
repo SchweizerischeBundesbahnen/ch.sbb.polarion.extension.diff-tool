@@ -1,6 +1,6 @@
 import {LEFT, RIGHT} from "@/components/WorkItemHeader";
 
-const MOVED_UP = 0;
+export const MOVED_UP = 0;
 const MOVED_DOWN = 1;
 
 export default function MovedItem({side, movedOutlineNumber, moveDirection}) {

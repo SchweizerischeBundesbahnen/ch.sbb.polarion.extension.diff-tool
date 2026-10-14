@@ -1,7 +1,7 @@
 import {useState} from "react";
-import {faArrowRightLong} from "@fortawesome/free-solid-svg-icons";
+import {faArrowDownLong, faArrowRightLong, faArrowUpLong} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import MovedItem from "@/components/documents/workitems/MovedItem";
+import MovedItem, {MOVED_UP} from "@/components/documents/workitems/MovedItem";
 
 export const LEFT = "left";
 export const RIGHT = "right";
@@ -87,22 +87,26 @@ export function WorkItemHeader({workItem, asHeaderInDocument, movedOutlineNumber
   );
 }
 
+/** A moved pair of the unified view is shown at its source position, with its diff, and as a placeholder at its target one. */
+export const isMovedPlaceholder = (rightWorkItem) => !!rightWorkItem?.movedOutlineNumber;
+
 /**
  * The one-row header of a pair in the unified view. It names the work item once, by its source title
  * (or the target one, if the source is missing), and links both work items: source, then target.
- * A row which only marks where a moved work item was shows the work item of its other side and the link
- * to that position.
+ * A moved pair links its two positions to each other. The placeholder at the target position is one
+ * slim line, no heading, so the document outline reads as the source.
  */
 export function UnifiedWorkItemHeader({leftWorkItem, rightWorkItem, asHeaderInDocument}) {
-  // A side is a placeholder when the work item of the other side moved away from this position.
-  const leftShown = !!leftWorkItem && !rightWorkItem?.movedOutlineNumber;
-  const rightShown = !!rightWorkItem && !leftWorkItem?.movedOutlineNumber;
-  const [leftId] = useState(leftShown ? anchorId(leftWorkItem, LEFT) : null);
-  const [rightId] = useState(rightShown ? anchorId(rightWorkItem, RIGHT) : null);
+  const placeholder = isMovedPlaceholder(rightWorkItem);
+  const movedAway = !!leftWorkItem?.movedOutlineNumber;
+  // One anchor per position, as the "moved to" links of both views point to them.
+  const [leftId] = useState(placeholder ? null : anchorId(leftWorkItem, LEFT));
+  const [rightId] = useState(movedAway ? null : anchorId(rightWorkItem, RIGHT));
 
-  const workItem = leftShown ? leftWorkItem : (rightShown ? rightWorkItem : null);
-  const headerLevel = headerLevelOf(workItem, asHeaderInDocument);
-  const badgeFontSize = badgeFontSizeOf(headerLevel, asHeaderInDocument);
+  const workItem = placeholder ? rightWorkItem : (leftWorkItem || rightWorkItem);
+  const asHeading = asHeaderInDocument && !placeholder;
+  const headerLevel = headerLevelOf(workItem, asHeading);
+  const badgeFontSize = badgeFontSizeOf(headerLevel, asHeading);
 
   const sideBadge = (sideWorkItem, sideName) => (
       <span className="wi-side">
@@ -118,26 +122,31 @@ export function UnifiedWorkItemHeader({leftWorkItem, rightWorkItem, asHeaderInDo
       </span>
   );
 
-  const movedLink = (movedOutlineNumber, side) => (
-      <a className="wi-tag moved" href={`#${side}${movedOutlineNumber}`}>moved to {movedOutlineNumber}</a>
+  const movedTag = (movedWorkItem, side) => (
+      <a className="wi-tag moved" href={`#${side}${movedWorkItem.movedOutlineNumber}`} title="Go to the other position of this WorkItem">
+        <FontAwesomeIcon icon={movedWorkItem.moveDirection === MOVED_UP ? faArrowUpLong : faArrowDownLong}/> Moved to {movedWorkItem.movedOutlineNumber}
+      </a>
   );
+
+  const title = workItem && asHeaderInDocument ? `${workItem.outlineNumber} ${workItem.title}` : workItem?.title;
 
   return (
       <div style={{
         paddingLeft: asHeaderInDocument ? "4rem" : "7rem",
-        fontWeight: asHeaderInDocument ? "600" : "300",
-        fontSize: fontSizeOf(headerLevel, asHeaderInDocument)
-      }} {...headingPropsOf(headerLevel)} className="wi-header unified col collapsed-border" data-testid="unified-wi">
+        fontWeight: asHeading ? "600" : "300",
+        fontSize: placeholder ? "0.85em" : fontSizeOf(headerLevel, asHeading)
+      }} {...headingPropsOf(headerLevel)} className={`wi-header unified col collapsed-border ${placeholder ? "moved-placeholder" : ""}`}
+           data-testid="unified-wi">
         {leftId && <span id={leftId} className="wi-anchor"/>}
         {rightId && <span id={rightId} className="wi-anchor"/>}
-        {workItem && <span className="wi-title">{asHeaderInDocument ? `${workItem.outlineNumber} ${workItem.title}` : workItem.title}</span>}
-        {leftShown && sideBadge(leftWorkItem, "Source")}
-        {leftShown && rightShown && <FontAwesomeIcon icon={faArrowRightLong} className="wi-arrow"/>}
-        {rightShown && sideBadge(rightWorkItem, "Target")}
+        {workItem && <span className="wi-title">{title}</span>}
+        {leftWorkItem && sideBadge(leftWorkItem, "Source")}
+        {leftWorkItem && rightWorkItem && <FontAwesomeIcon icon={faArrowRightLong} className="wi-arrow"/>}
+        {rightWorkItem && sideBadge(rightWorkItem, "Target")}
         {leftWorkItem && !rightWorkItem && <span className="wi-tag only-in-source">Only in source</span>}
         {!leftWorkItem && rightWorkItem && <span className="wi-tag only-in-target">Only in target</span>}
-        {rightWorkItem?.movedOutlineNumber && movedLink(rightWorkItem.movedOutlineNumber, LEFT)}
-        {leftWorkItem?.movedOutlineNumber && movedLink(leftWorkItem.movedOutlineNumber, RIGHT)}
+        {movedAway && movedTag(leftWorkItem, RIGHT)}
+        {placeholder && movedTag(rightWorkItem, LEFT)}
         {!workItem && <span style={{fontSize: ".75em"}}>&ndash;</span>}
       </div>
   );
