@@ -1,5 +1,5 @@
 import PairMergeTicker from "@/components/merge/PairMergeTicker";
-import {LEFT, RIGHT, WorkItemHeader} from "@/components/WorkItemHeader";
+import PairHeader from "@/components/PairHeader";
 import {useContext, useEffect, useRef, useState} from "react";
 import useImageUtils from "@/utils/useImageUtils";
 import DiffContent from "@/components/diff/DiffContent";
@@ -206,22 +206,17 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
   return (
       <>
         <div className={`wi-diff container-fluid g-0`}>
-          <div style={{
-            backgroundColor: "#f6f6f6",
-            display: 'flex'
-          }} className="header row g-0" data-testid={`${workItemsPair.leftWorkItem.id}-header`}>
-            <PairMergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />
-            <WorkItemHeader workItem={workItemsPair.leftWorkItem} side={LEFT} />
-
-            {diffs && diffs.length > 0
-                && (!workItemsPair.rightWorkItem || !workItemsPair.rightWorkItem.movedOutlineNumber)
-                && <FloatingButton fontAwesomeIcon={expanded ? faChevronDown : faChevronUp} clickHandler={expandHandler}
-                                   expanded={expanded} label={expanded ? "Collapse the differences" : "Expand the differences"}/>}
-            {(!diffs || diffs.length === 0) && !error && <FloatingButton fontAwesomeIcon={faEquals} disabled={true} label="No differences"/>}
-            {(!diffs || diffs.length === 0) && error && <FloatingButton fontAwesomeIcon={faQuestion} disabled={true} label="Differences could not be determined"/>}
-
-            <WorkItemHeader workItem={workItemsPair.rightWorkItem} side={RIGHT} />
-          </div>
+          <PairHeader leftWorkItem={workItemsPair.leftWorkItem} rightWorkItem={workItemsPair.rightWorkItem}
+                      style={{backgroundColor: "#f6f6f6", display: 'flex'}} testId={`${workItemsPair.leftWorkItem.id}-header`}
+                      ticker={<PairMergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />}
+                      statusButton={<>
+                        {diffs && diffs.length > 0
+                            && (!workItemsPair.rightWorkItem || !workItemsPair.rightWorkItem.movedOutlineNumber)
+                            && <FloatingButton fontAwesomeIcon={expanded ? faChevronDown : faChevronUp} clickHandler={expandHandler}
+                                               expanded={expanded} label={expanded ? "Collapse the differences" : "Expand the differences"}/>}
+                        {(!diffs || diffs.length === 0) && !error && <FloatingButton fontAwesomeIcon={faEquals} disabled={true} label="No differences"/>}
+                        {(!diffs || diffs.length === 0) && error && <FloatingButton fontAwesomeIcon={faQuestion} disabled={true} label="Differences could not be determined"/>}
+                      </>} />
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
           {loading && <div className="loader wi-loader"></div>}
           {!loading && <DiffContent workItemsPair={workItemsPair} pairSelected={selected} pairSelectionTrigger={pairSelectionTrigger} pairSelectedCallback={pairSelected} diffs={diffs} expanded={expanded}/>}

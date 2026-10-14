@@ -1,6 +1,6 @@
 import DiffContent from "@/components/diff/DiffContent";
 import {useContext, useEffect, useMemo, useRef, useState} from "react";
-import {WorkItemHeader, LEFT, RIGHT} from "@/components/WorkItemHeader";
+import PairHeader from "@/components/PairHeader";
 import FloatingButton from "@/components/FloatingButton";
 import {faChevronDown, faChevronUp, faEquals, faQuestion} from "@fortawesome/free-solid-svg-icons";
 import useRemote from "@/services/useRemote";
@@ -282,27 +282,20 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
         <div className={`wi-diff ${selected ? "selected" : ""} ${getReferencedClass(workItemsPair)} container-fluid g-0`} style={{
           display: (workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.outlineNumber) || (workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.outlineNumber) ? 'block' : 'none'
         }} data-testid={`${workItemsPair.leftWorkItem ? workItemsPair.leftWorkItem.id : "NONE"}_${workItemsPair.rightWorkItem ? workItemsPair.rightWorkItem.id : "NONE"}${workItemsPair.leftWorkItem?.movedOutlineNumber ? "_direct" : (workItemsPair.rightWorkItem?.movedOutlineNumber ? "_reverse" : "")}`}>
-          <div style={{
-            backgroundColor: asHeaderInDocument ? "#eeeeee" : "#f6f6f6",
-            display: isChapterVisible(leftChapter, true) || isChapterVisible(rightChapter, false) || !context.state.hideChaptersIfNoDifference || error ? 'flex' : 'none'
-          }} className="header row g-0">
-            {!(branchedDocuments && asHeaderInDocument) && <PairMergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />}
-
-            <WorkItemHeader workItem={workItemsPair.leftWorkItem} asHeaderInDocument={asHeaderInDocument}
-                            movedOutlineNumber={workItemsPair.rightWorkItem?.movedOutlineNumber}
-                            moveDirection={workItemsPair.rightWorkItem?.moveDirection} side={LEFT} />
-
-            {!(branchedDocuments && asHeaderInDocument) && diffs && diffs.length > 0
-                && (!workItemsPair.rightWorkItem || !workItemsPair.rightWorkItem.movedOutlineNumber)
-                && <FloatingButton fontAwesomeIcon={expanded ? faChevronDown : faChevronUp} clickHandler={expandHandler}
-                                   expanded={expanded} label={expanded ? "Collapse the differences" : "Expand the differences"}/>}
-            {(!diffs || diffs.length === 0) && !error && <FloatingButton fontAwesomeIcon={faEquals} disabled={true} label="No differences"/>}
-            {((branchedDocuments && asHeaderInDocument) || ((!diffs || diffs.length === 0) && error)) && <FloatingButton fontAwesomeIcon={faQuestion} disabled={true} label="Differences could not be determined"/>}
-
-            <WorkItemHeader workItem={workItemsPair.rightWorkItem} asHeaderInDocument={asHeaderInDocument}
-                            movedOutlineNumber={workItemsPair.leftWorkItem?.movedOutlineNumber}
-                            moveDirection={workItemsPair.leftWorkItem?.moveDirection} side={RIGHT} />
-          </div>
+          <PairHeader leftWorkItem={workItemsPair.leftWorkItem} rightWorkItem={workItemsPair.rightWorkItem} asHeaderInDocument={asHeaderInDocument}
+                      style={{
+                        backgroundColor: asHeaderInDocument ? "#eeeeee" : "#f6f6f6",
+                        display: isChapterVisible(leftChapter, true) || isChapterVisible(rightChapter, false) || !context.state.hideChaptersIfNoDifference || error ? 'flex' : 'none'
+                      }}
+                      ticker={!(branchedDocuments && asHeaderInDocument) && <PairMergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />}
+                      statusButton={<>
+                        {!(branchedDocuments && asHeaderInDocument) && diffs && diffs.length > 0
+                            && (!workItemsPair.rightWorkItem || !workItemsPair.rightWorkItem.movedOutlineNumber)
+                            && <FloatingButton fontAwesomeIcon={expanded ? faChevronDown : faChevronUp} clickHandler={expandHandler}
+                                               expanded={expanded} label={expanded ? "Collapse the differences" : "Expand the differences"}/>}
+                        {(!diffs || diffs.length === 0) && !error && <FloatingButton fontAwesomeIcon={faEquals} disabled={true} label="No differences"/>}
+                        {((branchedDocuments && asHeaderInDocument) || ((!diffs || diffs.length === 0) && error)) && <FloatingButton fontAwesomeIcon={faQuestion} disabled={true} label="Differences could not be determined"/>}
+                      </>} />
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
           {loading && <div className="loader wi-loader"></div>}
           {!loading && !(branchedDocuments && asHeaderInDocument) && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber)

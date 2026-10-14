@@ -694,6 +694,58 @@ a.wi-badge:hover {
   font-weight: normal;
 }
 
+/* The unified pair header (PairHeader.jsx): one row, with the status button next to the merge ticker
+   instead of between the two sides. */
+.wi-diff > .header.unified .floating-button {
+  left: 31px;
+}
+.wi-header.unified {
+  max-width: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.5em;
+  row-gap: 0.3rem;
+}
+/* Out of the flex flow: a row has one or two anchors, and each would add a gap before the title. */
+.wi-header.unified .wi-anchor {
+  position: absolute;
+}
+.wi-header.unified .wi-side {
+  display: inline-flex;
+  align-items: center;
+  column-gap: 0.4rem;
+}
+.wi-header.unified .wi-arrow {
+  font-size: 0.75rem;
+  color: #888;
+}
+/* Sized in rem: a tag reads the same next to a chapter heading and next to a work item. */
+.wi-tag {
+  padding: 1px 6px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 9px;
+  background-color: #fff;
+  color: #444;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.wi-tag.only-in-source {
+  background-color: var(--diff-removed-bg, #fdc6c6);
+}
+.wi-tag.only-in-target {
+  background-color: var(--diff-added-bg, #ccffcc);
+}
+.wi-tag.external-project {
+  color: red;
+}
+a.wi-tag.moved:hover {
+  text-decoration: none;
+  background-color: #eee;
+}
+
 .in-progress-overlay {
   display: flex;
   position: absolute;

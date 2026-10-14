@@ -192,3 +192,63 @@ describe('Unified field diff', () => {
     expect(document.querySelectorAll('.diff-viewer .merge-ticker')).toHaveLength(viewers);
   });
 });
+
+const unifiedHeader = (pair: string) =>
+  document.querySelector<HTMLElement>(`[data-testid="${pair}"] .wi-header.unified`);
+
+describe('Unified pair header', () => {
+  it('names the work item once and links the source, then the target', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    await switchToUnified();
+
+    const header = unifiedHeader('EL-4977_DP-11559')!;
+    expect(document.querySelectorAll('[data-testid="EL-4977_DP-11559"] .wi-header')).toHaveLength(1);
+    expect(header.querySelector('.wi-title')).toHaveTextContent('New Requirement');
+    const badges = [...header.querySelectorAll('.wi-badge')];
+    expect(badges.map((badge) => badge.getAttribute('aria-label'))).toEqual([
+      'Source WorkItem EL-4977',
+      'Target WorkItem DP-11559',
+    ]);
+    expect(header.querySelector('.wi-tag')).toBeNull();
+  });
+
+  it('tags a work item that exists on one side only', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    await switchToUnified();
+
+    expect(unifiedHeader('EL-156_NONE')!.querySelector('.wi-tag.only-in-source')).toHaveTextContent('Only in source');
+    expect(unifiedHeader('NONE_DP-11570')!.querySelector('.wi-tag.only-in-target')).toHaveTextContent('Only in target');
+  });
+
+  it('tags a referenced work item with its revision', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    await switchToUnified();
+
+    expect(unifiedHeader('EL-11575_EL-11575')!.querySelector('.wi-tag')).toHaveTextContent('Referenced, rev. 6480');
+  });
+
+  it('keeps a chapter a heading of its level', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    await switchToUnified();
+
+    const header = unifiedHeader('EL-145_DP-11550')!;
+    expect(header).toHaveAttribute('role', 'heading');
+    expect(header).toHaveAttribute('aria-level', '2');
+  });
+
+  it('keeps the target of every "moved to" link', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    await switchToUnified();
+
+    const links = [...document.querySelectorAll<HTMLAnchorElement>('.wi-header.unified a.wi-tag.moved')];
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      expect(document.getElementById(link.getAttribute('href')!.substring(1))).not.toBeNull();
+    }
+  });
+});
