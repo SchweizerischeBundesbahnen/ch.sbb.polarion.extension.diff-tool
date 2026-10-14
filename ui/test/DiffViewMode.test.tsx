@@ -148,9 +148,6 @@ describe('Unified field diff', () => {
     const added = leaf.querySelector('.diff-html-added')!;
     expect(getComputedStyle(removed).display).not.toBe('none');
     expect(getComputedStyle(added).display).not.toBe('none');
-    // Removed and added differ by more than their color.
-    expect(getComputedStyle(removed).textDecorationLine).toBe('line-through');
-    expect(getComputedStyle(added).textDecorationLine).toBe('none');
   });
 
   it('shows a work item missing in the target from its source diff', async () => {

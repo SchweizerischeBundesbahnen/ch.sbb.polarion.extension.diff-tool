@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 
+// The only merge direction the viewer offers: from the source into the target.
 export const LEFT_TO_RIGHT = 0;
-export const RIGHT_TO_LEFT = 1;
 
 export function useMergingContext({contentDiffing = false} = {}){
   const [selectionRegistry, setSelectionRegistry] = useState(new Map());

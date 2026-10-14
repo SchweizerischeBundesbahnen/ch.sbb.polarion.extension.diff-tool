@@ -187,66 +187,82 @@ a:hover {
   align-items: center;
 }
 
+/* The merge toolbar (MergePane.jsx): what is selected on the left, the one merge action on the right.
+   The same in both views, since a merge always goes from the source into the target. */
 .merge-pane {
+  align-items: center;
+  column-gap: 1rem;
+  padding: 0.5rem 2rem 0.5rem 0.6rem;
   background-color: #c9cccf;
+  font-size: 0.7em;
+  color: #555555;
 }
 
 .merge-pane label.select-all {
-  margin-left: -7px;
-  font-size: 0.7em;
-  color: #666666;
+  align-items: center;
+  column-gap: 0.4rem;
 }
 
 .merge-pane label.select-all input[type='checkbox'] {
   font-size: 1.2em;
-  margin-top: 0.1em;
-  margin-right: 5px;
+  margin-top: 0;
 }
 
-.merge-button-container {
-  display: flex;
-  padding: 0.6rem;
-  container-type: inline-size;
+.merge-pane .selection-count {
+  font-weight: 500;
 }
 
-.merge-button-container > span {
-  align-content: center;
-  font-size: 0.7em;
-  color: #666666;
-  margin: 0 1em;
+/* Takes the free width, so the merge button stays at the right end. */
+.merge-pane .merge-pane-status {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
 }
 
-.link-role-direction-label {
+.merge-pane .merge-pane-status > span + span {
+  margin-left: 1em;
+}
+
+.merge-pane .merge-button .btn {
+  --bs-btn-font-size: 1.3em;
+  --bs-btn-padding-y: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  column-gap: 0.5rem;
+  background-color: var(--polarion-blue);
+  border-color: var(--polarion-blue);
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.merge-pane .merge-button .btn:hover:not(:disabled) {
+  background-color: #0095b3;
+}
+
+.merge-pane .merge-button .btn:disabled {
+  background-color: #8e9499;
+  border-color: #8e9499;
+  color: #eeeeee;
+  opacity: 1;
+}
+
+.link-role-direction {
+  margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  border-left: 3px solid var(--polarion-blue);
+  background-color: #f4f6f7;
+}
+
+.link-role-direction .select-set {
   display: flex;
   align-items: center;
-  font-size: 0.7em;
+  column-gap: 1rem;
+}
+
+.link-role-direction .link-role-direction-hint {
+  margin: 0.5rem 0 0;
   color: #666666;
-  white-space: nowrap;
-  margin-right: 0.5rem;
-  gap: 0.4rem;
-  /* The merge pane's row is justified to the right, so content wider than the row overflows to the
-     left - under the expanded control pane, which is fixed on top and swallows the clicks of the
-     select-all checkbox. The row must therefore shrink instead of pushing: this label is the only
-     elastic part, so let it shrink and clip its text. Fonts that render this text a few pixels wider
-     otherwise break the checkbox, on some platforms only. */
-  min-width: 0;
 }
-
-.link-role-direction-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-
-@container (max-width: 450px) {
-  .link-role-direction-text {
-    display: none;
-  }
-}
-
-/* The link-role picker renders as react-sbb-polarion's SearchableSelect (see MergePane), which brings
-   its own combobox styling in the bundled style.css — no native-<select> border/focus rules here,
-   which used to stack on top of it and left a stray dark frame after selection. */
 
 .sticky-top {
   transition: all 0.1s linear;
@@ -443,11 +459,114 @@ a:hover {
   font-size: 1.2em;
 }
 
+.doc-revision {
+  padding-left: 1.2em;
+  font-size: 0.65em;
+  font-weight: 300;
+}
+
+/* The comparison header (ComparisonHeader.jsx). Side by side, the source and the target are columns and
+   their lines are rows, aligned across both columns by a subgrid. */
+.comparison-header {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(var(--comparison-lines), auto);
+}
+
+.comparison-side {
+  display: grid;
+  grid-row: 1 / span var(--comparison-lines);
+  grid-template-rows: subgrid;
+  min-width: 0;
+}
+
+.comparison-side.left {
+  grid-column: 1;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.comparison-side.right {
+  grid-column: 2;
+}
+
+.comparison-line {
+  grid-row: span var(--comparison-line-span, 1);
+  display: flex;
+  align-items: center;
+  column-gap: 1rem;
+  min-width: 0;
+  padding: 1rem 2rem;
+}
+
+.comparison-line + .comparison-line {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* The document title belongs to its space: one cell side by side, as before the two became lines. */
+.diff-view-side-by-side .comparison-line:has(> .path[data-testid$='-space']) {
+  padding-bottom: 0;
+}
+
+.diff-view-side-by-side .comparison-line:has(> .doc-title) {
+  padding-top: 0.2rem;
+  border-top: none;
+}
+
+/* Fixed width, so the lines after it start at the same x for "Source" and "Target". */
+.side-label {
+  flex: none;
+  width: 5.5em;
+  padding: 0.15em 0;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 1em;
+  font-size: 0.7em;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.missing-counterpart {
+  color: #bbb;
+  font-weight: 200;
+}
+
+/* Unified, the sides are rows and their lines are columns, aligned across both rows by a subgrid. The
+   last column takes the remaining width, so the row borders run the full width of the header. */
+.diff-view-unified .comparison-header {
+  grid-template-columns: repeat(var(--comparison-lines), auto) 1fr;
+  grid-template-rows: auto auto;
+}
+
+.diff-view-unified .comparison-side {
+  grid-row: auto;
+  grid-column: 1 / -1;
+  grid-template-rows: none;
+  grid-template-columns: subgrid;
+  border-right: none;
+}
+
+.diff-view-unified .comparison-side.left {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.diff-view-unified .comparison-line {
+  grid-row: auto;
+  grid-column: span var(--comparison-line-span, 1);
+  padding: 0.6rem 0 0.6rem 2rem;
+}
+
+.diff-view-unified .comparison-line + .comparison-line {
+  border-top: none;
+}
+
+/* Centered on the lines below the project or collection: the documents it swaps. */
 .swap-button {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  grid-row: 2 / -1;
+  grid-column: 1 / -1;
+  justify-self: center;
+  align-self: center;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -461,6 +580,21 @@ a:hover {
   color: rgba(255, 255, 255, 0.6);
   transition: all 0.2s ease;
   z-index: 1;
+}
+
+/* Unified, the sides are stacked, so the button sits at the right end and swaps them vertically. */
+/* Taken out of the grid area: an absolutely positioned grid item with one is placed within it. */
+.diff-view-unified .swap-button {
+  grid-row: auto;
+  grid-column: auto;
+  position: absolute;
+  top: 50%;
+  right: 2rem;
+  transform: translateY(-50%);
+}
+
+.diff-view-unified .swap-button svg {
+  transform: rotate(90deg);
 }
 
 .swap-button:hover {
@@ -714,14 +848,9 @@ a.wi-badge:hover {
   background: var(--diff-removed-bg, #fdc6c6);
 }
 
-/* The unified view: one leaf with the removed and the added parts next to each other. The strikethrough
-   tells them apart without relying on the color alone (WCAG 1.4.1), and keeps working with swapped colors. */
+/* The unified view: one leaf with the removed and the added parts next to each other. */
 .diff-leaf.unified {
   width: 100%;
-}
-.diff-leaf.unified del,
-.diff-leaf.unified .diff-html-removed {
-  text-decoration: line-through;
 }
 /* DaisyDiff marks an enum change with an empty span on the other side, which a side-by-side leaf hides
    along with that side. Here it would show as a sliver of padding. */
@@ -767,7 +896,8 @@ a.wi-badge:hover {
     padding-left: 0;
   }
 
-  .header.row {
+  .header.row,
+  .comparison-header {
     font-size: 8pt;
   }
 

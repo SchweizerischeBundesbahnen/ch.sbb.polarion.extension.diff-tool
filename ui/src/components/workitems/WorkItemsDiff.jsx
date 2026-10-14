@@ -4,6 +4,8 @@ import {useDataSearchParams} from "@/router/navigation";
 import useDiffBodyClassName from "@/utils/useDiffBodyClassName";
 import {v4 as uuidv4} from "uuid";
 import ProjectHeader from "@/components/workitems/ProjectHeader";
+import ComparisonHeader from "@/components/ComparisonHeader";
+import {DIFF_SIDES} from "@/components/diff/DiffLeaf";
 import Loading from "@/components/loading/Loading";
 import AppAlert from "@/components/AppAlert";
 import {useMergingContext} from "@/components/merge/useMergingContext";
@@ -107,10 +109,9 @@ export default function WorkItemsDiff() {
 
   return <div id="diff-body" className={diffBodyClassName}>
     <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`} data-testid="diff-header">
-      <div className="row g-0" data-testid="project-header-row">
-        <ProjectHeader project={workItemsData.leftProject} />
-        <ProjectHeader project={workItemsData.rightProject} />
-      </div>
+      <ComparisonHeader
+          source={[<ProjectHeader project={workItemsData.leftProject} side={DIFF_SIDES.LEFT} />]}
+          target={[<ProjectHeader project={workItemsData.rightProject} side={DIFF_SIDES.RIGHT} />]} />
       <ProgressBar loadingContext={loadingContext} />
       <MergePane leftContext={workItemsData.leftProject} rightContext={workItemsData.rightProject}  diff_type={DiffTypes.WORK_ITEMS_DIFF}
                  mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />

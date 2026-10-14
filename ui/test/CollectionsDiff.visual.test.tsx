@@ -11,6 +11,7 @@ import {
   renderViewer,
   restoreUrl,
   shoot,
+  switchToUnified,
 } from './viewerHarness';
 
 // Docker-only snapshots of the collections diff viewer, the collections.html entry.
@@ -96,6 +97,22 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Collections diff viewer visual', () => {
     await headerLoaded();
     await createOffered();
     await shoot('collections-diff-no-counterpart');
+  });
+
+  it('a paired document in the unified view', async () => {
+    renderPaired();
+    await headerLoaded();
+    await pairsLoaded();
+    await switchToUnified();
+    await shoot('collections-diff-unified');
+  });
+
+  it('a document with no counterpart in the unified view', async () => {
+    renderCollections(UNPAIRED_URL, fixture('collections.json'), fixture('documents-from-collection.json'));
+    await headerLoaded();
+    await createOffered();
+    await switchToUnified();
+    await shoot('collections-diff-no-counterpart-unified');
   });
 
   it('the document configuration dialog, raised over that offer', async () => {

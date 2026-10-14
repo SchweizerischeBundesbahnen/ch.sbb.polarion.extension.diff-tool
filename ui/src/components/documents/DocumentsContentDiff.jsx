@@ -6,7 +6,7 @@ import useDiffService from "@/services/useDiffService";
 import useLoadingContext from "@/components/loading/useLoadingContext";
 import CollectionHeader from "@/components/collections/CollectionHeader";
 import DocumentProjectHeader from "@/components/documents/DocumentProjectHeader";
-import DocumentHeader from "@/components/documents/DocumentHeader";
+import {DocumentSpaceHeader, DocumentTitleHeader} from "@/components/documents/DocumentHeader";
 import MergePane from "@/components/merge/MergePane";
 import ErrorsOverlay from "@/components/ErrorsOverlay";
 import MergeInProgressOverlay from "@/components/merge/MergeInProgressOverlay";
@@ -18,9 +18,9 @@ import {useMergingContext} from "@/components/merge/useMergingContext";
 import Loading from "@/components/loading/Loading";
 import ContentAnchorsDiff, {CONTENT_ABOVE, CONTENT_BELOW} from "@/components/documents/ContentAnchorsDiff";
 import {DIFF_SIDES} from "@/components/diff/DiffLeaf";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faRightLeft} from "@fortawesome/free-solid-svg-icons";
 import useSwapDocuments from "@/utils/useSwapDocuments";
+import ComparisonHeader from "@/components/ComparisonHeader";
+import SwapDocumentsButton from "@/components/SwapDocumentsButton";
 import * as DiffTypes from "@/DiffTypes";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument'];
@@ -133,25 +133,18 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
   return <div id="diff-body" className={diffBodyClassName}>
     <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>
 
-      <div className="row g-0">
-        {enclosingCollections && <>
-          <CollectionHeader collection={enclosingCollections.leftCollection} side={DIFF_SIDES.LEFT} />
-          <CollectionHeader collection={enclosingCollections.rightCollection} side={DIFF_SIDES.RIGHT} />
-        </>}
-        {!enclosingCollections && <>
-          <DocumentProjectHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />
-          <DocumentProjectHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />
-        </>}
-      </div>
-      <div className="row g-0" style={{ position: "relative" }}>
-        <DocumentHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />
-        <button className="btn btn-secondary btn-xs swap-button" onClick={swapDocuments}
-                title="Swap source and target documents. Be aware that pairs selection will be cleared by this action."
-                aria-label="Swap documents">
-          <FontAwesomeIcon icon={faRightLeft} />
-        </button>
-        <DocumentHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />
-      </div>
+      <ComparisonHeader
+          source={[enclosingCollections
+              ? <CollectionHeader collection={enclosingCollections.leftCollection} side={DIFF_SIDES.LEFT} />
+              : <DocumentProjectHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />,
+            <DocumentSpaceHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT}/>,
+            <DocumentTitleHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT}/>]}
+          target={[enclosingCollections
+              ? <CollectionHeader collection={enclosingCollections.rightCollection} side={DIFF_SIDES.RIGHT} />
+              : <DocumentProjectHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />,
+            <DocumentSpaceHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT}/>,
+            <DocumentTitleHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT}/>]}
+          swapButton={<SwapDocumentsButton clearedSelection="pairs" onClick={swapDocuments} />} />
 
       <MergePane leftContext={docsData.leftDocument} rightContext={docsData.rightDocument}  diff_type={DiffTypes.DOCUMENTS_CONTENT_DIFF}
                  mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />

@@ -5,7 +5,7 @@ import AppContext from "../AppContext";
 import AppAlert from "@/components/AppAlert";
 import Loading from "@/components/loading/Loading";
 import WorkItemsPairDiff from "@/components/documents/workitems/WorkItemsPairDiff";
-import DocumentHeader from "@/components/documents/DocumentHeader";
+import {DocumentSpaceHeader, DocumentTitleHeader} from "@/components/documents/DocumentHeader";
 import ProgressBar from "@/components/loading/ProgressBar";
 import {v4 as uuidv4} from 'uuid';
 import ErrorsOverlay from "@/components/ErrorsOverlay";
@@ -19,9 +19,9 @@ import CollectionHeader from "@/components/collections/CollectionHeader";
 import DocumentProjectHeader from "@/components/documents/DocumentProjectHeader";
 import MergeResultModal from "@/components/merge/MergeResultModal";
 import {DIFF_SIDES} from "@/components/diff/DiffLeaf";
-import {faRightLeft} from "@fortawesome/free-solid-svg-icons";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import useSwapDocuments from "@/utils/useSwapDocuments";
+import ComparisonHeader from "@/components/ComparisonHeader";
+import SwapDocumentsButton from "@/components/SwapDocumentsButton";
 import * as DiffTypes from "@/DiffTypes";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument'];
@@ -238,25 +238,18 @@ export default function DocumentsDiff({ enclosingCollections }) {
   return <div id="diff-body" className={diffBodyClassName}>
     <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>
 
-      <div className="row g-0">
-        {enclosingCollections && <>
-          <CollectionHeader collection={enclosingCollections.leftCollection} side={DIFF_SIDES.LEFT} />
-          <CollectionHeader collection={enclosingCollections.rightCollection} side={DIFF_SIDES.RIGHT} />
-        </>}
-        {!enclosingCollections && <>
-          <DocumentProjectHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />
-          <DocumentProjectHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />
-        </>}
-      </div>
-      <div className="row g-0" style={{ position: "relative" }}>
-        <DocumentHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />
-        <button className="btn btn-secondary btn-xs swap-button" onClick={confirmAndSwapDocuments}
-                title="Swap source and target documents. Be aware that WorkItems/Fields selection will be cleared by this action."
-                aria-label="Swap documents">
-          <FontAwesomeIcon icon={faRightLeft} />
-        </button>
-        <DocumentHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />
-      </div>
+      <ComparisonHeader
+          source={[enclosingCollections
+              ? <CollectionHeader collection={enclosingCollections.leftCollection} side={DIFF_SIDES.LEFT} />
+              : <DocumentProjectHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT} />,
+            <DocumentSpaceHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT}/>,
+            <DocumentTitleHeader document={docsData.leftDocument} side={DIFF_SIDES.LEFT}/>]}
+          target={[enclosingCollections
+              ? <CollectionHeader collection={enclosingCollections.rightCollection} side={DIFF_SIDES.RIGHT} />
+              : <DocumentProjectHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT} />,
+            <DocumentSpaceHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT}/>,
+            <DocumentTitleHeader document={docsData.rightDocument} side={DIFF_SIDES.RIGHT}/>]}
+          swapButton={<SwapDocumentsButton clearedSelection="WorkItems/Fields" onClick={confirmAndSwapDocuments} />} />
 
       <ProgressBar loadingContext={loadingContext} />
       <MergePane leftContext={docsData.leftDocument} rightContext={docsData.rightDocument}  diff_type={DiffTypes.DOCUMENTS_DIFF}

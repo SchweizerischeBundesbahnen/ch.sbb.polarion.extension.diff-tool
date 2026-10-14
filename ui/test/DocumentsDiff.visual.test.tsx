@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
 import DocumentsPage from '../src/pages/DocumentsPage';
-import { setFieldValue } from './formextHelpers';
 import { jsonResponse } from './mockFetch';
 import {
   SERVER_RENDERED,
@@ -14,6 +13,7 @@ import {
   renderViewer,
   restoreUrl,
   shoot,
+  switchToUnified,
 } from './viewerHarness';
 
 // Docker-only snapshots of the documents diff viewer: the work item pairs with their merge tickers and
@@ -79,10 +79,19 @@ function renderDocumentsAs(compareAs: 'Fields' | 'Content') {
 }
 
 /** Ticks the pair the merge specs in e2e/ merge, and asks to merge it. */
-async function openMergeConfirmation() {
+/**
+ * Ticks a pair and asks to merge it: by default the pair the merge specs in e2e/ merge, or EL-156, which
+ * has no counterpart in the target, so the merge creates a WorkItem and asks for the link role direction.
+ */
+async function openMergeConfirmation(pair = 'EL-4977_DP-11559') {
+  // The toolbar shows once every pair has loaded. A pair still loading resets its selection when it is done.
+  await vi.waitFor(
+    () => expect(getComputedStyle(document.querySelector('.header .merge-pane') as HTMLElement).display).toBe('flex'),
+    { timeout: 5000 },
+  );
   const ticker = await vi.waitFor(() => {
     const box = document.querySelector<HTMLInputElement>(
-      '[data-testid="EL-4977_DP-11559"] .merge-ticker input[type="checkbox"]',
+      `[data-testid="${pair}"] .merge-ticker input[type="checkbox"]`,
     );
     expect(box).not.toBeNull();
     return box!;
@@ -95,15 +104,6 @@ async function openMergeConfirmation() {
   });
   merge.click();
   await openDialog('Merge confirmation');
-}
-
-/** Picks the unified view in the configuration pane, and closes the pane again. */
-async function switchToUnified() {
-  await openControlPane();
-  setFieldValue(document.querySelector<HTMLSelectElement>('#diff-view')!, 'unified');
-  await vi.waitFor(() => expect(document.querySelector('#diff-body')).toHaveClass('diff-view-unified'));
-  document.querySelector<HTMLButtonElement>('.control-pane .expand-button')!.click();
-  await vi.waitFor(() => expect(document.querySelectorAll('.control-pane.expanded')).toHaveLength(0));
 }
 
 async function loaded() {
@@ -196,6 +196,13 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents diff viewer visual', () => {
     await shoot('documents-diff-merge-confirmation');
   });
 
+  it('the merge confirmation dialog, asking for the link role direction of a created WorkItem', async () => {
+    renderDocuments();
+    await loaded();
+    await openMergeConfirmation('EL-156_NONE');
+    await shoot('documents-diff-merge-confirmation-link-role-direction');
+  });
+
   it('a field with issues, and the popup a keyboard user opens on it', async () => {
     renderDocumentsWithFieldIssues();
     await loaded();
@@ -246,6 +253,13 @@ describe('Documents diff viewer, accessibility', () => {
     renderDocuments();
     await loaded();
     await openMergeConfirmation();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the merge confirmation asking for the link role direction', async () => {
+    renderDocuments();
+    await loaded();
+    await openMergeConfirmation('EL-156_NONE');
     expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
 
@@ -362,6 +376,7 @@ describe('Documents diff viewer, accessibility', () => {
   it('names the link role direction combobox after its label', async () => {
     renderDocuments();
     await loaded();
+    await openMergeConfirmation('EL-156_NONE');
     const trigger = await vi.waitFor(() => {
       const found = document.querySelector('#link-role-direction + .searchable-dropdown .sd-trigger');
       expect(found).not.toBeNull();

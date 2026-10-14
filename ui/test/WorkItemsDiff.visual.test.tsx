@@ -2,7 +2,15 @@ import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-react';
 import WorkItemsPage from '../src/pages/WorkItemsPage';
-import { SERVER_RENDERED, fixture, openControlPane, renderViewer, restoreUrl, shoot } from './viewerHarness';
+import {
+  SERVER_RENDERED,
+  fixture,
+  openControlPane,
+  renderViewer,
+  restoreUrl,
+  shoot,
+  switchToUnified,
+} from './viewerHarness';
 
 // Docker-only snapshots of the work items diff viewer, the workitems.html entry. It pairs work items
 // selected by a query rather than by their place in a document, and renders its own copy of the pair
@@ -66,6 +74,13 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Work items diff viewer visual', () => {
     await loaded();
     await openControlPane();
     await shoot('workitems-diff-control-pane');
+  });
+
+  it('unified view', async () => {
+    renderWorkItems();
+    await loaded();
+    await switchToUnified();
+    await shoot('workitems-diff-unified');
   });
 });
 

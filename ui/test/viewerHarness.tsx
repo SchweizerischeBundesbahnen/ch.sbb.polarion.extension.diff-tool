@@ -5,6 +5,7 @@ import { page } from 'vitest/browser';
 import AppShell from '../src/components/AppShell';
 import ErrorBoundary from '../src/components/ErrorBoundary';
 import PublicShell from '../src/components/PublicShell';
+import { setFieldValue } from './formextHelpers';
 import { type Route, installFetchMock, jsonResponse } from './mockFetch';
 import { settleBeforeCapture, settleLayout } from './visualHelpers';
 
@@ -141,4 +142,13 @@ export async function openControlPane(): Promise<void> {
   });
   toggle.click();
   await vi.waitFor(() => expect(document.querySelectorAll('.control-pane.expanded')).toHaveLength(1));
+}
+
+/** Picks the unified view in the configuration pane, and closes the pane again. */
+export async function switchToUnified(): Promise<void> {
+  await openControlPane();
+  setFieldValue(document.querySelector<HTMLSelectElement>('#diff-view')!, 'unified');
+  await vi.waitFor(() => expect(document.querySelector('#diff-body')).toHaveClass('diff-view-unified'));
+  document.querySelector<HTMLButtonElement>('.control-pane .expand-button')!.click();
+  await vi.waitFor(() => expect(document.querySelectorAll('.control-pane.expanded')).toHaveLength(0));
 }
