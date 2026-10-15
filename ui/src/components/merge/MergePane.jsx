@@ -6,6 +6,7 @@ import Modal from "@/components/Modal";
 import AppContext from "@/components/AppContext";
 import {LEFT_TO_RIGHT} from "@/components/merge/useMergingContext";
 import * as DiffTypes from "@/DiffTypes";
+import * as DiffViewModes from "@/DiffViewModes";
 
 export const LINK_ROLE_DIRECTION_DIRECT = "DIRECT";
 export const LINK_ROLE_DIRECTION_REVERSE = "REVERSE";
@@ -79,19 +80,21 @@ export default function MergePane({rightContext, diff_type, mergingContext, merg
   return (
       <>
         <div className="merge-pane" style={{ display: display }}>
-          <label className="select-all" style={{
-            display: selectAllVisible ? "inline-flex" : "none"
-          }}>
-            <input className="form-check-input" type="checkbox"
-                   ref={(el) => { if (el) { el.indeterminate = selectionCount > 0 && !mergingContext.selectAll; } }}
-                   checked={mergingContext.selectAll} onChange={() => {
-              mergingContext.setAndApplySelectAll(!mergingContext.selectAll);
-            }}/>
-            Select all
-          </label>
-          <span className="selection-count" aria-live="polite" data-testid="selection-count">
-            {selectionCount > 0 ? `${selectionCount} selected` : ""}
-          </span>
+          <div className="merge-pane-selection">
+            <label className="select-all" style={{
+              display: selectAllVisible ? "inline-flex" : "none"
+            }}>
+              <input className="form-check-input" type="checkbox"
+                     ref={(el) => { if (el) { el.indeterminate = selectionCount > 0 && !mergingContext.selectAll; } }}
+                     checked={mergingContext.selectAll} onChange={() => {
+                mergingContext.setAndApplySelectAll(!mergingContext.selectAll);
+              }}/>
+              Select all
+            </label>
+            <span className="selection-count" aria-live="polite" data-testid="selection-count">
+              {selectionCount > 0 ? `${selectionCount} selected` : ""}
+            </span>
+          </div>
           <span className="merge-pane-status">
             {(!rightContext || rightContext.revision) && <span>Target document not in HEAD, which locks merging into it</span>}
             {rightContext && !rightContext.authorizedForMerge && <span>You are not authorized to merge into target project</span>}
@@ -99,7 +102,9 @@ export default function MergePane({rightContext, diff_type, mergingContext, merg
           <div className="merge-button">
             <button className="btn btn-xs" disabled={mergeDisabled || selectionCount === 0} onClick={confirmMerge}
                     title="Merge selected items into the target document">
-              Merge into target <FontAwesomeIcon icon={faArrowRightLong} />
+              Merge into target
+              {/* Side by side, the button sits between the source and the target, and points into the target. */}
+              {appContext.state.diffViewMode === DiffViewModes.SIDE_BY_SIDE && <FontAwesomeIcon icon={faArrowRightLong} />}
             </button>
           </div>
         </div>

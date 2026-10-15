@@ -263,6 +263,22 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents diff viewer visual', () => {
     await shoot('documents-diff-field-issues');
   });
 
+  it('a field with issues in the unified view, and its popup', async () => {
+    renderDocumentsWithFieldIssues();
+    await loaded();
+    await switchToUnified();
+
+    const header = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLElement>('[data-testid="EL-4977_DP-11559"] .diff-header[tabindex]');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    header.focus();
+    await vi.waitFor(() => expect(document.querySelector('.tooltip-container')).not.toBeNull());
+
+    await shoot('documents-diff-unified-field-issues');
+  });
+
   // The "Swap documents" dialog is deliberately not covered. DocumentsDiff only raises it above
   // PAIRS_COUNT_TO_ASK_SWAP_CONFIRMATION, which is 200, and documents-diff.json holds 19 pairs, so the
   // swap button goes straight through. Reaching it would mean a 200-pair fixture invented for one
@@ -359,6 +375,22 @@ describe('Documents diff viewer, accessibility', () => {
     renderDocumentsAs('Content');
     await contentLoaded();
     await switchToUnified();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a field issue popup open in the unified view', async () => {
+    renderDocumentsWithFieldIssues();
+    await loaded();
+    await switchToUnified();
+    const header = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLElement>('[data-testid="EL-4977_DP-11559"] .diff-header[tabindex]');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    header.focus();
+    await vi.waitFor(() => expect(document.querySelector('.tooltip-container')).not.toBeNull());
+    // The popup is in a portal, out of the pair, and still names the field it describes.
+    expect(header).toHaveAccessibleDescription(/EL-90001/);
     expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
 

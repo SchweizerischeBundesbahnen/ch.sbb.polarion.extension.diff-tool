@@ -109,6 +109,20 @@ describe('Diff view switch', () => {
     await vi.waitFor(() => expect(diffBody()).toHaveClass('diff-view-unified'));
   });
 
+  it('shows the merge button with an arrow side by side, and without one in the unified view', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    const mergeButton = () => document.querySelector<HTMLButtonElement>('.merge-pane .merge-button .btn')!;
+    expect(mergeButton()).toHaveTextContent('Merge into target');
+    expect(mergeButton().querySelector('svg')).not.toBeNull();
+
+    await openControlPane();
+    setFieldValue(viewSelect(), 'unified');
+
+    await vi.waitFor(() => expect(mergeButton().querySelector('svg')).toBeNull());
+    expect(mergeButton()).toHaveTextContent('Merge into target');
+  });
+
   // axe accepts a label that names only the hidden native <select>, see the link role direction case in
   // DocumentsDiff.visual.test.tsx.
   it('names the diff view combobox after its label', async () => {

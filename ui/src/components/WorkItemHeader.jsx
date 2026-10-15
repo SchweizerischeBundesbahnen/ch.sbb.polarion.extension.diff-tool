@@ -2,6 +2,7 @@ import {useState} from "react";
 import {faArrowDownLong, faArrowRightLong, faArrowUpLong} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import MovedItem, {MOVED_UP} from "@/components/documents/workitems/MovedItem";
+import {iconSize} from "@/utils/iconSize";
 
 export const LEFT = "left";
 export const RIGHT = "right";
@@ -31,13 +32,6 @@ const badgeFontSizeOf = (headerLevel, asHeaderInDocument) => asHeaderInDocument
 
 // Capped at 6 like <h1>-<h6>: screen readers do not agree on a level beyond that.
 const headingPropsOf = (headerLevel) => headerLevel > 0 ? {role: "heading", "aria-level": Math.min(headerLevel, 6)} : {};
-
-/**
- * Size attributes of an icon, in pixels at its usual font size. A browser sizes the icon by CSS and ignores
- * them, but the PDF export renders with WeasyPrint, which sizes an inline SVG only by them, or else by its
- * view box: hundreds of pixels for a Font Awesome icon.
- */
-const iconSize = (icon, height) => ({height: height, width: Math.round(height * icon.icon[0] / icon.icon[1])});
 
 const workItemUrl = (workItem) => `/polarion/#/project/${workItem.projectId}/workitem?id=${workItem.id}${workItem.revision ? "&revision=" + workItem.revision : ""}`;
 

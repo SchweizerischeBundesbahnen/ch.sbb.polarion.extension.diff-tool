@@ -212,11 +212,36 @@ a:hover {
   font-weight: 500;
 }
 
+.merge-pane .merge-pane-selection {
+  display: flex;
+  align-items: center;
+  column-gap: 1rem;
+}
+
 /* Takes the free width, so the merge button stays at the right end. */
 .merge-pane .merge-pane-status {
   flex: 1;
   min-width: 0;
   text-align: right;
+}
+
+/* Side by side, the merge button sits in the middle, on the line between the source and the target: the
+   selection and the status take equal widths on either side of it. */
+.diff-view-side-by-side .merge-pane {
+  padding-right: 0.6rem;
+}
+
+.diff-view-side-by-side .merge-pane .merge-pane-selection,
+.diff-view-side-by-side .merge-pane .merge-pane-status {
+  flex: 1 1 0;
+}
+
+.diff-view-side-by-side .merge-pane .merge-button {
+  order: 1;
+}
+
+.diff-view-side-by-side .merge-pane .merge-pane-status {
+  order: 2;
 }
 
 .merge-pane .merge-pane-status > span + span {
@@ -843,7 +868,71 @@ a.wi-tag.moved:hover {
   background-color: #c61010;
 }
 
+/* Unified, the field name is a column of its own, left of the value, like a label of the Polarion work item
+   form: a tab names the two columns of side by side, and unified has one. */
+.diff-view-unified .diff-wrapper {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+}
+
+.diff-view-unified .diff-header {
+  position: static;
+  transform: none;
+  min-width: 0;
+  padding: 12px 12px 10px 40px;
+  border: none;
+  border-radius: 0;
+  background: #f6f6f6; /* the work item header rows: the frame around the values */
+  color: #666666;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.diff-view-unified .diff-header.diff-issues {
+  background: #f6f6f6;
+  color: #c61010;
+}
+
+.diff-view-unified .diff-issues-icon {
+  margin-right: 0.4em;
+}
+
+.diff-view-unified .diff-wrapper .diff-leaf.unified {
+  padding: 10px 40px 10px 16px;
+}
+
+/* The checkbox on the line of the field name and the value's first line, however tall the value is. */
+.diff-view-unified .diff-wrapper > .merge-ticker {
+  align-items: flex-start;
+  padding-top: 12px;
+}
+
+/* The selection tint of the value, over the label column's own background. */
+.diff-view-unified .diff-wrapper.selected > .diff-header {
+  background: linear-gradient(#96befa21, #96befa21), #f6f6f6;
+}
+
+/* Narrow, the label column would take the value's width: the name goes above the value instead. */
+@media (max-width: 700px) {
+  .diff-view-unified .diff-wrapper {
+    display: block;
+  }
+
+  .diff-view-unified .diff-header {
+    padding: 6px 40px 4px;
+  }
+
+  .diff-view-unified .diff-wrapper .diff-leaf.unified {
+    padding: 4px 40px 10px;
+  }
+}
+
+/* Rendered outside the work item pair (FieldsDiff.jsx), so it states the pair's font itself. */
 .tooltip-container {
+  z-index: 2; /* above the merge tickers */
+  font-family: 'Segoe UI', Selawik, 'Open Sans', Ubuntu, Helvetica, Arial, Verdana, sans-serif;
+  font-size: 0.9em;
+  font-weight: 300;
   background-color: #c61010;
   color: #eee;
   padding: 5px 10px;
