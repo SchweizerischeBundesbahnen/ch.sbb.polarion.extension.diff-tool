@@ -465,20 +465,26 @@ a:hover {
   font-weight: 300;
 }
 
-/* The comparison header (ComparisonHeader.jsx). Side by side, the source and the target are columns and
-   their lines are rows, aligned across both columns by a subgrid. */
+/* The comparison header (ComparisonHeader.jsx). Side by side, the source and the target are columns of
+   three rows, aligned across both columns by a subgrid: the label, the lines but the last one next to each
+   other, and the last line (the document). */
 .comparison-header {
   position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: repeat(var(--comparison-lines), auto);
+  grid-template-rows: repeat(var(--comparison-rows), auto);
 }
 
 .comparison-side {
   display: grid;
-  grid-row: 1 / span var(--comparison-lines);
+  grid-row: 1 / span var(--comparison-rows);
   grid-template-rows: subgrid;
+  grid-template-columns: max-content max-content 1fr;
+  align-items: center;
+  row-gap: 0.4rem;
+  column-gap: 2rem;
   min-width: 0;
+  padding: 0.8rem 2rem;
 }
 
 .comparison-side.left {
@@ -490,27 +496,23 @@ a:hover {
   grid-column: 2;
 }
 
+.comparison-label {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  display: flex;
+}
+
 .comparison-line {
-  grid-row: span var(--comparison-line-span, 1);
+  grid-row: 2;
   display: flex;
   align-items: center;
   column-gap: 1rem;
   min-width: 0;
-  padding: 1rem 2rem;
 }
 
-.comparison-line + .comparison-line {
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-/* The document title belongs to its space: one cell side by side, as before the two became lines. */
-.diff-view-side-by-side .comparison-line:has(> .path[data-testid$='-space']) {
-  padding-bottom: 0;
-}
-
-.diff-view-side-by-side .comparison-line:has(> .doc-title) {
-  padding-top: 0.2rem;
-  border-top: none;
+.comparison-line.last {
+  grid-row: 3;
+  grid-column: 1 / -1;
 }
 
 /* Fixed width, so the lines after it start at the same x for "Source" and "Target". */
@@ -532,10 +534,10 @@ a:hover {
   font-weight: 200;
 }
 
-/* Unified, the sides are rows and their lines are columns, aligned across both rows by a subgrid. The
-   last column takes the remaining width, so the row borders run the full width of the header. */
+/* Unified, the sides are rows and the label and the lines are columns, aligned across both rows by a
+   subgrid. The last column takes the remaining width, so the row borders run the full width of the header. */
 .diff-view-unified .comparison-header {
-  grid-template-columns: repeat(var(--comparison-lines), auto) 1fr;
+  grid-template-columns: repeat(var(--comparison-columns), auto) 1fr;
   grid-template-rows: auto auto;
 }
 
@@ -544,6 +546,8 @@ a:hover {
   grid-column: 1 / -1;
   grid-template-rows: none;
   grid-template-columns: subgrid;
+  gap: 0;
+  padding: 0;
   border-right: none;
 }
 
@@ -551,14 +555,22 @@ a:hover {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.diff-view-unified .comparison-line {
+.diff-view-unified .comparison-label,
+.diff-view-unified .comparison-line,
+.diff-view-unified .comparison-line.last {
   grid-row: auto;
-  grid-column: span var(--comparison-line-span, 1);
+  grid-column: auto;
   padding: 0.6rem 0 0.6rem 2rem;
 }
 
-.diff-view-unified .comparison-line + .comparison-line {
-  border-top: none;
+.diff-view-unified .comparison-line,
+.diff-view-unified .comparison-line.last {
+  grid-column: span var(--comparison-line-span, 1);
+}
+
+/* The label and the first line read as one: "Source  project: ...". */
+.diff-view-unified .comparison-label + .comparison-line {
+  padding-left: 1rem;
 }
 
 /* Centered on the lines below the project or collection: the documents it swaps. */
@@ -966,8 +978,32 @@ a.wi-tag.moved:hover {
     font-size: 8pt;
   }
 
-  /* The PDF export renders with WeasyPrint, which has no subgrid: a CSS table keeps the lines of both
-     sides aligned. */
+  /* The PDF export renders with WeasyPrint, which has no subgrid. Side by side, each side is laid out as
+     blocks: both have the same three rows. */
+  .diff-view-side-by-side .comparison-side {
+    display: block;
+  }
+
+  .diff-view-side-by-side .comparison-label {
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  .diff-view-side-by-side .comparison-line {
+    display: inline-block;
+    margin-right: 2rem;
+  }
+
+  .diff-view-side-by-side .comparison-line.last {
+    display: block;
+    margin-top: 0.4rem;
+  }
+
+  .diff-view-side-by-side .comparison-line > * {
+    display: inline-block;
+  }
+
+  /* Unified, a CSS table keeps the lines of both sides aligned. */
   .diff-view-unified .comparison-header {
     display: table;
   }
@@ -976,6 +1012,7 @@ a.wi-tag.moved:hover {
     display: table-row;
   }
 
+  .diff-view-unified .comparison-label,
   .diff-view-unified .comparison-line {
     display: table-cell;
     vertical-align: middle;
@@ -985,10 +1022,6 @@ a.wi-tag.moved:hover {
   .diff-view-unified .comparison-line > * {
     display: inline-block;
     vertical-align: middle;
-  }
-
-  .diff-view-unified .comparison-line .side-label {
-    margin-right: 1rem;
   }
 
   /* On screen a tag is sized in rem, to read the same on every row. Printed, the rows are 8pt. */
