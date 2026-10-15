@@ -178,6 +178,11 @@ export default function DocumentsDiff({ enclosingCollections }) {
     }
   };
 
+  // A moved pair is shown twice: at its source position and at its target one. This finds the other row.
+  const mirroredPair = (movedPair) => loadingContext.pairs.find(pair => pair !== movedPair && (
+      (movedPair.leftWorkItem?.movedOutlineNumber && movedPair.leftWorkItem.movedOutlineNumber === pair.rightWorkItem?.outlineNumber)
+      || (movedPair.rightWorkItem?.movedOutlineNumber && movedPair.rightWorkItem.movedOutlineNumber === pair.leftWorkItem?.outlineNumber)));
+
   const unSelectionAllowed = (pairToCheck) => {
     if (!fullPair(pairToCheck)) {
       return true; // Only full pairs to be checked
@@ -281,7 +286,7 @@ export default function DocumentsDiff({ enclosingCollections }) {
                                 leftChaptersDiffMarkers={leftChaptersDiffMarkers} rightChaptersDiffMarkers={rightChaptersDiffMarkers}
                                 currentIndex={index} loadingContext={loadingContext} mergingContext={mergingContext}
                                 unSelectionAllowedCallback={unSelectionAllowed} selectChildrenCallback={selectChildren}
-                                setMirroredPairSelectedCallback={setMirroredPairSelected}
+                                setMirroredPairSelectedCallback={setMirroredPairSelected} mirroredPairCallback={mirroredPair}
                                 createdReportEntries={mergeReport.created || []} modifiedReportEntries={mergeReport.modified || []}/>;
 
     })}

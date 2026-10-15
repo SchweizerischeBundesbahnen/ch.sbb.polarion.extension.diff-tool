@@ -3,6 +3,11 @@ import {useEffect, useState} from "react";
 // The only merge direction the viewer offers: from the source into the target.
 export const LEFT_TO_RIGHT = 0;
 
+// Both rows of a moved pair stand for one work item, so they count once.
+const selectionKey = (index, value) => value?.leftWorkItem?.movedOutlineNumber || value?.rightWorkItem?.movedOutlineNumber
+    ? `moved:${value.leftWorkItem.id}:${value.rightWorkItem.id}`
+    : index;
+
 export function useMergingContext({contentDiffing = false} = {}){
   const [selectionRegistry, setSelectionRegistry] = useState(new Map());
   const [selectionCount, setSelectionCount] = useState(0);
@@ -12,14 +17,15 @@ export function useMergingContext({contentDiffing = false} = {}){
 
   useEffect(() => {
     let allSelected = selectionRegistry.size > 0;
-    let count = 0;
-    selectionRegistry.forEach((value) => {
-      count += (value ? 1 : 0);
-      if (!value) {
+    const selected = new Set();
+    selectionRegistry.forEach((value, index) => {
+      if (value) {
+        selected.add(selectionKey(index, value));
+      } else {
         allSelected = false;
       }
     });
-    setSelectionCount(count);
+    setSelectionCount(selected.size);
     if (allSelected !== selectAll) {
       setSelectAll(allSelected);
     }

@@ -99,4 +99,11 @@ describe('Work items diff viewer, accessibility', () => {
     await loaded();
     expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
+
+  it('has no WCAG A/AA violations in the unified view', async () => {
+    renderWorkItems();
+    await loaded();
+    await switchToUnified();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
 });

@@ -12,7 +12,8 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
 
   const [display, setDisplay] = useState(true);
   const [popupVisible, setPopupVisible] = useState(false);
-  const [selected, setSelected] = useState(pairSelected);
+  // A field of a moved pair can come back after a switch of the diff view, on the other row of that pair.
+  const [selected, setSelected] = useState(() => workItemsPair?.fieldsToMerge?.find(fieldToMerge => fieldToMerge.id === fieldId)?.selected ?? pairSelected);
 
   const arrowRef = useRef(null);
   const {refs, floatingStyles, context: floatingContext} = useFloating({
@@ -48,10 +49,13 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
     setDisplay(fieldId !== "outlineNumber" || context.state.showOutlineNumbersDiff);
   }, [fieldId, context.state.showOutlineNumbersDiff]);
 
+  // Only a change of the trigger selects the fields: a field mounted after a switch of the diff view keeps its own selection.
+  const handledPairSelectionTrigger = useRef(pairSelectionTrigger);
   useEffect(() => {
-    if (pairSelectionTrigger > 0) {
+    if (pairSelectionTrigger > 0 && pairSelectionTrigger !== handledPairSelectionTrigger.current) {
       setSelected(pairSelected);
     }
+    handledPairSelectionTrigger.current = pairSelectionTrigger;
   }, [pairSelectionTrigger])
 
   useEffect(() => {

@@ -11,10 +11,11 @@ import PairMergeTicker from "@/components/merge/PairMergeTicker";
 import Modal from "@/components/Modal";
 import useDiffService from "@/services/useDiffService";
 import useImageUtils from "@/utils/useImageUtils";
+import * as DiffViewModes from "@/DiffViewModes";
 
 export default function WorkItemsPairDiff({ leftDocument, rightDocument, workItemsPair, pairedWorkItemsLinkRole, configCacheId, dataLoadedCallback,
                                             leftChaptersDiffMarkers, rightChaptersDiffMarkers, currentIndex, loadingContext, mergingContext,
-                                            unSelectionAllowedCallback, selectChildrenCallback, setMirroredPairSelectedCallback, createdReportEntries, modifiedReportEntries }) {
+                                            unSelectionAllowedCallback, selectChildrenCallback, setMirroredPairSelectedCallback, mirroredPairCallback, createdReportEntries, modifiedReportEntries }) {
   const CODES_TO_RETRY = [500, 502, 503, 504]; // 500 - Internal Server Error, 502 - Bad Gateway, 503 - Service Unavailable, 504 - Gateway Timeout
   const RETRY_MARKER = "RETRY";
 
@@ -115,6 +116,8 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
         body.rightWorkItem.revision = workItemsPair.rightWorkItem.revision;
       }
     }
+    // A field mounted after this load must not start from the field selection of the previous load.
+    delete workItemsPair.fieldsToMerge;
     requestDiff(body, 0, ++latestRequestRef.current);
   }, [onHold]);
 
@@ -150,9 +153,18 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
       const rightWiId = workItemsPair.rightWorkItem ? workItemsPair.rightWorkItem.id : null;
       dataLoadedCallback(currentIndex, error, diffsExist, selected, leftChapter, rightChapter, leftWiId, rightWiId);
       if (diffsExist) {
-        workItemsPair.fieldsToMerge = diffData.fieldDiffs
-            .filter(fieldDiff => fieldDiff.id !== "outlineNumber" && fieldDiff.id !== "externalProjectWorkItem")
-            .map(fieldDiff => ({id: fieldDiff.id, selected: selected}));
+        // Both rows of a moved pair share one field selection, as the merge sends only one of them and the
+        // diff is shown on the row of the current diff view. Shared only within one load: the other row's
+        // selection from before a reload is not this load's.
+        const mirroredFieldsToMerge = isMoved(workItemsPair) && mirroredPairCallback(workItemsPair)?.fieldsToMerge;
+        if (mirroredFieldsToMerge && mirroredFieldsToMerge.reloadMarker === loadingContext.reloadMarker) {
+          workItemsPair.fieldsToMerge = mirroredFieldsToMerge;
+        } else {
+          workItemsPair.fieldsToMerge = diffData.fieldDiffs
+              .filter(fieldDiff => fieldDiff.id !== "outlineNumber" && fieldDiff.id !== "externalProjectWorkItem")
+              .map(fieldDiff => ({id: fieldDiff.id, selected: selected}));
+          workItemsPair.fieldsToMerge.reloadMarker = loadingContext.reloadMarker; // Not serialized: JSON keeps array items only
+        }
         mergingContext.setPairSelected(currentIndex, workItemsPair, selected); // Initialize pair in selection registry
       } else {
         mergingContext.resetRegistryEntry(currentIndex); // Reset pair in selection registry
@@ -256,6 +268,14 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
     });
   };
 
+  const isMoved = (pair) => !!(pair.leftWorkItem?.movedOutlineNumber || pair.rightWorkItem?.movedOutlineNumber);
+
+  // A moved pair shows its diff once. Side by side, at its source position. Unified, at its target position,
+  // as the unified diff shows the target as the new state.
+  const diffShownHere = context.state.diffViewMode === DiffViewModes.UNIFIED
+      ? !workItemsPair.leftWorkItem?.movedOutlineNumber
+      : !workItemsPair.rightWorkItem?.movedOutlineNumber;
+
   const getChapter = (workItem) => {
     const outlineNumberParts = workItem && workItem.outlineNumber && workItem.outlineNumber.split('-');
     return outlineNumberParts && outlineNumberParts.length > 0 && outlineNumberParts[0];
@@ -289,8 +309,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
                       }}
                       ticker={!(branchedDocuments && asHeaderInDocument) && <PairMergeTicker workItemsPair={workItemsPair} diffs={diffs} selected={selected} pairSelectedCallback={pairSelected} />}
                       statusButton={<>
-                        {!(branchedDocuments && asHeaderInDocument) && diffs && diffs.length > 0
-                            && (!workItemsPair.rightWorkItem || !workItemsPair.rightWorkItem.movedOutlineNumber)
+                        {!(branchedDocuments && asHeaderInDocument) && diffs && diffs.length > 0 && diffShownHere
                             && <FloatingButton fontAwesomeIcon={expanded ? faChevronDown : faChevronUp} clickHandler={expandHandler}
                                                expanded={expanded} label={expanded ? "Collapse the differences" : "Expand the differences"}/>}
                         {(!diffs || diffs.length === 0) && !error && <FloatingButton fontAwesomeIcon={faEquals} disabled={true} label="No differences"/>}
@@ -298,7 +317,7 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
                       </>} />
           {error && <div className="wi-error">Error occurred loading diff data: <span className="error-trace">{error}</span></div>}
           {loading && <div className="loader wi-loader"></div>}
-          {!loading && !(branchedDocuments && asHeaderInDocument) && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.movedOutlineNumber)
+          {!loading && !(branchedDocuments && asHeaderInDocument) && diffShownHere
               && !(workItemsPair.leftWorkItem && workItemsPair.leftWorkItem.externalProjectWorkItem)
               && !(workItemsPair.rightWorkItem && workItemsPair.rightWorkItem.externalProjectWorkItem)
               && <DiffContent workItemsPair={workItemsPair} pairSelected={selected} pairSelectionTrigger={pairSelectionTrigger} pairSelectedCallback={pairSelected} diffs={diffs} expanded={expanded}/>}

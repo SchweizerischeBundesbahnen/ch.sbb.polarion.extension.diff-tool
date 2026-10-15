@@ -6,7 +6,7 @@ import MovedItem, {MOVED_UP} from "@/components/documents/workitems/MovedItem";
 export const LEFT = "left";
 export const RIGHT = "right";
 
-/** The target of the "moved to" links: one anchor per side and outline number. */
+/** The target of the "moved to" and "moved from" links: one anchor per side and outline number. */
 const anchorId = (workItem, side) => workItem && workItem.outlineNumber ? `${side}${workItem.outlineNumber}` : null;
 
 // workItem.outlineNumber may become empty on header deletion
@@ -31,6 +31,13 @@ const badgeFontSizeOf = (headerLevel, asHeaderInDocument) => asHeaderInDocument
 
 // Capped at 6 like <h1>-<h6>: screen readers do not agree on a level beyond that.
 const headingPropsOf = (headerLevel) => headerLevel > 0 ? {role: "heading", "aria-level": Math.min(headerLevel, 6)} : {};
+
+/**
+ * Size attributes of an icon, in pixels at its usual font size. A browser sizes the icon by CSS and ignores
+ * them, but the PDF export renders with WeasyPrint, which sizes an inline SVG only by them, or else by its
+ * view box: hundreds of pixels for a Font Awesome icon.
+ */
+const iconSize = (icon, height) => ({height: height, width: Math.round(height * icon.icon[0] / icon.icon[1])});
 
 const workItemUrl = (workItem) => `/polarion/#/project/${workItem.projectId}/workitem?id=${workItem.id}${workItem.revision ? "&revision=" + workItem.revision : ""}`;
 
@@ -87,23 +94,26 @@ export function WorkItemHeader({workItem, asHeaderInDocument, movedOutlineNumber
   );
 }
 
-/** A moved pair of the unified view is shown at its source position, with its diff, and as a placeholder at its target one. */
-export const isMovedPlaceholder = (rightWorkItem) => !!rightWorkItem?.movedOutlineNumber;
+/**
+ * A moved pair of the unified view is shown with its diff at its target position, since the unified diff
+ * shows the target as the new state. Its source position is a placeholder.
+ */
+export const isMovedPlaceholder = (leftWorkItem) => !!leftWorkItem?.movedOutlineNumber;
 
 /**
- * The one-row header of a pair in the unified view. It names the work item once, by its source title
- * (or the target one, if the source is missing), and links both work items: source, then target.
- * A moved pair links its two positions to each other. The placeholder at the target position is one
- * slim line, no heading, so the document outline reads as the source.
+ * The one-row header of a pair in the unified view. It names the work item once, by its target title
+ * (or the source one, if the target is missing), and links both work items: source, then target.
+ * A moved pair links its two positions to each other. The placeholder at the source position is one
+ * slim line, no heading, so the document outline reads as the target.
  */
 export function UnifiedWorkItemHeader({leftWorkItem, rightWorkItem, asHeaderInDocument}) {
-  const placeholder = isMovedPlaceholder(rightWorkItem);
-  const movedAway = !!leftWorkItem?.movedOutlineNumber;
-  // One anchor per position, as the "moved to" links of both views point to them.
-  const [leftId] = useState(placeholder ? null : anchorId(leftWorkItem, LEFT));
-  const [rightId] = useState(movedAway ? null : anchorId(rightWorkItem, RIGHT));
+  const placeholder = isMovedPlaceholder(leftWorkItem);
+  const movedHere = !!rightWorkItem?.movedOutlineNumber;
+  // One anchor per position, as the "moved to" and "moved from" links of both views point to them.
+  const [leftId] = useState(movedHere ? null : anchorId(leftWorkItem, LEFT));
+  const [rightId] = useState(placeholder ? null : anchorId(rightWorkItem, RIGHT));
 
-  const workItem = placeholder ? rightWorkItem : (leftWorkItem || rightWorkItem);
+  const workItem = placeholder ? leftWorkItem : (rightWorkItem || leftWorkItem);
   const asHeading = asHeaderInDocument && !placeholder;
   const headerLevel = headerLevelOf(workItem, asHeading);
   const badgeFontSize = badgeFontSizeOf(headerLevel, asHeading);
@@ -122,9 +132,11 @@ export function UnifiedWorkItemHeader({leftWorkItem, rightWorkItem, asHeaderInDo
       </span>
   );
 
-  const movedTag = (movedWorkItem, side) => (
+  const movedIcon = (movedWorkItem) => movedWorkItem.moveDirection === MOVED_UP ? faArrowUpLong : faArrowDownLong;
+
+  const movedTag = (movedWorkItem, side, label) => (
       <a className="wi-tag moved" href={`#${side}${movedWorkItem.movedOutlineNumber}`} title="Go to the other position of this WorkItem">
-        <FontAwesomeIcon icon={movedWorkItem.moveDirection === MOVED_UP ? faArrowUpLong : faArrowDownLong}/> Moved to {movedWorkItem.movedOutlineNumber}
+        <FontAwesomeIcon icon={movedIcon(movedWorkItem)} {...iconSize(movedIcon(movedWorkItem), 11)}/> {label} {movedWorkItem.movedOutlineNumber}
       </a>
   );
 
@@ -141,12 +153,12 @@ export function UnifiedWorkItemHeader({leftWorkItem, rightWorkItem, asHeaderInDo
         {rightId && <span id={rightId} className="wi-anchor"/>}
         {workItem && <span className="wi-title">{title}</span>}
         {leftWorkItem && sideBadge(leftWorkItem, "Source")}
-        {leftWorkItem && rightWorkItem && <FontAwesomeIcon icon={faArrowRightLong} className="wi-arrow"/>}
+        {leftWorkItem && rightWorkItem && <FontAwesomeIcon icon={faArrowRightLong} className="wi-arrow" {...iconSize(faArrowRightLong, 12)}/>}
         {rightWorkItem && sideBadge(rightWorkItem, "Target")}
         {leftWorkItem && !rightWorkItem && <span className="wi-tag only-in-source">Only in source</span>}
         {!leftWorkItem && rightWorkItem && <span className="wi-tag only-in-target">Only in target</span>}
-        {movedAway && movedTag(leftWorkItem, RIGHT)}
-        {placeholder && movedTag(rightWorkItem, LEFT)}
+        {placeholder && movedTag(leftWorkItem, RIGHT, "Moved to")}
+        {movedHere && movedTag(rightWorkItem, LEFT, "Moved from")}
         {!workItem && <span style={{fontSize: ".75em"}}>&ndash;</span>}
       </div>
   );

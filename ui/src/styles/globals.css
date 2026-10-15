@@ -751,6 +751,9 @@ a.wi-badge:hover {
 a.wi-tag.moved {
   color: #0078a8;
 }
+.wi-header.unified.moved-placeholder .wi-tag.moved {
+  font-weight: normal;
+}
 a.wi-tag.moved:hover {
   text-decoration: none;
   background-color: #eee;
@@ -961,6 +964,42 @@ a.wi-tag.moved:hover {
   .header.row,
   .comparison-header {
     font-size: 8pt;
+  }
+
+  /* The PDF export renders with WeasyPrint, which has no subgrid: a CSS table keeps the lines of both
+     sides aligned. */
+  .diff-view-unified .comparison-header {
+    display: table;
+  }
+
+  .diff-view-unified .comparison-side {
+    display: table-row;
+  }
+
+  .diff-view-unified .comparison-line {
+    display: table-cell;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .diff-view-unified .comparison-line > * {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .diff-view-unified .comparison-line .side-label {
+    margin-right: 1rem;
+  }
+
+  /* On screen a tag is sized in rem, to read the same on every row. Printed, the rows are 8pt. */
+  .wi-tag {
+    font-size: 7pt;
+  }
+
+  /* WeasyPrint leaves out the gap after a work item's own tags. */
+  .wi-tag.only-in-source,
+  .wi-tag.only-in-target {
+    margin-left: 0.4em;
   }
 
   .diff-leaf img,

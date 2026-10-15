@@ -86,6 +86,8 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
         }
       }
     }
+    // A field mounted after this load must not start from the field selection of the previous load.
+    delete workItemsPair.fieldsToMerge;
     requestDiff(body, 0, ++latestRequestRef.current);
   }, [onHold]);
 

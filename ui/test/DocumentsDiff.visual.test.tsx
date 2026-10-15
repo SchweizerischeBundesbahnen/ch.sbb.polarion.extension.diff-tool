@@ -106,6 +106,23 @@ async function openMergeConfirmation(pair = 'EL-4977_DP-11559') {
   await openDialog('Merge confirmation');
 }
 
+async function fieldsLoaded() {
+  await vi.waitFor(
+    () => expect(document.querySelector('[data-testid="version-field-diff"] .diff-viewer')).not.toBeNull(),
+    { timeout: 10000 },
+  );
+}
+
+async function contentLoaded() {
+  await vi.waitFor(() => expect(document.querySelector('.header .merge-pane')).not.toBeNull(), { timeout: 10000 });
+  await vi.waitFor(() => expect(document.querySelector('.diff-viewer .merge-ticker')).not.toBeNull());
+  // The toolbar shows a second after the content: wait for it, or a capture depends on the timing.
+  await vi.waitFor(
+    () => expect(getComputedStyle(document.querySelector('.header .merge-pane') as HTMLElement).display).toBe('flex'),
+    { timeout: 5000 },
+  );
+}
+
 async function loaded() {
   await vi.waitFor(() => expect(document.querySelector('.header .merge-pane')).not.toBeNull(), { timeout: 10000 });
   await vi.waitFor(() => expect(document.querySelectorAll('.wi-diff').length).toBeGreaterThan(0));
@@ -162,6 +179,31 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents diff viewer visual', () => {
     await loaded();
     await switchToUnified();
     await shoot('documents-diff-unified');
+  });
+
+  it('unified view with the diff colors swapped', async () => {
+    renderDocuments();
+    await loaded();
+    await openControlPane();
+    document.querySelector<HTMLInputElement>('#swap-colors')!.click();
+    document.querySelector<HTMLButtonElement>('.control-pane .expand-button')!.click();
+    await vi.waitFor(() => expect(document.querySelectorAll('.control-pane.expanded')).toHaveLength(0));
+    await switchToUnified();
+    await shoot('documents-diff-unified-swapped-colors');
+  });
+
+  it('the document fields in the unified view', async () => {
+    renderDocumentsAs('Fields');
+    await fieldsLoaded();
+    await switchToUnified();
+    await shoot('documents-fields-unified');
+  });
+
+  it('the document content in the unified view', async () => {
+    renderDocumentsAs('Content');
+    await contentLoaded();
+    await switchToUnified();
+    await shoot('documents-content-unified');
   });
 
   // The auxiliary dialogs, each over the page that raises it rather than on its own. What a dialog looks
@@ -296,19 +338,27 @@ describe('Documents diff viewer, accessibility', () => {
 
   it('has no WCAG A/AA violations comparing the document fields', async () => {
     renderDocumentsAs('Fields');
-    await vi.waitFor(
-      () => expect(document.querySelector('[data-testid="version-field-diff"] .diff-viewer')).not.toBeNull(),
-      {
-        timeout: 10000,
-      },
-    );
+    await fieldsLoaded();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations comparing the document fields in the unified view', async () => {
+    renderDocumentsAs('Fields');
+    await fieldsLoaded();
+    await switchToUnified();
     expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
 
   it('has no WCAG A/AA violations comparing the document content', async () => {
     renderDocumentsAs('Content');
-    await vi.waitFor(() => expect(document.querySelector('.header .merge-pane')).not.toBeNull(), { timeout: 10000 });
-    await vi.waitFor(() => expect(document.querySelector('.diff-viewer .merge-ticker')).not.toBeNull());
+    await contentLoaded();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations comparing the document content in the unified view', async () => {
+    renderDocumentsAs('Content');
+    await contentLoaded();
+    await switchToUnified();
     expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
 

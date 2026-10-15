@@ -553,12 +553,12 @@ test.describe("diffing of documents' work items", () => {
 
     const movedIconHtml = await movedIcon.innerHTML();
     expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
-      <g id=\"SVGRepo_bgCarrier\" stroke-width=\"0\"></g><g id=\"SVGRepo_tracerCarrier\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><g id=\"SVGRepo_iconCarrier\"><path d=\"M17 8L15 8C12.7909 8 11 9.79086 11 12L11 17\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path><path d=\"M8 14L11 17L14 14\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></g>
+      <g id=\"SVGRepo_bgCarrier\" stroke-width=\"0\"></g><g id=\"SVGRepo_tracerCarrier\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><g id=\"SVGRepo_iconCarrier\"><path d=\"M8 17L8 15C8 12.7909 9.79086 11 12 11L17 11\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path><path d=\"M14 8L17 11L14 14\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></g>
     `));
 
     const movedLink = EL157_DP11562_reverse.locator(".header .moved.left a");
     await expect(movedLink).toBeVisible();
-    await expect(movedLink).toHaveText("moved to 2.2-3");
+    await expect(movedLink).toHaveText("moved from 2.2-3");
 
     const rightBadge = EL157_DP11562_reverse.locator(".header .right .badge");
     await expect(rightBadge).toBeVisible();
@@ -705,12 +705,12 @@ test.describe("diffing of documents' work items", () => {
 
     const movedIconHtml = await movedIcon.innerHTML();
     expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
-      <g id=\"SVGRepo_bgCarrier\" stroke-width=\"0\"></g><g id=\"SVGRepo_tracerCarrier\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><g id=\"SVGRepo_iconCarrier\"><path d=\"M17 16L15 16C12.7909 16 11 14.2091 11 12L11 7\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path><path d=\"M8 10L11 7L14 10\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></g>
+      <g id=\"SVGRepo_bgCarrier\" stroke-width=\"0\"></g><g id=\"SVGRepo_tracerCarrier\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><g id=\"SVGRepo_iconCarrier\"><path d=\"M8 7L8 9C8 11.2091 9.79086 13 12 13L17 13\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path><path d=\"M14 10L17 13L14 16\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></g>
     `));
 
     const movedLink = EL158_DP11563_reverse.locator(".header .moved.left a");
     await expect(movedLink).toBeVisible();
-    await expect(movedLink).toHaveText("moved to 2.3");
+    await expect(movedLink).toHaveText("moved from 2.3");
 
     const rightHeader = EL158_DP11563_reverse.locator(".header .right");
     await expect(rightHeader).toBeVisible();
@@ -769,12 +769,12 @@ test.describe("diffing of documents' work items", () => {
 
     const movedIconHtml = await movedIcon.innerHTML();
     expect(normalizeHtml(movedIconHtml)).toBe(normalizeHtml(`
-      <g id=\"SVGRepo_bgCarrier\" stroke-width=\"0\"></g><g id=\"SVGRepo_tracerCarrier\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><g id=\"SVGRepo_iconCarrier\"><path d=\"M17 16L15 16C12.7909 16 11 14.2091 11 12L11 7\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path><path d=\"M8 10L11 7L14 10\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></g>
+      <g id=\"SVGRepo_bgCarrier\" stroke-width=\"0\"></g><g id=\"SVGRepo_tracerCarrier\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></g><g id=\"SVGRepo_iconCarrier\"><path d=\"M8 7L8 9C8 11.2091 9.79086 13 12 13L17 13\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path><path d=\"M14 10L17 13L14 16\" stroke=\"#666666\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></g>
     `));
 
     const movedLink = EL159_DP11564_reverse.locator(".header .moved.left a");
     await expect(movedLink).toBeVisible();
-    await expect(movedLink).toHaveText("moved to 2.3-1");
+    await expect(movedLink).toHaveText("moved from 2.3-1");
 
     const rightBadge = EL159_DP11564_reverse.locator(".header .right .badge");
     await expect(rightBadge).toBeVisible();

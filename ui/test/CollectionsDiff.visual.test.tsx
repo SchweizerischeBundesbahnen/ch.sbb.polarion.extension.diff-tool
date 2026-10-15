@@ -185,6 +185,14 @@ describe('Collections diff viewer, accessibility', () => {
     expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
 
+  it('has no WCAG A/AA violations with a paired document shown in the unified view', async () => {
+    renderPaired();
+    await headerLoaded();
+    await pairsLoaded();
+    await switchToUnified();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
   it('has no WCAG A/AA violations while offering to create a missing counterpart', async () => {
     renderCollections(UNPAIRED_URL, fixture('collections.json'), fixture('documents-from-collection.json'));
     await headerLoaded();

@@ -47,6 +47,40 @@ the project first, see [Configuration](CONFIGURATION.md).
 4. Choose link role by which work items to be linked, then click Compare button.
 5. Another tab will be opened in browser listing documents differences. You can change documents from collections to be compared in side pane. Later you can select certain differences and merge them from left to right document.
 
+## Diff views
+The diff view shows the differences in one of two views:
+- `Side by side`: the source on the left, the target on the right. This is the default.
+- `Unified`: one column. Removed content is red, added content is green.
+
+To change the view, select it in `Diff view` in the control pane.
+A change of the view keeps the selection and loads nothing again.
+The view is kept until the page is reloaded.
+
+In the unified view, each work item has one header row: its title, the source ID and the target ID.
+Tags on the header row give more information:
+- `Only in source`: the work item is not in the target. A merge creates it there.
+- `Only in target`: the work item is not in the source. A merge deletes it there.
+- `Referenced`: the work item is referenced in its document.
+
+A moved work item is shown at two positions:
+- At its target position, with its differences and the tag `Moved from <outline number>`.
+- At its source position, as a slim line with the tag `Moved to <outline number>`.
+
+Click the tag to go to the other position.
+The side by side view marks the same positions with `moved from` and `moved to`.
+
+## Merging differences
+1. In the diff view, select the checkboxes of the differences to merge, or select `Select all`.
+2. Click `Merge into target`. The toolbar shows how many items are selected.
+3. Read the confirmation dialog and click `Merge`.
+
+A merge always goes from the source into the target.
+`Merge into target` is disabled if the target is not the HEAD revision, or if you are not authorized to merge.
+
+If the merge creates work items in the target, the confirmation dialog asks for the link role direction:
+- `Direct`: each created work item links to its source work item.
+- `Reverse`: each source work item links to the work item created from it.
+
 ## Diff colors
 The diff view shows removed content in red and added content in green.
 To swap the two colors, select `Swap diff colors` in the control pane.

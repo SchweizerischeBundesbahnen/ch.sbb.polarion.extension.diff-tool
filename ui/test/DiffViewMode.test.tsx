@@ -230,6 +230,21 @@ describe('Unified pair header', () => {
     expect(unifiedHeader('EL-11575_EL-11575')!.querySelector('.wi-tag')).toHaveTextContent('Referenced, rev. 6480');
   });
 
+  // The PDF export renders with WeasyPrint, which sizes an inline SVG by its attributes only: without
+  // them, a Font Awesome icon prints hundreds of pixels wide.
+  it('gives its icons a size the PDF export can read', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    await switchToUnified();
+
+    const icons = [...document.querySelectorAll('.wi-header.unified svg')];
+    expect(icons.length).toBeGreaterThan(0);
+    for (const icon of icons) {
+      expect(Number(icon.getAttribute('width'))).toBeGreaterThan(0);
+      expect(Number(icon.getAttribute('height'))).toBeGreaterThan(0);
+    }
+  });
+
   it('keeps a chapter a heading of its level', async () => {
     renderDocuments();
     await documentsLoaded();
@@ -240,7 +255,7 @@ describe('Unified pair header', () => {
     expect(header).toHaveAttribute('aria-level', '2');
   });
 
-  it('keeps the target of every "moved to" link', async () => {
+  it('keeps the target of every "moved to" and "moved from" link', async () => {
     renderDocuments();
     await documentsLoaded();
     await switchToUnified();
@@ -254,37 +269,110 @@ describe('Unified pair header', () => {
 });
 
 describe('Unified moved items', () => {
-  it('shows the diff at the source position, with a link to the target position', async () => {
-    renderDocuments();
-    await documentsLoaded();
-    await switchToUnified();
-
-    const pair = '[data-testid="EL-157_DP-11562_direct"]';
-    const header = unifiedHeader('EL-157_DP-11562_direct')!;
-    expect(header).not.toHaveClass('moved-placeholder');
-    expect([...header.querySelectorAll('.wi-badge')].map((badge) => badge.textContent)).toEqual(['EL-157', 'DP-11562']);
-    const moved = header.querySelector<HTMLAnchorElement>('a.wi-tag.moved')!;
-    expect(moved).toHaveTextContent('Moved to 2.2-2');
-    expect(moved.getAttribute('href')).toBe('#right2.2-2');
-    expect(document.querySelector(`${pair} .merge-ticker`)).not.toBeNull();
-    await vi.waitFor(() => expect(document.querySelector(`${pair} .diff-leaf.unified`)).not.toBeNull());
-  });
-
-  it('shows the target position as a slim placeholder, linked back', async () => {
+  it('shows the diff at the target position, with a link to the source position', async () => {
     renderDocuments();
     await documentsLoaded();
     await switchToUnified();
 
     const pair = '[data-testid="EL-158_DP-11563_reverse"]';
     const header = unifiedHeader('EL-158_DP-11563_reverse')!;
+    expect(header).not.toHaveClass('moved-placeholder');
+    expect(header).toHaveAttribute('role', 'heading');
+    expect(header.querySelector('.wi-title')).toHaveTextContent('2.4 Performance Requirements');
+    expect([...header.querySelectorAll('.wi-badge')].map((badge) => badge.textContent)).toEqual(['EL-158', 'DP-11563']);
+    const moved = header.querySelector<HTMLAnchorElement>('a.wi-tag.moved')!;
+    expect(moved).toHaveTextContent('Moved from 2.3');
+    expect(moved.getAttribute('href')).toBe('#left2.3');
+    expect(document.querySelector(`${pair} .merge-ticker input`)).not.toBeNull();
+    await vi.waitFor(() => expect(document.querySelector(`${pair} .diff-leaf.unified`)).not.toBeNull());
+  });
+
+  it('shows the source position as a slim placeholder, linked to the target position', async () => {
+    renderDocuments();
+    await documentsLoaded();
+    await switchToUnified();
+
+    const pair = '[data-testid="EL-158_DP-11563_direct"]';
+    const header = unifiedHeader('EL-158_DP-11563_direct')!;
     expect(header).toHaveClass('moved-placeholder');
     expect(header).not.toHaveAttribute('role');
-    expect(header.querySelector('.wi-title')).toHaveTextContent('2.4 Performance Requirements');
-    expect(header.querySelector('#right2\\.4')).not.toBeNull();
-    expect(header.querySelector('a.wi-tag.moved')).toHaveTextContent('Moved to 2.3');
-    expect(header.querySelector('a.wi-tag.moved')!.getAttribute('href')).toBe('#left2.3');
+    expect(header.querySelector('.wi-title')).toHaveTextContent('2.3 Performance Requirements');
+    expect(header.querySelector('#left2\\.3')).not.toBeNull();
+    expect(header.querySelector('a.wi-tag.moved')).toHaveTextContent('Moved to 2.4');
+    expect(header.querySelector('a.wi-tag.moved')!.getAttribute('href')).toBe('#right2.4');
     expect(document.querySelector(`${pair} .merge-ticker input`)).toBeNull();
     expect(document.querySelector(`${pair} .floating-button`)).toBeNull();
     expect(document.querySelector(`${pair} .diff-leaf`)).toBeNull();
+  });
+
+  it('keeps the diff at the source position side by side', async () => {
+    renderDocuments();
+    await documentsLoaded();
+
+    await vi.waitFor(() =>
+      expect(document.querySelector('[data-testid="EL-158_DP-11563_direct"] .diff-leaf')).not.toBeNull(),
+    );
+    expect(document.querySelector('[data-testid="EL-158_DP-11563_reverse"] .diff-leaf')).toBeNull();
+  });
+
+  it('shares the field selection between both rows of a moved pair, across a switch of the view', async () => {
+    const field = (id: string) => ({
+      id: id,
+      name: id,
+      diffLeft: `<span class="diff-html-removed">${id} old</span>`,
+      diffRight: `<span class="diff-html-added">${id} new</span>`,
+      issues: [],
+    });
+    renderViewer(
+      DOCUMENTS_URL,
+      [
+        { method: 'POST', match: /\/diff\/documents$/, json: fixture('documents-diff.json') ?? {} },
+        {
+          method: 'POST',
+          match: /\/diff\/document-workitems$/,
+          respond: (url: string, init?: RequestInit) =>
+            JSON.parse((init?.body as string) ?? '{}').leftWorkItem?.id === 'EL-157'
+              ? new Response(JSON.stringify({ fieldDiffs: [field('Description'), field('Title')] }), {
+                  status: 200,
+                  headers: { 'Content-Type': 'application/json' },
+                })
+              : pairDiff(url, init),
+        },
+        { method: 'POST', match: /\/diff\/documents-fields$/, json: fixture('documents-fields.json') ?? {} },
+      ],
+      <DocumentsPage />,
+    );
+    await documentsLoaded();
+    await openControlPane();
+    const perFieldSelection = document.querySelector<HTMLInputElement>('#per-field-merge-selection')!;
+    if (!perFieldSelection.checked) {
+      perFieldSelection.click();
+    }
+    setFieldValue(viewSelect(), 'unified');
+    await vi.waitFor(() => expect(diffBody()).toHaveClass('diff-view-unified'));
+
+    const fieldTicker = (row: string, name: string) =>
+      document.querySelector<HTMLInputElement>(
+        `[data-testid="EL-157_DP-11562${row}"] [aria-label="Select field ${name} for merge"]`,
+      );
+    const pairTicker = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLInputElement>(
+        '[data-testid="EL-157_DP-11562_reverse"] .header .merge-ticker input',
+      );
+      expect(found).not.toBeNull();
+      expect(fieldTicker('_reverse', 'Description')).not.toBeNull();
+      return found!;
+    });
+    pairTicker.click();
+    await vi.waitFor(() => expect(fieldTicker('_reverse', 'Description')!.checked).toBe(true));
+    fieldTicker('_reverse', 'Description')!.click();
+    await vi.waitFor(() => expect(fieldTicker('_reverse', 'Description')!.checked).toBe(false));
+
+    setFieldValue(viewSelect(), 'side-by-side');
+
+    await vi.waitFor(() => expect(fieldTicker('_direct', 'Description')).not.toBeNull());
+    expect(fieldTicker('_direct', 'Description')!.checked).toBe(false);
+    expect(fieldTicker('_direct', 'Title')!.checked).toBe(true);
+    expect(fieldTicker('_reverse', 'Title')).toBeNull();
   });
 });
