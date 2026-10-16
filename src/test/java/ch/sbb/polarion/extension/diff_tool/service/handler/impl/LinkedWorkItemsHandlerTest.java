@@ -112,7 +112,7 @@ class LinkedWorkItemsHandlerTest {
         });
 
         assertEquals("""
-                    <div class="diff-lwi-container"><div class="diff-html-added diff-lwi"><span>roleId1_name</span>: <span><span>ID-B1</span> - <span>Title B1</span></span></div></div><div class="diff-lwi-container"><div class="diff-html-removed diff-lwi"><span>roleId1_name</span>: <span><span>ID-B1</span> - <span>Title B1</span></span></div></div>""",
+                    <div class="diff-lwi-container"><div class="diff-html-removed diff-lwi"><span>roleId1_name</span>: <span><span>ID-A1</span> - <span>Title A1</span></span></div></div><div class="diff-lwi-container"><div class="diff-html-added diff-lwi"><span>roleId1_name</span>: <span><span>ID-B1</span> - <span>Title B1</span></span></div></div>""",
                 linkedWorkItemsHandlerPartiallyMocked.postProcess("not_relevant", context));
     }
 
@@ -185,6 +185,30 @@ class LinkedWorkItemsHandlerTest {
             // Should contain one entry marked as NONE (unchanged)
             assertTrue(result.contains("class=\"unchanged diff-lwi\""));
             assertFalse(result.contains("class=\"diff-html-added diff-lwi\""));
+        }
+    }
+
+    @Test
+    void testInterlinkedItems_DirectLinkFromWorkItemA_NotMarkedAsRemoved() {
+        // workItemA links to workItemB, which workItemB sees as a back link → one NONE row, not also a REMOVED one
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+
+        IModule document1 = mockDocument("doc1", new Date());
+        IWorkItem workItemA = mockWorkItem(trackerProject, document1, "WI-A", "open");
+        IModule document2 = mockDocument("doc2", new Date());
+        IWorkItem workItemB = mockWorkItem(trackerProject, document2, "WI-B", "open");
+        mockLinks(workItemA, List.of(mockLink(workItemB, LINK_ROLE_ID_1)), List.of());
+        mockLinks(workItemB, List.of(), List.of(mockLink(workItemA, LINK_ROLE_ID_1)));
+
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
+            DiffContext context = createContext(workItemA, workItemB);
+            LinkedWorkItemsHandler handler = createPartiallyMockedHandler();
+
+            String result = handler.postProcess("not_relevant", context);
+
+            assertTrue(result.contains("class=\"unchanged diff-lwi\""));
+            assertFalse(result.contains("class=\"diff-html-removed diff-lwi\""));
+            assertEquals(1, countOccurrences(result, "diff-lwi\""));
         }
     }
 
@@ -307,14 +331,16 @@ class LinkedWorkItemsHandlerTest {
 
             String result = handler.postProcess("not_relevant", context);
 
-            // Should be marked as NONE (counterparts)
+            // Should be marked as NONE (counterparts), and the link of A to the counterpart not as removed
             assertTrue(result.contains("class=\"unchanged diff-lwi\""));
+            assertFalse(result.contains("class=\"diff-html-removed diff-lwi\""));
+            assertEquals(1, countOccurrences(result, "diff-lwi\""));
         }
     }
 
     @Test
     void testCounterpartItems_NotPaired_MarkedAsAddedRemoved() {
-        // linkB points to item that is NOT paired → ADDED + REMOVED
+        // linkB points to item that is NOT paired → linkA REMOVED, linkB ADDED
         ITrackerProject trackerProjectA = mock(ITrackerProject.class);
         ITrackerProject trackerProjectB = mock(ITrackerProject.class);
 
@@ -341,9 +367,9 @@ class LinkedWorkItemsHandlerTest {
 
             String result = handler.postProcess("not_relevant", context);
 
-            // Should be marked as both ADDED and REMOVED
-            assertTrue(result.contains("class=\"diff-html-added diff-lwi\""));
-            assertTrue(result.contains("class=\"diff-html-removed diff-lwi\""));
+            assertEquals("""
+                    <div class="diff-lwi-container"><div class="diff-html-removed diff-lwi"><span>roleId1_name</span>: <span><span>WI-A2</span> - <span>Title WI-A2</span></span></div></div>\
+                    <div class="diff-lwi-container"><div class="diff-html-added diff-lwi"><span>roleId1_name</span>: <span><span>WI-B2</span> - <span>Title WI-B2</span></span></div></div>""", result);
         }
     }
 
@@ -404,8 +430,8 @@ class LinkedWorkItemsHandlerTest {
     }
 
     @Test
-    void testEdgeCase_NullWorkItemA_AllLinksMarkedAsAddedRemoved() {
-        // workItemA is null, workItemB has links → all marked ADDED/REMOVED
+    void testEdgeCase_NullWorkItemA_AllLinksMarkedAsAdded() {
+        // workItemA is null, workItemB has links → all marked ADDED, once
         ITrackerProject trackerProject = mock(ITrackerProject.class);
 
         IModule document = mockDocument("doc", new Date());
@@ -420,15 +446,15 @@ class LinkedWorkItemsHandlerTest {
 
             String result = handler.postProcess("not_relevant", context);
 
-            // Should be marked as both ADDED and REMOVED
             assertTrue(result.contains("class=\"diff-html-added diff-lwi\""));
-            assertTrue(result.contains("class=\"diff-html-removed diff-lwi\""));
+            assertFalse(result.contains("class=\"diff-html-removed diff-lwi\""));
+            assertEquals(1, countOccurrences(result, "diff-lwi\""));
         }
     }
 
     @Test
-    void testEdgeCase_NullWorkItemB_EmptyResult() {
-        // workItemA has links, workItemB is null → empty result
+    void testEdgeCase_NullWorkItemB_AllLinksMarkedAsRemoved() {
+        // workItemA has links, workItemB is null (a work item only in the source) → all marked REMOVED, once
         ITrackerProject trackerProject = mock(ITrackerProject.class);
 
         IModule document = mockDocument("doc", new Date());
@@ -443,8 +469,60 @@ class LinkedWorkItemsHandlerTest {
 
             String result = handler.postProcess("not_relevant", context);
 
-            // Should be empty (no linksB to process)
-            assertEquals("", result);
+            assertTrue(result.contains("class=\"diff-html-removed diff-lwi\""));
+            assertFalse(result.contains("class=\"diff-html-added diff-lwi\""));
+            assertEquals(1, countOccurrences(result, "diff-lwi\""));
+        }
+    }
+
+    @Test
+    void testReversedDiff_WorkItemOnlyInSource_AllLinksMarkedAsRemoved() {
+        // The left diff of a work item only in the source: A is the missing target, B the source, styles reversed.
+        // ReverseStylesHandler runs before this handler, so the handler itself marks the source links as REMOVED.
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+
+        IModule document = mockDocument("doc", new Date());
+        IWorkItem sourceWorkItem = mockWorkItem(trackerProject, document, "WI-Source", "open");
+        IWorkItem linkedItem = mockWorkItem(trackerProject, document, "WI-Link", "open");
+        mockLinks(sourceWorkItem, List.of(mockLink(linkedItem, LINK_ROLE_ID_1)), List.of());
+
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
+            DiffContext context = createContext(null, sourceWorkItem).reverseStyles(true);
+            LinkedWorkItemsHandler handler = createPartiallyMockedHandler();
+
+            String result = handler.postProcess("not_relevant", context);
+
+            assertTrue(result.contains("class=\"diff-html-removed diff-lwi\""));
+            assertFalse(result.contains("class=\"diff-html-added diff-lwi\""));
+            assertEquals(1, countOccurrences(result, "diff-lwi\""));
+        }
+    }
+
+    @Test
+    void testReversedDiff_BothWorkItems_SwapsAddedAndRemoved() {
+        // The left diff of a pair: A is the target, B the source, styles reversed. A link only the source has is
+        // REMOVED, a link only the target has is ADDED, and the REMOVED row comes first.
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        ILinkRoleOpt sharedRole = mockRole(LINK_ROLE_ID_1);
+
+        IModule document = mockDocument("doc", new Date());
+        IWorkItem targetWorkItem = mockWorkItem(trackerProject, document, "WI-Target", "open");
+        IWorkItem targetOnly = mockWorkItem(trackerProject, document, "WI-TargetOnly", "open");
+        mockLinks(targetWorkItem, List.of(mockLinkWithRole(targetOnly, sharedRole)), List.of());
+
+        IWorkItem sourceWorkItem = mockWorkItem(trackerProject, document, "WI-Source", "open");
+        IWorkItem sourceOnly = mockWorkItem(trackerProject, document, "WI-SourceOnly", "open");
+        mockLinks(sourceWorkItem, List.of(mockLinkWithRole(sourceOnly, sharedRole)), List.of());
+
+        try (MockedStatic<DiffModelCachedResource> mockDiffModelCachedResource = mockDiffModelResource(List.of(LINK_ROLE_ID_1))) {
+            DiffContext context = createContext(targetWorkItem, sourceWorkItem).reverseStyles(true);
+            LinkedWorkItemsHandler handler = createPartiallyMockedHandler();
+
+            String result = handler.postProcess("not_relevant", context);
+
+            assertEquals("""
+                    <div class="diff-lwi-container"><div class="diff-html-removed diff-lwi"><span>roleId1_name</span>: <span><span>ID-WI-SourceOnly</span> - <span>Title WI-SourceOnly</span></span></div></div>\
+                    <div class="diff-lwi-container"><div class="diff-html-added diff-lwi"><span>roleId1_name</span>: <span><span>ID-WI-TargetOnly</span> - <span>Title WI-TargetOnly</span></span></div></div>""", result);
         }
     }
 
@@ -509,12 +587,12 @@ class LinkedWorkItemsHandlerTest {
             // Should contain both links
             assertTrue(result.contains("WI-Link1"));
             assertTrue(result.contains("WI-Link2"));
-            // Each unmatched link appears twice (ADDED + REMOVED), and each render contains
-            // the ID twice (once as ID, once in title), so 4 total occurrences per link
+            // Each unmatched link appears once (ADDED), and each render contains
+            // the ID twice (once as ID, once in title), so 2 total occurrences per link
             int count1 = countOccurrences(result, "WI-Link1");
             int count2 = countOccurrences(result, "WI-Link2");
-            assertEquals(4, count1);
-            assertEquals(4, count2);
+            assertEquals(2, count1);
+            assertEquals(2, count2);
         }
     }
 
@@ -810,18 +888,19 @@ class LinkedWorkItemsHandlerTest {
     void testProcessMatchingLinks_MultipleLinksWithSomeMatching() {
         // Test with mix of matching and non-matching links
         ITrackerProject trackerProject = mock(ITrackerProject.class);
+        ILinkRoleOpt sharedRole = mockRole(LINK_ROLE_ID_1); // Create ONE role mock for all links
 
         IModule doc = mockDocument("doc", new Date());
         IWorkItem workItemA = mockWorkItem(trackerProject, doc, "WI-A", "open");
         IWorkItem target1 = mockWorkItem(trackerProject, doc, "WI-Target-1", "open");
         IWorkItem target2 = mockWorkItem(trackerProject, doc, "WI-Target-2", "open");
-        ILinkedWorkItemStruct linkA1 = mockLink(target1, LINK_ROLE_ID_1);
-        ILinkedWorkItemStruct linkA2 = mockLink(target2, LINK_ROLE_ID_1);
+        ILinkedWorkItemStruct linkA1 = mockLinkWithRole(target1, sharedRole);
+        ILinkedWorkItemStruct linkA2 = mockLinkWithRole(target2, sharedRole);
 
         IWorkItem workItemB = mockWorkItem(trackerProject, doc, "WI-B", "open");
         IWorkItem target3 = mockWorkItem(trackerProject, doc, "WI-Target-3", "open");
-        ILinkedWorkItemStruct linkB1 = mockLink(target1, LINK_ROLE_ID_1); // Matches linkA1
-        ILinkedWorkItemStruct linkB3 = mockLink(target3, LINK_ROLE_ID_1); // No match
+        ILinkedWorkItemStruct linkB1 = mockLinkWithRole(target1, sharedRole); // Matches linkA1
+        ILinkedWorkItemStruct linkB3 = mockLinkWithRole(target3, sharedRole); // No match
 
         mockLinks(workItemA, List.of(linkA1, linkA2), List.of());
         mockLinks(workItemB, List.of(linkB1, linkB3), List.of());
@@ -832,8 +911,12 @@ class LinkedWorkItemsHandlerTest {
 
             String result = handler.postProcess("not_relevant", context);
 
-            // Result should contain all targets
-            assertTrue(result.contains("WI-Target"));
+            // linkA1/linkB1 are the same link; linkA2 is only in A, linkB3 only in B: each shown once
+            assertEquals(1, countOccurrences(result, "unchanged diff-lwi"));
+            assertEquals(1, countOccurrences(result, "diff-html-removed diff-lwi"));
+            assertEquals(1, countOccurrences(result, "diff-html-added diff-lwi"));
+            assertTrue(result.contains("diff-html-removed diff-lwi\"><span>roleId1_name</span>: <span><span>ID-WI-Target-2</span>"));
+            assertTrue(result.contains("diff-html-added diff-lwi\"><span>roleId1_name</span>: <span><span>ID-WI-Target-3</span>"));
         }
     }
 

@@ -70,14 +70,27 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
             processCounterparts(resultRows, allRoles, linksA, linksB, workItemA, workItemB, context);
         }
 
-        // rest items we mark as added/removed
+        // The rest are links only one work item has: removed if A has it, added if B has it. So each of the two diffs
+        // holds the whole change: the unified view shows one of them, and side by side each leaf hides the other half.
+        // ReverseStylesHandler post-processes before this handler and never sees these rows, so the reversed diff
+        // swaps them here. Removed rows come first, as in a text diff.
+        ModificationType onlyInA = context.reverseStyles() ? ADDED : REMOVED;
+        ModificationType onlyInB = context.reverseStyles() ? REMOVED : ADDED;
         for (ILinkRoleOpt linkRole : allRoles) {
-            for (ILinkedWorkItemStruct link : linksB) {
+            List<String> removedRows = new ArrayList<>();
+            List<String> addedRows = new ArrayList<>();
+            for (ILinkedWorkItemStruct link : linksA) {
                 if (Objects.equals(link.getLinkRole(), linkRole)) {
-                    resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), ADDED));
-                    resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), REMOVED));
+                    (onlyInA == REMOVED ? removedRows : addedRows).add(markChanged(renderLinkedItem(link, workItemA, false), onlyInA));
                 }
             }
+            for (ILinkedWorkItemStruct link : linksB) {
+                if (Objects.equals(link.getLinkRole(), linkRole)) {
+                    (onlyInB == REMOVED ? removedRows : addedRows).add(markChanged(renderLinkedItem(link, workItemB, false), onlyInB));
+                }
+            }
+            resultRows.addAll(removedRows);
+            resultRows.addAll(addedRows);
         }
 
         return String.join("", resultRows);
@@ -115,6 +128,8 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
 
         linksA.removeAll(toRemove);
         linksB.removeAll(toRemove);
+        // A link from A to B is the back link of B to A, which is already shown above
+        linksA.removeIf(link -> sameWorkItem(link, workItemB));
     }
 
     private void processDirectLinks(List<String> resultRows, List<ILinkedWorkItemStruct> toRemove,
@@ -166,6 +181,8 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                 .map(l -> l.getLinkedItem().getId())
                 .collect(Collectors.toSet());
 
+        List<ILinkedWorkItemStruct> counterpartsA = new ArrayList<>();
+
         for (ILinkRoleOpt linkRole : allRoles) {
             for (ILinkedWorkItemStruct link : linksB) {
                 if (!Objects.equals(link.getLinkRole(), linkRole) || !sameProjectItems(workItemB, link.getLinkedItem())) {
@@ -173,13 +190,23 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
                 }
                 List<IWorkItem> pairedWorkItems = context.getPolarionService().getPairedWorkItems(
                         link.getLinkedItem(), workItemA.getProjectId(), context.getPairedWorkItemsLinkRole());
-                if (pairedWorkItems.stream().anyMatch(w -> oppositeWorkItems.contains(w.getId()))) {
+                Set<String> pairedIds = pairedWorkItems.stream().map(IWorkItem::getId).filter(oppositeWorkItems::contains).collect(Collectors.toSet());
+                if (!pairedIds.isEmpty()) {
                     resultRows.add(markChanged(renderLinkedItem(link, workItemB, false), NONE));
                     toRemove.add(link);
+                    // The link of A to the counterpart is the same link, not a removed one
+                    linksA.stream()
+                            .filter(linkA -> sameRole(linkA, link) && pairedIds.contains(linkA.getLinkedItem().getId()))
+                            .forEach(counterpartsA::add);
                 }
             }
         }
         linksB.removeAll(toRemove);
+        linksA.removeAll(counterpartsA);
+    }
+
+    private boolean sameRole(ILinkedWorkItemStruct linkA, ILinkedWorkItemStruct linkB) {
+        return linkA.getLinkRole() != null && linkB.getLinkRole() != null && Objects.equals(linkA.getLinkRole().getId(), linkB.getLinkRole().getId());
     }
 
     @VisibleForTesting
