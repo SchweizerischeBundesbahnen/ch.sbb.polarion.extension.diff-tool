@@ -220,6 +220,7 @@ public class MergeService {
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
             documentsContentHandler.merge(sourceModule, targetModule, context, mergeParams.getPairs());
             if (!context.getMergeReport().getModified().isEmpty()) {
+                copyModuleAttachments(sourceModule, targetModule, targetModule.getHomePageContent().getContent());
                 targetModule.save();
             }
             return null;
@@ -865,7 +866,6 @@ public class MergeService {
      * Copies the document attachments a rich text refers to. Content which is placed between work items belongs
      * to no work item, hence the overload which takes the documents directly.
      */
-    @VisibleForTesting
     void copyModuleAttachments(IModule sourceModule, IModule targetModule, String content) {
         RegexMatcher.get("<img[^>]+src=\"attachment:(?<attachmentFilename>[^\"]+)\"").processEntry(content, engine -> {
             String attachmentFilename = engine.group("attachmentFilename");

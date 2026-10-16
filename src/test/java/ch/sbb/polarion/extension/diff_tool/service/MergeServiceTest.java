@@ -363,6 +363,7 @@ class MergeServiceTest {
             assertNotNull(result);
             assertTrue(result.isSuccess());
             assertEquals(1, result.getMergeReport().getModified().size());
+            verify(service).copyModuleAttachments(any(), eq(rightModule), contains("Inserted paragraph"));
         }
     }
 
@@ -408,6 +409,7 @@ class MergeServiceTest {
             MergeResult result = service.mergeDocumentsContent(mergeParams);
             assertNotNull(result);
             assertFalse(result.isSuccess());
+            verify(service, never()).copyModuleAttachments(any(), any(), any());
         }
     }
 
