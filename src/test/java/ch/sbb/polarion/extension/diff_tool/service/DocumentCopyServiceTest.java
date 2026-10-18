@@ -129,7 +129,8 @@ class DocumentCopyServiceTest {
         IDataService sourceModuleDataService = mock(IDataService.class);
         when(sourceModuleDataService.getVersionedInstance(any(IObjectId.class), anyString())).thenReturn(sourceModule);
         when(sourceModule.getDataSvc()).thenReturn(sourceModuleDataService);
-        when(sourceModule.getObjectId()).thenReturn(mock(IObjectId.class));
+        IObjectId objectId = mock(IObjectId.class);
+        when(sourceModule.getObjectId()).thenReturn(objectId);
 
         IModule existingModule = mock(IModule.class);
         when(existingModule.isUnresolvable()).thenReturn(false);
@@ -213,7 +214,8 @@ class DocumentCopyServiceTest {
         when(trackerService.getDataService()).thenReturn(dataService);
 
         IPrototype workItemPrototype = mock(IPrototype.class);
-        when(workItemPrototype.getKeyType(anyString())).thenReturn(mock(IType.class));
+        IType keyType = mock(IType.class);
+        when(workItemPrototype.getKeyType(anyString())).thenReturn(keyType);
         when(dataService.getPrototype(IWorkItem.PROTO)).thenReturn(workItemPrototype);
         IPObject workItemInstance = mock(IPObject.class);
         when(dataService.createInstance(IWorkItem.PROTO)).thenReturn(workItemInstance);
@@ -295,7 +297,8 @@ class DocumentCopyServiceTest {
         IModule module = mock(IModule.class);
         IWorkItem workItem = mock(IWorkItem.class);
         when(workItem.getType()).thenReturn(workItemType);
-        when(workItem.getFieldType(anyString())).thenReturn(mock(IListType.class));
+        IListType listType = mock(IListType.class);
+        when(workItem.getFieldType(anyString())).thenReturn(listType);
         when(module.getAllWorkItems()).thenReturn(List.of(workItem));
 
         IUser user = mock(IUser.class);

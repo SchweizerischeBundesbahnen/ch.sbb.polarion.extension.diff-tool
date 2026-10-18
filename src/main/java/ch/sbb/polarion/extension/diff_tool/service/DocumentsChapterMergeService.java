@@ -532,8 +532,11 @@ public class DocumentsChapterMergeService {
     @VisibleForTesting
     void copyFreeContent(@NotNull DocumentsChapterMergeContext context, @NotNull List<SourceNode> subtree) {
         List<String> sourceWorkItemIds = subtree.stream().map(sourceNode -> sourceNode.workItem().getId()).toList();
-        documentsContentHandler.copyFreeContent(context.getSourceHomePageContentSnapshot(), context.getTargetModule(),
+        boolean contentCopied = documentsContentHandler.copyFreeContent(context.getSourceHomePageContentSnapshot(), context.getTargetModule(),
                 sourceWorkItemIds, context.getIdMapping(), copyDocumentComments(context, sourceWorkItemIds));
+        if (contentCopied) {
+            mergeService.copyModuleAttachments(context.getSourceModule(), context.getTargetModule(), context.getTargetModule().getHomePageContent().getContent());
+        }
     }
 
     /**

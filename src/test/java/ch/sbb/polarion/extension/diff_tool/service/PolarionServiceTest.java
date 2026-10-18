@@ -406,6 +406,47 @@ class PolarionServiceTest {
         ), idPairs);
     }
 
+    @Test
+    void testGetPairedWorkItemsRemovesOrphanPairs() {
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.HOUR_OF_DAY, -1);
+        IModule leftDocument = mockDocument("left", calendar.getTime());
+        calendar.add(Calendar.HOUR_OF_DAY, -1);
+        IModule rightDocument = mockDocument("right", calendar.getTime());
+
+        IWorkItem left1 = mockWorkItem(trackerProject, leftDocument, "L1", true, false, "open");
+        IWorkItem left2 = mockWorkItem(trackerProject, leftDocument, "L2", true, false, "open");
+        when(leftDocument.getAllWorkItems()).thenReturn(List.of(left1, left2));
+
+        IWorkItem right1 = mockWorkItem(trackerProject, rightDocument, "R1", true, false, "open");
+        IWorkItem right2 = mockWorkItem(trackerProject, rightDocument, "R2", true, false, "open");
+        when(rightDocument.getAllWorkItems()).thenReturn(List.of(right1, right2));
+
+        // L1 and R2 have no links, so they produce orphans {L1, null} and {null, R2}.
+        // R1 and L2 link to them, so they produce the real pairs {L1, R1} and {L2, R2}.
+        mockLinks(left1, List.of(), List.of());
+        mockLinks(left2, List.of(mockLink(right2, LINK_ROLE_ID_1)), List.of());
+        mockLinks(right1, List.of(), List.of(mockLink(left1, LINK_ROLE_ID_1)));
+        mockLinks(right2, List.of(), List.of());
+
+        ILinkRoleOpt role = mock(ILinkRoleOpt.class);
+        lenient().when(role.getId()).thenReturn(LINK_ROLE_ID_1);
+
+        List<WorkItemsPair> result = polarionService.getPairedWorkItems(leftDocument, rightDocument, false, role, Collections.emptyList());
+
+        Set<Pair<String, String>> idPairs = result.stream().map(pair -> Pair.of(
+                pair.getLeftWorkItem() == null ? null : pair.getLeftWorkItem().getId(),
+                pair.getRightWorkItem() == null ? null : pair.getRightWorkItem().getId())).collect(Collectors.toSet());
+
+        assertEquals(2, result.size());
+        assertEquals(Set.of(
+                Pair.of("ID-L1", "ID-R1"),
+                Pair.of("ID-L2", "ID-R2")
+        ), idPairs);
+    }
+
     private IWorkItem mockBranchedWorkItem(IModule module, String id, String outlineNumber) {
         IWorkItem workItem = mock(IWorkItem.class);
         lenient().when(workItem.getProjectId()).thenReturn(PROJECT_ID);

@@ -102,7 +102,8 @@ class NonListFieldCleanerTest {
                 .required(false)
                 .build();
 
-        when(workItem.getFieldType("description")).thenReturn(mock(IType.class));
+        IType type = mock(IType.class);
+        when(workItem.getFieldType("description")).thenReturn(type);
 
         cleaner.clean(workItem, field);
 
@@ -117,7 +118,8 @@ class NonListFieldCleanerTest {
                 .required(false)
                 .build();
 
-        when(workItem.getFieldType("approvals")).thenReturn(mock(IListType.class));
+        IListType listType = mock(IListType.class);
+        when(workItem.getFieldType("approvals")).thenReturn(listType);
 
         cleaner.clean(workItem, field);
 

@@ -591,6 +591,30 @@ class DocumentsChapterMergeServiceTest {
     }
 
     @Test
+    void testDocumentAttachmentsOfCopiedFreeContentAreCopied() {
+        chapter(sourceModule, "2", heading("SOURCE-1"));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "heading");
+        when(documentsContentHandler.copyFreeContent(any(), any(), any(), any(), any())).thenReturn(true);
+
+        inTransaction(() -> documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.COPY, ChapterInsertMode.UNDER)));
+
+        verify(mergeService).copyModuleAttachments(sourceModule, targetModule, "<p>free text</p>");
+    }
+
+    @Test
+    void testDocumentAttachmentsAreNotCopiedWithoutCopiedFreeContent() {
+        chapter(sourceModule, "2", heading("SOURCE-1"));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "heading");
+        when(documentsContentHandler.copyFreeContent(any(), any(), any(), any(), any())).thenReturn(false);
+
+        inTransaction(() -> documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.COPY, ChapterInsertMode.UNDER)));
+
+        verify(mergeService, never()).copyModuleAttachments(any(), any(), any());
+    }
+
+    @Test
     void testMissingWorkItemLayoutsAreCopiedIntoTheTargetDocument() {
         IModule.IStructureNode sourceChapter = chapter(sourceModule, "2", heading("SOURCE-1"));
         addChild(sourceChapter, node(workItem("SOURCE-2", "requirement"), false));
