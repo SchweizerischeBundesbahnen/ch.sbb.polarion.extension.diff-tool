@@ -56,6 +56,21 @@ test.describe("unified view of diffing documents' WorkItems", () => {
     await expect(pair.locator('.header .wi-header')).toHaveCount(2);
   });
 
+  test('keeps the unified view in the URL, so a reload keeps it', async ({ page }) => {
+    await switchView(page, 'Unified');
+    await expect(page).toHaveURL(/diffView=unified/);
+
+    // A merge with structural changes reloads the page: the same happens here.
+    await page.reload();
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' });
+
+    await expect(page.locator('#diff-body')).toHaveClass(/diff-view-unified/);
+    await expect(page.getByTestId('EL-4977_DP-11559').getByTestId('Description').locator('.diff-leaf.unified')).toHaveCount(1);
+
+    await switchView(page, 'Side by side');
+    await expect(page).not.toHaveURL(/diffView/);
+  });
+
   test('merges from the unified view what it merges side by side', async ({ page }) => {
     await switchView(page, 'Unified');
 
@@ -71,10 +86,10 @@ test.describe("unified view of diffing documents' WorkItems", () => {
     await expect(page.getByTestId('merge-result-modal')).toBeVisible();
   });
 
-  test('merges a moved WorkItem once, selected at its target position', async ({ page }) => {
+  test('merges a moved WorkItem once, selected at its source position', async ({ page }) => {
     await switchView(page, 'Unified');
 
-    await page.getByTestId('EL-157_DP-11562_reverse').locator('.header .merge-ticker input[type="checkbox"]').click();
+    await page.getByTestId('EL-157_DP-11562_direct').locator('.header .merge-ticker input[type="checkbox"]').click();
     await expect(page.getByTestId('EL-157_DP-11562_reverse')).toHaveClass(/selected/);
     await expect(page.getByTestId('EL-157_DP-11562_direct')).toHaveClass(/selected/);
     await expect(page.getByTestId('selection-count')).toHaveText('1 selected');
@@ -91,14 +106,14 @@ test.describe("unified view of diffing documents' WorkItems", () => {
 
     const target = page.getByTestId('EL-158_DP-11563_reverse');
     const source = page.getByTestId('EL-158_DP-11563_direct');
-    await expect(source.locator('.wi-header')).toHaveClass(/moved-placeholder/);
-
-    await target.locator('a.wi-tag.moved', { hasText: 'Moved from 2.3' }).click();
-    await expect(page).toHaveURL(/#left2\.3$/);
-    await expect(source.locator('.wi-header')).toBeInViewport();
+    await expect(target.locator('.wi-header')).toHaveClass(/moved-placeholder/);
 
     await source.locator('a.wi-tag.moved', { hasText: 'Moved to 2.4' }).click();
     await expect(page).toHaveURL(/#right2\.4$/);
     await expect(target.locator('.wi-header')).toBeInViewport();
+
+    await target.locator('a.wi-tag.moved', { hasText: 'Moved from 2.3' }).click();
+    await expect(page).toHaveURL(/#left2\.3$/);
+    await expect(source.locator('.wi-header')).toBeInViewport();
   });
 });

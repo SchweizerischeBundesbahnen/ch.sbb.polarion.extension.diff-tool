@@ -73,7 +73,7 @@ export function useSearchParams(): URLSearchParams {
 }
 
 /** Query params which change only the look of the page, never the data it loads. */
-const VIEW_ONLY_PARAMS = ['swapColors'];
+const VIEW_ONLY_PARAMS = ['swapColors', 'diffView'];
 
 /**
  * The current query string without view-only params. The data-loading effects depend on it, so

@@ -54,17 +54,17 @@ The diff view shows the differences in one of two views:
 
 To change the view, select it in `Diff view` in the control pane.
 A change of the view keeps the selection and loads nothing again.
-The view is kept until the page is reloaded.
+The unified view is kept in the page URL as `diffView=unified`, so a reload or a shared link keeps it.
 
-In the unified view, each work item has one header row: its title, the source ID and the target ID.
+In the unified view, each work item has one header row: its source title, the source ID and the target ID.
 Tags on the header row give more information:
 - `Only in source`: the work item is not in the target. A merge creates it there.
 - `Only in target`: the work item is not in the source. A merge deletes it there.
 - `Referenced`: the work item is referenced in its document.
 
 A moved work item is shown at two positions:
-- At its target position, with its differences and the tag `Moved from <outline number>`.
-- At its source position, as a slim line with the tag `Moved to <outline number>`.
+- At its source position, with its differences and the tag `Moved to <outline number>`.
+- At its target position, as a slim line with the tag `Moved from <outline number>`.
 
 Click the tag to go to the other position.
 The side by side view marks the same positions with `moved from` and `moved to`.

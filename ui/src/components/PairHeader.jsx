@@ -13,7 +13,7 @@ export default function PairHeader({leftWorkItem, rightWorkItem, asHeaderInDocum
   const context = useContext(AppContext);
 
   if (context.state.diffViewMode === DiffViewModes.UNIFIED) {
-    const placeholder = isMovedPlaceholder(leftWorkItem);
+    const placeholder = isMovedPlaceholder(rightWorkItem);
     return (
         <div style={style} className="header row g-0 unified" data-testid={testId}>
           {placeholder ? <span className="merge-ticker" aria-hidden="true"/> : ticker}

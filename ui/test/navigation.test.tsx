@@ -133,7 +133,7 @@ describe('useDataSearchParams', () => {
   }
 
   it('drops the view-only params', () => {
-    window.history.replaceState(null, '', '/documents?config=A&swapColors=true');
+    window.history.replaceState(null, '', '/documents?config=A&swapColors=true&diffView=unified');
     const seen: URLSearchParams[] = [];
     const Collect = collectDataParams(seen);
     render(<Collect />);

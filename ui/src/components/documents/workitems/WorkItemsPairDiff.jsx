@@ -11,7 +11,6 @@ import PairMergeTicker from "@/components/merge/PairMergeTicker";
 import Modal from "@/components/Modal";
 import useDiffService from "@/services/useDiffService";
 import useImageUtils from "@/utils/useImageUtils";
-import * as DiffViewModes from "@/DiffViewModes";
 
 export default function WorkItemsPairDiff({ leftDocument, rightDocument, workItemsPair, pairedWorkItemsLinkRole, configCacheId, dataLoadedCallback,
                                             leftChaptersDiffMarkers, rightChaptersDiffMarkers, currentIndex, loadingContext, mergingContext,
@@ -153,9 +152,8 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
       const rightWiId = workItemsPair.rightWorkItem ? workItemsPair.rightWorkItem.id : null;
       dataLoadedCallback(currentIndex, error, diffsExist, selected, leftChapter, rightChapter, leftWiId, rightWiId);
       if (diffsExist) {
-        // Both rows of a moved pair share one field selection, as the merge sends only one of them and the
-        // diff is shown on the row of the current diff view. Shared only within one load: the other row's
-        // selection from before a reload is not this load's.
+        // Both rows of a moved pair share one field selection, as the merge sends only one of them, whichever
+        // registered first. Shared only within one load: the other row's selection from before a reload is not this load's.
         const mirroredFieldsToMerge = isMoved(workItemsPair) && mirroredPairCallback(workItemsPair)?.fieldsToMerge;
         if (mirroredFieldsToMerge && mirroredFieldsToMerge.reloadMarker === loadingContext.reloadMarker) {
           workItemsPair.fieldsToMerge = mirroredFieldsToMerge;
@@ -270,11 +268,8 @@ export default function WorkItemsPairDiff({ leftDocument, rightDocument, workIte
 
   const isMoved = (pair) => !!(pair.leftWorkItem?.movedOutlineNumber || pair.rightWorkItem?.movedOutlineNumber);
 
-  // A moved pair shows its diff once. Side by side, at its source position. Unified, at its target position,
-  // as the unified diff shows the target as the new state.
-  const diffShownHere = context.state.diffViewMode === DiffViewModes.UNIFIED
-      ? !workItemsPair.leftWorkItem?.movedOutlineNumber
-      : !workItemsPair.rightWorkItem?.movedOutlineNumber;
+  // A moved pair shows its diff once, at its source position, in both views.
+  const diffShownHere = !workItemsPair.rightWorkItem?.movedOutlineNumber;
 
   const getChapter = (workItem) => {
     const outlineNumberParts = workItem && workItem.outlineNumber && workItem.outlineNumber.split('-');

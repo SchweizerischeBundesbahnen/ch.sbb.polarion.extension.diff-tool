@@ -89,25 +89,25 @@ export function WorkItemHeader({workItem, asHeaderInDocument, movedOutlineNumber
 }
 
 /**
- * A moved pair of the unified view is shown with its diff at its target position, since the unified diff
- * shows the target as the new state. Its source position is a placeholder.
+ * A moved pair of the unified view is shown with its diff at its source position, as side by side, the source
+ * being the document the merge goes from. Its target position is a placeholder.
  */
-export const isMovedPlaceholder = (leftWorkItem) => !!leftWorkItem?.movedOutlineNumber;
+export const isMovedPlaceholder = (rightWorkItem) => !!rightWorkItem?.movedOutlineNumber;
 
 /**
- * The one-row header of a pair in the unified view. It names the work item once, by its target title
- * (or the source one, if the target is missing), and links both work items: source, then target.
- * A moved pair links its two positions to each other. The placeholder at the source position is one
- * slim line, no heading, so the document outline reads as the target.
+ * The one-row header of a pair in the unified view. It names the work item once, by its source title
+ * (or the target one, if the source is missing), and links both work items: source, then target.
+ * A moved pair links its two positions to each other. The placeholder at the target position is one
+ * slim line, no heading, so the document outline reads as the source.
  */
 export function UnifiedWorkItemHeader({leftWorkItem, rightWorkItem, asHeaderInDocument}) {
-  const placeholder = isMovedPlaceholder(leftWorkItem);
-  const movedHere = !!rightWorkItem?.movedOutlineNumber;
+  const placeholder = isMovedPlaceholder(rightWorkItem);
+  const movedAway = !!leftWorkItem?.movedOutlineNumber;
   // One anchor per position, as the "moved to" and "moved from" links of both views point to them.
-  const [leftId] = useState(movedHere ? null : anchorId(leftWorkItem, LEFT));
-  const [rightId] = useState(placeholder ? null : anchorId(rightWorkItem, RIGHT));
+  const [leftId] = useState(placeholder ? null : anchorId(leftWorkItem, LEFT));
+  const [rightId] = useState(movedAway ? null : anchorId(rightWorkItem, RIGHT));
 
-  const workItem = placeholder ? leftWorkItem : (rightWorkItem || leftWorkItem);
+  const workItem = placeholder ? rightWorkItem : (leftWorkItem || rightWorkItem);
   const asHeading = asHeaderInDocument && !placeholder;
   const headerLevel = headerLevelOf(workItem, asHeading);
   const badgeFontSize = badgeFontSizeOf(headerLevel, asHeading);
@@ -151,8 +151,8 @@ export function UnifiedWorkItemHeader({leftWorkItem, rightWorkItem, asHeaderInDo
         {rightWorkItem && sideBadge(rightWorkItem, "Target")}
         {leftWorkItem && !rightWorkItem && <span className="wi-tag only-in-source">Only in source</span>}
         {!leftWorkItem && rightWorkItem && <span className="wi-tag only-in-target">Only in target</span>}
-        {placeholder && movedTag(leftWorkItem, RIGHT, "Moved to")}
-        {movedHere && movedTag(rightWorkItem, LEFT, "Moved from")}
+        {movedAway && movedTag(leftWorkItem, RIGHT, "Moved to")}
+        {placeholder && movedTag(rightWorkItem, LEFT, "Moved from")}
         {!workItem && <span style={{fontSize: ".75em"}}>&ndash;</span>}
       </div>
   );
