@@ -31,8 +31,13 @@ function renderDocuments() {
   );
 }
 
+// The toolbar shows once every pair diff has loaded. A test which counts the diff requests must wait for it: on a
+// slow machine the last pairs are still requested after the first pair is rendered.
 async function documentsLoaded() {
-  await vi.waitFor(() => expect(document.querySelector('.header .merge-pane')).not.toBeNull(), { timeout: 10000 });
+  await vi.waitFor(
+    () => expect(getComputedStyle(document.querySelector('.header .merge-pane') as HTMLElement).display).toBe('flex'),
+    { timeout: 10000 },
+  );
   await vi.waitFor(() => expect(document.querySelector(PAIR_TICKER)).not.toBeNull());
 }
 
