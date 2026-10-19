@@ -65,6 +65,7 @@ public class HyperlinksHandler implements DiffLifecycleHandler {
             for (HyperlinkStruct link : linksA) {
                 HyperlinkStruct oppositeLink = linksB.stream().filter(l -> l.getUri().equals(link.getUri())).findFirst().orElse(null);
                 if (oppositeLink != null) {
+                    allLinksA.remove(link);
                     allLinksB.remove(oppositeLink);
                     linksB.remove(oppositeLink);
                     resultRows.add(markChanged(renderLink(link), NONE));
@@ -72,16 +73,32 @@ public class HyperlinksHandler implements DiffLifecycleHandler {
             }
         }
 
-        // the rest items go after
-        for (String roleId : rolesToMerge) {
-            List<HyperlinkStruct> linksB = filterByRole(allLinksB, roleId);
-            linksB.forEach(link -> {
-                resultRows.add(markChanged(renderLink(link), ADDED));
-                resultRows.add(markChanged(renderLink(link), REMOVED));
-            });
-        }
+        // the rest are links only one work item has
+        processOneSidedLinks(resultRows, rolesToMerge, allLinksA, allLinksB, context.reverseStyles());
 
         return String.join("", resultRows);
+    }
+
+    /**
+     * Renders the links only one work item has: removed if A has it, added if B has it. So each of the two diffs
+     * holds the whole change: the unified view shows one of them, and side by side each leaf hides the other half.
+     * ReverseStylesHandler post-processes before this handler and never sees these rows, so the reversed diff
+     * swaps them here. Removed rows come first, as in a text diff.
+     */
+    private void processOneSidedLinks(List<String> resultRows, List<String> rolesToMerge,
+                                      List<HyperlinkStruct> linksA, List<HyperlinkStruct> linksB, boolean reverseStyles) {
+        for (String roleId : rolesToMerge) {
+            List<String> rowsA = renderOneSidedLinks(linksA, roleId, reverseStyles ? ADDED : REMOVED);
+            List<String> rowsB = renderOneSidedLinks(linksB, roleId, reverseStyles ? REMOVED : ADDED);
+            resultRows.addAll(reverseStyles ? rowsB : rowsA);
+            resultRows.addAll(reverseStyles ? rowsA : rowsB);
+        }
+    }
+
+    private List<String> renderOneSidedLinks(List<HyperlinkStruct> links, String roleId, ModificationType modificationType) {
+        return filterByRole(links, roleId).stream()
+                .map(link -> markChanged(renderLink(link), modificationType))
+                .toList();
     }
 
     private List<HyperlinkStruct> getHyperlinks(WorkItem workItem) {

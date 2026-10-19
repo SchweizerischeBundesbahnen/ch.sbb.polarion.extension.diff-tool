@@ -70,30 +70,35 @@ public class LinkedWorkItemsHandler implements DiffLifecycleHandler {
             processCounterparts(resultRows, allRoles, linksA, linksB, workItemA, workItemB, context);
         }
 
-        // The rest are links only one work item has: removed if A has it, added if B has it. So each of the two diffs
-        // holds the whole change: the unified view shows one of them, and side by side each leaf hides the other half.
-        // ReverseStylesHandler post-processes before this handler and never sees these rows, so the reversed diff
-        // swaps them here. Removed rows come first, as in a text diff.
-        ModificationType onlyInA = context.reverseStyles() ? ADDED : REMOVED;
-        ModificationType onlyInB = context.reverseStyles() ? REMOVED : ADDED;
-        for (ILinkRoleOpt linkRole : allRoles) {
-            List<String> removedRows = new ArrayList<>();
-            List<String> addedRows = new ArrayList<>();
-            for (ILinkedWorkItemStruct link : linksA) {
-                if (Objects.equals(link.getLinkRole(), linkRole)) {
-                    (onlyInA == REMOVED ? removedRows : addedRows).add(markChanged(renderLinkedItem(link, workItemA, false), onlyInA));
-                }
-            }
-            for (ILinkedWorkItemStruct link : linksB) {
-                if (Objects.equals(link.getLinkRole(), linkRole)) {
-                    (onlyInB == REMOVED ? removedRows : addedRows).add(markChanged(renderLinkedItem(link, workItemB, false), onlyInB));
-                }
-            }
-            resultRows.addAll(removedRows);
-            resultRows.addAll(addedRows);
-        }
+        // the rest are links only one work item has
+        processOneSidedLinks(resultRows, allRoles, linksA, linksB, workItemA, workItemB, context.reverseStyles());
 
         return String.join("", resultRows);
+    }
+
+    /**
+     * Renders the links only one work item has: removed if A has it, added if B has it. So each of the two diffs
+     * holds the whole change: the unified view shows one of them, and side by side each leaf hides the other half.
+     * ReverseStylesHandler post-processes before this handler and never sees these rows, so the reversed diff
+     * swaps them here. Removed rows come first, as in a text diff.
+     */
+    private void processOneSidedLinks(List<String> resultRows, List<ILinkRoleOpt> allRoles,
+                                      List<ILinkedWorkItemStruct> linksA, List<ILinkedWorkItemStruct> linksB,
+                                      IWorkItem workItemA, IWorkItem workItemB, boolean reverseStyles) {
+        for (ILinkRoleOpt linkRole : allRoles) {
+            List<String> rowsA = renderOneSidedLinks(linksA, linkRole, workItemA, reverseStyles ? ADDED : REMOVED);
+            List<String> rowsB = renderOneSidedLinks(linksB, linkRole, workItemB, reverseStyles ? REMOVED : ADDED);
+            resultRows.addAll(reverseStyles ? rowsB : rowsA);
+            resultRows.addAll(reverseStyles ? rowsA : rowsB);
+        }
+    }
+
+    private List<String> renderOneSidedLinks(List<ILinkedWorkItemStruct> links, ILinkRoleOpt linkRole,
+                                             IWorkItem workItem, ModificationType modificationType) {
+        return links.stream()
+                .filter(link -> Objects.equals(link.getLinkRole(), linkRole))
+                .map(link -> markChanged(renderLinkedItem(link, workItem, false), modificationType))
+                .toList();
     }
 
     private List<ILinkRoleOpt> collectAllRoles(DiffContext context, List<ILinkedWorkItemStruct> linksA,
