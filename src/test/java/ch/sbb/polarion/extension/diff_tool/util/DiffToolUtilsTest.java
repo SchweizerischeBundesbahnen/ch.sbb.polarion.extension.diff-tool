@@ -44,7 +44,7 @@ class DiffToolUtilsTest {
     @Test
     void testApplyStyle() {
         String diffResult = "<div class=\"diff-html-removed\">Removed Text</div>";
-        String expectedStyledResult = "<div style=\"background-color: #FDC6C6; text-decoration: line-through;\">Removed Text</div>";
+        String expectedStyledResult = "<div style=\"background-color: #FDC6C6;\">Removed Text</div>";
         String styledResult = DiffToolUtils.applyStyle(diffResult);
         assertEquals(expectedStyledResult, styledResult);
     }
@@ -57,7 +57,7 @@ class DiffToolUtilsTest {
         String changedStyle = DiffToolUtils.getStyleByClass("diff-html-changed");
         String invalidStyle = DiffToolUtils.getStyleByClass("invalid-class");
 
-        assertEquals("background-color: #FDC6C6; text-decoration: line-through;", removedStyle);
+        assertEquals("background-color: #FDC6C6;", removedStyle);
         assertEquals("background-color: #CCFFCC;", addedStyle);
         assertEquals("background-color: lightyellow;", modifiedStyle);
         assertEquals("border: 1px dashed magenta; padding: 2px; margin: 2px;", changedStyle);
@@ -119,7 +119,7 @@ class DiffToolUtilsTest {
                 Arguments.of("Same text", "Same text", false, "Same text"),
                 Arguments.of("Some text", "Some other text", true, "Some <span style=\"background-color: #CCFFCC;\" " +
                         "id=\"added-diff-0\" previous=\"first-diff\" changeId=\"added-diff-0\" next=\"last-diff\">other </span>text"),
-                Arguments.of("Some other text", "Some text", true, "Some <span style=\"background-color: #FDC6C6; text-decoration: line-through;\" " +
+                Arguments.of("Some other text", "Some text", true, "Some <span style=\"background-color: #FDC6C6;\" " +
                         "id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"last-diff\">other </span>text"),
                 Arguments.of("Same text", "Same <span style=\"background-color: red;\">text</span>", false, "Same text"),
                 Arguments.of("Same <span style=\"background-color: red;\">text</span>", "Same text", false, "Same text")
@@ -140,9 +140,9 @@ class DiffToolUtilsTest {
                 Arguments.of(null, "", ""),
                 Arguments.of("  ", "", ""),
                 Arguments.of("<h1>Heading</h1><p>Some content for page</p>", "<h1>Heading2</h1><p>Some text for webpage</p>", "<h1>" +
-                        "<span style=\"background-color: #FDC6C6; text-decoration: line-through;\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">Heading</span><span style=\"background-color: #CCFFCC;\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"removed-diff-1\">Heading2</span>" +
+                        "<span style=\"background-color: #FDC6C6;\" id=\"removed-diff-0\" previous=\"first-diff\" changeId=\"removed-diff-0\" next=\"added-diff-0\">Heading</span><span style=\"background-color: #CCFFCC;\" id=\"added-diff-0\" previous=\"removed-diff-0\" changeId=\"added-diff-0\" next=\"removed-diff-1\">Heading2</span>" +
                         "</h1><p>" +
-                        "Some <span style=\"background-color: #FDC6C6; text-decoration: line-through;\" id=\"removed-diff-1\" previous=\"added-diff-0\" changeId=\"removed-diff-1\" next=\"added-diff-1\">content </span><span style=\"background-color: #CCFFCC;\" id=\"added-diff-1\" previous=\"removed-diff-1\" changeId=\"added-diff-1\" next=\"removed-diff-2\">text </span>for <span style=\"background-color: #FDC6C6; text-decoration: line-through;\" id=\"removed-diff-2\" previous=\"added-diff-1\" changeId=\"removed-diff-2\" next=\"added-diff-2\">page</span><span style=\"background-color: #CCFFCC;\" id=\"added-diff-2\" previous=\"removed-diff-2\" changeId=\"added-diff-2\" next=\"last-diff\">webpage</span>" +
+                        "Some <span style=\"background-color: #FDC6C6;\" id=\"removed-diff-1\" previous=\"added-diff-0\" changeId=\"removed-diff-1\" next=\"added-diff-1\">content </span><span style=\"background-color: #CCFFCC;\" id=\"added-diff-1\" previous=\"removed-diff-1\" changeId=\"added-diff-1\" next=\"removed-diff-2\">text </span>for <span style=\"background-color: #FDC6C6;\" id=\"removed-diff-2\" previous=\"added-diff-1\" changeId=\"removed-diff-2\" next=\"added-diff-2\">page</span><span style=\"background-color: #CCFFCC;\" id=\"added-diff-2\" previous=\"removed-diff-2\" changeId=\"added-diff-2\" next=\"last-diff\">webpage</span>" +
                         "</p>")
         );
     }

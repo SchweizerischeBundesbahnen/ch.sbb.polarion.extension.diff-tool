@@ -1,9 +1,9 @@
-import {DIFF_SIDES, DiffLeaf} from "@/components/diff/DiffLeaf";
+import DiffViewer from "@/components/diff/DiffViewer";
 
 export default function ContentBlocksDiff({label, oldValue, newValue, selected, selectedCallback}) {
 
   return (
-      <div className="diff-viewer" style={{
+      <DiffViewer oldValue={oldValue} newValue={newValue} style={{
         position: "relative"
       }}>
         <label className="merge-ticker">
@@ -12,8 +12,6 @@ export default function ContentBlocksDiff({label, oldValue, newValue, selected, 
                    aria-label={label} />
           </span>
         </label>
-        <DiffLeaf htmlDiff={oldValue} diffSide={DIFF_SIDES.LEFT}/>
-        <DiffLeaf htmlDiff={newValue} diffSide={DIFF_SIDES.RIGHT}/>
-      </div>
+      </DiffViewer>
   );
 }

@@ -1,10 +1,13 @@
 import {useEffect, useState} from "react";
+import useDiffViewMode from "@/utils/useDiffViewMode";
 
 export function useAppContext(){
   const [headerPinned, setHeaderPinned] = useState(false);
   const [controlPaneAccessible, setControlPaneAccessible] = useState(false);
   const [controlPaneExpanded, setControlPaneExpanded] = useState(false);
   const [pairedDocuments, setPairedDocuments] = useState([]);
+  // In the query string rather than here, so the reload after a merge keeps it.
+  const [diffViewMode, setDiffViewMode] = useDiffViewMode();
   const [showOutlineNumbersDiff, setShowOutlineNumbersDiff] = useState(false);
   const [syncStructure, setSyncStructure] = useState(true);
   const [counterpartWorkItemsDiffer, setCounterpartWorkItemsDiffer] = useState(false);
@@ -72,6 +75,8 @@ export function useAppContext(){
     setControlPaneExpanded,
     pairedDocuments,
     setPairedDocuments,
+    diffViewMode,
+    setDiffViewMode,
     showOutlineNumbersDiff,
     setShowOutlineNumbersDiff,
     syncStructure,

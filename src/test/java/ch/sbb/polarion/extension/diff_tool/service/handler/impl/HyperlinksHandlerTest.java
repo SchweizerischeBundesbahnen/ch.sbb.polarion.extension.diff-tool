@@ -17,7 +17,27 @@ class HyperlinksHandlerTest {
 
     @Test
     void testPositiveCase() {
-        String input = "test";
+        DiffContext context = mockContext();
+
+        String result = new HyperlinksHandler().postProcess("test", context);
+
+        // The source-only link urlA2 is removed and the target-only links are added, each shown once
+        assertEquals(row("unchanged", "urlA1") + row("diff-html-added", "urlB1")
+                + row("diff-html-removed", "urlA2") + row("diff-html-added", "urlB2"), result);
+    }
+
+    @Test
+    void testReversedDiffSwapsRemovedAndAdded() {
+        DiffContext context = mockContext();
+        when(context.reverseStyles()).thenReturn(true);
+
+        String result = new HyperlinksHandler().postProcess("test", context);
+
+        assertEquals(row("unchanged", "urlA1") + row("diff-html-removed", "urlB1")
+                + row("diff-html-removed", "urlB2") + row("diff-html-added", "urlA2"), result);
+    }
+
+    private DiffContext mockContext() {
         DiffContext context = mock(DiffContext.class, RETURNS_DEEP_STUBS);
 
         context.setFieldA(mock(WorkItem.Field.class, RETURNS_DEEP_STUBS));
@@ -52,27 +72,15 @@ class HyperlinksHandlerTest {
         when(context.getWorkItemB().getUnderlyingObject().getHyperlinks()).thenReturn(hyperlinksB);
 
         when(context.getDiffModel().getHyperlinkRoles()).thenReturn(List.of("someType#role1", "someType#role2"));
+        return context;
+    }
 
-        String result = new HyperlinksHandler().postProcess(input, context);
-
-        String expectedResult = """
-                <div class="diff-hl-container"><div class="unchanged diff-hl"><span class="polarion-JSEnumOption" title="external reference">null</span>:
-                <a href="urlA1" target="_blank" class="polarion-Hyperlink">
-                    <span class="polarion-JSTextRenderer-Text" title="urlA1">urlA1</span>
-                </a></div></div><div class="diff-hl-container"><div class="diff-html-added diff-hl"><span class="polarion-JSEnumOption" title="external reference">null</span>:
-                <a href="urlB1" target="_blank" class="polarion-Hyperlink">
-                    <span class="polarion-JSTextRenderer-Text" title="urlB1">urlB1</span>
-                </a></div></div><div class="diff-hl-container"><div class="diff-html-removed diff-hl"><span class="polarion-JSEnumOption" title="external reference">null</span>:
-                <a href="urlB1" target="_blank" class="polarion-Hyperlink">
-                    <span class="polarion-JSTextRenderer-Text" title="urlB1">urlB1</span>
-                </a></div></div><div class="diff-hl-container"><div class="diff-html-added diff-hl"><span class="polarion-JSEnumOption" title="external reference">null</span>:
-                <a href="urlB2" target="_blank" class="polarion-Hyperlink">
-                    <span class="polarion-JSTextRenderer-Text" title="urlB2">urlB2</span>
-                </a></div></div><div class="diff-hl-container"><div class="diff-html-removed diff-hl"><span class="polarion-JSEnumOption" title="external reference">null</span>:
-                <a href="urlB2" target="_blank" class="polarion-Hyperlink">
-                    <span class="polarion-JSTextRenderer-Text" title="urlB2">urlB2</span>
-                </a></div></div>""";
-        assertEquals(expectedResult, result);
+    private String row(String styleName, String uri) {
+        return """
+                <div class="diff-hl-container"><div class="%1$s diff-hl"><span class="polarion-JSEnumOption" title="external reference">null</span>:
+                <a href="%2$s" target="_blank" class="polarion-Hyperlink">
+                    <span class="polarion-JSTextRenderer-Text" title="%2$s">%2$s</span>
+                </a></div></div>""".formatted(styleName, uri);
     }
 
     private HyperlinkStruct mockHyperlinkStruct(String uri, String roleId) {

@@ -739,12 +739,18 @@ public class MergeService {
 
     void merge(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, MergeWorkItemsPair pair) {
         for (DiffField field : orderForMerge(context.getDiffModel().getDiffFields())) {
-            if (pair != null && !pair.fieldSelectedForMerge(field)) {
-                continue; // Skip processing if field wasn't explicitly or implicitly selected for merge
+            if (shouldMergeField(field, pair)) {
+                mergeField(source, target, context, pair, field);
             }
-            mergeField(source, target, context, pair, field);
         }
         target.save();
+    }
+
+    private boolean shouldMergeField(DiffField field, MergeWorkItemsPair pair) {
+        // Polarion derives the outline number from the position in the document, which a merge sets by moving the work item.
+        // Any other field is merged only if it was explicitly or implicitly selected for merge.
+        return !DiffField.OUTLINE_NUMBER.getKey().equals(field.getKey())
+                && (pair == null || pair.fieldSelectedForMerge(field));
     }
 
     private void mergeField(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, MergeWorkItemsPair pair, DiffField field) {

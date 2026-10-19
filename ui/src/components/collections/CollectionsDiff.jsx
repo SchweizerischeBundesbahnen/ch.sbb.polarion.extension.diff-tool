@@ -1,7 +1,7 @@
 import {useContext, useEffect, useMemo, useState} from "react";
 import AppContext from "@/components/AppContext";
 import {useDataSearchParams} from "@/router/navigation";
-import useSwapColors from "@/utils/useSwapColors";
+import useDiffBodyClassName from "@/utils/useDiffBodyClassName";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faSquarePlus} from "@fortawesome/free-solid-svg-icons";
 import Loading from "@/components/loading/Loading";
@@ -9,9 +9,10 @@ import AppAlert from "@/components/AppAlert";
 import useDiffService from "@/services/useDiffService";
 import {responseError} from "@/services/responseError";
 import DocumentsDiff from "@/components/documents/DocumentsDiff";
-import DocumentHeader from "@/components/documents/DocumentHeader";
+import {DocumentSpaceHeader, DocumentTitleHeader} from "@/components/documents/DocumentHeader";
 import {SearchableSelect} from "@sbb-polarion/react-sbb-polarion";
 import CollectionHeader from "@/components/collections/CollectionHeader";
+import ComparisonHeader from "@/components/ComparisonHeader";
 import useRemote from "@/services/useRemote";
 import Modal from "@/components/Modal";
 import DocumentsFieldsDiff from "@/components/documents/DocumentsFieldsDiff";
@@ -23,7 +24,7 @@ const REQUIRED_PARAMS = ['sourceProjectId', 'sourceCollectionId', 'targetProject
 export default function CollectionsDiff() {
   const context = useContext(AppContext);
   const searchParams = useDataSearchParams();
-  const [swapColors] = useSwapColors();
+  const diffBodyClassName = useDiffBodyClassName();
   const diffService = useDiffService();
   const remote = useRemote();
 
@@ -117,24 +118,19 @@ export default function CollectionsDiff() {
   }
 
   if (!selectedDocumentsPair.rightDocument) {
-    return <div id="diff-body" className={`doc-diff ${swapColors ? "swap-colors" : ""} ${context.state.controlPaneExpanded ? "control-pane-expanded" : ""}`}>
+    return <div id="diff-body" className={diffBodyClassName}>
       <div className={`header container-fluid g-0 sticky-top ${context.state.headerPinned ? "pinned" : ""}`}>
-        <div className="row g-0">
-          <CollectionHeader collection={collectionsData.leftCollection} side={DIFF_SIDES.LEFT} />
-          <CollectionHeader collection={collectionsData.rightCollection} side={DIFF_SIDES.RIGHT} />
-        </div>
-        <div className="row g-0">
-          <DocumentHeader document={selectedDocumentsPair.leftDocument} side={DIFF_SIDES.LEFT}/>
-          <div className="col collapsed-border" style={{
-            color: "#bbb",
-            fontWeight: "200"
-          }}>
-            No counterpart document in target collection. Do you want to create it?
-            <button className="btn btn-secondary btn-xs create-document-button" onClick={() => setTargetConfigurationModalVisible(true)} data-testid="create-document-button">
-              <FontAwesomeIcon icon={faSquarePlus} style={{ color: "#189418", marginRight: "4px", fontWeight: "600" }}/> Create document
-            </button>
-          </div>
-        </div>
+        <ComparisonHeader
+            source={[<CollectionHeader collection={collectionsData.leftCollection} side={DIFF_SIDES.LEFT} />,
+              <DocumentSpaceHeader document={selectedDocumentsPair.leftDocument} side={DIFF_SIDES.LEFT}/>,
+              <DocumentTitleHeader document={selectedDocumentsPair.leftDocument} side={DIFF_SIDES.LEFT}/>]}
+            target={[<CollectionHeader collection={collectionsData.rightCollection} side={DIFF_SIDES.RIGHT} />,
+              <div className="missing-counterpart">
+                No counterpart document in target collection. Do you want to create it?
+                <button className="btn btn-secondary btn-xs create-document-button" onClick={() => setTargetConfigurationModalVisible(true)} data-testid="create-document-button">
+                  <FontAwesomeIcon icon={faSquarePlus} style={{ color: "#189418", marginRight: "4px", fontWeight: "600" }}/> Create document
+                </button>
+              </div>]} />
       </div>
       <Modal title="Choose document configuration" visible={targetConfigurationModalVisible} setVisible={setTargetConfigurationModalVisible} className="modal-md"
              cancelButtonTitle="Cancel" actionButtonTitle="Create Document" actionButtonHandler={() => {

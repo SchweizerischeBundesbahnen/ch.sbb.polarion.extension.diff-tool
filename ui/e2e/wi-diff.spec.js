@@ -70,7 +70,7 @@ test.describe("page of diffing WorkItems WorkItems", () => {
 
     const selectAllLabel = page.locator('.header .merge-pane label.select-all');
     await expect(selectAllLabel).toBeVisible();
-    await expect(selectAllLabel).toHaveText("select all");
+    await expect(selectAllLabel).toHaveText("Select all");
 
     const selectAllCheckbox = page.locator('.header .merge-pane label.select-all input[type="checkbox"]');
     await expect(selectAllCheckbox).toBeVisible();

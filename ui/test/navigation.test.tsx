@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type Router, useDataSearchParams, usePathname, useRouter, useSearchParams } from '../src/router/navigation';
 
 // The next/navigation replacement. What matters is the contract the call sites rely on: a reactive,
@@ -133,7 +133,7 @@ describe('useDataSearchParams', () => {
   }
 
   it('drops the view-only params', () => {
-    window.history.replaceState(null, '', '/documents?config=A&swapColors=true');
+    window.history.replaceState(null, '', '/documents?config=A&swapColors=true&diffView=unified');
     const seen: URLSearchParams[] = [];
     const Collect = collectDataParams(seen);
     render(<Collect />);
@@ -215,13 +215,23 @@ describe('useRouter', () => {
     expect(window.history.length).toBe(lengthBefore);
   });
 
+  // Asserted on the History API call, not on history.length: Chromium caps the length at 50, and every
+  // test file shares one page, so the viewer suites' pushes can leave no room for one more entry.
   it('push() adds a history entry', () => {
     window.history.replaceState(null, '', '/workitems?config=1');
     render(<Probe />);
-    const lengthBefore = window.history.length;
+    const pushState = vi.spyOn(window.history, 'pushState');
+    const replaceState = vi.spyOn(window.history, 'replaceState');
 
-    flushSync(() => capturedRouter.push('/workitems?config=2'));
+    try {
+      flushSync(() => capturedRouter.push('/workitems?config=2'));
 
-    expect(window.history.length).toBe(lengthBefore + 1);
+      expect(probeText()).toBe('2');
+      expect(pushState).toHaveBeenCalledExactlyOnceWith(null, '', '/workitems?config=2');
+      expect(replaceState).not.toHaveBeenCalled();
+    } finally {
+      pushState.mockRestore();
+      replaceState.mockRestore();
+    }
   });
 });

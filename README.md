@@ -35,7 +35,7 @@ or move a chapter of one document, with everything below it, into another docume
 | Document | Description |
 |---|---|
 | [Quick start](QUICK_START.md) | Install the extension and enable it in a project |
-| [User guide](USER_GUIDE.md) | Documents diffing, copy and chapter merge, work items and collections diffing |
+| [User guide](USER_GUIDE.md) | Documents diffing, copy and chapter merge, work items and collections diffing, diff views and merging |
 | [Configuration](CONFIGURATION.md) | Enabling the forms and navigation nodes, performance tuning, chapter merge timeouts, project duplication |
 | [Velocity API](VELOCITY_API.md) | `$diffTool.diffText`, `diffHtml` and `diffWorkItems` in the Velocity context |
 | [REST API](docs/openapi.json) | OpenAPI specification |

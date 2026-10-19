@@ -3094,6 +3094,29 @@ class MergeServiceTest {
     }
 
     @Test
+    void testTheOutlineNumberIsNeverMerged() {
+        // A diff configuration may list the outline number. A pair which differs in it only (a moved work item) has
+        // no field selection, which counts as all fields selected: the outline number is still not written.
+        IWorkItem source = mock(IWorkItem.class);
+        IWorkItem target = mock(IWorkItem.class);
+        IPrototype prototype = mock(IPrototype.class);
+        when(prototype.isKeyDefined("title")).thenReturn(true);
+        when(source.getPrototype()).thenReturn(prototype);
+        when(polarionService.getFieldValue(source, "title")).thenReturn("Title");
+
+        DocumentsMergeContext context = mock(DocumentsMergeContext.class);
+        when(context.getDiffModel()).thenReturn(DiffModel.builder()
+                .diffFields(new ArrayList<>(List.of(DiffField.OUTLINE_NUMBER, DiffField.builder().key("title").build()))).build());
+        MergeWorkItemsPair pair = new MergeWorkItemsPair(source, target, List.of());
+
+        mergeService.merge(source, target, context, pair);
+
+        verify(polarionService, never()).getFieldValue(source, "outlineNumber");
+        verify(polarionService, never()).setFieldValue(eq(target), eq("outlineNumber"), any());
+        verify(polarionService).setFieldValue(target, "title", "Title");
+    }
+
+    @Test
     void testAListFieldOfADifferentTypeIsNotCopiedIntoTheTargetProject() {
         IWorkItem source = mock(IWorkItem.class);
         IWorkItem target = mock(IWorkItem.class);
