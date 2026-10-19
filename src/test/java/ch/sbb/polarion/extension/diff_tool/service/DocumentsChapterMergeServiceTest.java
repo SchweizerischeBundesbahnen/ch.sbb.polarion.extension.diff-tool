@@ -191,6 +191,42 @@ class DocumentsChapterMergeServiceTest {
     }
 
     @Test
+    void testMissingChapterIsReportedWithTheDocumentItWasLookedFor() {
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+
+        MergeResult result = documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.COPY, ChapterInsertMode.UNDER));
+
+        assertEquals("there is no chapter '2' in the source document 'space/sourceDoc' of project 'source'",
+                result.getMergeReport().getProhibited().get(0).getDescription());
+    }
+
+    @Test
+    void testChapterOfNonHeadingItemIsReportedWithItsType() {
+        IWorkItem requirement = workItem("SOURCE-1", "requirement");
+        when(requirement.getType().getName()).thenReturn("Requirement");
+        IModule.IStructureNode node = node(requirement, false);
+        when(mergeService.getNodeByOutlineNumber(sourceModule, "2")).thenReturn(node);
+
+        String message = documentsChapterMergeService.chapterNotFound(sourceModule, SOURCE_DOCUMENT, "source", "2");
+
+        assertEquals("'2' in the source document 'space/sourceDoc' of project 'source' is workitem 'SOURCE-1' of type 'Requirement', not a heading", message);
+    }
+
+    @Test
+    void testChapterOfNonStructuralItemIsReportedAsAWorkItemNumber() {
+        String message = documentsChapterMergeService.chapterNotFound(targetModule, TARGET_DOCUMENT, "target", " 3.1-2 ");
+
+        assertEquals("'3.1-2' in the target document 'space/targetDoc' of project 'target' is the outline number of a workitem, not of a chapter", message);
+    }
+
+    @Test
+    void testMissingOutlineNumberIsReported() {
+        String message = documentsChapterMergeService.chapterNotFound(sourceModule, SOURCE_DOCUMENT, "source", " ");
+
+        assertEquals("no chapter of the source document 'space/sourceDoc' of project 'source' was given", message);
+    }
+
+    @Test
     void testTargetChapterInsideSourceChapterIsProhibited() {
         IModule.IStructureNode sourceChapter = chapter(sourceModule, "2", heading("SOURCE-1"));
         IModule.IStructureNode targetChapter = node(heading("SOURCE-2"), true);

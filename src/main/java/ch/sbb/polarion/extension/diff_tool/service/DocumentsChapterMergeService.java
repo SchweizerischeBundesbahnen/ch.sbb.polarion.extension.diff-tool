@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterInsertMode;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeInfo;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ChapterMergeMode;
@@ -199,10 +200,10 @@ public class DocumentsChapterMergeService {
     @Nullable
     String validate(@NotNull DocumentsChapterMergeContext context, @Nullable IModule.IStructureNode sourceChapterNode, @Nullable IModule.IStructureNode targetChapterNode) {
         if (sourceChapterNode == null) {
-            return "chapter '%s' could not be found in the source document, or it isn't a chapter".formatted(context.getSourceChapterOutlineNumber());
+            return chapterNotFound(context.getSourceModule(), context.getSourceDocumentIdentifier(), "source", context.getSourceChapterOutlineNumber());
         }
         if (targetChapterNode == null) {
-            return "chapter '%s' could not be found in the target document, or it isn't a chapter".formatted(context.getTargetChapterOutlineNumber());
+            return chapterNotFound(context.getTargetModule(), context.getTargetDocumentIdentifier(), "target", context.getTargetChapterOutlineNumber());
         }
         if (context.getSourceDocumentIdentifier().pointsToSameDocumentAs(context.getTargetDocumentIdentifier())
                 && isDescendantOrSelf(targetChapterNode, sourceChapterNode)) {
@@ -210,6 +211,37 @@ public class DocumentsChapterMergeService {
                     .formatted(context.getTargetChapterOutlineNumber(), context.getSourceChapterOutlineNumber());
         }
         return null;
+    }
+
+    /**
+     * Says why an outline number names no chapter of a document. The message names the document which was read
+     * and what was found there, so that a refused merge can be told apart from a merge of the wrong document.
+     */
+    @VisibleForTesting
+    @NotNull
+    String chapterNotFound(@NotNull IModule module, @NotNull DocumentIdentifier document, @NotNull String side, @Nullable String outlineNumber) {
+        String where = "the %s document '%s/%s' of project '%s'".formatted(side, document.getSpaceId(), document.getName(), document.getProjectId());
+        if (outlineNumber == null || outlineNumber.isBlank()) {
+            return "no chapter of %s was given".formatted(where);
+        }
+        String chapter = outlineNumber.trim();
+        if (chapter.contains("-")) {
+            return "'%s' in %s is the outline number of a workitem, not of a chapter".formatted(chapter, where);
+        }
+        IModule.IStructureNode node = mergeService.getNodeByOutlineNumber(module, chapter);
+        IWorkItem workItem = node == null ? null : node.getWorkItem();
+        if (workItem == null) {
+            return "there is no chapter '%s' in %s".formatted(chapter, where);
+        }
+        return "'%s' in %s is workitem '%s' of type '%s', not a heading".formatted(chapter, where, workItem.getId(), typeName(workItem));
+    }
+
+    private @NotNull String typeName(@NotNull IWorkItem workItem) {
+        ITypeOpt type = workItem.getType();
+        if (type == null) {
+            return "none";
+        }
+        return type.getName() != null ? type.getName() : type.getId();
     }
 
     @VisibleForTesting
