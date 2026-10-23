@@ -1,5 +1,18 @@
 # Changelog
 
+## [9.4.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.0...v9.4.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **deps:** update dependency eslint to v10.13.0 ([#773](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/773)) ([4fb725c](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/4fb725c21c8b3763f4f8159fc2a2a1e306509c55))
+* **deps:** update dependency node-html-parser to v9.0.5 ([#776](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/776)) ([bcd4f08](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/bcd4f0863ce4bb7f23354da07272ba928dae68dd))
+* **deps:** update dependency typescript-eslint to v8.72.0 ([#777](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/777)) ([8a3e716](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/8a3e7166f1f5e44fd385d4ce94e6afdf49e5f384))
+* **deps:** update npm to v12.2.1 ([#775](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/775)) ([72ef324](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/72ef32409d04c3265bbabcd8f54c12fbc1d6362c))
+* give execution queue its own menu icon ([fa7d067](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/fa7d067ca99738f2b38902e7fb818063d4fc4002))
+* use a jobs icon for the execution queue ([#701](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/701)) ([fa7d067](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/fa7d067ca99738f2b38902e7fb818063d4fc4002))
+* workaround for Polarion issue of multiple workitems in the same document with the same outline number ([#778](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/778)) ([d4ba0e2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d4ba0e2c87c7740f42f5c0a8b61226ffd6b665d0))
+
 ## [9.4.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.3.1...v9.4.0) (2026-10-20)
 
 
