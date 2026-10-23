@@ -371,6 +371,7 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
               <input
                 id="work-items-filter-input"
                 type="text"
+                aria-label="Work item IDs"
                 placeholder="comma/space separated list of IDs"
                 value={filterValue}
                 onChange={(event) => setFilterValue(event.target.value)}

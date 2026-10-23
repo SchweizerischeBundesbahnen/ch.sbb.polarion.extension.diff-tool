@@ -149,6 +149,9 @@ test.describe("page of diffing Collections c", () => {
     await expect(page.locator(".control-pane .controls label[for='hide-chapters']")).toHaveText("Hide chapters if no difference");
     await expect(page.locator("#hide-chapters")).toBeChecked({checked: true});
 
+    await expect(page.locator(".control-pane .controls label[for='swap-colors']")).toHaveText("Swap diff colors");
+    await expect(page.locator("#swap-colors")).toBeChecked({checked: false});
+
     await expect(page.locator(".control-pane .controls label[for='paper-size']")).toHaveText("Paper size:");
     await expect(page.locator("#paper-size")).toHaveValue("A4");
 

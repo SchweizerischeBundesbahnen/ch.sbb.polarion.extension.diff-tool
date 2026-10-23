@@ -1,11 +1,11 @@
 export default function FieldMergeTicker({fieldName, selected, changeSelectionCallback}) {
 
   return (
-      <div className="merge-ticker" onClick={changeSelectionCallback}>
-        <div className="form-check" onClick={changeSelectionCallback}>
+      <label className="merge-ticker">
+        <span className="form-check">
           <input className="form-check-input" type="checkbox" checked={selected} onChange={changeSelectionCallback}
                  aria-label={`Select field ${fieldName} for merge`} />
-        </div>
-      </div>
+        </span>
+      </label>
   );
 }

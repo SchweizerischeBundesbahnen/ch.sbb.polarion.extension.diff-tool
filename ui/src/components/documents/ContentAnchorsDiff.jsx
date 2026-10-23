@@ -1,4 +1,4 @@
-import {LEFT, RIGHT, WorkItemHeader} from "@/components/WorkItemHeader";
+import PairHeader from "@/components/PairHeader";
 import {useEffect, useState} from "react";
 import ContentBlocksDiff from "@/components/documents/ContentBlocksDiff";
 
@@ -46,13 +46,8 @@ export default function ContentAnchorsDiff({ anchorsPair, currentIndex, mergingC
     {(leftDiffAbove || rightDiffAbove)
         && <ContentBlocksDiff label={`Select the document text above ${anchorId} for merge`} oldValue={leftDiffAbove} newValue={rightDiffAbove} selected={aboveDiffSelected} selectedCallback={() => changeDiffSelected(CONTENT_ABOVE)} />
     }
-    <div style={{
-      backgroundColor: "#f6f6f6",
-      display: 'flex'
-    }} className="header row g-0">
-      <WorkItemHeader workItem={anchorsPair.leftAnchor} side={LEFT} asHeaderInDocument={asHeaderInDocument}/>
-      <WorkItemHeader workItem={anchorsPair.rightAnchor} side={RIGHT} asHeaderInDocument={asHeaderInDocument}/>
-    </div>
+    <PairHeader leftWorkItem={anchorsPair.leftAnchor} rightWorkItem={anchorsPair.rightAnchor} asHeaderInDocument={asHeaderInDocument}
+                style={{backgroundColor: "#f6f6f6", display: 'flex'}} />
     {(leftDiffBelow || rightDiffBelow)
         && <ContentBlocksDiff label={`Select the document text below ${anchorId} for merge`} oldValue={leftDiffBelow} newValue={rightDiffBelow} selected={belowDiffSelected} selectedCallback={() => changeDiffSelected(CONTENT_BELOW)}/>
     }

@@ -53,7 +53,7 @@ server-rendered fragments call.
 
 Each panel mounts into a **shadow root** on the fragment's div (`src/formext/shadowMount.ts`). The
 Document Properties pane is one page shared by several extensions' panels - and by all of these - so
-plain global CSS would collide. RSP's stylesheet and `src/formext/diff-tool.css` - the row layout both
+plain global CSS would collide. RSP's stylesheet and `src/formext/diff-tool.css` - the row layout all three
 panels share, plus the toast styles a shadow root cannot see - are injected _inside_ the shadow (via
 `?inline`), which also means nothing has to be `<link>`ed from a Polarion-served URL and the panels can be
 tested with `ui/` alone.
@@ -67,6 +67,38 @@ may never expand, and two of them have no endpoint.
 `src/formext/openDocumentsDiff.ts` holds the handoff to `documents.html` - query string plus the
 `<uuid>_additionalParams` localStorage entry. It is a verbatim port and must not drift; the viewer's
 reading half of it (and of the widget's `?ids=`) is pinned by `test/widgetHandoff.test.tsx`.
+
+## The documentation site
+
+Quick Start, User Guide, Configuration and Velocity API are the markdown files at the repository
+root, rendered as one documentation site: a sidebar, a search, a breadcrumb, prev/next and an "on this
+page" rail. The components are RSP's (`DocsProvider`, `DocPage`, `DocLinkInterceptor`, `createAdminNav`);
+this app supplies only its data.
+
+- **The manifest** is [`src/docs/docs.config.json`](src/docs/docs.config.json): one entry per article, in
+  reading order - the sidebar and prev/next follow it. Each `id` is the feature id, the basename of the
+  rendered `<id>.html` and the `source` markdown file. [`src/features.tsx`](src/features.tsx) builds one
+  `DocPage` feature per entry, so adding an article is a manifest entry, its markdown and its
+  markdown2html execution in the pom; nothing in `src/` changes.
+- **The articles** are rendered by the Maven build (markdown2html, in `generate-sources`) into
+  `src/main/resources/webapp/diff-tool-app/html/`, and `DocPage` fetches `../../html/<id>.html` from
+  there. `npm run dev` serves that same directory at `/html/` (a plugin in `vite.config.js`): nothing else in
+  the dev server does, so without it every article would answer 404 and show its "not generated" message even
+  after a Maven build. Their relative links stay relative: `DocLinkInterceptor` (wrapping the whole app in
+  [`App.tsx`](src/App.tsx)) turns a `.md`/`.html` link to another article into a `?feature=` switch and opens
+  any other relative link, e.g. `docs/openapi.json`, on GitHub.
+- **Admin-shell sync.** A link that leaves the page's admin node (the About page, which is the README, linking
+  to an article) switches Polarion's own node too, so its breadcrumb and left menu follow:
+  [`src/services/adminNav.ts`](src/services/adminNav.ts) maps each feature to its node, and
+  [`src/main.tsx`](src/main.tsx) resumes the stashed target before the first render.
+- **The search index** `src/docs/search-index.json` is a build artifact and is **not committed**.
+  [`scripts/build-docs-index.mjs`](scripts/build-docs-index.mjs) builds it from the rendered articles, one
+  record per h2/h3 with the heading id the article carries, before every build (`prebuild`, where a missing
+  article fails the build), dev server (`predev`, `predev:e2e`), typecheck (`pretypecheck`) and test run
+  (Vitest `globalSetup`). `scripts/docker-test.mjs` mounts the rendered articles into its container, so the
+  Docker suite - and with it CI - indexes them too. Without rendered articles it writes an empty index, and the
+  search box is simply hidden - run the Maven build once to get the articles, and with them the search, into
+  `npm run dev`.
 
 ## Getting started
 
@@ -85,6 +117,12 @@ Then open one of the pages with the parameters it expects, e.g.
 <http://localhost:3000/documents?sourceProjectId=...>. Bare paths without the `.html` suffix work in
 dev too (see the `extensionlessHtml` plugin in `vite.config.js`).
 
+The documentation articles and their search come from the Maven build, see
+[The documentation site](#the-documentation-site): the dev server serves the articles it rendered, and until
+it has run once the article pages show their "not generated" message and there is no search box. After
+editing a markdown file, render it again (a Maven build, or its markdown2html execution alone) and restart
+`npm run dev` for the search to follow.
+
 ## Scripts
 
 | Script                            |                                                                                           |
@@ -93,7 +131,7 @@ dev too (see the `extensionlessHtml` plugin in `vite.config.js`).
 | `npm run dev:e2e`                 | dev server as the E2E suite runs it: loads `.env.e2e`, no proxy                           |
 | `npm run build`                   | production build to `dist/app`, both Vite passes (copied into the extension jar by Maven) |
 | `npm run typecheck`               | `tsc --noEmit`                                                                            |
-| `npm run lint` / `lint:fix`       | ESLint                                                                                    |
+| `npm run lint` / `lint:fix`       | ESLint, on RSP's shared config (with the `jsx-a11y` rules)                                |
 | `npm run format` / `format:check` | Prettier (`**/*.{ts,tsx,css,html}`)                                                       |
 | `npm run e2e`                     | Playwright E2E suite (interactive)                                                        |
 | `npm run e2e:headless`            | Playwright E2E suite (list reporter)                                                      |
@@ -112,7 +150,10 @@ Two layers, deliberately:
   layout; REST is mocked at the global `fetch` boundary (`test/mockFetch.ts`), so no Polarion is
   needed. Visual references live in `test/expected/<Component>/` and **must** be generated inside the
   pinned Playwright Docker image (`npm run test:update:docker`) so any dev machine and Linux CI
-  produce identical pixels.
+  produce identical pixels. Each page's own test file also has an `accessibility` block that scans its
+  states with axe-core (`pageViolations()` from `@sbb-polarion/react-sbb-polarion/testing`; the panels
+  through their shadow host with `a11yViolations()`). HTML the server renders into the viewer is left out
+  (`SERVER_RENDERED` in `test/viewerHarness.tsx`).
 - **`e2e/`** - the Playwright end-to-end suite for the diff/merge viewer and the two picker topics: 12
   specs across chromium/firefox/webkit, driving the real dev server with every REST call stubbed from
   `e2e/fixtures/` (`topics-pickers.spec.js` stubs its four responses inline).

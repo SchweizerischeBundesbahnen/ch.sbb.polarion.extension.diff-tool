@@ -1,31 +1,40 @@
 import {useContext, useEffect, useRef, useState} from "react";
 import AppContext from "@/components/AppContext";
 import DiffViewer from "@/components/diff/DiffViewer";
-import {FloatingArrow, arrow, useFloating, offset, useInteractions, useHover, useFocus, useRole, useDismiss, flip} from '@floating-ui/react';
+import {FloatingArrow, arrow, useFloating, offset, useInteractions, useHover, useFocus, useRole, useDismiss, flip, shift, FloatingPortal} from '@floating-ui/react';
 import FieldMergeTicker from "@/components/merge/FieldMergeTicker";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faTriangleExclamation} from "@fortawesome/free-solid-svg-icons";
+import * as DiffViewModes from "@/DiffViewModes";
+import {iconSize} from "@/utils/iconSize";
 
 const ARROW_HEIGHT = 7;
 const GAP = 2;
 
-export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTrigger, pairSelectedCallback, fieldId, fieldName, oldValue, newValue, issues}) {
+export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTrigger, pairSelectedCallback, fieldId, fieldName, oldValue, newValue, unifiedValue, issues}) {
   const context = useContext(AppContext);
+  const unified = context.state.diffViewMode === DiffViewModes.UNIFIED;
 
   const [display, setDisplay] = useState(true);
   const [popupVisible, setPopupVisible] = useState(false);
-  const [selected, setSelected] = useState(pairSelected);
+  // A field of a moved pair can come back after a switch of the diff view, on the other row of that pair.
+  const [selected, setSelected] = useState(() => workItemsPair?.fieldsToMerge?.find(fieldToMerge => fieldToMerge.id === fieldId)?.selected ?? pairSelected);
 
   const arrowRef = useRef(null);
   const {refs, floatingStyles, context: floatingContext} = useFloating({
-    placement: 'bottom',
+    // Unified, the field name is at the left edge: the popup starts there instead of centering on it.
+    placement: unified ? 'bottom-start' : 'bottom',
     strategy: 'absolute',
     open: popupVisible,
     onOpenChange: setPopupVisible,
     middleware: [
       offset(ARROW_HEIGHT + GAP),
+      flip(),
+      // Keeps the popup inside the page. The arrow comes after, so it still points at the field name.
+      shift({padding: 8}),
       arrow({
         element: arrowRef,
-      }),
-      flip()
+      })
     ],
   });
   const hover = useHover(floatingContext);
@@ -48,10 +57,13 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
     setDisplay(fieldId !== "outlineNumber" || context.state.showOutlineNumbersDiff);
   }, [fieldId, context.state.showOutlineNumbersDiff]);
 
+  // Only a change of the trigger selects the fields: a field mounted after a switch of the diff view keeps its own selection.
+  const handledPairSelectionTrigger = useRef(pairSelectionTrigger);
   useEffect(() => {
-    if (pairSelectionTrigger > 0) {
+    if (pairSelectionTrigger > 0 && pairSelectionTrigger !== handledPairSelectionTrigger.current) {
       setSelected(pairSelected);
     }
+    handledPairSelectionTrigger.current = pairSelectionTrigger;
   }, [pairSelectionTrigger])
 
   useEffect(() => {
@@ -83,25 +95,30 @@ export default function FieldsDiff({workItemsPair, pairSelected, pairSelectionTr
   }
 
   return (
-      <div className={`container-fluid g-0 diff-wrapper ${selected ? "selected" : ""} ${display ? "d-block" : "d-none"}`} data-testid={fieldName}>
+      <div className={`container-fluid g-0 diff-wrapper ${selected ? "selected" : ""} ${display ? "" : "d-none"}`} data-testid={fieldName}>
         {workItemsPair && context.state.individualFieldsSelection && <FieldMergeTicker fieldName={fieldName} selected={selected} changeSelectionCallback={changeSelected} />}
         <div className={`diff-header ${issues && issues.length > 0 ? "diff-issues" : ""}`} ref={refs.setReference}
              tabIndex={issues && issues.length > 0 ? 0 : undefined} {...getReferenceProps()} >
+          {/* Unified, the field name is plain text, so a field with issues needs more than a color to stand out. */}
+          {unified && issues && issues.length > 0 && <FontAwesomeIcon icon={faTriangleExclamation} className="diff-issues-icon" {...iconSize(faTriangleExclamation, 11)} />}
           {fieldName}
         </div>
         {popupVisible && issues && issues.length > 0 &&
-            <div ref={refs.setFloating} style={floatingStyles} className={'tooltip-container diff-issues'} {...getFloatingProps()}>
-              <FloatingArrow ref={arrowRef} context={floatingContext} fill="#c61010" />
-              <ul>
-                {issues.map((issue, index) => (
-                    <li key={index}>
-                      {issue}
-                    </li>
-                ))}
-              </ul>
-            </div>
+            // Out of the work item pair, which clips what overflows it: a short field has no room for the popup.
+            <FloatingPortal root={document.getElementById("diff-body")}>
+              <div ref={refs.setFloating} style={floatingStyles} className={'tooltip-container diff-issues'} {...getFloatingProps()}>
+                <FloatingArrow ref={arrowRef} context={floatingContext} fill="#c61010" />
+                <ul>
+                  {issues.map((issue, index) => (
+                      <li key={index}>
+                        {issue}
+                      </li>
+                  ))}
+                </ul>
+              </div>
+            </FloatingPortal>
         }
-        <DiffViewer oldValue={oldValue} newValue={newValue}/>
+        <DiffViewer oldValue={oldValue} newValue={newValue} unifiedValue={unifiedValue}/>
       </div>
   );
 }

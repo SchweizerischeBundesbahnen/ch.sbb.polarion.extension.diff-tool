@@ -38,7 +38,7 @@ export default function MergeResultModal({visible, visibilityCallback, mergeDeni
                   {mergeReport.detached?.length > 0 && <li><strong>{mergeReport.detached.length}</strong> items were moved out of documents.</li>}
                   {mergeReport.warnings?.length > 0 && <li><strong>{mergeReport.warnings.length}</strong> warnings.</li>}
                 </ul>
-                {mergeReport.logs && !mergeLogsVisible && <p><a href="#" data-testid="see-full-log" onClick={() => setMergeLogsVisible(true)}>See full log</a></p>}
+                {mergeReport.logs && !mergeLogsVisible && <p><button type="button" className="btn btn-link p-0 align-baseline" data-testid="see-full-log" onClick={() => setMergeLogsVisible(true)}>See full log</button></p>}
                 {mergeReport.logs && mergeLogsVisible && <pre style={{
                   padding: "10px",
                   background: "#444",

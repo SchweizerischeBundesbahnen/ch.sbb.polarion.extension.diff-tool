@@ -46,9 +46,13 @@ export default defineConfig({
       'chart.js',
       'chartjs-adapter-date-fns',
       'chartjs-plugin-zoom',
+      'axe-core',
+      '@sbb-polarion/react-sbb-polarion/testing',
     ],
   },
   test: {
+    // Generates the (uncommitted) documentation search index before any test file imports it.
+    globalSetup: ['./scripts/vitest-global-setup.mjs'],
     include: ['test/**/*.{test,spec}.{ts,tsx}'],
     setupFiles: ['./test/setup.ts'],
     // Run test files one at a time. Under high parallelism the Playwright browser provider

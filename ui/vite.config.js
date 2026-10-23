@@ -1,5 +1,6 @@
-import { copyFileSync, readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { join } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
@@ -28,6 +29,35 @@ const extensionlessHtml = () => ({
         }
       }
       next();
+    });
+  },
+});
+
+/**
+ * Dev-only counterpart of the webapp's html/: a documentation page fetches `../../html/<id>.html` relative to
+ * the app, which under the dev server's root is `/html/<id>.html` - served here from where the Maven build
+ * renders the help articles (markdown2html). A file not rendered yet answers 404, which the page reports as
+ * "not generated". Only a flat `<name>.html` is served, so a request cannot reach outside the directory.
+ */
+const RENDERED_ARTICLES = resolvePath('../src/main/resources/webapp/diff-tool-app/html/');
+const serveRenderedArticles = () => ({
+  name: 'diff-tool:serve-rendered-articles',
+  configureServer(server) {
+    server.middlewares.use('/html', (req, res) => {
+      let name = '';
+      try {
+        name = decodeURIComponent((req.url ?? '').split('?')[0]).replace(/^\//, '');
+      } catch {
+        // a malformed escape: no such article
+      }
+      const file = join(RENDERED_ARTICLES, name);
+      if (!/^[\w-]+\.html$/.test(name) || !existsSync(file)) {
+        res.statusCode = 404;
+        res.end();
+        return;
+      }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.end(readFileSync(file));
     });
   },
 });
@@ -107,7 +137,7 @@ function copyRspShellScripts() {
 
     return {
       ...shared,
-      plugins: [...shared.plugins, extensionlessHtml()],
+      plugins: [...shared.plugins, extensionlessHtml(), serveRenderedArticles()],
       // No SPA history fallback: every page is a real .html entry, and a fallback would mask a
       // genuine 404 as a blank page.
       appType: 'mpa',

@@ -23,6 +23,7 @@ import ch.sbb.polarion.extension.diff_tool.service.handler.impl.ImageHandler;
 import ch.sbb.polarion.extension.diff_tool.util.DiffToolUtils;
 import ch.sbb.polarion.extension.diff_tool.util.OutlineNumberComparator;
 import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
+import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import ch.sbb.polarion.extension.generic.fields.model.FieldMetadata;
 import ch.sbb.polarion.extension.generic.settings.NamedSettings;
 import com.polarion.alm.projects.model.IProject;
@@ -452,8 +453,10 @@ class DiffServiceTest {
         when(left.getFieldLabel(anyString())).thenAnswer((Answer<String>) i -> (String) i.getArguments()[0]);
         when(right.getFieldLabel(anyString())).thenAnswer((Answer<String>) i -> (String) i.getArguments()[0]);
 
-        when(right.getCustomFieldPrototype(anyString())).thenReturn(mock(ICustomField.class));
-        when(left.getCustomFieldPrototype(anyString())).thenReturn(mock(ICustomField.class));
+        ICustomField rightCustomField = mock(ICustomField.class);
+        when(right.getCustomFieldPrototype(anyString())).thenReturn(rightCustomField);
+        ICustomField leftCustomField = mock(ICustomField.class);
+        when(left.getCustomFieldPrototype(anyString())).thenReturn(leftCustomField);
 
         when(left.getProjectId()).thenReturn("projectId");
 
@@ -585,7 +588,8 @@ class DiffServiceTest {
     private FieldMetadata createMockFieldMetadata(String fieldId) {
         FieldMetadata metadata = mock(FieldMetadata.class);
         when(metadata.getId()).thenReturn(fieldId);
-        lenient().when(metadata.getType()).thenReturn(mock(IEnumType.class));
+        IEnumType enumType = mock(IEnumType.class);
+        lenient().when(metadata.getType()).thenReturn(enumType);
         return metadata;
     }
 
@@ -1014,14 +1018,16 @@ class DiffServiceTest {
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev1")).thenReturn(document);
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev2")).thenReturn(document);
         when(polarionService.getPairedWorkItems(eq(document), eq(document), eq(false), isNull(), anyList())).thenReturn(Collections.emptyList());
-        when(polarionService.getDocumentWorkItemsCache()).thenReturn(mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class));
+        ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache workItemsCache = mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class);
+        when(polarionService.getDocumentWorkItemsCache()).thenReturn(workItemsCache);
 
         DocumentIdentifier leftDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev1").build();
         DocumentIdentifier rightDocumentIdentifier = DocumentIdentifier.builder().projectId("project1").spaceId("space1").name("doc").revision("rev2").build();
 
         org.springframework.web.context.request.ServletRequestAttributes attrs =
                 mock(org.springframework.web.context.request.ServletRequestAttributes.class);
-        when(attrs.getRequest()).thenReturn(mock(jakarta.servlet.http.HttpServletRequest.class));
+        jakarta.servlet.http.HttpServletRequest httpRequest = mock(jakarta.servlet.http.HttpServletRequest.class);
+        when(attrs.getRequest()).thenReturn(httpRequest);
         org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(attrs);
         try (org.mockito.MockedStatic<ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource> mockedDiffModel =
                      mockStatic(ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.class)) {
@@ -1043,7 +1049,8 @@ class DiffServiceTest {
 
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "left", null)).thenReturn(leftDocument);
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "right", null)).thenReturn(rightDocument);
-        when(polarionService.getDocumentWorkItemsCache()).thenReturn(mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class));
+        ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache workItemsCache = mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class);
+        when(polarionService.getDocumentWorkItemsCache()).thenReturn(workItemsCache);
 
         ILinkRoleOpt branchedRole = mock(ILinkRoleOpt.class);
         when(polarionService.getLinkRoleById(ch.sbb.polarion.extension.diff_tool.rest.model.settings.LinkRole.BRANCHED_FROM, leftDocument.getProject())).thenReturn(branchedRole);
@@ -1056,7 +1063,8 @@ class DiffServiceTest {
 
         org.springframework.web.context.request.ServletRequestAttributes attrs =
                 mock(org.springframework.web.context.request.ServletRequestAttributes.class);
-        when(attrs.getRequest()).thenReturn(mock(jakarta.servlet.http.HttpServletRequest.class));
+        jakarta.servlet.http.HttpServletRequest httpRequest = mock(jakarta.servlet.http.HttpServletRequest.class);
+        when(attrs.getRequest()).thenReturn(httpRequest);
         org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(attrs);
         try (org.mockito.MockedStatic<ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource> mockedDiffModel =
                      mockStatic(ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.class)) {
@@ -1083,7 +1091,8 @@ class DiffServiceTest {
         IModule document = mockSameDocumentForDiff();
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev1")).thenReturn(document);
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev2")).thenReturn(document);
-        when(polarionService.getDocumentWorkItemsCache()).thenReturn(mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class));
+        ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache workItemsCache = mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class);
+        when(polarionService.getDocumentWorkItemsCache()).thenReturn(workItemsCache);
 
         WorkItemsPair fullPair = WorkItemsPair.builder()
                 .leftWorkItem(WorkItem.builder().id("AA-1").outlineNumber("1-1").build())
@@ -1105,7 +1114,8 @@ class DiffServiceTest {
 
         org.springframework.web.context.request.ServletRequestAttributes attrs =
                 mock(org.springframework.web.context.request.ServletRequestAttributes.class);
-        when(attrs.getRequest()).thenReturn(mock(jakarta.servlet.http.HttpServletRequest.class));
+        jakarta.servlet.http.HttpServletRequest httpRequest = mock(jakarta.servlet.http.HttpServletRequest.class);
+        when(attrs.getRequest()).thenReturn(httpRequest);
         org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(attrs);
         try (org.mockito.MockedStatic<ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource> mockedDiffModel =
                      mockStatic(ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.class)) {
@@ -1134,7 +1144,8 @@ class DiffServiceTest {
         IModule document = mockSameDocumentForDiff();
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev1")).thenReturn(document);
         when(polarionService.getDocumentWithFilledRevision("project1", "space1", "doc", "rev2")).thenReturn(document);
-        when(polarionService.getDocumentWorkItemsCache()).thenReturn(mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class));
+        ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache workItemsCache = mock(ch.sbb.polarion.extension.diff_tool.util.DocumentWorkItemsCache.class);
+        when(polarionService.getDocumentWorkItemsCache()).thenReturn(workItemsCache);
 
         // Root outline numbers that are equal ⇒ handleMovedItems detects no move (no surrogate creation)
         WorkItemsPair fullPair = WorkItemsPair.builder()
@@ -1153,7 +1164,8 @@ class DiffServiceTest {
 
         org.springframework.web.context.request.ServletRequestAttributes attrs =
                 mock(org.springframework.web.context.request.ServletRequestAttributes.class);
-        when(attrs.getRequest()).thenReturn(mock(jakarta.servlet.http.HttpServletRequest.class));
+        jakarta.servlet.http.HttpServletRequest httpRequest = mock(jakarta.servlet.http.HttpServletRequest.class);
+        when(attrs.getRequest()).thenReturn(httpRequest);
         org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(attrs);
         try (org.mockito.MockedStatic<ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource> mockedDiffModel =
                      mockStatic(ch.sbb.polarion.extension.diff_tool.util.DiffModelCachedResource.class)) {
@@ -1441,6 +1453,34 @@ class DiffServiceTest {
     }
 
     @Test
+    void testGetCollectionsDiffOfDeletedProject() {
+        String projectId = "project";
+
+        IBaselineCollection leftCollection = mock(IBaselineCollection.class);
+        IBaselineCollection rightCollection = mock(IBaselineCollection.class);
+        IProject project = mock(IProject.class);
+
+        when(leftCollection.getProjectId()).thenReturn(projectId);
+        when(leftCollection.getProject()).thenReturn(project);
+        when(project.isUnresolvable()).thenReturn(true);
+        when(project.getId()).thenReturn(projectId);
+
+        when(leftCollection.getElements()).thenReturn(List.of());
+        when(rightCollection.getElements()).thenReturn(List.of());
+
+        when(polarionService.getCollection(projectId, "left")).thenReturn(leftCollection);
+        when(polarionService.getCollection(projectId, "right")).thenReturn(rightCollection);
+
+        CollectionsDiffParams params = new CollectionsDiffParams(
+                DocumentsCollection.builder().projectId(projectId).id("left").build(),
+                DocumentsCollection.builder().projectId(projectId).id("right").build()
+        );
+
+        ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class, () -> diffService.getCollectionsDiff(params));
+        assertEquals("Project 'project' not found", exception.getMessage());
+    }
+
+    @Test
     void testGetDocumentsFieldsDiff() {
         ITrackerProject project = mock(ITrackerProject.class);
         when(project.getId()).thenReturn("project1");
@@ -1459,7 +1499,8 @@ class DiffServiceTest {
         when(rightDocument.getFieldLabel(anyString())).thenAnswer(i -> i.getArguments()[0]);
 
         ICustomField customFieldPrototype = mock(ICustomField.class);
-        when(customFieldPrototype.getType()).thenReturn(mock(IEnumType.class));
+        IEnumType enumType = mock(IEnumType.class);
+        when(customFieldPrototype.getType()).thenReturn(enumType);
         when(leftDocument.getCustomFieldPrototype(anyString())).thenReturn(customFieldPrototype);
         when(rightDocument.getCustomFieldPrototype(anyString())).thenReturn(customFieldPrototype);
 
@@ -1501,7 +1542,8 @@ class DiffServiceTest {
         when(rightDocument.getFieldLabel(anyString())).thenAnswer(i -> i.getArguments()[0]);
 
         ICustomField customFieldPrototype = mock(ICustomField.class);
-        when(customFieldPrototype.getType()).thenReturn(mock(IEnumType.class));
+        IEnumType enumType = mock(IEnumType.class);
+        when(customFieldPrototype.getType()).thenReturn(enumType);
         when(leftDocument.getCustomFieldPrototype(anyString())).thenReturn(customFieldPrototype);
         when(rightDocument.getCustomFieldPrototype(anyString())).thenReturn(customFieldPrototype);
 

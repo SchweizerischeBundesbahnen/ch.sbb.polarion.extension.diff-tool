@@ -23,7 +23,8 @@ class ListFieldCleanerTest {
                 .required(false)
                 .build();
 
-        when(workItem.getFieldType(IWorkItem.KEY_APPROVALS)).thenReturn(mock(IListType.class));
+        IListType listType = mock(IListType.class);
+        when(workItem.getFieldType(IWorkItem.KEY_APPROVALS)).thenReturn(listType);
         when(workItem.getApprovals()).thenReturn(java.util.List.of());
 
         cleaner.clean(workItem, field);
@@ -39,7 +40,8 @@ class ListFieldCleanerTest {
                 .required(false)
                 .build();
 
-        when(workItem.getFieldType("unknownListField")).thenReturn(mock(IListType.class));
+        IListType listType = mock(IListType.class);
+        when(workItem.getFieldType("unknownListField")).thenReturn(listType);
 
         cleaner.clean(workItem, field);
 
@@ -55,7 +57,8 @@ class ListFieldCleanerTest {
                 .required(false)
                 .build();
 
-        when(workItem.getFieldType("description")).thenReturn(mock(IType.class));
+        IType type = mock(IType.class);
+        when(workItem.getFieldType("description")).thenReturn(type);
 
         cleaner.clean(workItem, field);
 
@@ -71,7 +74,8 @@ class ListFieldCleanerTest {
                 .required(true)
                 .build();
 
-        when(workItem.getFieldType(IWorkItem.KEY_APPROVALS)).thenReturn(mock(IListType.class));
+        IListType listType = mock(IListType.class);
+        when(workItem.getFieldType(IWorkItem.KEY_APPROVALS)).thenReturn(listType);
 
         cleaner.clean(workItem, field);
 

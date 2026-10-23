@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
+import ch.sbb.polarion.extension.generic.exception.ObjectNotFoundException;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.tracker.model.IModule;
@@ -7,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space.DEFAULT_SPACE_ID;
 import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space.DEFAULT_SPACE_NAME;
@@ -57,12 +58,12 @@ public class Document {
         return this;
     }
 
-    public static Document from(@Nullable IModule module) {
-        if (module == null) {
-            return null;
-        }
-
+    public static @NotNull Document from(@NotNull IModule module) {
         IProject project = module.getProject();
+        // A project deleted mid-request resolves lazily here: without this getName() throws UnresolvableObjectException, mapped to HTTP 500
+        if (project.isUnresolvable()) {
+            throw new ObjectNotFoundException(String.format("Project '%s' not found", project.getId()));
+        }
         return Document.builder()
                 .projectId(project.getId())
                 .projectName(project.getName())

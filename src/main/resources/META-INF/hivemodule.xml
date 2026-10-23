@@ -12,6 +12,18 @@
                   projectGroupScope="false"
                   repositoryScope="true"/>
 
+        <!-- Single entry point to the documentation site (Quick Start, User Guide, Configuration,
+             Velocity API). It opens at Quick Start; the sidebar, search and cross-document links reach
+             every other article without a menu entry of its own. -->
+        <extender id="documentation"
+                  name="Documentation"
+                  parentNodeId="diff-tool"
+                  iconUrl="/polarion/diff-tool-app/ui/images/menu/16x16/user_guide.svg"
+                  pageUrl="/polarion/diff-tool-app/ui/app/index.html?feature=quick-start&amp;embedded=true&amp;scope=$scope$"
+                  projectScope="true"
+                  projectGroupScope="false"
+                  repositoryScope="true"/>
+
         <extender id="rest-api"
                   name="REST API"
                   parentNodeId="diff-tool"

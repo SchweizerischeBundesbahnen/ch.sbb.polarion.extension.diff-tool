@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
 /**
  * Drop-in replacements for the three `next/navigation` hooks this app used.
@@ -70,6 +70,22 @@ const router: Router = {
 /** Reactive, read-only view of the current query string. */
 export function useSearchParams(): URLSearchParams {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+/** Query params which change only the look of the page, never the data it loads. */
+const VIEW_ONLY_PARAMS = ['swapColors', 'diffView'];
+
+/**
+ * The current query string without view-only params. The data-loading effects depend on it, so
+ * toggling a view-only param does not reload the diff. Reference-stable while only those params change.
+ */
+export function useDataSearchParams(): URLSearchParams {
+  const searchParams = useSearchParams();
+  const dataParams = new URLSearchParams(searchParams);
+  VIEW_ONLY_PARAMS.forEach((param) => dataParams.delete(param));
+  const key = dataParams.toString();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed by content, not by the fresh object
+  return useMemo(() => dataParams, [key]);
 }
 
 /** Fixed for the lifetime of the page, so no subscription is needed. */

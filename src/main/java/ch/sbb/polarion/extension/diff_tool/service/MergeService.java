@@ -220,6 +220,7 @@ public class MergeService {
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
             documentsContentHandler.merge(sourceModule, targetModule, context, mergeParams.getPairs());
             if (!context.getMergeReport().getModified().isEmpty()) {
+                copyModuleAttachments(sourceModule, targetModule, targetModule.getHomePageContent().getContent());
                 targetModule.save();
             }
             return null;
@@ -330,8 +331,9 @@ public class MergeService {
 
     @VisibleForTesting
     IWorkItem createItem(WorkItemsPair pair, ILinkRoleOpt linkRoleObj, WorkItemsMergeContext context) {
-        if (context.getSourceWorkItem(pair) != null && context.getTargetWorkItem(pair) == null) {
-            IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
+        WorkItem sourceWorkItem = context.getSourceWorkItem(pair);
+        if (sourceWorkItem != null && context.getTargetWorkItem(pair) == null) {
+            IWorkItem source = Objects.requireNonNull(getWorkItem(sourceWorkItem));
             IWorkItem newWorkItem = polarionService.getTrackerProject(context.getTargetProject().getId()).createWorkItem(Objects.requireNonNull(source.getType()).getId());
             if (context.getLinkRoleDirection() == LinkRoleDirection.DIRECT) {
                 newWorkItem.addLinkedItem(source, linkRoleObj, null, false);
@@ -363,16 +365,18 @@ public class MergeService {
     @SuppressWarnings("java:S3776")
         // ignore cognitive complexity complaint
     void updateAndMoveItem(MergeWorkItemsPair pair, DocumentsMergeContext context) {
-        IWorkItem source = getWorkItem(context.getSourceWorkItem(pair));
-        IWorkItem target = getWorkItem(context.getTargetWorkItem(pair));
+        // Pairs with a missing side are handled (and removed) by createOrDeleteItem before this method is called
+        WorkItem targetWorkItem = Objects.requireNonNull(context.getTargetWorkItem(pair));
+        IWorkItem source = Objects.requireNonNull(getWorkItem(context.getSourceWorkItem(pair)));
+        IWorkItem target = Objects.requireNonNull(getWorkItem(targetWorkItem));
         boolean moveRequested = pair.getLeftWorkItem().getMovedOutlineNumber() != null || pair.getRightWorkItem().getMovedOutlineNumber() != null;
 
         if (!context.getTargetModule().getExternalWorkItems().contains(target)) {
-            if (context.getTargetWorkItem(pair).getRevision() != null) {
-                context.reportEntry(PROHIBITED, pair, "merge is not allowed into non-HEAD revision: target workitem '%s', requested revision '%s'".formatted(target.getId(), context.getTargetWorkItem(pair).getRevision()));
-            } else if (!Objects.equals(context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision())) {
+            if (targetWorkItem.getRevision() != null) {
+                context.reportEntry(PROHIBITED, pair, "merge is not allowed into non-HEAD revision: target workitem '%s', requested revision '%s'".formatted(target.getId(), targetWorkItem.getRevision()));
+            } else if (!Objects.equals(targetWorkItem.getLastRevision(), target.getLastRevision())) {
                 context.reportEntry(CONFLICTED, pair, "merge is not allowed: target workitem '%s' revision '%s' has been already changed to '%s'"
-                        .formatted(target.getId(), context.getTargetWorkItem(pair).getLastRevision(), target.getLastRevision()));
+                        .formatted(target.getId(), targetWorkItem.getLastRevision(), target.getLastRevision()));
             } else if (context.getSourceModule().getExternalWorkItems().contains(source)) {
                 context.reportEntry(PROHIBITED, pair, "don't allow merging referenced work item into included one");
             } else {
@@ -735,12 +739,18 @@ public class MergeService {
 
     void merge(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, MergeWorkItemsPair pair) {
         for (DiffField field : orderForMerge(context.getDiffModel().getDiffFields())) {
-            if (pair != null && !pair.fieldSelectedForMerge(field)) {
-                continue; // Skip processing if field wasn't explicitly or implicitly selected for merge
+            if (shouldMergeField(field, pair)) {
+                mergeField(source, target, context, pair, field);
             }
-            mergeField(source, target, context, pair, field);
         }
         target.save();
+    }
+
+    private boolean shouldMergeField(DiffField field, MergeWorkItemsPair pair) {
+        // Polarion derives the outline number from the position in the document, which a merge sets by moving the work item.
+        // Any other field is merged only if it was explicitly or implicitly selected for merge.
+        return !DiffField.OUTLINE_NUMBER.getKey().equals(field.getKey())
+                && (pair == null || pair.fieldSelectedForMerge(field));
     }
 
     private void mergeField(IWorkItem source, IWorkItem target, SettingsAwareMergeContext context, MergeWorkItemsPair pair, DiffField field) {
@@ -811,22 +821,9 @@ public class MergeService {
     List<DiffField> orderForMerge(List<DiffField> fields) {
         // Attachments should be merged last, cause their merging can affect rich text fields.
         // Preserve the original relative order of all fields, only moving attachments to the end.
-        List<DiffField> ordered = new ArrayList<>(fields.size());
-
-        // First, add all non-attachment fields in their original order.
-        for (DiffField field : fields) {
-            if (!KEY_ATTACHMENTS.equals(field.getKey())) {
-                ordered.add(field);
-            }
-        }
-
-        // Then, add all attachment fields in their original order.
-        for (DiffField field : fields) {
-            if (KEY_ATTACHMENTS.equals(field.getKey())) {
-                ordered.add(field);
-            }
-        }
-
+        Map<Boolean, List<DiffField>> partitioned = fields.stream().collect(Collectors.partitioningBy(field -> KEY_ATTACHMENTS.equals(field.getKey())));
+        List<DiffField> ordered = new ArrayList<>(partitioned.get(false));
+        ordered.addAll(partitioned.get(true));
         return ordered;
     }
 
@@ -875,7 +872,6 @@ public class MergeService {
      * Copies the document attachments a rich text refers to. Content which is placed between work items belongs
      * to no work item, hence the overload which takes the documents directly.
      */
-    @VisibleForTesting
     void copyModuleAttachments(IModule sourceModule, IModule targetModule, String content) {
         RegexMatcher.get("<img[^>]+src=\"attachment:(?<attachmentFilename>[^\"]+)\"").processEntry(content, engine -> {
             String attachmentFilename = engine.group("attachmentFilename");

@@ -1,3 +1,4 @@
+import { a11yViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mountDiffToolPanel } from '../src/formext/mountDiffToolPanel';
 import { readPanelProps } from '../src/formext/panelProps';
@@ -469,5 +470,39 @@ describe('remembered selections', () => {
 
     // Wins over "the first visible one", which is the order the legacy baselineSelected() + refresh() had.
     await vi.waitFor(() => expect($<HTMLSelectElement>(reopened, '#revision-selector').value).toBe('200'));
+  });
+});
+
+// A panel lives in a shadow root that its mount already gives `.sbb-ui`, so it is scanned through its host.
+describe('DiffToolPanel, accessibility', () => {
+  it('has no WCAG A/AA violations as opened', async () => {
+    await open();
+    expect(await a11yViolations(panel!.host)).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a target document chosen', async () => {
+    const { shadow } = await open();
+    await pickTargetDocument(shadow);
+    expect(await a11yViolations(panel!.host)).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the work items filter on', async () => {
+    const { shadow } = await open();
+    clickCheckbox(shadow, 'use-work-items-filter');
+    await vi.waitFor(() => expect(shadow.querySelector('#work-items-filter-input')).not.toBeNull());
+    expect(await a11yViolations(panel!.host)).toEqual([]);
+    // Axe accepts the placeholder as a name, so the scan alone would not notice the aria-label going.
+    expect($<HTMLInputElement>(shadow, '#work-items-filter-input')).toHaveAttribute('aria-label', 'Work item IDs');
+  });
+
+  it('has no WCAG A/AA violations with the alert of a list that could not be loaded', async () => {
+    const { shadow } = await open(
+      installFetchMock(
+        routes([{ method: 'GET', match: /\/spaces$/, respond: () => jsonResponse({ message: 'boom' }, 500) }]),
+      ),
+    );
+    await selectOption(shadow, 'comparison-project-selector', 'drivepilot');
+    await vi.waitFor(() => expect(shadow.querySelector('.notifications .alert-error')).not.toBeNull());
+    expect(await a11yViolations(panel!.host)).toEqual([]);
   });
 });

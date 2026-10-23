@@ -64,12 +64,12 @@ export default function JobsTable({ jobs, error, initiallyExpanded = [], pollCou
     <table className="jobs-table" id="jobs-table">
       <thead>
         <tr>
-          <th>Job</th>
-          <th>Started</th>
-          <th>Duration</th>
-          <th>State</th>
-          <th>Status / Message</th>
-          <th>Progress</th>
+          <th scope="col">Job</th>
+          <th scope="col">Started</th>
+          <th scope="col">Duration</th>
+          <th scope="col">State</th>
+          <th scope="col">Status / Message</th>
+          <th scope="col">Progress</th>
         </tr>
       </thead>
       <tbody id="jobs-tbody">
@@ -108,36 +108,34 @@ function FragmentRow({
 
   return (
     <>
-      <tr
-        className="row-clickable"
-        data-job-id={job.jobId}
-        aria-expanded={expanded}
-        tabIndex={0}
-        onClick={() => onToggle(job.jobId)}
-        onKeyDown={(event) => {
-          // The row is the disclosure control, so it answers the two keys a button answers, and in the
-          // way a button answers them: Enter on the way down, Space on the way up. Acting on Space here
-          // would auto-repeat while the key is held.
-          if (event.key === 'Enter') {
-            event.preventDefault();
-            onToggle(job.jobId);
-          } else if (event.key === ' ') {
-            // Swallow the page scroll now, act on the way up.
-            event.preventDefault();
-          }
-        }}
-        onKeyUp={(event) => {
-          if (event.key === ' ') {
-            event.preventDefault();
-            onToggle(job.jobId);
-          }
-        }}
-      >
+      {/* The whole row stays a pointer target. The disclosure control is the button: a table row cannot
+          carry aria-expanded (only a treegrid row can), and a row is not announced as something to press. */}
+      <tr className="row-clickable" data-job-id={job.jobId} onClick={() => onToggle(job.jobId)}>
         <td>
-          <div>
-            <strong>{job.jobName}</strong>
+          <div className="job-cell">
+            <button
+              type="button"
+              className="expand-arrow"
+              aria-label={`Log of ${job.jobId}`}
+              aria-expanded={expanded}
+              title={expanded ? 'Collapse' : 'Expand'}
+              onClick={(event) => {
+                // Handled here, so the row's own click must not toggle the log back.
+                event.stopPropagation();
+                onToggle(job.jobId);
+              }}
+            >
+              <span className="expand-arrow-glyph" aria-hidden="true">
+                {expanded ? '▾' : '▸'}
+              </span>
+            </button>
+            <div>
+              <div>
+                <strong>{job.jobName}</strong>
+              </div>
+              <div className="job-id">{job.jobId}</div>
+            </div>
           </div>
-          <div className="job-id">{job.jobId}</div>
         </td>
         <td>{formatTime(job.startTime || job.creationTime)}</td>
         <td>{formatDuration(job.startTime || job.creationTime, job.finishTime)}</td>

@@ -1,3 +1,4 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { subTopicHref } from '../src/topics/DiffToolHomePage';
@@ -138,5 +139,14 @@ describe('TopicsApp', () => {
     expect(subTopicHref('https://polarion/#/project/elibrary/diff-tool', COMPARE_WORK_ITEMS)).toBe(
       'https://polarion/#/project/elibrary/diff-tool/compare-work-items',
     );
+  });
+});
+
+describe('TopicsApp, accessibility', () => {
+  it('has no WCAG A/AA violations on the root topic', async () => {
+    openTopic(DIFF_TOOL);
+    render(<TopicsApp />);
+    await vi.waitFor(() => expect(document.querySelectorAll('.link-button').length).toBe(2));
+    expect(await pageViolations()).toEqual([]);
   });
 });

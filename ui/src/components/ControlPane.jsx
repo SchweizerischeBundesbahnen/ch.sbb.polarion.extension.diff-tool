@@ -7,8 +7,10 @@ import useRemote from "@/services/useRemote";
 import {responseError} from "@/services/responseError";
 import usePdf from "@/services/usePdf";
 import * as DiffTypes from "@/DiffTypes";
+import * as DiffViewModes from "@/DiffViewModes";
 import Modal from "@/components/Modal";
 import {SearchableSelect} from "@sbb-polarion/react-sbb-polarion";
+import useSwapColors from "@/utils/useSwapColors";
 
 export default function ControlPane({diff_type}) {
   const context = useContext(AppContext);
@@ -17,6 +19,7 @@ export default function ControlPane({diff_type}) {
   const pathname = usePathname();
   const remote = useRemote();
   const pdf = usePdf();
+  const [swapColors, setSwapColors] = useSwapColors();
   const [projectId] = useState(searchParams.get('sourceProjectId'));
   const [selectedCompareAs, setSelectedCompareAs] = useState(searchParams.get("compareAs") || 'Workitems');
   const [configurations, setConfigurations] = useState([]);
@@ -207,6 +210,15 @@ export default function ControlPane({diff_type}) {
                                   options={configurations.map((configuration) => ({id: configuration, name: configuration}))} />
               </div>
           }
+          <div style={{
+            marginBottom: "6px"
+          }} className="select-set">
+            <label htmlFor="diff-view">
+              Diff view:
+            </label>
+            <SearchableSelect id="diff-view" value={context.state.diffViewMode} onChange={context.state.setDiffViewMode} searchable={false}
+                              options={[{id: DiffViewModes.SIDE_BY_SIDE, name: "Side by side"}, {id: DiffViewModes.UNIFIED, name: "Unified"}]} />
+          </div>
           {(diff_type === DiffTypes.DOCUMENTS_DIFF || diff_type === DiffTypes.COLLECTIONS_DIFF) &&
               <div className="form-check">
                 <input className="form-check-input" type="checkbox" value="" id="outline-numbers"
@@ -306,6 +318,13 @@ export default function ControlPane({diff_type}) {
                 </label>
               </div>
           }
+          <div className="form-check">
+            <input className="form-check-input" type="checkbox" checked={swapColors} id="swap-colors"
+                   onChange={() => setSwapColors(!swapColors)}/>
+            <label className="form-check-label" htmlFor="swap-colors" title="Show removed content in green and added content in red.">
+              Swap diff colors
+            </label>
+          </div>
           <div className="export-controls">
             <h1>Export to PDF</h1>
             <div className="select-set">

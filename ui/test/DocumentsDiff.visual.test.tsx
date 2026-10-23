@@ -1,8 +1,20 @@
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-react';
+import { userEvent } from 'vitest/browser';
 import DocumentsPage from '../src/pages/DocumentsPage';
 import { jsonResponse } from './mockFetch';
-import { fixture, openControlPane, openDialog, pairDiff, renderViewer, restoreUrl, shoot } from './viewerHarness';
+import {
+  SERVER_RENDERED,
+  fixture,
+  openControlPane,
+  openDialog,
+  pairDiff,
+  renderViewer,
+  restoreUrl,
+  shoot,
+  switchToUnified,
+} from './viewerHarness';
 
 // Docker-only snapshots of the documents diff viewer: the work item pairs with their merge tickers and
 // pair toggles, and the same page with the configuration pane open over it.
@@ -56,6 +68,61 @@ function renderDocumentsWithFieldIssues() {
   );
 }
 
+/** The same two documents compared by their document fields, or by their content (`compareAs`). */
+function renderDocumentsAs(compareAs: 'Fields' | 'Content') {
+  const endpoint = compareAs === 'Fields' ? 'documents-fields' : 'documents-content';
+  renderViewer(
+    `${DOCUMENTS_URL}&config=Default&compareAs=${compareAs}`,
+    [{ method: 'POST', match: new RegExp(`/diff/${endpoint}$`), json: fixture(`${endpoint}.json`) ?? {} }],
+    <DocumentsPage />,
+  );
+}
+
+/** Ticks the pair the merge specs in e2e/ merge, and asks to merge it. */
+/**
+ * Ticks a pair and asks to merge it: by default the pair the merge specs in e2e/ merge, or EL-156, which
+ * has no counterpart in the target, so the merge creates a WorkItem and asks for the link role direction.
+ */
+async function openMergeConfirmation(pair = 'EL-4977_DP-11559') {
+  // The toolbar shows once every pair has loaded. A pair still loading resets its selection when it is done.
+  await vi.waitFor(
+    () => expect(getComputedStyle(document.querySelector('.header .merge-pane') as HTMLElement).display).toBe('flex'),
+    { timeout: 5000 },
+  );
+  const ticker = await vi.waitFor(() => {
+    const box = document.querySelector<HTMLInputElement>(
+      `[data-testid="${pair}"] .merge-ticker input[type="checkbox"]`,
+    );
+    expect(box).not.toBeNull();
+    return box!;
+  });
+  ticker.click();
+  const merge = await vi.waitFor(() => {
+    const button = document.querySelector<HTMLButtonElement>('.merge-pane .merge-button .btn')!;
+    expect(button.disabled).toBe(false);
+    return button;
+  });
+  merge.click();
+  await openDialog('Merge confirmation');
+}
+
+async function fieldsLoaded() {
+  await vi.waitFor(
+    () => expect(document.querySelector('[data-testid="version-field-diff"] .diff-viewer')).not.toBeNull(),
+    { timeout: 10000 },
+  );
+}
+
+async function contentLoaded() {
+  await vi.waitFor(() => expect(document.querySelector('.header .merge-pane')).not.toBeNull(), { timeout: 10000 });
+  await vi.waitFor(() => expect(document.querySelector('.diff-viewer .merge-ticker')).not.toBeNull());
+  // The toolbar shows a second after the content: wait for it, or a capture depends on the timing.
+  await vi.waitFor(
+    () => expect(getComputedStyle(document.querySelector('.header .merge-pane') as HTMLElement).display).toBe('flex'),
+    { timeout: 5000 },
+  );
+}
+
 async function loaded() {
   await vi.waitFor(() => expect(document.querySelector('.header .merge-pane')).not.toBeNull(), { timeout: 10000 });
   await vi.waitFor(() => expect(document.querySelectorAll('.wi-diff').length).toBeGreaterThan(0));
@@ -79,6 +146,64 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents diff viewer visual', () => {
     await loaded();
     await openControlPane();
     await shoot('documents-diff-control-pane');
+  });
+
+  // The same page as 'documents-diff-control-pane' with "Swap diff colors" ticked, so the two references
+  // differ only in the highlight colors and the checkbox.
+  it('diff colors swapped from the configuration pane', async () => {
+    renderDocuments();
+    await loaded();
+    await openControlPane();
+
+    const GREEN = 'rgb(204, 255, 204)';
+    const RED = 'rgb(253, 198, 198)';
+    const background = (selector: string) => {
+      const element = document.querySelector(selector);
+      expect(element).not.toBeNull();
+      return getComputedStyle(element!).backgroundColor;
+    };
+    const added = '.diff-leaf.right .diff-html-added';
+    const removed = '.diff-leaf.left .diff-html-removed';
+    await vi.waitFor(() => expect(background(added)).toBe(GREEN));
+    expect(background(removed)).toBe(RED);
+
+    document.querySelector<HTMLInputElement>('#swap-colors')!.click();
+    await vi.waitFor(() => expect(background(added)).toBe(RED));
+    expect(background(removed)).toBe(GREEN);
+
+    await shoot('documents-diff-swapped-colors');
+  });
+
+  it('unified view, the configuration pane closed again', async () => {
+    renderDocuments();
+    await loaded();
+    await switchToUnified();
+    await shoot('documents-diff-unified');
+  });
+
+  it('unified view with the diff colors swapped', async () => {
+    renderDocuments();
+    await loaded();
+    await openControlPane();
+    document.querySelector<HTMLInputElement>('#swap-colors')!.click();
+    document.querySelector<HTMLButtonElement>('.control-pane .expand-button')!.click();
+    await vi.waitFor(() => expect(document.querySelectorAll('.control-pane.expanded')).toHaveLength(0));
+    await switchToUnified();
+    await shoot('documents-diff-unified-swapped-colors');
+  });
+
+  it('the document fields in the unified view', async () => {
+    renderDocumentsAs('Fields');
+    await fieldsLoaded();
+    await switchToUnified();
+    await shoot('documents-fields-unified');
+  });
+
+  it('the document content in the unified view', async () => {
+    renderDocumentsAs('Content');
+    await contentLoaded();
+    await switchToUnified();
+    await shoot('documents-content-unified');
   });
 
   // The auxiliary dialogs, each over the page that raises it rather than on its own. What a dialog looks
@@ -113,6 +238,13 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents diff viewer visual', () => {
     await shoot('documents-diff-merge-confirmation');
   });
 
+  it('the merge confirmation dialog, asking for the link role direction of a created WorkItem', async () => {
+    renderDocuments();
+    await loaded();
+    await openMergeConfirmation('EL-156_NONE');
+    await shoot('documents-diff-merge-confirmation-link-role-direction');
+  });
+
   it('a field with issues, and the popup a keyboard user opens on it', async () => {
     renderDocumentsWithFieldIssues();
     await loaded();
@@ -131,8 +263,207 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents diff viewer visual', () => {
     await shoot('documents-diff-field-issues');
   });
 
+  it('a field with issues in the unified view, and its popup', async () => {
+    renderDocumentsWithFieldIssues();
+    await loaded();
+    await switchToUnified();
+
+    const header = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLElement>('[data-testid="EL-4977_DP-11559"] .diff-header[tabindex]');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    header.focus();
+    await vi.waitFor(() => expect(document.querySelector('.tooltip-container')).not.toBeNull());
+
+    await shoot('documents-diff-unified-field-issues');
+  });
+
   // The "Swap documents" dialog is deliberately not covered. DocumentsDiff only raises it above
   // PAIRS_COUNT_TO_ASK_SWAP_CONFIRMATION, which is 200, and documents-diff.json holds 19 pairs, so the
   // swap button goes straight through. Reaching it would mean a 200-pair fixture invented for one
   // screenshot, which is a worse trade than leaving that dialog to a behavioural test.
+});
+
+// Not Docker-only, unlike the visual suite above: an accessibility scan compares no pixels.
+describe('Documents diff viewer, accessibility', () => {
+  it('has no WCAG A/AA violations as loaded', async () => {
+    renderDocuments();
+    await loaded();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations in the unified view', async () => {
+    renderDocuments();
+    await loaded();
+    await switchToUnified();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the configuration pane open', async () => {
+    renderDocuments();
+    await loaded();
+    await openControlPane();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the merge confirmation open', async () => {
+    renderDocuments();
+    await loaded();
+    await openMergeConfirmation();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the merge confirmation asking for the link role direction', async () => {
+    renderDocuments();
+    await loaded();
+    await openMergeConfirmation('EL-156_NONE');
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the merge report and its full log shown', async () => {
+    renderViewer(
+      DOCUMENTS_URL,
+      [
+        { method: 'POST', match: /\/diff\/documents$/, json: fixture('documents-diff.json') ?? {} },
+        { method: 'POST', match: /\/diff\/document-workitems$/, respond: pairDiff },
+        { method: 'POST', match: /\/merge\/documents$/, json: fixture('EL-4977_DP-11559_merge.json') ?? {} },
+      ],
+      <DocumentsPage />,
+    );
+    await loaded();
+    await openMergeConfirmation();
+    document.querySelector<HTMLButtonElement>('[data-testid="merge-confirmation-modal-action-button"]')!.click();
+    await openDialog('Merge Report');
+    document.querySelector<HTMLButtonElement>('[data-testid="see-full-log"]')!.click();
+    await vi.waitFor(() => expect(document.querySelector('[data-testid="merge-result-modal"] pre')).not.toBeNull());
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the alert of a comparison that could not be loaded', async () => {
+    renderViewer(
+      DOCUMENTS_URL,
+      [{ method: 'POST', match: /\/diff\/documents$/, status: 500, json: { message: 'Polarion is not available' } }],
+      <DocumentsPage />,
+    );
+    await vi.waitFor(() => expect(document.querySelector('[data-testid="app-alert-title"]')).not.toBeNull(), {
+      timeout: 10000,
+    });
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations comparing the document fields', async () => {
+    renderDocumentsAs('Fields');
+    await fieldsLoaded();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations comparing the document fields in the unified view', async () => {
+    renderDocumentsAs('Fields');
+    await fieldsLoaded();
+    await switchToUnified();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations comparing the document content', async () => {
+    renderDocumentsAs('Content');
+    await contentLoaded();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations comparing the document content in the unified view', async () => {
+    renderDocumentsAs('Content');
+    await contentLoaded();
+    await switchToUnified();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a field issue popup open in the unified view', async () => {
+    renderDocumentsWithFieldIssues();
+    await loaded();
+    await switchToUnified();
+    const header = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLElement>('[data-testid="EL-4977_DP-11559"] .diff-header[tabindex]');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    header.focus();
+    await vi.waitFor(() => expect(document.querySelector('.tooltip-container')).not.toBeNull());
+    // The popup is in a portal, out of the pair, and still names the field it describes.
+    expect(header).toHaveAccessibleDescription(/EL-90001/);
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a field issue popup open', async () => {
+    renderDocumentsWithFieldIssues();
+    await loaded();
+    const header = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLElement>('[data-testid="EL-4977_DP-11559"] .diff-header[tabindex]');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    header.focus();
+    await vi.waitFor(() => expect(document.querySelector('.tooltip-container')).not.toBeNull());
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  // Axe does not require role="dialog" on a modal, so the scans above pass without it.
+  it('exposes the merge confirmation as a modal dialog named by its title', async () => {
+    renderDocuments();
+    await loaded();
+    await openMergeConfirmation();
+    const dialog = document.querySelector('[data-testid="merge-confirmation-modal"] .modal-dialog');
+    expect(dialog).toHaveAttribute('role', 'dialog');
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(dialog).toHaveAccessibleName('Merge confirmation');
+  });
+
+  it('keeps Tab and Shift+Tab inside the merge confirmation', async () => {
+    renderDocuments();
+    await loaded();
+    await openMergeConfirmation();
+    const modal = document.querySelector<HTMLElement>('[data-testid="merge-confirmation-modal"]')!;
+    const close = modal.querySelector<HTMLButtonElement>('.btn-close')!;
+    const merge = modal.querySelector<HTMLButtonElement>('[data-testid="merge-confirmation-modal-action-button"]')!;
+    await vi.waitFor(() => expect(document.activeElement).toBe(close));
+
+    merge.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(close);
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toBe(merge);
+  });
+
+  it('reports the loading progress it shows', async () => {
+    renderDocuments();
+    await loaded();
+    const progress = document.querySelector('[role="progressbar"]');
+    expect(progress).toHaveAccessibleName('Diff data loading');
+    await vi.waitFor(() => expect(progress).toHaveAttribute('aria-valuenow', '100'));
+  });
+
+  it('exposes a document heading at its outline level, and a work item not at all', async () => {
+    renderDocuments();
+    await loaded();
+    const header = (pair: string) => document.querySelector<HTMLElement>(`[data-testid="${pair}"] .wi-header.left`);
+    await vi.waitFor(() => expect(header('EL-145_DP-11550')).not.toBeNull());
+    expect(header('EL-183_DP-11545')).toHaveAttribute('aria-level', '1');
+    expect(header('EL-145_DP-11550')).toHaveAttribute('role', 'heading');
+    expect(header('EL-145_DP-11550')).toHaveAttribute('aria-level', '2');
+    expect(header('EL-101_DP-11551')).not.toHaveAttribute('role');
+  });
+
+  // Neither axe nor jsx-a11y would catch a regression here: axe accepts a label that names only the hidden
+  // native <select>, even when react-sbb-polarion's visible trigger ends up without a name.
+  it('names the link role direction combobox after its label', async () => {
+    renderDocuments();
+    await loaded();
+    await openMergeConfirmation('EL-156_NONE');
+    const trigger = await vi.waitFor(() => {
+      const found = document.querySelector('#link-role-direction + .searchable-dropdown .sd-trigger');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    expect(trigger).toHaveAccessibleName('Link role direction for created WorkItems:');
+  });
 });

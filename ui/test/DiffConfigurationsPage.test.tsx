@@ -1,4 +1,5 @@
 import { Toaster } from '@sbb-polarion/react-sbb-polarion';
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import DiffConfigurationsPage from '../src/admin/pages/DiffConfigurationsPage';
@@ -383,5 +384,64 @@ describe('DiffConfigurationsPage', () => {
     render(<Page />);
 
     await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
+  });
+});
+
+describe('DiffConfigurationsPage, accessibility', () => {
+  it('has no WCAG A/AA violations as loaded', async () => {
+    await renderPage();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with both role multiselects shown', async () => {
+    await renderPage(
+      installFetchMock(
+        routes([
+          {
+            method: 'GET',
+            match: /\/names\/Default\/content/,
+            json: { ...STORED, diffFields: [{ key: 'hyperlinks' }, { key: 'linkedWorkItems' }] },
+          },
+        ]),
+      ),
+    );
+    await vi.waitFor(() => expect(document.querySelector('#hyperlink-settings-container')).not.toBeNull());
+    expect(document.querySelector('#linked-workitem-settings-container')).not.toBeNull();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the revisions table open', async () => {
+    await renderPage();
+    toolbarButton(3).click();
+    await vi.waitFor(() => expect(document.body.textContent).toContain('3 388'));
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations while asking to confirm Cancel', async () => {
+    await renderPage();
+    toolbarButton(1).click();
+    await vi.waitFor(() => expect(document.querySelector('.rsp-modal')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the changed field set warning shown', async () => {
+    await renderPage(
+      installFetchMock(
+        routes([
+          {
+            method: 'GET',
+            match: /\/names\/Default\/content/,
+            json: { ...STORED, bundleTimestamp: '2020-01-01 00:00' },
+          },
+          {
+            method: 'GET',
+            match: /\/default-content$/,
+            json: { diffFields: [{ key: 'title' }, { key: 'outlineNumber' }] },
+          },
+        ]),
+      ),
+    );
+    await vi.waitFor(() => expect(document.querySelector('.alert-warning')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
   });
 });

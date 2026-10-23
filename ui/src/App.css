@@ -387,6 +387,10 @@
 }
 
 .jobs-table {
+  /* The job cell's disclosure triangle: its box, and the gap to the job name. The Job header is indented
+     by both, so it stands over the job names. */
+  --job-arrow-width: 16px;
+  --job-arrow-gap: 6px;
   width: 100%;
   border-collapse: collapse;
 }
@@ -404,6 +408,10 @@
   white-space: nowrap;
 }
 
+.jobs-table th:first-child {
+  padding-left: calc(10px + var(--job-arrow-width) + var(--job-arrow-gap));
+}
+
 .jobs-table .job-id {
   color: #888;
   font-size: 0.85em;
@@ -415,6 +423,37 @@
 
 .jobs-table .row-clickable:hover {
   background: #f5f5f5;
+}
+
+.jobs-table .job-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--job-arrow-gap);
+}
+
+/* The disclosure triangle of a job row, drawn like xml-repair's expand arrows: a bare glyph, no button box.
+   A fixed width, so the Job header can line up with the names whatever the font. The box keeps the text's
+   font and line, so it is exactly the job name's first line and the name stays level with the other cells. */
+.jobs-table .expand-arrow {
+  flex: 0 0 var(--job-arrow-width);
+  width: var(--job-arrow-width);
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: #666;
+  cursor: pointer;
+}
+
+/* The glyph is drawn at the size of xml-repair's arrows by scaling, not by font size: a larger font would
+   make its line taller and push the job name down, and a transform does not change the layout. */
+.jobs-table .expand-arrow-glyph {
+  display: inline-block;
+  transform: scale(1.5);
+}
+
+.jobs-table .expand-arrow:hover {
+  color: #333;
 }
 
 .jobs-table .state-FINISHED {

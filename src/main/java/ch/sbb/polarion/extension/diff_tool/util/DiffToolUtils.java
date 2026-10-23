@@ -149,7 +149,7 @@ public class DiffToolUtils {
     @VisibleForTesting
     String getStyleByClass(@NotNull String className) {
         return switch (className) {
-            case "diff-html-removed" -> "background-color: #FDC6C6; text-decoration: line-through;";
+            case "diff-html-removed" -> "background-color: #FDC6C6;";
             case "diff-html-added" -> "background-color: #CCFFCC;";
             case "diff-html-modified" -> "background-color: lightyellow;";
             case "diff-html-changed" -> "border: 1px dashed magenta; padding: 2px; margin: 2px;";

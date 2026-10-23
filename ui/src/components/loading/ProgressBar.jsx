@@ -14,7 +14,7 @@ export default function ProgressBar({loadingContext}) {
 
   return (
       <div className="row g-0">
-        <div className="progress" role="progressbar" aria-label="Default striped example" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100" style={{
+        <div className="progress" role="progressbar" aria-label="Diff data loading" aria-valuenow={loadingContext.diffsLoadingProgress} aria-valuemin="0" aria-valuemax="100" style={{
           height: "4em",
           display: display
         }}>

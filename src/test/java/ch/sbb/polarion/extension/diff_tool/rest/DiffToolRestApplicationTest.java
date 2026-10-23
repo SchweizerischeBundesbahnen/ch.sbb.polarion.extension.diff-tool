@@ -35,6 +35,7 @@ class DiffToolRestApplicationTest {
             // 14 of this extension's own, plus generic's two /roles controllers - which generic ships but
             // leaves unregistered, so an extension without an authorization page does not expose them.
             assertEquals(16, app.getExtensionControllerClasses().size());
+            assertEquals(2, app.getExtensionExceptionMapperSingletons().size());
             assertNotNull(DiffToolRestApplication.getExecutionService());
             assertNotNull(DiffToolRestApplication.getExecutionMonitor());
         } finally {

@@ -17,11 +17,11 @@ export default function PairMergeTicker({workItemsPair, diffs, selected, pairSel
   };
 
   return (
-      <div className="merge-ticker" onClick={changeSelected}>
-        {diffService.diffsExist(workItemsPair, diffs, branchedDocuments) && <div className="form-check" onClick={changeSelected}>
+      <label className="merge-ticker">
+        {diffService.diffsExist(workItemsPair, diffs, branchedDocuments) && <span className="form-check">
           <input className="form-check-input" type="checkbox" checked={selected} onChange={changeSelected}
                  aria-label={`Select work item ${workItemId} for merge`} />
-        </div>}
-      </div>
+        </span>}
+      </label>
   );
 }

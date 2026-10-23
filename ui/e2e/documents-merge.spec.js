@@ -579,6 +579,18 @@ test.describe("page of diffing documents' WorkItems", () => {
     }
   });
 
+  // The link role direction is asked for in the merge confirmation, and only when the merge creates
+  // WorkItems: EL-156 has no counterpart in the target document, EL-4977 has one.
+  test('asks no link role direction when no WorkItem is created', async ({ page }) => {
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
+
+    await page.getByTestId('EL-4977_DP-11559').locator('.merge-ticker input[type="checkbox"]').nth(0).click();
+    await page.locator('.header .merge-pane .merge-button .btn').click();
+
+    await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible();
+    await expect(page.getByTestId("merge-confirmation-link-role-direction")).toHaveCount(0);
+  });
+
   test('merge with default (direct) link role direction', async ({ page }) => {
     const requestPromise = page.waitForRequest(request => {
       return request.url().includes('/merge/documents');
@@ -586,27 +598,22 @@ test.describe("page of diffing documents' WorkItems", () => {
 
     await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
-    const selectionCheckbox = page.getByTestId('EL-4977_DP-11559').locator('.merge-ticker input[type="checkbox"]').nth(0);
-    await selectionCheckbox.isVisible();
+    const selectionCheckbox = page.getByTestId('EL-156_NONE').locator('.merge-ticker input[type="checkbox"]').nth(0);
     await selectionCheckbox.click();
 
-    // Verify default link role direction is "Direct"
+    const mergeButton = page.locator('.header .merge-pane .merge-button .btn');
+    await expect(mergeButton).toBeEnabled();
+    await mergeButton.click();
+
+    await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible();
+    await expect(page.getByTestId("merge-confirmation-link-role-direction")).toContainText("1 selected WorkItem does not exist in the target yet");
     // The value lives on the native <select>; what the user sees is the combobox in front of it.
     await expect(comboTrigger(page, 'link-role-direction')).toBeVisible();
     await expect(page.locator('#link-role-direction')).toHaveValue('DIRECT');
 
-    const mergeButton = page.locator('.header .merge-pane .merge-button .btn').nth(0);
-    await expect(mergeButton).toBeEnabled();
-    await mergeButton.isEnabled();
-    await mergeButton.click();
-
-    await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible();
     const actionButton = page.getByTestId("merge-confirmation-modal-action-button");
-    await expect(actionButton).toBeVisible();
     await expect(actionButton).toBeEnabled();
-
-    await actionButton.isVisible();
-    actionButton.click();
+    await actionButton.click();
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
 
@@ -622,27 +629,22 @@ test.describe("page of diffing documents' WorkItems", () => {
 
     await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
-    const selectionCheckbox = page.getByTestId('EL-4977_DP-11559').locator('.merge-ticker input[type="checkbox"]').nth(0);
-    await selectionCheckbox.isVisible();
+    const selectionCheckbox = page.getByTestId('EL-156_NONE').locator('.merge-ticker input[type="checkbox"]').nth(0);
     await selectionCheckbox.click();
 
-    // Change link role direction to "Reverse"
-    await expect(comboTrigger(page, 'link-role-direction')).toBeVisible();
-    await pickOption(page, 'link-role-direction', 'Reverse');
-    await expect(page.locator('#link-role-direction')).toHaveValue('REVERSE');
-
-    const mergeButton = page.locator('.header .merge-pane .merge-button .btn').nth(0);
+    const mergeButton = page.locator('.header .merge-pane .merge-button .btn');
     await expect(mergeButton).toBeEnabled();
-    await mergeButton.isEnabled();
     await mergeButton.click();
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible();
-    const actionButton = page.getByTestId("merge-confirmation-modal-action-button");
-    await expect(actionButton).toBeVisible();
-    await expect(actionButton).toBeEnabled();
+    await expect(comboTrigger(page, 'link-role-direction')).toBeVisible();
+    await pickOption(page, 'link-role-direction', 'Reverse');
+    await expect(page.locator('#link-role-direction')).toHaveValue('REVERSE');
+    await expect(page.getByTestId("merge-confirmation-link-role-direction")).toContainText("Each source WorkItem links to the WorkItem created from it.");
 
-    await actionButton.isVisible();
-    actionButton.click();
+    const actionButton = page.getByTestId("merge-confirmation-modal-action-button");
+    await expect(actionButton).toBeEnabled();
+    await actionButton.click();
 
     await expect(page.getByTestId("merge-confirmation-modal")).toBeVisible({ visible: false });
 

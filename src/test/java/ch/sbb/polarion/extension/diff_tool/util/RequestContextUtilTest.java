@@ -1,5 +1,6 @@
 package ch.sbb.polarion.extension.diff_tool.util;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -13,6 +14,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class RequestContextUtilTest {
+
+    @AfterEach
+    void tearDown() {
+        RequestContextHolder.resetRequestAttributes();
+    }
 
     @Test
     void shouldReturnUserSubject() {

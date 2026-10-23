@@ -26,7 +26,7 @@ export default function DiffContent({workItemsPair, pairSelected, pairSelectionT
     {diffs.map((diff, index) => (
         <FieldsDiff key={index} workItemsPair={workItemsPair} pairSelected={pairSelected}
                     pairSelectionTrigger={pairSelectionTrigger} pairSelectedCallback={pairSelectedCallback}
-                    fieldId={diff.id} fieldName={diff.name} oldValue={diff.oldValue} newValue={diff.newValue} issues={diff.issues} />
+                    fieldId={diff.id} fieldName={diff.name} oldValue={diff.oldValue} newValue={diff.newValue} unifiedValue={diff.unifiedValue} issues={diff.issues} />
     ))}
 
   </div>;

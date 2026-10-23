@@ -5,12 +5,13 @@ import { page } from 'vitest/browser';
 import AppShell from '../src/components/AppShell';
 import ErrorBoundary from '../src/components/ErrorBoundary';
 import PublicShell from '../src/components/PublicShell';
+import { setFieldValue } from './formextHelpers';
 import { type Route, installFetchMock, jsonResponse } from './mockFetch';
 import { settleBeforeCapture, settleLayout } from './visualHelpers';
 
 /**
- * What the three diff/merge viewers need to be photographed: the sample data, the shell they mount in,
- * and a capture that waits for the page to settle.
+ * What the three diff/merge viewers need to be photographed and scanned for accessibility: the sample data,
+ * the shell they mount in, a capture that waits for the page to settle, and what a scan leaves out.
  *
  * The viewers are the part of this app the visual suites long left out. The admin pages, the two
  * Document Properties panels and the topic pickers have references; documents.html, workitems.html and
@@ -26,6 +27,13 @@ const FIXTURES = import.meta.glob('../e2e/fixtures/*.json', { eager: true, impor
 >;
 
 export const fixture = (name: string): unknown => FIXTURES[`../e2e/fixtures/${name}`];
+
+/**
+ * What an accessibility scan of a viewer leaves out: the diff values are HTML the server generates and
+ * DiffLeaf inserts. Their images lack alt text and their text sits on the diff highlight colors (#682); a
+ * fix there belongs in the Java diff pipeline.
+ */
+export const SERVER_RENDERED = ['.diff-leaf'];
 
 /** The per-pair diff endpoint answers from `{leftId}_{rightId}.json`, exactly as e2e/test-utils.js does. */
 export function pairDiff(_url: string, init?: RequestInit): Response {
@@ -134,4 +142,13 @@ export async function openControlPane(): Promise<void> {
   });
   toggle.click();
   await vi.waitFor(() => expect(document.querySelectorAll('.control-pane.expanded')).toHaveLength(1));
+}
+
+/** Picks the unified view in the configuration pane, and closes the pane again. */
+export async function switchToUnified(): Promise<void> {
+  await openControlPane();
+  setFieldValue(document.querySelector<HTMLSelectElement>('#diff-view')!, 'unified');
+  await vi.waitFor(() => expect(document.querySelector('#diff-body')).toHaveClass('diff-view-unified'));
+  document.querySelector<HTMLButtonElement>('.control-pane .expand-button')!.click();
+  await vi.waitFor(() => expect(document.querySelectorAll('.control-pane.expanded')).toHaveLength(0));
 }

@@ -81,9 +81,18 @@ and `src/topics/open{WorkItems,Collections}Diff.ts` open them by literal URL. Do
 The admin pages and all three Document Properties panels are built on the shared **react-sbb-polarion**
 library (RSP), like the other migrated SBB Polarion extensions; the viewer predates it and does not use
 it. `META-INF/hivemodule.xml` is the source of truth for which extenders point at the React app
-(`.../ui/app/index.html?feature=<id>`); all five now do, and `rest-api` deliberately still points at
+(`.../ui/app/index.html?feature=<id>`); all six now do, and `rest-api` deliberately still points at
 `/polarion/diff-tool/rest/swagger`. See `ui/README.md` for the details, including why the viewer's page
 shell is `.diff-app` rather than `.app`.
+
+The **Documentation** entry opens a documentation site built on RSP's `DocPage` (sidebar, search, breadcrumb,
+prev/next, "on this page"), the same setup as pdf-exporter and docx-exporter. Its articles are the markdown files
+of `ui/src/docs/docs.config.json` (Quick Start, User Guide, Configuration, Velocity API), each rendered by its own
+markdown2html execution in the pom into `webapp/diff-tool-app/html/` next to `about.html` - all in
+`generate-sources`, one phase before the frontend build, because `npm run build` builds the documentation search
+index from that HTML and fails when an article is missing. The index (`ui/src/docs/search-index.json`) is
+generated, not committed. An article added to the manifest needs its own markdown2html execution, or the build
+fails. See [`ui/README.md`](ui/README.md#the-documentation-site).
 
 All three Document Properties panels are laid out by **one row model**, in `src/formext/formRows.tsx` +
 `diff-tool.css`, with `PanelShell.tsx` as the frame they share. It is the row model pdf-exporter and
@@ -155,16 +164,64 @@ mvn test -Dtest=DiffServiceTest#testDiffDocuments
   but **never links a copy to its origin**, which is why none of `MergeService`'s own paths can be used: they resolve
   counterparts by a link role. Counterparts inside the copied chapter come from the context's own id mapping instead
 - Heading levels come from Polarion: `IStructureNode.addChild` gives an attached heading the level of its parent + 1
+- `IModule.moveIn` takes a work item over **with everything below it**, so in move mode a work item whose parent is moved
+  along with it is already attached to that parent in the target document. It is left there (`alreadyPlacedUnder`): adding
+  a node which is already its parent's child is refused by Polarion with "Node has been added before."
 - Writes the document page only for the text between work items (`DocumentsContentHandler.copyFreeContent`), which has no
   API of its own. It is spliced around the anchor it belongs to, so the rest of the page stays byte-identical. Work items
   themselves go in through the Polarion API
 - Copies comments through `CommentsCopier` (shared with `DocumentCopyService`): the comments of a copied work item and the
   document comments written on the copied text. Comment IDs change, so the markers which anchor a comment to a piece of
   text are re-pointed with `CommentUtils.copyCommentMarkers`
-- Runs as a Polarion job (`service/job/ChapterMerge*`), because a big chapter does not fit into one HTTP request. The job
-  asks nothing of the request which scheduled it: the servlet container recycles the request object once the response is
-  written, and Polarion runs the job as the user who scheduled it anyway. Whatever needs the request - the documents
-  cache is keyed by user - is done in `ChapterMergeJobScheduler.schedule`, on the REST thread
+- Runs in the background (`service/job/ChapterMergeJobsService`), because a big chapter does not fit into one HTTP
+  request. The job mechanics are generic's `AsyncJobsService` over one static `JobsRegistry` (package
+  `ch.sbb.polarion.extension.generic.jobs`, shared with the exporters and the excel-importer): running as the
+  scheduling user, ending the session, polling, expiring results. `ChapterMergeJobsService` adds only what is particular
+  to a merge: the cache eviction, the bounded executor and the 429. Do not re-implement job mechanics here - change
+  generic. A merge has a hard limit on how long it may run (`chapter.merge.timeout`, 60 minutes by default, counted from
+  the moment the merge is handed over, so it covers the wait for a thread). Polarion's own job API is not used for it -
+  `ProjectDuplication*` still is
+- The deadline **asks the merge to stop** rather than declaring it over (`TimeoutPolicy.COOPERATIVE`). `DocumentsChapterMergeService` takes an
+  `abortRequested` supplier and checks it between work items, where nothing of the merge is in the target document
+  yet: it throws out of the write transaction, which is rolled back, and only then is the merge reported as failed.
+  Declaring a merge over while its thread keeps writing (what `CompletableFuture.orTimeout` does) would have this
+  service report "not merged" of a document which is about to change. Past the last work item the merge is no longer
+  asked: what is left is the write itself, which is the result the caller wanted
+- What the server takes at once is bounded, unlike the cached pool this started out with: `CONCURRENT_MERGES` merges
+  run and `QUEUED_MERGES` wait (generic's `JobsRegistry.Builder.maxConcurrentJobs`), and one beyond that is answered
+  with 429 (`QueueFullException`, the same refusal the execution queue uses). A merge is a long write operation on two
+  documents, and a caller can ask for them faster than they finish. A merge which times out or is stopped while it
+  still waits for a thread has written nothing: it is taken out of the queue and never runs. A merge asked for while
+  the extension stops is refused with generic's `JobsRegistryShutDownException` (503), not as a full queue
+- Whether the caller may merge at all is decided by `MergeInternalController` before the merge is handed over, and
+  answered with 403. `DocumentsChapterMergeService` checks it again, but only once it has a thread and has read both
+  documents - by then an unauthorized caller has already taken a place in the queue
+- The merge asks nothing of the request which started it: the servlet container recycles the request object once the
+  response is written. Whatever needs that request is done in `startJob`, on the REST thread - the documents cache is
+  keyed by user, and so is the user the merge runs as
+- A merge thread does **not** inherit the user of the request which started it, and a call of nobody is answered by
+  Polarion with unresolvable objects: a document of an existing project then reads as "Project '...' not found". The
+  service therefore takes the `Subject` along and runs the merge as that user
+- Who ends that user's session depends on how the call authenticated itself. A call from the Polarion UI carries an
+  XSRF token and shares the session of that UI, which is not the merge's to end. A call which authenticated itself got
+  a session of its own, which `LogoutFilter` would end with the response of the request that started the merge, so
+  `MergeApiController` asks for it to be kept (generic's `RequestContextUtil.keepSessionAlive`, the `ASYNC_SKIP_LOGOUT` flag the
+  exporter extensions use for their async exports) and the merge ends it when it is over. The flag is set before the
+  merge is started, since `startJob` is where it is read, so a call which never gets that far - refused parameters, a
+  document which cannot be read - gives the session back (`RequestContextUtil.releaseSession`): the merge which was to
+  end it is not running. Once the merge has started it owns the session, and a later failure of the request leaves
+  the session to it
+- The REST contract is the pdf-exporter's, with generic's `JobDetails` / `JobStatus` DTOs and `JobResponses`:
+  `POST /merge/chapter` answers 202 with the job in the `Location` header,
+  polling that job answers 202 while it runs (with what the merge is doing right now) and redirects to
+  `.../result` once it is over, and 409 names what went wrong if there is no result. A merge which did not do what was
+  asked of it reports that in its `MergeResult`, so only a merge which threw is a failed job
+- The cleaner of the registry, started by `ExtensionBundleActivator` (`ChapterMergeJobsService.startCleaner`, stopped
+  with the merge threads by `ChapterMergeJobsService.shutdown`, which asks running merges to stop and never interrupts
+  their threads), drops the results of finished merges
+  `chapter.merge.result.timeout` (30 minutes by default) after the merge was **over**, not after it was asked for: a
+  merge which ran longer than that would otherwise be expired the moment it finished, and that is the merge whose
+  result took the longest to produce
 
 **DocumentLayoutSyncService** (src/main/java/ch/sbb/polarion/extension/diff_tool/service/DocumentLayoutSyncService.java):
 - Copies the work item configuration a *document* holds - the rendering layout of a work item type and the document's
@@ -271,14 +328,15 @@ When merging rich text fields containing work item links:
 - **Caching**: DocumentWorkItemsCache and DiffModelCachedResource reduce repeated API calls
 - **Queue Management**: ExecutionQueueService prevents server overload during heavy operations
 - **Configurable Chunk Size**: `ch.sbb.polarion.extension.diff-tool.chunk.size` property controls parallel REST requests (default: 2)
+- **Chapter Merge Timeouts**: `chapter.merge.timeout` (60 min) limits one merge, `chapter.merge.result.timeout` (30 min) how long its result is kept - both in `DiffToolExtensionConfiguration`
 
 ### Testing Polarion Extensions
 
 - Unit tests use mocked Polarion services (ITrackerService, IProjectService, etc.)
 - Integration tests require Polarion dependencies extracted via [polarion-artifacts-deployer](https://github.com/SchweizerischeBundesbahnen/polarion-artifacts-deployer)
-- Frontend has two layers: Vitest browser mode (real Chromium via Playwright) for components and
-  visual regression, and Playwright specs in `ui/e2e/` for the viewer end-to-end. Only the Vitest layer
-  runs in the Maven `test` phase; see `ui/README.md`
+- Frontend has two layers: Vitest browser mode (real Chromium via Playwright) for components, visual
+  regression and axe-core accessibility scans, and Playwright specs in `ui/e2e/` for the viewer
+  end-to-end. Only the Vitest layer runs in the Maven `test` phase; see `ui/README.md`
 
 ### Deployment and Installation
 
@@ -311,9 +369,12 @@ In `polarion.properties`:
 
 ```properties
 ch.sbb.polarion.extension.diff-tool.chunk.size=2
+ch.sbb.polarion.extension.diff-tool.chapter.merge.timeout=60
+ch.sbb.polarion.extension.diff-tool.chapter.merge.result.timeout=30
 ```
 
-Increase for faster processing, but may overload server.
+Increase the chunk size for faster processing, but may overload server. The two chapter merge properties are
+minutes: how long a merge may run, and how long its result is kept for the panel which polls it.
 
 ## Code Quality
 
@@ -394,6 +455,8 @@ Increase for faster processing, but may overload server.
 - Maven plugin configurations already in use
 - JavaScript testing with Vitest + react-sbb-polarion test helpers
 - Shadow-root mounting for form-extension panels (`ui/src/formext/shadowMount.ts`)
+- Accessibility cases in each page's own test file (`pageViolations()`, or `a11yViolations(panel.host)` for a
+  panel), not in a separate `a11y.test.tsx`
 
 ### Project-Specific Review Focus
 

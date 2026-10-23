@@ -65,9 +65,8 @@ import com.polarion.subterra.base.location.Location;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
-
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.VisibleForTesting;
+
 import javax.security.auth.Subject;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -342,13 +341,10 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
         // Sometimes extra 'orphan' pairs (who has empty left/right part) may occur
         // (e.g. the resulting set may contain pair {EL-1,null} even though {EL-1,EL-2} exists too),
         // so we have to check & remove that kind of data.
-        List<Pair<IWorkItem, IWorkItem>> orphansToRemove = new ArrayList<>();
-        for (Pair<IWorkItem, IWorkItem> pair : pairs) {
-            if ((pair.getLeft() == null && pairs.stream().anyMatch(p -> p.getLeft() != null && Objects.equals(p.getRight(), pair.getRight()))) ||
-                    (pair.getRight() == null && pairs.stream().anyMatch(p -> p.getRight() != null && Objects.equals(p.getLeft(), pair.getLeft())))) {
-                orphansToRemove.add(pair);
-            }
-        }
+        List<Pair<IWorkItem, IWorkItem>> orphansToRemove = pairs.stream()
+                .filter(pair -> (pair.getLeft() == null && pairs.stream().anyMatch(p -> p.getLeft() != null && Objects.equals(p.getRight(), pair.getRight()))) ||
+                        (pair.getRight() == null && pairs.stream().anyMatch(p -> p.getRight() != null && Objects.equals(p.getLeft(), pair.getLeft()))))
+                .toList();
 
         orphansToRemove.forEach(pairs::remove);
 
@@ -719,6 +715,14 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
      */
     public @Nullable String getCurrentUser() {
         return securityService.getCurrentUser();
+    }
+
+    /**
+     * Subject of the user the current call runs as. Work handed to a job takes it along: a job thread carries no
+     * subject of its own, and Polarion answers a call of nobody with unresolvable objects.
+     */
+    public @Nullable Subject getCurrentSubject() {
+        return securityService.getCurrentSubject();
     }
 
     public boolean hasSufficientPermissions() {

@@ -1,4 +1,5 @@
 import { Toaster } from '@sbb-polarion/react-sbb-polarion';
+import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import MergeAuthorizationPage from '../src/admin/pages/MergeAuthorizationPage';
@@ -195,5 +196,19 @@ describe('MergeAuthorizationPage', () => {
 
     expect(document.querySelector('.alert-warning')).toBeNull();
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/extension/info'))).toBe(false);
+  });
+});
+
+describe('MergeAuthorizationPage, accessibility', () => {
+  it('has no WCAG A/AA violations as loaded', async () => {
+    await renderPage();
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with a role list open', async () => {
+    await renderPage();
+    mousedown(trigger('global'));
+    await vi.waitFor(() => expect(listedRoles('global').length).toBeGreaterThan(0));
+    expect(await pageViolations()).toEqual([]);
   });
 });

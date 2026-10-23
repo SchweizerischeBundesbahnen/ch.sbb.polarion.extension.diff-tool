@@ -1,19 +1,17 @@
-import {DIFF_SIDES, DiffLeaf} from "@/components/diff/DiffLeaf";
+import DiffViewer from "@/components/diff/DiffViewer";
 
 export default function ContentBlocksDiff({label, oldValue, newValue, selected, selectedCallback}) {
 
   return (
-      <div className="diff-viewer" style={{
+      <DiffViewer oldValue={oldValue} newValue={newValue} style={{
         position: "relative"
       }}>
-        <div className="merge-ticker" onClick={selectedCallback}>
-          <div className="form-check">
+        <label className="merge-ticker">
+          <span className="form-check">
             <input className="form-check-input" type="checkbox" checked={selected} onChange={selectedCallback}
                    aria-label={label} />
-          </div>
-        </div>
-        <DiffLeaf htmlDiff={oldValue} diffSide={DIFF_SIDES.LEFT}/>
-        <DiffLeaf htmlDiff={newValue} diffSide={DIFF_SIDES.RIGHT}/>
-      </div>
+          </span>
+        </label>
+      </DiffViewer>
   );
 }
