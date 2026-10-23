@@ -542,6 +542,19 @@ public class MergeService {
     }
 
     /**
+     * Finds all nodes with this outline number. Polarion can give one outline number to several work items of a
+     * document, so a caller which looks for a certain kind of node, eg. a heading, has to look through all of them.
+     */
+    @NotNull
+    List<IModule.IStructureNode> getNodesByOutlineNumber(@NotNull IModule module, @NotNull String outlineNumber) {
+        return module.getAllWorkItems().stream()
+                .filter(workItem -> outlineNumber.equals(module.getOutlineNumberOfWorkitem(workItem)))
+                .map(module::getStructureNodeOfWI)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    /**
      * Solution based on internal Polarion classes usage.
      */
     IWorkItem copyWorkItemToDocument(IWorkItem sourceWorkItem, @NotNull InternalWriteTransaction transaction, DocumentsMergeContext context, MergeWorkItemsPair pair) {

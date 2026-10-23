@@ -185,7 +185,7 @@ class DocumentsChapterMergeServiceTest {
     @Test
     void testChapterOfNonHeadingItemIsNotResolved() {
         IModule.IStructureNode node = node(workItem("SOURCE-1", "requirement"), false);
-        when(mergeService.getNodeByOutlineNumber(sourceModule, "2")).thenReturn(node);
+        when(mergeService.getNodesByOutlineNumber(sourceModule, "2")).thenReturn(List.of(node));
 
         assertNull(documentsChapterMergeService.resolveChapterNode(sourceModule, "2"));
     }
@@ -205,7 +205,7 @@ class DocumentsChapterMergeServiceTest {
         IWorkItem requirement = workItem("SOURCE-1", "requirement");
         when(requirement.getType().getName()).thenReturn("Requirement");
         IModule.IStructureNode node = node(requirement, false);
-        when(mergeService.getNodeByOutlineNumber(sourceModule, "2")).thenReturn(node);
+        when(mergeService.getNodesByOutlineNumber(sourceModule, "2")).thenReturn(List.of(node));
 
         String message = documentsChapterMergeService.chapterNotFound(sourceModule, SOURCE_DOCUMENT, "source", "2");
 
@@ -227,11 +227,33 @@ class DocumentsChapterMergeServiceTest {
     }
 
     @Test
+    void testChapterIsTheHeadingAmongItemsOfTheSameOutlineNumber() {
+        // Polarion can give the outline number of a chapter to another work item too
+        IModule.IStructureNode requirement = node(workItem("SOURCE-1", "requirement"), false);
+        IModule.IStructureNode heading = node(heading("SOURCE-2"), true);
+        when(mergeService.getNodesByOutlineNumber(sourceModule, "2")).thenReturn(List.of(requirement, heading));
+
+        assertEquals(heading, documentsChapterMergeService.resolveChapterNode(sourceModule, "2"));
+    }
+
+    @Test
+    void testItemsOfTheSameOutlineNumberWithoutHeadingAreAllReported() {
+        IModule.IStructureNode requirement = node(workItem("SOURCE-1", "requirement"), false);
+        IModule.IStructureNode task = node(workItem("SOURCE-2", "task"), false);
+        when(mergeService.getNodesByOutlineNumber(sourceModule, "2")).thenReturn(List.of(requirement, task));
+
+        String message = documentsChapterMergeService.chapterNotFound(sourceModule, SOURCE_DOCUMENT, "source", "2");
+
+        assertEquals("'2' in the source document 'space/sourceDoc' of project 'source' is workitem 'SOURCE-1' of type 'requirement', "
+                + "workitem 'SOURCE-2' of type 'task', none of them a heading", message);
+    }
+
+    @Test
     void testTargetChapterInsideSourceChapterIsProhibited() {
         IModule.IStructureNode sourceChapter = chapter(sourceModule, "2", heading("SOURCE-1"));
         IModule.IStructureNode targetChapter = node(heading("SOURCE-2"), true);
         when(targetChapter.getParent()).thenReturn(sourceChapter);
-        when(mergeService.getNodeByOutlineNumber(sourceModule, "2.1")).thenReturn(targetChapter);
+        when(mergeService.getNodesByOutlineNumber(sourceModule, "2.1")).thenReturn(List.of(targetChapter));
 
         ChapterMergeParams params = params(SOURCE_DOCUMENT, SOURCE_DOCUMENT, ChapterMergeMode.COPY, ChapterInsertMode.UNDER);
         params.setTargetChapterOutlineNumber("2.1");
@@ -918,7 +940,7 @@ class DocumentsChapterMergeServiceTest {
 
     private IModule.IStructureNode chapter(IModule module, String outlineNumber, IWorkItem workItem) {
         IModule.IStructureNode node = node(workItem, true);
-        when(mergeService.getNodeByOutlineNumber(module, outlineNumber)).thenReturn(node);
+        when(mergeService.getNodesByOutlineNumber(module, outlineNumber)).thenReturn(List.of(node));
         return node;
     }
 
