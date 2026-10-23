@@ -185,6 +185,8 @@ public class DocumentsChapterMergeService {
     /**
      * Finds the node of a chapter by its outline number. Only a heading can be a chapter: an outline number
      * containing '-' (eg. '2.1-1') belongs to a work item which is not a structural part of the document.
+     * Polarion can give the outline number of a chapter to another work item too, so the first heading among all
+     * the nodes with this number is the chapter.
      */
     @VisibleForTesting
     @Nullable
@@ -192,8 +194,10 @@ public class DocumentsChapterMergeService {
         if (outlineNumber == null || outlineNumber.isBlank() || outlineNumber.contains("-")) {
             return null;
         }
-        IModule.IStructureNode node = mergeService.getNodeByOutlineNumber(module, outlineNumber.trim());
-        return node != null && node.getWorkItem() != null && isHeading(module, node.getWorkItem()) ? node : null;
+        return mergeService.getNodesByOutlineNumber(module, outlineNumber.trim()).stream()
+                .filter(node -> node.getWorkItem() != null && isHeading(module, node.getWorkItem()))
+                .findFirst()
+                .orElse(null);
     }
 
     @VisibleForTesting
@@ -228,12 +232,15 @@ public class DocumentsChapterMergeService {
         if (chapter.contains("-")) {
             return "'%s' in %s is the outline number of a workitem, not of a chapter".formatted(chapter, where);
         }
-        IModule.IStructureNode node = mergeService.getNodeByOutlineNumber(module, chapter);
-        IWorkItem workItem = node == null ? null : node.getWorkItem();
-        if (workItem == null) {
+        List<String> workItems = mergeService.getNodesByOutlineNumber(module, chapter).stream()
+                .map(IModule.IStructureNode::getWorkItem)
+                .filter(Objects::nonNull)
+                .map(workItem -> "workitem '%s' of type '%s'".formatted(workItem.getId(), typeName(workItem)))
+                .toList();
+        if (workItems.isEmpty()) {
             return "there is no chapter '%s' in %s".formatted(chapter, where);
         }
-        return "'%s' in %s is workitem '%s' of type '%s', not a heading".formatted(chapter, where, workItem.getId(), typeName(workItem));
+        return "'%s' in %s is %s, %s".formatted(chapter, where, String.join(", ", workItems), workItems.size() == 1 ? "not a heading" : "none of them a heading");
     }
 
     private @NotNull String typeName(@NotNull IWorkItem workItem) {

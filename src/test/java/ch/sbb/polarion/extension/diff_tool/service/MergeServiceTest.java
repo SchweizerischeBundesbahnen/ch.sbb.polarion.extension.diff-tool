@@ -1620,6 +1620,26 @@ class MergeServiceTest {
     }
 
     @Test
+    void testAllNodesOfAnOutlineNumberAreFound() {
+        // Polarion can give one outline number to several work items of a document
+        IModule module = mock(IModule.class);
+        IWorkItem requirement = mock(IWorkItem.class);
+        IWorkItem heading = mock(IWorkItem.class);
+        IWorkItem other = mock(IWorkItem.class);
+        IModule.IStructureNode requirementNode = mock(IModule.IStructureNode.class);
+        IModule.IStructureNode headingNode = mock(IModule.IStructureNode.class);
+        when(module.getAllWorkItems()).thenReturn(List.of(requirement, heading, other));
+        when(module.getOutlineNumberOfWorkitem(requirement)).thenReturn("2");
+        when(module.getOutlineNumberOfWorkitem(heading)).thenReturn("2");
+        when(module.getOutlineNumberOfWorkitem(other)).thenReturn("3");
+        when(module.getStructureNodeOfWI(requirement)).thenReturn(requirementNode);
+        when(module.getStructureNodeOfWI(heading)).thenReturn(headingNode);
+
+        assertEquals(List.of(requirementNode, headingNode), mergeService.getNodesByOutlineNumber(module, "2"));
+        assertEquals(List.of(), mergeService.getNodesByOutlineNumber(module, "4"));
+    }
+
+    @Test
     void testRoleNotFound() {
         PolarionService polarionServiceMock = mock(PolarionService.class);
 
