@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.service;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.BaseDocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentDuplicateParams;
+import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.HandleReferencesType;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
@@ -185,6 +186,16 @@ class DocumentCopyServiceTest {
         assertDoesNotThrow(() ->
                 copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
         verify(copyService, times(1)).copyModuleComments(any(), any());
+
+        when(module.getLastRevision()).thenReturn("42");
+        DocumentIdentifier result = copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams);
+        assertEquals("42", result.getModuleXmlRevision());
+
+        // the created document is returned without a revision when Polarion cannot find its history yet
+        when(module.getLastRevision()).thenThrow(new RuntimeException("UnknownObjectException"));
+        result = copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams);
+        assertEquals("targetProjectId", result.getProjectId());
+        assertNull(result.getModuleXmlRevision());
     }
 
     @Test

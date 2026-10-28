@@ -15,16 +15,13 @@ import com.polarion.alm.projects.model.IFolder;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.internal.model.WorkItem;
-import com.polarion.alm.tracker.model.ICommentBase;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
-import com.polarion.alm.tracker.model.IModuleComment;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
-import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.location.ILocation;
 import com.polarion.subterra.base.location.Location;
@@ -32,14 +29,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 public class DocumentCopyService {
+
+    private static final Logger logger = Logger.getLogger(DocumentCopyService.class);
 
     private final PolarionService polarionService;
     private final MergeService mergeService;
@@ -136,8 +133,23 @@ public class DocumentCopyService {
                 .projectId(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())
                 .spaceId(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId())
                 .name(Objects.requireNonNull(targetModule).getModuleName())
-                .moduleXmlRevision(targetModule.getLastRevision())
+                .moduleXmlRevision(getLastRevisionOfCreatedModule(targetModule))
                 .build();
+    }
+
+    /**
+     * Polarion can fail to find the history of a module created moments ago ({@code UnknownObjectException}).
+     * The document is already created at this point, so the caller gets it without a revision instead of an error.
+     * Polarion does the same in {@code com.polarion.alm.server.api.model.PObjectRevisionHandler#getLastRevision()}:
+     * it catches the {@code WrapperException} of {@code IPObject.getLastRevision()} and returns {@code null}.
+     */
+    private @Nullable String getLastRevisionOfCreatedModule(@NotNull IModule module) {
+        try {
+            return module.getLastRevision();
+        } catch (Exception e) {
+            logger.warn(String.format("Cannot read the revision of the created document '%s'", module.getModuleName()), e);
+            return null;
+        }
     }
 
     @VisibleForTesting
