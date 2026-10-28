@@ -41,6 +41,8 @@ import java.util.function.Predicate;
 
 public class DocumentCopyService {
 
+    private static final Logger logger = Logger.getLogger(DocumentCopyService.class);
+
     private final PolarionService polarionService;
     private final MergeService mergeService;
     private final CommentsCopier commentsCopier;
@@ -136,8 +138,23 @@ public class DocumentCopyService {
                 .projectId(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())
                 .spaceId(documentDuplicateParams.getTargetDocumentIdentifier().getSpaceId())
                 .name(Objects.requireNonNull(targetModule).getModuleName())
-                .moduleXmlRevision(targetModule.getLastRevision())
+                .moduleXmlRevision(getLastRevisionOfCreatedModule(targetModule))
                 .build();
+    }
+
+    /**
+     * Polarion can fail to find the history of a module created moments ago ({@code UnknownObjectException}).
+     * The document is already created at this point, so the caller gets it without a revision instead of an error.
+     * Polarion does the same in {@code com.polarion.alm.server.api.model.PObjectRevisionHandler#getLastRevision()}:
+     * it catches the {@code WrapperException} of {@code IPObject.getLastRevision()} and returns {@code null}.
+     */
+    private @Nullable String getLastRevisionOfCreatedModule(@NotNull IModule module) {
+        try {
+            return module.getLastRevision();
+        } catch (Exception e) {
+            logger.warn(String.format("Cannot read the revision of the created document '%s'", module.getModuleName()), e);
+            return null;
+        }
     }
 
     @VisibleForTesting
