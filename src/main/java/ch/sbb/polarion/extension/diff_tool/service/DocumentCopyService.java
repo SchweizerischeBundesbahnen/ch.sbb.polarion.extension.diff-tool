@@ -15,16 +15,13 @@ import com.polarion.alm.projects.model.IFolder;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.internal.model.WorkItem;
-import com.polarion.alm.tracker.model.ICommentBase;
 import com.polarion.alm.tracker.model.ILinkRoleOpt;
 import com.polarion.alm.tracker.model.IModule;
-import com.polarion.alm.tracker.model.IModuleComment;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
-import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.location.ILocation;
 import com.polarion.subterra.base.location.Location;
@@ -32,12 +29,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 public class DocumentCopyService {
 
