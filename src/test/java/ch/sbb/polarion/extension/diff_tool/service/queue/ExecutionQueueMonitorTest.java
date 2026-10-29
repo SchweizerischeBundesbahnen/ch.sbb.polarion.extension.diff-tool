@@ -10,6 +10,8 @@ import ch.sbb.polarion.extension.diff_tool.settings.ExecutionQueueSettings;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -17,9 +19,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -79,6 +83,35 @@ class ExecutionQueueMonitorTest {
             diffEntries = recentHistory.get("2").get(Feature.DIFF_HTML).stream().map(s -> (EndpointCallEntry) s).toList();
             assertTrue(diffEntries.stream().anyMatch(e -> e.getExecuting() == 2));
             assertTrue(diffEntries.stream().noneMatch(e -> e.getQueued() > 0));
+        }
+    }
+
+    @Test
+    void testGetHistoryWhileCollectingStatistics() throws InterruptedException {
+        ExecutionQueueModel model = new ExecutionQueueModel();
+        Feature.workerFeatures().forEach(feature -> model.getWorkers().put(feature, 1));
+        for (int i = 1; i <= ExecutionQueueService.WORKERS_COUNT; i++) {
+            model.getThreads().put(i, 1);
+        }
+
+        try (MockedStatic<ExecutionQueueSettings> mockStaticSettings = mockStatic(ExecutionQueueSettings.class)) {
+            mockStaticSettings.when(ExecutionQueueSettings::readAsSystemUser).thenReturn(model);
+
+            ExecutionQueueService executionService = new ExecutionQueueService();
+            ExecutionQueueMonitor monitor = new ExecutionQueueMonitor(executionService, mock(ScheduledExecutorService.class));
+
+            // The CPU load history is read with a start date, so the filter reads every entry
+            String from = OffsetDateTime.now(ZoneOffset.UTC).minusDays(1).format(TimeframeStatisticsEntry.DATE_FORMATTER);
+            StatisticsParams params = new StatisticsParams(Map.of(Feature.CPU_LOAD.name(), from));
+            AtomicInteger reads = new AtomicInteger();
+            Throwable failure = ConcurrentAccess.run(monitor::collectStatistics, () -> {
+                if (reads.incrementAndGet() % 100 == 0) {
+                    monitor.clearHistory();
+                }
+                monitor.getHistory(params);
+            });
+
+            assertNull(failure);
         }
     }
 

@@ -9,11 +9,9 @@ import ch.sbb.polarion.extension.diff_tool.settings.ExecutionQueueSettings;
 import ch.sbb.polarion.extension.generic.util.NamedDaemonThreadFactory;
 import com.polarion.core.util.logging.Logger;
 import lombok.SneakyThrows;
-import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.EnumMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,8 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import static ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry.MAX_HISTORY_ENTRIES;
+import java.util.stream.Collectors;
 
 public class ExecutionWorker {
 
@@ -39,8 +36,9 @@ public class ExecutionWorker {
     private final ThreadPoolExecutor executor;
     private final CountersRegistry countersRegistry = new CountersRegistry();
 
-    private final Map<Feature, CircularFifoQueue<TimeframeStatisticsEntry>> history = new ConcurrentHashMap<>();
-    private final Set<Feature> features = new HashSet<>();
+    private final Map<Feature, StatisticsHistory<TimeframeStatisticsEntry>> history = new ConcurrentHashMap<>();
+    // Replaced as a whole, never modified: the monitor thread iterates it while a settings save refreshes it
+    private volatile Set<Feature> features = Set.of();
     private final int workerId;
 
     public ExecutionWorker(int workerId) {
@@ -66,13 +64,10 @@ public class ExecutionWorker {
 
     public void refreshConfiguration() {
         ExecutionQueueModel settings = ExecutionQueueSettings.readAsSystemUser();
-        for (Map.Entry<Feature, Integer> entry : settings.getWorkers().entrySet()) {
-            if (entry.getValue().equals(workerId)) {
-                features.add(entry.getKey());
-            } else {
-                features.remove(entry.getKey());
-            }
-        }
+        features = settings.getWorkers().entrySet().stream()
+                .filter(entry -> entry.getValue().equals(workerId))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toUnmodifiableSet());
         if (executor != null) {
             Integer workerThreads = settings.getThreads().get(workerId);
             if (getWorkerThreadCount() != workerThreads) {
@@ -156,13 +151,13 @@ public class ExecutionWorker {
 
     public void clearHistory() {
         for (Feature feature : Feature.values()) {
-            history.put(feature, new CircularFifoQueue<>(MAX_HISTORY_ENTRIES));
+            history.put(feature, new StatisticsHistory<>());
         }
     }
 
     public Map<Feature, List<TimeframeStatisticsEntry>> getHistory(StatisticsParams statisticsParams) {
         Map<Feature, List<TimeframeStatisticsEntry>> result = new EnumMap<>(Feature.class);
-        history.forEach((key, value) -> result.put(key, statisticsParams.filterQueue(String.valueOf(workerId), value)));
+        history.forEach((key, value) -> result.put(key, statisticsParams.filterQueue(String.valueOf(workerId), value.snapshot())));
         return result;
     }
 
