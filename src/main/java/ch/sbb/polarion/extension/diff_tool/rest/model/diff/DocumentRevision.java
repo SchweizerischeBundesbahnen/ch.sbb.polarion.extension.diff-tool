@@ -23,6 +23,7 @@ public class DocumentRevision implements Comparable<DocumentRevision> {
     @Schema(description = "The baseline of the revision")
     private String baselineName;
 
+    @Override
     public int compareTo(@NotNull DocumentRevision that) {
         long thisRevision = 0L;
         long thatRevision = 0L;

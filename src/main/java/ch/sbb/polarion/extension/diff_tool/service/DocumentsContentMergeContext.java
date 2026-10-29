@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 public class DocumentsContentMergeContext extends MergeContext implements IPreserveCommentsContext {
     final DocumentIdentifier leftDocumentIdentifier;
     final DocumentIdentifier rightDocumentIdentifier;
-    @Getter
+    @Getter(onMethod_ = @Override)
     final boolean preserveComments;
 
     protected DocumentsContentMergeContext(@NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier, @NotNull MergeDirection direction, boolean preserveComments) {

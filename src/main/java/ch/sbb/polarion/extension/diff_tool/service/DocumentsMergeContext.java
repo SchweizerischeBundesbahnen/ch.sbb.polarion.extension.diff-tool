@@ -36,10 +36,10 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext imple
     @Getter
     @Setter
     boolean allowReferencedWorkItemMerge;
-    @Getter
+    @Getter(onMethod_ = @Override)
     @Setter
     boolean preserveComments;
-    @Getter
+    @Getter(onMethod_ = @Override)
     @Setter
     boolean copyMissingDocumentAttachments;
 
