@@ -273,6 +273,26 @@ class DocumentsMergeContextTest {
     }
 
     @Test
+    void testAddAffectedModule() {
+        setupLinkRole();
+
+        DocumentsMergeContext context = new DocumentsMergeContext(
+                polarionService, leftDocIdentifier, rightDocIdentifier,
+                MergeDirection.LEFT_TO_RIGHT, LINK_ROLE, LinkRoleDirection.DIRECT, diffModel, false);
+        DocumentsMergeContext.AffectedModule affectedModule = DocumentsMergeContext.AffectedModule.builder()
+                .module(mock(IModule.class))
+                .workItem(mock(IWorkItem.class))
+                .parentNode(mock(IModule.IStructureNode.class))
+                .build();
+
+        context.addAffectedModule(affectedModule);
+
+        List<DocumentsMergeContext.AffectedModule> affectedModules = context.getAffectedModules();
+        assertEquals(List.of(affectedModule), affectedModules);
+        assertThrows(UnsupportedOperationException.class, () -> affectedModules.add(affectedModule));
+    }
+
+    @Test
     void testAllowReferencedWorkItemMerge() {
         setupLinkRole();
 

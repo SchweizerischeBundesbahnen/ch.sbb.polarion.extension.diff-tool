@@ -17,6 +17,7 @@ import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,7 +32,6 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext imple
     final DocumentReference leftDocumentReference;
     final DocumentReference rightDocumentReference;
     final ILinkRoleOpt linkRoleObject;
-    @Getter
     final List<AffectedModule> affectedModules = new ArrayList<>();
     @Getter
     @Setter
@@ -64,6 +64,14 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext imple
                 leftDocumentIdentifier.getRevision() == null ? leftModule.getLastRevision() : leftDocumentIdentifier.getRevision());
         rightDocumentReference = DocumentReference.fromModuleLocation(rightDocumentIdentifier.getProjectId(), rightModule.getModuleLocation().getLocationPath(),
                 rightDocumentIdentifier.getRevision() == null ? rightModule.getLastRevision() : rightDocumentIdentifier.getRevision());
+    }
+
+    public void addAffectedModule(@NotNull AffectedModule affectedModule) {
+        affectedModules.add(affectedModule);
+    }
+
+    public List<AffectedModule> getAffectedModules() {
+        return Collections.unmodifiableList(affectedModules);
     }
 
     public IModule getSourceModule() {
