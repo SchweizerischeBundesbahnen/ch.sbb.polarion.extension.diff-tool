@@ -36,10 +36,8 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext imple
     @Getter
     @Setter
     boolean allowReferencedWorkItemMerge;
-    @Getter(onMethod_ = @Override)
     @Setter
     boolean preserveComments;
-    @Getter(onMethod_ = @Override)
     @Setter
     boolean copyMissingDocumentAttachments;
 
@@ -72,6 +70,16 @@ public final class DocumentsMergeContext extends SettingsAwareMergeContext imple
 
     public List<AffectedModule> getAffectedModules() {
         return Collections.unmodifiableList(affectedModules);
+    }
+
+    @Override
+    public boolean isPreserveComments() {
+        return preserveComments;
+    }
+
+    @Override
+    public boolean isCopyMissingDocumentAttachments() {
+        return copyMissingDocumentAttachments;
     }
 
     public IModule getSourceModule() {

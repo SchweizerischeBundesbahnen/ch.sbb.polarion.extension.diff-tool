@@ -5,13 +5,11 @@ import ch.sbb.polarion.extension.diff_tool.report.MergeReportEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.DocumentIdentifier;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DocumentsContentMergePair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeDirection;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 public class DocumentsContentMergeContext extends MergeContext implements IPreserveCommentsContext {
     final DocumentIdentifier leftDocumentIdentifier;
     final DocumentIdentifier rightDocumentIdentifier;
-    @Getter(onMethod_ = @Override)
     final boolean preserveComments;
 
     protected DocumentsContentMergeContext(@NotNull DocumentIdentifier leftDocumentIdentifier, @NotNull DocumentIdentifier rightDocumentIdentifier, @NotNull MergeDirection direction, boolean preserveComments) {
@@ -20,6 +18,11 @@ public class DocumentsContentMergeContext extends MergeContext implements IPrese
         this.leftDocumentIdentifier = leftDocumentIdentifier;
         this.rightDocumentIdentifier = rightDocumentIdentifier;
         this.preserveComments = preserveComments;
+    }
+
+    @Override
+    public boolean isPreserveComments() {
+        return preserveComments;
     }
 
     public DocumentIdentifier getSourceDocumentIdentifier() {
