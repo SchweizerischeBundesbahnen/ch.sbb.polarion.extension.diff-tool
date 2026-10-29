@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.report;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItem;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.ToString;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.time.format.DateTimeFormatter;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@ToString
 @SuppressWarnings("unused")
 public class MergeReport {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");

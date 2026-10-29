@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -14,6 +15,7 @@ import java.time.ZoneId;
 
 @Getter
 @EqualsAndHashCode
+@ToString
 public class MergeReportEntry {
     @Schema(description = "Type of the operation result")
     private final @NotNull MergeReport.OperationResultType operationResultType;

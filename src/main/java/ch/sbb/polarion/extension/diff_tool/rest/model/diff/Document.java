@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 
 import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space.DEFAULT_SPACE_ID;
@@ -16,6 +17,7 @@ import static ch.sbb.polarion.extension.diff_tool.rest.model.diff.Space.DEFAULT_
 @Builder
 @Getter
 @Setter
+@ToString
 @Schema(description = "Represents a document within a project, including metadata such as projectID, space ID, and revision details")
 public class Document {
     @Schema(description = "The ID of the project this document belongs to")
