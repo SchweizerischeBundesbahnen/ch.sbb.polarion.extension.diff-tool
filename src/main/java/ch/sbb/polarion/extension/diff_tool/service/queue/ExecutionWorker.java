@@ -22,6 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class ExecutionWorker {
@@ -37,8 +38,8 @@ public class ExecutionWorker {
     private final CountersRegistry countersRegistry = new CountersRegistry();
 
     private final Map<Feature, StatisticsHistory<TimeframeStatisticsEntry>> history = new ConcurrentHashMap<>();
-    // Replaced as a whole, never modified: the monitor thread iterates it while a settings save refreshes it
-    private volatile Set<Feature> features = Set.of();
+    // Holds an immutable set, replaced as a whole: the monitor thread iterates it while a settings save refreshes it
+    private final AtomicReference<Set<Feature>> features = new AtomicReference<>(Set.of());
     private final int workerId;
 
     public ExecutionWorker(int workerId) {
@@ -64,10 +65,10 @@ public class ExecutionWorker {
 
     public void refreshConfiguration() {
         ExecutionQueueModel settings = ExecutionQueueSettings.readAsSystemUser();
-        features = settings.getWorkers().entrySet().stream()
+        features.set(settings.getWorkers().entrySet().stream()
                 .filter(entry -> entry.getValue().equals(workerId))
                 .map(Map.Entry::getKey)
-                .collect(Collectors.toUnmodifiableSet());
+                .collect(Collectors.toUnmodifiableSet()));
         if (executor != null) {
             Integer workerThreads = settings.getThreads().get(workerId);
             if (getWorkerThreadCount() != workerThreads) {
@@ -108,7 +109,7 @@ public class ExecutionWorker {
     }
 
     public void snapshotHistory() {
-        for (Feature feature : features) {
+        for (Feature feature : features.get()) {
             long queued = getQueuedCount(feature);
             long executing = getExecutingCount(feature);
             history.get(feature).add(new EndpointCallEntry(queued, executing));
