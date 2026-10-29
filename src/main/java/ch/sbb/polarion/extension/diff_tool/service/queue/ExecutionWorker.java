@@ -54,12 +54,14 @@ public class ExecutionWorker {
         refreshConfiguration();
 
         Integer workerThreads = ExecutionQueueSettings.readAsSystemUser().getThreads().get(workerId);
+        // Core size must equal the thread count: with fewer core threads, tasks queue up instead of starting new threads
         this.executor = new ThreadPoolExecutor(
-                0, workerThreads,
-                0L, TimeUnit.MILLISECONDS,
+                workerThreads, workerThreads,
+                60L, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(queueCapacity),
                 new NamedDaemonThreadFactory("ExecutionThread")
         );
+        this.executor.allowCoreThreadTimeOut(true);
     }
 
     public void refreshConfiguration() {
