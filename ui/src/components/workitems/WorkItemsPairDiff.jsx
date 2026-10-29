@@ -224,5 +224,5 @@ export default function WorkItemsPairDiff({ workItemsPair, leftProject, rightPro
           {!loading && <DiffContent workItemsPair={workItemsPair} pairSelected={selected} pairSelectionTrigger={pairSelectionTrigger} pairSelectedCallback={pairSelected} diffs={diffs} expanded={expanded}/>}
         </div>
       </>
-  )
+  );
 }

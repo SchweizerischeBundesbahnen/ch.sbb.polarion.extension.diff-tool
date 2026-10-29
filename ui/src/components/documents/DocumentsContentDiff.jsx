@@ -119,7 +119,7 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
     if (!visible) {
       location.reload();
     }
-  }
+  };
 
   if (loadingContext.contentDiffLoading) return <Loading message="Loading content diff" />;
 

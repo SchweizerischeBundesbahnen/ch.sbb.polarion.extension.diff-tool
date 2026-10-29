@@ -91,7 +91,7 @@ test.describe("page of diffing Collections c", () => {
     // Verify the modal is no longer visible
     await expect(targetConfigurationModal).not.toBeVisible();
 
-    const successAlert = page.getByTestId('app-alert-title')
+    const successAlert = page.getByTestId('app-alert-title');
     await expect(successAlert).toBeVisible();
   });
 
@@ -125,7 +125,7 @@ test.describe("page of diffing Collections c", () => {
       expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
     }
 
-    await expect(page.locator(".control-pane .controls label[for='source-document']")).toHaveText("Source documents:")
+    await expect(page.locator(".control-pane .controls label[for='source-document']")).toHaveText("Source documents:");
     await expect(page.locator("#source-document")).toHaveValue("Testing/Test Specification");
 
     await expect(page.locator(".control-pane .controls label[for='target-type']")).toHaveText("Compare as:");
@@ -169,7 +169,7 @@ test.describe("page of diffing Collections c", () => {
       expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
     }
 
-    await expect(page.locator(".control-pane .controls label[for='source-document']")).toHaveText("Source documents:")
+    await expect(page.locator(".control-pane .controls label[for='source-document']")).toHaveText("Source documents:");
     await expect(page.locator("#source-document")).toHaveValue("Testing/Test Specification");
 
 
