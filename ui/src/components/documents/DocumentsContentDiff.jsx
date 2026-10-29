@@ -67,7 +67,7 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
   }, [searchParams]);
 
   useEffect(() => {
-    context.state.setDiffsExist(docsData && docsData.pairedContentAnchors && docsData.pairedContentAnchors.filter(anchorsPair => containsDiff(anchorsPair)));
+    context.state.setDiffsExist(Boolean(docsData?.pairedContentAnchors?.some(anchorsPair => containsDiff(anchorsPair))));
   }, [docsData]);
 
   useEffect(() => {
