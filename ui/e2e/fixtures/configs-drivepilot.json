@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Default",
+    "scope": "project/drivepilot/"
+  },
+  {
+    "name": "Drive Pilot",
+    "scope": "project/drivepilot/"
+  }
+]
