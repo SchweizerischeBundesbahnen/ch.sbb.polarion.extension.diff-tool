@@ -214,28 +214,28 @@ class CommentUtilsTest {
         assertTrue(elements.isEmpty());
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "{argumentSetName}")
     @MethodSource("removeCommentsTestCases")
-    void testRemoveComments_fromString(String testName, String content, String expected) {
+    void testRemoveComments_fromString(String content, String expected) {
         String result = CommentUtils.removeComments(content);
         assertEquals(expected, result);
     }
 
     private static Stream<Arguments> removeCommentsTestCases() {
         return Stream.of(
-                Arguments.of("Single comment",
+                Arguments.argumentSet("Single comment",
                         "Before <span id=\"polarion-comment:123\"></span> After",
                         "Before  After"),
-                Arguments.of("Multiple comments",
+                Arguments.argumentSet("Multiple comments",
                         "Start <span id=\"polarion-comment:123\"></span> Middle <span id=\"polarion-comment:456\"></span> End",
                         "Start  Middle  End"),
-                Arguments.of("Single quotes",
+                Arguments.argumentSet("Single quotes",
                         "Text <span id='polarion-comment:789'>some content</span> more text",
                         "Text some content</span> more text"),
-                Arguments.of("No comments",
+                Arguments.argumentSet("No comments",
                         "Just plain text",
                         "Just plain text"),
-                Arguments.of("Empty content",
+                Arguments.argumentSet("Empty content",
                         "",
                         "")
         );
