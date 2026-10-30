@@ -1,5 +1,9 @@
 import { test, pickOption } from "./test-utils";
 import { expect } from "@playwright/test";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
+const fixturesDir = fileURLToPath(new URL("./fixtures/", import.meta.url));
 
 
 test.describe("page of diffing Collections c", () => {
@@ -91,7 +95,7 @@ test.describe("page of diffing Collections c", () => {
     // Verify the modal is no longer visible
     await expect(targetConfigurationModal).not.toBeVisible();
 
-    const successAlert = page.getByTestId('app-alert-title')
+    const successAlert = page.getByTestId('app-alert-title');
     await expect(successAlert).toBeVisible();
   });
 
@@ -125,7 +129,7 @@ test.describe("page of diffing Collections c", () => {
       expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
     }
 
-    await expect(page.locator(".control-pane .controls label[for='source-document']")).toHaveText("Source documents:")
+    await expect(page.locator(".control-pane .controls label[for='source-document']")).toHaveText("Source documents:");
     await expect(page.locator("#source-document")).toHaveValue("Testing/Test Specification");
 
     await expect(page.locator(".control-pane .controls label[for='target-type']")).toHaveText("Compare as:");
@@ -169,7 +173,7 @@ test.describe("page of diffing Collections c", () => {
       expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
     }
 
-    await expect(page.locator(".control-pane .controls label[for='source-document']")).toHaveText("Source documents:")
+    await expect(page.locator(".control-pane .controls label[for='source-document']")).toHaveText("Source documents:");
     await expect(page.locator("#source-document")).toHaveValue("Testing/Test Specification");
 
 
@@ -181,6 +185,29 @@ test.describe("page of diffing Collections c", () => {
     await expect(page.locator("#source-document")).toHaveValue("Specification/Administration Specification");
     const header = page.getByTestId('LEFT-doc-title');
     await expect(header).toHaveText("Administration SpecificationHEAD (rev. 9487)");
+  });
+
+  test('control pane change to source document with URL-reserved characters in its ID', async ({ page }) => {
+    const documentId = "R&D #1 = Specification";
+    const collections = JSON.parse(fs.readFileSync(fixturesDir + "collections.json", "utf8"));
+    const pairedDocument = collections.pairedDocuments.find(pair => pair.leftDocument.id === "Catalog Specification").leftDocument;
+    pairedDocument.id = documentId;
+    pairedDocument.title = documentId;
+    pairedDocument.locationPath = `Specification/${documentId}`;
+    await page.route('**/diff/collections', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(collections) }));
+    await page.reload();
+
+    await page.locator('.control-pane .expand-button').click();
+    await pickOption(page, "source-document", `Specification / ${documentId}`);
+
+    // The view finds the selected document by the IDs read back from the URL, so it only shows up if they survived
+    await expect(page.getByTestId('LEFT-doc-title')).toContainText(documentId);
+    await expect(page.locator("#source-document")).toHaveValue(`Specification/${documentId}`);
+    const url = new URL(page.url());
+    expect(url.searchParams.get('sourceSpaceId')).toBe("Specification");
+    expect(url.searchParams.get('sourceDocument')).toBe(documentId);
+    expect(url.searchParams.get('linkRole')).toBe("relates_to");
+    expect(url.hash).toBe("");
   });
 
   test('first source document is selected when opened without source document parameters', async ({ page }) => {

@@ -48,6 +48,7 @@ public class ModifiedHtmlSaxDiffOutput implements DiffOutput {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void generateOutput(TagNode node) throws SAXException {
 
         if (!node.getQName().equalsIgnoreCase("img")

@@ -123,7 +123,7 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
     if (!visible) {
       loadDiff();
     }
-  }
+  };
 
   const changeSelected = (fieldId) => {
     return (event) => {

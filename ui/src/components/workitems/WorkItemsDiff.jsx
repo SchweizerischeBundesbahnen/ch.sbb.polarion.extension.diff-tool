@@ -121,7 +121,7 @@ export default function WorkItemsDiff() {
     <MergeInProgressOverlay mergeInProgress={mergeInProgress} />
 
     <Modal title="Redundant counterpart WorkItems" cancelButtonTitle="Close" visible={redundancyModalVisible} setVisible={setRedundancyModalVisible} className="modal-md" testId={"redundancy-modal"}>
-      <p>Following WorkItems in source project have multiple counterpart WorkItems in target project by selected link role, and therefor single counterpart can not be chosen:</p>
+      <p>Following WorkItems in source project have multiple counterpart WorkItems in target project by selected link role, and therefore single counterpart can not be chosen:</p>
       <ul>
         {workItemsData.leftWorkItemIdsWithRedundancy.map((id, index) => {
           return <li key={index}>{id}</li>

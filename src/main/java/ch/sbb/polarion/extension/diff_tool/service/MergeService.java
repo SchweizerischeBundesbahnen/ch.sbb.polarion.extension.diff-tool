@@ -700,7 +700,7 @@ public class MergeService {
                         .parentNode(sourceExternalParentNode)
                         .destinationIndex(sourceExternalParentNode.getChildren().indexOf(sourceExternalNode))
                         .build();
-                context.getAffectedModules().add(affectedModule);
+                context.addAffectedModule(affectedModule);
             }
             insertNode(workItemToInsert, context.getTargetModule(), destinationParentNode, destinationIndex, referenced);
         }

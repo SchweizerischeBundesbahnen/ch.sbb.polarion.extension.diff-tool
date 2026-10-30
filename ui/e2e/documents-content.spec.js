@@ -1,5 +1,9 @@
 import { expect } from '@playwright/test';
 import { test, normalizeHtml, swapDocuments } from './test-utils';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const fixturesDir = fileURLToPath(new URL('./fixtures/', import.meta.url));
 
 test.describe("diffing of documents' contents", () => {
 
@@ -96,6 +100,23 @@ test.describe("diffing of documents' contents", () => {
     expect(url.searchParams.get('targetProjectId')).toBe('elibrary');
     expect(url.searchParams.get('targetSpaceId')).toBe('Specification');
     expect(url.searchParams.get('targetDocument')).toBe('Building Specification v2');
+  });
+
+  test('select all is offered only when the contents differ', async ({ page }) => {
+    const selectAll = page.locator('.header .merge-pane label.select-all');
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Shown only once the diff has loaded
+    await expect(selectAll).toBeVisible();
+
+    const contents = JSON.parse(fs.readFileSync(fixturesDir + 'documents-content.json', 'utf8'));
+    contents.pairedContentAnchors.forEach(pair => [pair.leftAnchor, pair.rightAnchor].filter(Boolean).forEach(anchor => {
+      anchor.diffAbove = null;
+      anchor.diffBelow = null;
+    }));
+    await page.route('**/diff/documents-content', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(contents) }));
+    await page.reload();
+
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' });
+    await expect(selectAll).toBeHidden();
   });
 
   test('content merge canceled', async ({ page }) => {

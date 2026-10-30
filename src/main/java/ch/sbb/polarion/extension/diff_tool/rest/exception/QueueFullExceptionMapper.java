@@ -11,6 +11,7 @@ import jakarta.ws.rs.ext.ExceptionMapper;
 public class QueueFullExceptionMapper implements ExceptionMapper<QueueFullException> {
     private static final Logger logger = Logger.getLogger(QueueFullExceptionMapper.class);
 
+    @Override
     public Response toResponse(QueueFullException e) {
         logger.error("QueueFullException error in controller: " + e.getMessage(), e);
         return Response.status(Response.Status.TOO_MANY_REQUESTS.getStatusCode())

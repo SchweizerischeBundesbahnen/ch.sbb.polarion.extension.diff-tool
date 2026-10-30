@@ -6,8 +6,7 @@
     'Source Code Pro', 'Fira Mono', 'Droid Sans Mono', 'Courier New', monospace;
 
   --foreground-rgb: 56, 56, 56;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --background-rgb: 255, 255, 255;
   --control-pane-collapsed-width: 40px;
   --control-pane-expanded-width: 300px;
 
@@ -39,7 +38,7 @@ body {
 
 body {
   color: rgb(var(--foreground-rgb));
-  background-color: var(--background-start-rgb);
+  background-color: rgb(var(--background-rgb));
   scroll-behavior: smooth;
   scroll-padding-top: 100px;
 }

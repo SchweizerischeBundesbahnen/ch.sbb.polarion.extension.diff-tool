@@ -1780,7 +1780,7 @@ class MergeServiceTest {
         when(externalParentNode.getChildren()).thenReturn(List.of(externalNode));
 
         ArrayList<DocumentsMergeContext.AffectedModule> affectedModules = new ArrayList<>();
-        when(context.getAffectedModules()).thenReturn(affectedModules);
+        doAnswer(invocation -> affectedModules.add(invocation.getArgument(0))).when(context).addAffectedModule(any());
 
         // Case 1: referenced=false, module=null -> should NOT add to affectedModules
         when(workItem.getModule()).thenReturn(null);

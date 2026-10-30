@@ -20,10 +20,12 @@ export default function ControlPane({diff_type}) {
   const remote = useRemote();
   const pdf = usePdf();
   const [swapColors, setSwapColors] = useSwapColors();
-  const [projectId] = useState(searchParams.get('sourceProjectId'));
-  const [selectedCompareAs, setSelectedCompareAs] = useState(searchParams.get("compareAs") || 'Workitems');
+  // Derived from the query string, not frozen in state: navigation re-renders this pane without remounting it,
+  // so back/forward and swapping the documents must show up here too.
+  const projectId = searchParams.get('sourceProjectId');
+  const selectedCompareAs = searchParams.get("compareAs") || 'Workitems';
   const [configurations, setConfigurations] = useState([]);
-  const [selectedConfiguration, setSelectedConfiguration] = useState(searchParams.get("config") || 'Default');
+  const selectedConfiguration = searchParams.get("config") || 'Default';
   const [documentSelectionToBeConfirmed, setDocumentSelectionToBeConfirmed] = useState("");
   // Derived from the query string, not frozen in state, so the selector reflects the document
   // auto-selected below and every later switch.
@@ -35,6 +37,8 @@ export default function ControlPane({diff_type}) {
 
   useEffect(() => {
     if (remote && projectId) {
+      // A response for a project which is no longer the source one must not overwrite the names of the current one
+      let outdated = false;
       remote.sendRequest({
         method: "GET",
         url: `/settings/diff/names?scope=project/${projectId}/`,
@@ -45,48 +49,40 @@ export default function ControlPane({diff_type}) {
         }
         return response.text();
       }).then(data => {
-        setConfigurations(JSON.parse(data).map(setting => setting.name));
+        if (!outdated) {
+          setConfigurations(JSON.parse(data).map(setting => setting.name));
+        }
       }).catch(error => {
         console.log("Error occurred loading setting names" + (error && error.message ? ": " + error.message : ""));
       });
+      return () => {
+        outdated = true;
+      };
     }
   }, [projectId]);
 
+  // The diffs read 'compareAs' and 'config' from the query string, so the defaults are written into it.
+  // Replaced, not pushed: writing a default is no navigation of its own, and both params go in one write.
   useEffect(() => {
-    if (diff_type !== DiffTypes.WORK_ITEMS_DIFF && searchParams.get('compareAs') !== selectedCompareAs) {
-      const params = [];
-      for (const [key, value] of searchParams.entries()) {
-        if (key === 'compareAs') {
-          params.push(`${key}=${selectedCompareAs}`); // update 'compareAs' parameter
-        } else {
-          params.push(`${key}=${value}`); // ...and leave other as they are
-        }
-      }
-      if (!searchParams.get('compareAs')) {
-        params.push(`compareAs=${selectedCompareAs}`);
-      }
-
-      router.push(pathname + '?' + params.join('&'));
+    const params = new URLSearchParams(searchParams);
+    if (diff_type !== DiffTypes.WORK_ITEMS_DIFF && !searchParams.get('compareAs')) {
+      params.set('compareAs', selectedCompareAs);
     }
-  }, [selectedCompareAs]);
-
-  useEffect(() => {
-    if (searchParams.get('config') !== selectedConfiguration) {
-      const params = [];
-      for (const [key, value] of searchParams.entries()) {
-        if (key === 'config') {
-          params.push(`${key}=${selectedConfiguration}`); // update 'config' parameter
-        } else {
-          params.push(`${key}=${value}`); // ...and leave other as they are
-        }
-      }
-      if (!searchParams.get('config')) {
-        params.push(`config=${selectedConfiguration}`);
-      }
-
-      router.push(pathname + '?' + params.join('&'));
+    if (!searchParams.get('config')) {
+      params.set('config', selectedConfiguration);
     }
-  }, [selectedConfiguration]);
+    if (params.toString() !== searchParams.toString()) {
+      router.replace(pathname + '?' + params.toString());
+    }
+  }, [searchParams, diff_type, selectedCompareAs, selectedConfiguration, router, pathname]);
+
+  const selectParam = (key, value, currentValue) => {
+    if (value !== currentValue) {
+      const params = new URLSearchParams(searchParams);
+      params.set(key, value);
+      router.push(pathname + '?' + params.toString());
+    }
+  };
 
   useEffect(() => {
     if (!selectedDocumentLocationPath && context.state.pairedDocuments && context.state.pairedDocuments.length > 0) {
@@ -103,24 +99,21 @@ export default function ControlPane({diff_type}) {
   };
 
   const documentSelected = (locationPath) => {
-    const params = [];
-    for (const [key, value] of searchParams.entries()) {
-      if (key !== "sourceSpaceId" && key !== "sourceDocument" && key !== "targetSpaceId" && key !== "targetDocument") {
-        params.push(`${key}=${value}`);
-      }
-    }
+    // URLSearchParams encodes the values: a document or space ID may contain '&', '#' or '='
+    const params = new URLSearchParams(searchParams);
+    ["sourceSpaceId", "sourceDocument", "targetSpaceId", "targetDocument"].forEach(key => params.delete(key));
 
     const selectedDocumentsPair = locationPath && context.state.pairedDocuments.find(documentsPair => documentsPair.leftDocument.locationPath === locationPath);
     if (selectedDocumentsPair) {
-      params.push(`sourceSpaceId=${selectedDocumentsPair.leftDocument.spaceId}`);
-      params.push(`sourceDocument=${selectedDocumentsPair.leftDocument.id}`);
+      params.set("sourceSpaceId", selectedDocumentsPair.leftDocument.spaceId);
+      params.set("sourceDocument", selectedDocumentsPair.leftDocument.id);
       if (selectedDocumentsPair.rightDocument) {
-        params.push(`targetSpaceId=${selectedDocumentsPair.rightDocument.spaceId}`);
-        params.push(`targetDocument=${selectedDocumentsPair.rightDocument.id}`);
+        params.set("targetSpaceId", selectedDocumentsPair.rightDocument.spaceId);
+        params.set("targetDocument", selectedDocumentsPair.rightDocument.id);
       }
     }
 
-    router.push(pathname + '?' + params.join('&'));
+    router.push(pathname + '?' + params.toString());
   };
 
   const exportToPDF = () => {
@@ -195,7 +188,7 @@ export default function ControlPane({diff_type}) {
                 <label htmlFor="target-type">
                   Compare as:
                 </label>
-                <SearchableSelect id="target-type" value={selectedCompareAs} onChange={setSelectedCompareAs}
+                <SearchableSelect id="target-type" value={selectedCompareAs} onChange={compareAs => selectParam('compareAs', compareAs, selectedCompareAs)}
                                   options={["Workitems", "Fields", "Content"].map((compareAs) => ({id: compareAs, name: compareAs}))} />
               </div>
           }
@@ -206,7 +199,7 @@ export default function ControlPane({diff_type}) {
                 <label htmlFor="configuration">
                   Configuration:
                 </label>
-                <SearchableSelect id="configuration" value={selectedConfiguration} onChange={setSelectedConfiguration}
+                <SearchableSelect id="configuration" value={selectedConfiguration} onChange={configuration => selectParam('config', configuration, selectedConfiguration)}
                                   options={configurations.map((configuration) => ({id: configuration, name: configuration}))} />
               </div>
           }

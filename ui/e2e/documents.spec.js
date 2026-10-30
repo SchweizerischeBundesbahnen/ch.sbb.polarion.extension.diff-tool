@@ -316,6 +316,41 @@ test.describe("page of diffing documents' WorkItems", () => {
     expect(url.searchParams.get('targetDocument')).toBe('Catalog Specification');
   });
 
+  test('configuration names follow the swapped source project', async ({ page, mockApi }) => {
+    await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
+
+    await mockApi.mockEndpoint({ url: '**/settings/diff/names?scope=project/drivepilot/', fixtureFile: 'configs-drivepilot.json' });
+    await mockApi.mockEndpoint({ url: '**/diff/documents', fixtureFile: 'reversed-documents-diff.json' });
+    const namesRequestPromise = page.waitForRequest(request => request.url().includes('/settings/diff/names?scope=project/drivepilot/'));
+
+    await swapDocuments(page, /sourceProjectId=drivepilot/);
+    await namesRequestPromise;
+
+    await page.locator('.control-pane .expand-button').click();
+    await page.locator('#configuration + .searchable-dropdown .sd-trigger').click();
+    const options = page.locator('.sd-portal .items .option');
+    await expect(options).toHaveText(["Default", "Drive Pilot"]);
+  });
+
+  test('compare mode follows browser history', async ({ page, mockApi }) => {
+    await mockApi.mockEndpoint({ url: '**/diff/documents-fields', fixtureFile: 'documents-fields.json' });
+    await expect(page.locator(".progress span")).toHaveText("Data loaded successfully", { timeout: 10_000 });
+
+    await page.locator('.control-pane .expand-button').click();
+    await pickOption(page, "target-type", "Fields");
+    await expect(page.locator('.app-header .app-title')).toHaveText("Diff/merge of Polarion Documents (Fields)");
+    await expect(page.locator("#target-type")).toHaveValue("Fields");
+
+    await page.goBack();
+    await expect(page.locator('.app-header .app-title')).toHaveText("Diff/merge of Polarion Documents (WorkItems)");
+    await expect(page.locator("#target-type")).toHaveValue("Workitems");
+    expect(new URL(page.url()).searchParams.get('compareAs')).toBe('Workitems');
+
+    await page.goForward();
+    await expect(page.locator('.app-header .app-title')).toHaveText("Diff/merge of Polarion Documents (Fields)");
+    await expect(page.locator("#target-type")).toHaveValue("Fields");
+  });
+
   test('swap diff colors', async ({ page }) => {
     const GREEN = 'rgb(204, 255, 204)';
     const RED = 'rgb(253, 198, 198)';
