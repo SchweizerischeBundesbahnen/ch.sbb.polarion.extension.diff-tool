@@ -1,5 +1,16 @@
 # Changelog
 
+## [9.4.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.1...v9.4.2) (2026-10-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @types/node to v26 ([#790](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/790)) ([00282a3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/00282a388c80cc67c437b47fe21f560eb61acf12))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v16.4.0 ([#787](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/787)) ([7095910](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/7095910ca718e10abc122aba8c88632957bdb9da))
+* **deps:** update dependency typescript-eslint to v8.72.1 ([#794](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/794)) ([2c96360](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/2c96360e3d4332eadd9f52cf24764845e049ce9e))
+* **deps:** update dependency vite to v8.3.5 ([#780](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/780)) ([b482161](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/b4821619ff46436ba2b56c38a99e3768d66b98ca))
+* return copied document when its revision cannot be read ([#792](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/792)) ([32ce340](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/32ce3400d79b316b884495f6497767adddd42368)), closes [#791](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/791)
+
 ## [9.4.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.0...v9.4.1) (2026-10-23)
 
 
