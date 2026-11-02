@@ -4,7 +4,7 @@
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
     "@fortawesome/react-fontawesome": "^3.3.1",
-    "@sbb-polarion/react-sbb-polarion": "^2.5.0",
+    "@sbb-polarion/react-sbb-polarion": "^3.0.0",
     "bootstrap": "^5.3.8",
     "chart.js": "^4.5.1",
     "chartjs-adapter-date-fns": "^3.0.0",
@@ -30,7 +30,7 @@
     "cross-spawn": "7.0.6",
     "eslint": "10.13.0",
     "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-jsx-a11y-x": "0.2.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.13.0",
     "node-html-parser": "9.0.5",
@@ -50,9 +50,7 @@
   "type": "module",
   "overrides": {
     "postcss": ">=8.5.10",
-    "eslint-plugin-jsx-a11y": {
-      "eslint": "$eslint"
-    }
+    "minimatch": "^11.0.1"
   },
   "packageManager": "npm@12.2.1",
   "private": true,
