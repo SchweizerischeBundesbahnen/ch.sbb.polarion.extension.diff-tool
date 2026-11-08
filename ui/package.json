@@ -52,7 +52,7 @@
     "postcss": ">=8.5.10",
     "minimatch": "^11.0.1"
   },
-  "packageManager": "npm@12.2.1",
+  "packageManager": "npm@12.2.2",
   "private": true,
   "scripts": {
     "docs:index": "node scripts/build-docs-index.mjs",
