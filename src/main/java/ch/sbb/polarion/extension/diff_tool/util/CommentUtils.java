@@ -17,7 +17,8 @@ import java.util.stream.Collectors;
 @UtilityClass
 public class CommentUtils {
 
-    private static final String COMMENT_REGEX = "<span id=[\"']polarion-comment:(?<id>\\d+)[\"'][^>]*>(?:</span>)?";
+    /** Finds a marker the way Polarion does: in any letter case, with its ID at any position among the attributes. */
+    private static final String COMMENT_REGEX = "(?i)<span\\b[^>]*?\\sid=[\"']polarion-comment:(?<id>\\d+)[\"'][^>]*>(?:</span>)?";
     private static final Pattern COMMENT_PATTERN = Pattern.compile(COMMENT_REGEX);
     /** The ID a comment marker carries as the ID of its span element. */
     private static final Pattern COMMENT_MARKER_ID_PATTERN = Pattern.compile("polarion-comment:\\d+");

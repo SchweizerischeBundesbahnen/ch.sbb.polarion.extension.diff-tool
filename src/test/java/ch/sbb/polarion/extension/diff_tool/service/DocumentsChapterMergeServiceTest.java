@@ -13,6 +13,7 @@ import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.WriteTransaction;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.IModuleComment;
 import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
@@ -21,6 +22,7 @@ import com.polarion.subterra.base.data.identification.IContextId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -33,6 +35,8 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -96,7 +100,7 @@ class DocumentsChapterMergeServiceTest {
         when(documentLayoutSyncService.copyMissingLayouts(any(), any(), any()))
                 .thenReturn(new DocumentLayoutSyncService.LayoutSyncResult(List.of(), List.of()));
         when(commentsCopier.copyComments(any(IWorkItem.class), any(IWorkItem.class))).thenReturn(Map.of());
-        when(commentsCopier.copyComments(any(IModule.class), any(IModule.class), any(), any())).thenReturn(Map.of());
+        when(commentsCopier.copyComments(any(IModule.class), any(IModule.class), any(), any(), any())).thenReturn(Map.of());
     }
 
     // -------------------------------------------------------------------------------------------------------------
@@ -760,19 +764,78 @@ class DocumentsChapterMergeServiceTest {
         when(context.getSourceModule()).thenReturn(sourceModule);
         when(context.getTargetModule()).thenReturn(targetModule);
         when(documentsContentHandler.freeContentCommentIds("<p>text</p>", List.of("SOURCE-1"))).thenReturn(Set.of("5"));
-        when(commentsCopier.copyComments(eq(sourceModule), eq(targetModule), any(), any())).thenReturn(Map.of("5", "17"));
+        when(commentsCopier.copyComments(eq(sourceModule), eq(targetModule), any(), any(), any())).thenReturn(Map.of("5", "17"));
 
         assertEquals(Map.of("5", "17"), documentsChapterMergeService.copyDocumentComments(context, List.of("SOURCE-1")));
     }
 
     @Test
-    void testTextWithoutCommentsCopiesNoDocumentComments() {
-        DocumentsChapterMergeContext context = mock(DocumentsChapterMergeContext.class);
-        when(context.getSourceHomePageContentSnapshot()).thenReturn("<p>text</p>");
+    void testADocumentCommentIsCopiedForItsTextOrForItsWorkItemAndForNothingElse() {
+        when(documentsContentHandler.freeContentCommentIds(anyString(), any())).thenReturn(Set.of("5"));
+        Predicate<IModuleComment> commentsToCopy = commentsToCopy(documentCommentsContext(Map.of()));
+
+        assertTrue(commentsToCopy.test(documentComment("5", null)));
+        assertTrue(commentsToCopy.test(documentComment("9", workItem("SOURCE-1", "requirement"))));
+        assertFalse(commentsToCopy.test(documentComment("9", null)));
+        assertFalse(commentsToCopy.test(documentComment("9", workItem("OTHER-1", "requirement"))));
+    }
+
+    @Test
+    void testACopiedDocumentCommentRefersToTheWorkItemWhichRepresentsItsOwnInTheTargetDocument() {
+        IWorkItem copy = workItem("TARGET-100", "requirement");
+        IWorkItem referenced = workItem("REFERENCED-1", "requirement");
+        DocumentsChapterMergeContext context = documentCommentsContext(Map.of("SOURCE-1", copy, "REFERENCED-1", referenced));
         when(documentsContentHandler.freeContentCommentIds(anyString(), any())).thenReturn(Set.of());
 
-        assertTrue(documentsChapterMergeService.copyDocumentComments(context, List.of("SOURCE-1")).isEmpty());
-        verify(commentsCopier, never()).copyComments(any(IModule.class), any(IModule.class), any(), any());
+        documentsChapterMergeService.copyDocumentComments(context, List.of("SOURCE-1", "REFERENCED-1"));
+
+        ArgumentCaptor<Function<IWorkItem, IWorkItem>> resolver = ArgumentCaptor.captor();
+        verify(commentsCopier).copyComments(eq(sourceModule), eq(targetModule), any(), any(), resolver.capture());
+        assertEquals(copy, resolver.getValue().apply(workItem("SOURCE-1", "requirement")));
+        assertEquals(referenced, resolver.getValue().apply(referenced));
+        assertNull(resolver.getValue().apply(workItem("OTHER-1", "requirement")));
+    }
+
+    @Test
+    void testAReferencedWorkItemWhichIsSkippedLeavesItsTextAndItsCommentsBehind() {
+        IModule.IStructureNode sourceChapter = chapter(sourceModule, "2", heading("SOURCE-1"));
+        addChild(sourceChapter, node(workItem("OTHER-1", "requirement"), false, true));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "heading");
+        ChapterMergeParams params = params(ChapterMergeMode.COPY, ChapterInsertMode.UNDER);
+        params.setReferencedItems(ReferencedItemsHandling.SKIP);
+
+        inTransaction(() -> documentsChapterMergeService.mergeChapter(params));
+
+        verify(documentsContentHandler).freeContentCommentIds("<p>free text</p>", List.of("SOURCE-1"));
+        verify(documentsContentHandler).copyFreeContent(eq("<p>free text</p>"), eq(targetModule), eq(List.of("SOURCE-1")), any(), any());
+    }
+
+    @Test
+    void testAWorkItemWhichCouldNotBeMergedLeavesItsTextAndItsCommentsBehind() {
+        IModule.IStructureNode sourceChapter = chapter(sourceModule, "2", heading("SOURCE-1"));
+        IWorkItem failing = workItem("SOURCE-2", "requirement");
+        addChild(sourceChapter, node(failing, false));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "heading");
+        doThrow(new IllegalStateException("field types differ")).when(mergeService).merge(eq(failing), any(), any(), any());
+
+        inTransaction(() -> documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.COPY, ChapterInsertMode.UNDER)));
+
+        verify(documentsContentHandler).freeContentCommentIds("<p>free text</p>", List.of("SOURCE-1"));
+        verify(documentsContentHandler).copyFreeContent(eq("<p>free text</p>"), eq(targetModule), eq(List.of("SOURCE-1")), any(), any());
+    }
+
+    @Test
+    void testAMovedWorkItemKeepsItsTextAndItsComments() {
+        IModule.IStructureNode sourceChapter = chapter(sourceModule, "2", heading("SOURCE-1"));
+        addChild(sourceChapter, node(workItem("SOURCE-2", "requirement"), false));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "heading");
+
+        inTransaction(() -> documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.MOVE, ChapterInsertMode.UNDER)));
+
+        verify(documentsContentHandler).freeContentCommentIds("<p>free text</p>", List.of("SOURCE-1", "SOURCE-2"));
     }
 
 
@@ -853,6 +916,29 @@ class DocumentsChapterMergeServiceTest {
     // -------------------------------------------------------------------------------------------------------------
     // helpers
     // -------------------------------------------------------------------------------------------------------------
+
+    private DocumentsChapterMergeContext documentCommentsContext(Map<String, IWorkItem> itemMapping) {
+        DocumentsChapterMergeContext context = mock(DocumentsChapterMergeContext.class);
+        when(context.getSourceHomePageContentSnapshot()).thenReturn("<p>text</p>");
+        when(context.getSourceModule()).thenReturn(sourceModule);
+        when(context.getTargetModule()).thenReturn(targetModule);
+        when(context.getItemMapping()).thenReturn(itemMapping);
+        return context;
+    }
+
+    private Predicate<IModuleComment> commentsToCopy(DocumentsChapterMergeContext context) {
+        documentsChapterMergeService.copyDocumentComments(context, List.of("SOURCE-1"));
+        ArgumentCaptor<Predicate<IModuleComment>> commentsToCopy = ArgumentCaptor.captor();
+        verify(commentsCopier).copyComments(eq(sourceModule), eq(targetModule), commentsToCopy.capture(), any(), any());
+        return commentsToCopy.getValue();
+    }
+
+    private IModuleComment documentComment(String id, IWorkItem referredWorkItem) {
+        IModuleComment comment = mock(IModuleComment.class);
+        when(comment.getId()).thenReturn(id);
+        when(comment.getReferredWorkItem()).thenReturn(referredWorkItem);
+        return comment;
+    }
 
     private ChapterMergeParams params(@SuppressWarnings("SameParameterValue") ChapterMergeMode mode, ChapterInsertMode insertMode) {
         return params(SOURCE_DOCUMENT, TARGET_DOCUMENT, mode, insertMode);

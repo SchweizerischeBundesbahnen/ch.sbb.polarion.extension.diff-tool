@@ -488,6 +488,14 @@ class DocumentsContentHandlerTest {
         assertEquals("<p>text</p>", handler.contentToInsert("<p>text<span id=\"polarion-comment:9\"></span></p>", Map.of("5", "17")));
     }
 
+    @Test
+    void testAMarkerWithItsIdAfterAnotherAttributeIsRenumbered() {
+        String marker = "<span class=\"x\" id=\"polarion-comment:5\"></span>";
+
+        assertEquals(Set.of("5"), handler.freeContentCommentIds("<p>text" + marker + "</p>" + anchor("div", "AA-1"), List.of("AA-1")));
+        assertEquals("<p>text<span id=\"polarion-comment:17\"></span></p>", handler.contentToInsert("<p>text" + marker + "</p>", Map.of("5", "17")));
+    }
+
 
     @Test
     void testMergedWorkItemsArePlacedUnderTheChapterAboveWhatItAlreadyHeld() {

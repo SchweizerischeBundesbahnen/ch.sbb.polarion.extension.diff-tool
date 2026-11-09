@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -43,7 +44,7 @@ public class CommentsCopier {
      * @return ID of a source comment mapped to the ID of its copy
      */
     public @NotNull Map<String, String> copyComments(@NotNull IWorkItem sourceWorkItem, @NotNull IWorkItem targetWorkItem) {
-        return copyThreads(sourceWorkItem.getRootComments(true), targetWorkItem::createComment, null);
+        return copyThreads(sourceWorkItem.getRootComments(true), targetWorkItem::createComment, null, (source, target) -> { });
     }
 
     /**
@@ -55,6 +56,21 @@ public class CommentsCopier {
      */
     public @NotNull Map<String, String> copyComments(@NotNull IModule sourceModule, @NotNull IModule targetModule,
                                                      @NotNull Predicate<IModuleComment> commentsToCopy, @Nullable IUser fallbackAuthor) {
+        return copyComments(sourceModule, targetModule, commentsToCopy, fallbackAuthor, workItem -> null);
+    }
+
+    /**
+     * Copies the comments of a document into another document, and keeps a copied comment on the work item its source
+     * comment refers to. Polarion keeps a comment on a referenced work item in the document, not in the work item.
+     *
+     * @param commentsToCopy           which of the document's comment threads to copy
+     * @param fallbackAuthor           who a comment is attributed to when the author of the source comment cannot be set
+     * @param referredWorkItemResolver gives the work item a copied comment refers to, {@code null} when there is none
+     * @return ID of a source comment mapped to the ID of its copy
+     */
+    public @NotNull Map<String, String> copyComments(@NotNull IModule sourceModule, @NotNull IModule targetModule,
+                                                     @NotNull Predicate<IModuleComment> commentsToCopy, @Nullable IUser fallbackAuthor,
+                                                     @NotNull Function<IWorkItem, IWorkItem> referredWorkItemResolver) {
         // Iterated rather than streamed: this is a Polarion object list, and its own iterator is what reads it
         List<IModuleComment> rootComments = new ArrayList<>();
         IPObjectList<IModuleComment> sourceRootComments = sourceModule.getRootComments(true);
@@ -65,13 +81,24 @@ public class CommentsCopier {
                 }
             }
         }
-        return copyThreads(rootComments, targetModule::createComment, fallbackAuthor);
+        return copyThreads(rootComments, targetModule::createComment, fallbackAuthor,
+                (source, target) -> copyReferredWorkItem(source, target, referredWorkItemResolver));
+    }
+
+    private void copyReferredWorkItem(@NotNull IModuleComment source, @NotNull IModuleComment target,
+                                      @NotNull Function<IWorkItem, IWorkItem> referredWorkItemResolver) {
+        IWorkItem sourceReferredWorkItem = source.getReferredWorkItem();
+        IWorkItem targetReferredWorkItem = sourceReferredWorkItem == null ? null : referredWorkItemResolver.apply(sourceReferredWorkItem);
+        if (targetReferredWorkItem != null) {
+            target.setReferredWorkItem(targetReferredWorkItem);
+        }
     }
 
     @VisibleForTesting
     <T extends ICommentBase<T>> @NotNull Map<String, String> copyThreads(@Nullable List<T> sourceRootComments,
                                                                         @NotNull Function<Text, T> rootCommentFactory,
-                                                                        @Nullable IUser fallbackAuthor) {
+                                                                        @Nullable IUser fallbackAuthor,
+                                                                        @NotNull BiConsumer<T, T> rootCommentCustomizer) {
         Map<String, String> idMapping = new LinkedHashMap<>();
         if (sourceRootComments == null || sourceRootComments.isEmpty()) {
             return idMapping;
@@ -79,6 +106,7 @@ public class CommentsCopier {
         for (T sourceRootComment : sourceRootComments) {
             T newRootComment = rootCommentFactory.apply(sourceRootComment.getText());
             copyMetadata(sourceRootComment, newRootComment, fallbackAuthor);
+            rootCommentCustomizer.accept(sourceRootComment, newRootComment);
             newRootComment.save();
             idMapping.put(sourceRootComment.getId(), newRootComment.getId());
             copyChildComments(sourceRootComment, newRootComment, idMapping, fallbackAuthor);

@@ -15,6 +15,7 @@ import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
 import com.polarion.alm.tracker.model.IModule;
+import com.polarion.alm.tracker.model.IModuleComment;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.alm.tracker.model.IWorkflowObject;
@@ -26,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -567,10 +569,16 @@ public class DocumentsChapterMergeService {
      * This is the only thing a chapter merge writes into the page itself. Work items are put into the document
      * through Polarion's API ({@link MergeService#insertNode}), which maintains the page - including the level of
      * a merged chapter, which the API derives from the chapter it is attached to.
+     * <p>
+     * A work item which did not make it into the target document takes its text and the comments on that text with
+     * it: there is no anchor to place them at, and a comment would be left behind without its text.
      */
     @VisibleForTesting
     void copyFreeContent(@NotNull DocumentsChapterMergeContext context, @NotNull List<SourceNode> subtree) {
-        List<String> sourceWorkItemIds = subtree.stream().map(sourceNode -> sourceNode.workItem().getId()).toList();
+        List<String> sourceWorkItemIds = subtree.stream()
+                .map(sourceNode -> sourceNode.workItem().getId())
+                .filter(context.getIdMapping()::containsKey)
+                .toList();
         boolean contentCopied = documentsContentHandler.copyFreeContent(context.getSourceHomePageContentSnapshot(), context.getTargetModule(),
                 sourceWorkItemIds, context.getIdMapping(), copyDocumentComments(context, sourceWorkItemIds));
         if (contentCopied) {
@@ -579,19 +587,27 @@ public class DocumentsChapterMergeService {
     }
 
     /**
-     * Gives the target document the comments which were written on the text the merge copies into it.
+     * Gives the target document the comments which were written on the text the merge copies into it, and the
+     * comments which refer to a merged work item. A copied comment refers to the work item which represents the source
+     * one in the target document: its copy, or the same work item when that is only referenced there.
      *
+     * @param sourceWorkItemIds IDs of the work items which made it into the target document
      * @return ID of a source comment mapped to the ID of its copy
      */
     @VisibleForTesting
     @NotNull
     Map<String, String> copyDocumentComments(@NotNull DocumentsChapterMergeContext context, @NotNull List<String> sourceWorkItemIds) {
         Set<String> commentIds = documentsContentHandler.freeContentCommentIds(context.getSourceHomePageContentSnapshot(), sourceWorkItemIds);
-        if (commentIds.isEmpty()) {
-            return Map.of();
-        }
+        Set<String> mergedWorkItemIds = new HashSet<>(sourceWorkItemIds);
         return commentsCopier.copyComments(context.getSourceModule(), context.getTargetModule(),
-                comment -> commentIds.contains(comment.getId()), context.getTargetModule().getAuthor());
+                comment -> commentIds.contains(comment.getId()) || refersToOneOf(comment, mergedWorkItemIds),
+                context.getTargetModule().getAuthor(),
+                referredWorkItem -> context.getItemMapping().get(referredWorkItem.getId()));
+    }
+
+    private boolean refersToOneOf(@NotNull IModuleComment comment, @NotNull Set<String> workItemIds) {
+        IWorkItem referredWorkItem = comment.getReferredWorkItem();
+        return referredWorkItem != null && workItemIds.contains(referredWorkItem.getId());
     }
 
     /**
