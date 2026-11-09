@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 /**
  * Copies comment threads onto a copy of the object they were written on - a work item or a document.
@@ -70,7 +71,7 @@ public class CommentsCopier {
      */
     public @NotNull Map<String, String> copyComments(@NotNull IModule sourceModule, @NotNull IModule targetModule,
                                                      @NotNull Predicate<IModuleComment> commentsToCopy, @Nullable IUser fallbackAuthor,
-                                                     @NotNull Function<IWorkItem, IWorkItem> referredWorkItemResolver) {
+                                                     @NotNull UnaryOperator<IWorkItem> referredWorkItemResolver) {
         // Iterated rather than streamed: this is a Polarion object list, and its own iterator is what reads it
         List<IModuleComment> rootComments = new ArrayList<>();
         IPObjectList<IModuleComment> sourceRootComments = sourceModule.getRootComments(true);
@@ -86,7 +87,7 @@ public class CommentsCopier {
     }
 
     private void copyReferredWorkItem(@NotNull IModuleComment source, @NotNull IModuleComment target,
-                                      @NotNull Function<IWorkItem, IWorkItem> referredWorkItemResolver) {
+                                      @NotNull UnaryOperator<IWorkItem> referredWorkItemResolver) {
         IWorkItem sourceReferredWorkItem = source.getReferredWorkItem();
         IWorkItem targetReferredWorkItem = sourceReferredWorkItem == null ? null : referredWorkItemResolver.apply(sourceReferredWorkItem);
         if (targetReferredWorkItem != null) {

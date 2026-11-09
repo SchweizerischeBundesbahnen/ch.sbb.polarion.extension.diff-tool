@@ -158,7 +158,8 @@ class CommentsCopierTest {
         IModule sourceModule = mock(IModule.class);
         IModule targetModule = mock(IModule.class);
         IModuleComment sourceComment = comment(IModuleComment.class, "5", "About this work item");
-        when(sourceComment.getReferredWorkItem()).thenReturn(mock(IWorkItem.class));
+        IWorkItem referredWorkItem = mock(IWorkItem.class);
+        when(sourceComment.getReferredWorkItem()).thenReturn(referredWorkItem);
         when(sourceModule.getRootComments(true)).thenReturn(new PObjectListStub(List.of(sourceComment)));
         IModuleComment createdComment = comment(IModuleComment.class, "17", "About this work item");
         when(targetModule.createComment(sourceComment.getText())).thenReturn(createdComment);
@@ -174,7 +175,8 @@ class CommentsCopierTest {
         IModule sourceModule = mock(IModule.class);
         IModule targetModule = mock(IModule.class);
         IModuleComment sourceComment = comment(IModuleComment.class, "5", "About this work item");
-        when(sourceComment.getReferredWorkItem()).thenReturn(mock(IWorkItem.class));
+        IWorkItem referredWorkItem = mock(IWorkItem.class);
+        when(sourceComment.getReferredWorkItem()).thenReturn(referredWorkItem);
         when(sourceModule.getRootComments(true)).thenReturn(new PObjectListStub(List.of(sourceComment)));
         IModuleComment createdComment = comment(IModuleComment.class, "17", "About this work item");
         when(targetModule.createComment(sourceComment.getText())).thenReturn(createdComment);

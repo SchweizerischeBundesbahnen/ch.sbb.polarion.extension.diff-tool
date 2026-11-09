@@ -35,8 +35,8 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -766,7 +766,9 @@ class DocumentsChapterMergeServiceTest {
         when(documentsContentHandler.freeContentCommentIds("<p>text</p>", List.of("SOURCE-1"))).thenReturn(Set.of("5"));
         when(commentsCopier.copyComments(eq(sourceModule), eq(targetModule), any(), any(), any())).thenReturn(Map.of("5", "17"));
 
-        assertEquals(Map.of("5", "17"), documentsChapterMergeService.copyDocumentComments(context, List.of("SOURCE-1")));
+        List<IWorkItem> mergedSourceWorkItems = List.of(workItem("SOURCE-1", "requirement"));
+
+        assertEquals(Map.of("5", "17"), documentsChapterMergeService.copyDocumentComments(context, mergedSourceWorkItems));
     }
 
     @Test
@@ -781,15 +783,34 @@ class DocumentsChapterMergeServiceTest {
     }
 
     @Test
+    void testADocumentCommentOnAnotherProjectsWorkItemWithTheSameIdIsNotCopied() {
+        when(documentsContentHandler.freeContentCommentIds(anyString(), any())).thenReturn(Set.of());
+        IWorkItem copy = workItem("TARGET-100", "requirement");
+        DocumentsChapterMergeContext context = documentCommentsContext(Map.of("SOURCE-1", copy));
+        IWorkItem merged = workItem("source", "SOURCE-1", "requirement");
+        IWorkItem otherProjects = workItem("other", "SOURCE-1", "requirement");
+
+        documentsChapterMergeService.copyDocumentComments(context, List.of(merged));
+
+        ArgumentCaptor<Predicate<IModuleComment>> commentsToCopy = ArgumentCaptor.captor();
+        ArgumentCaptor<UnaryOperator<IWorkItem>> resolver = ArgumentCaptor.captor();
+        verify(commentsCopier).copyComments(eq(sourceModule), eq(targetModule), commentsToCopy.capture(), any(), resolver.capture());
+        assertTrue(commentsToCopy.getValue().test(documentComment("9", workItem("source", "SOURCE-1", "requirement"))));
+        assertFalse(commentsToCopy.getValue().test(documentComment("9", otherProjects)));
+        assertEquals(copy, resolver.getValue().apply(workItem("source", "SOURCE-1", "requirement")));
+        assertNull(resolver.getValue().apply(otherProjects));
+    }
+
+    @Test
     void testACopiedDocumentCommentRefersToTheWorkItemWhichRepresentsItsOwnInTheTargetDocument() {
         IWorkItem copy = workItem("TARGET-100", "requirement");
         IWorkItem referenced = workItem("REFERENCED-1", "requirement");
         DocumentsChapterMergeContext context = documentCommentsContext(Map.of("SOURCE-1", copy, "REFERENCED-1", referenced));
         when(documentsContentHandler.freeContentCommentIds(anyString(), any())).thenReturn(Set.of());
 
-        documentsChapterMergeService.copyDocumentComments(context, List.of("SOURCE-1", "REFERENCED-1"));
+        documentsChapterMergeService.copyDocumentComments(context, List.of(workItem("SOURCE-1", "requirement"), referenced));
 
-        ArgumentCaptor<Function<IWorkItem, IWorkItem>> resolver = ArgumentCaptor.captor();
+        ArgumentCaptor<UnaryOperator<IWorkItem>> resolver = ArgumentCaptor.captor();
         verify(commentsCopier).copyComments(eq(sourceModule), eq(targetModule), any(), any(), resolver.capture());
         assertEquals(copy, resolver.getValue().apply(workItem("SOURCE-1", "requirement")));
         assertEquals(referenced, resolver.getValue().apply(referenced));
@@ -927,7 +948,7 @@ class DocumentsChapterMergeServiceTest {
     }
 
     private Predicate<IModuleComment> commentsToCopy(DocumentsChapterMergeContext context) {
-        documentsChapterMergeService.copyDocumentComments(context, List.of("SOURCE-1"));
+        documentsChapterMergeService.copyDocumentComments(context, List.of(workItem("SOURCE-1", "requirement")));
         ArgumentCaptor<Predicate<IModuleComment>> commentsToCopy = ArgumentCaptor.captor();
         verify(commentsCopier).copyComments(eq(sourceModule), eq(targetModule), commentsToCopy.capture(), any(), any());
         return commentsToCopy.getValue();
@@ -992,6 +1013,12 @@ class DocumentsChapterMergeServiceTest {
         IModule.IStructureNode createdNode = node(created, false);
         when(targetModule.getStructureNodeOfWI(created)).thenReturn(createdNode);
         return created;
+    }
+
+    private IWorkItem workItem(String projectId, String id, String typeId) {
+        IWorkItem workItem = workItem(id, typeId);
+        when(workItem.getProjectId()).thenReturn(projectId);
+        return workItem;
     }
 
     private IWorkItem workItem(String id, String typeId) {

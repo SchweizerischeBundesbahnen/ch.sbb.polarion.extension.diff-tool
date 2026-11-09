@@ -575,12 +575,13 @@ public class DocumentsChapterMergeService {
      */
     @VisibleForTesting
     void copyFreeContent(@NotNull DocumentsChapterMergeContext context, @NotNull List<SourceNode> subtree) {
-        List<String> sourceWorkItemIds = subtree.stream()
-                .map(sourceNode -> sourceNode.workItem().getId())
-                .filter(context.getIdMapping()::containsKey)
+        List<IWorkItem> mergedSourceWorkItems = subtree.stream()
+                .map(SourceNode::workItem)
+                .filter(workItem -> context.getIdMapping().containsKey(workItem.getId()))
                 .toList();
+        List<String> sourceWorkItemIds = mergedSourceWorkItems.stream().map(IWorkItem::getId).toList();
         boolean contentCopied = documentsContentHandler.copyFreeContent(context.getSourceHomePageContentSnapshot(), context.getTargetModule(),
-                sourceWorkItemIds, context.getIdMapping(), copyDocumentComments(context, sourceWorkItemIds));
+                sourceWorkItemIds, context.getIdMapping(), copyDocumentComments(context, mergedSourceWorkItems));
         if (contentCopied) {
             mergeService.copyModuleAttachments(context.getSourceModule(), context.getTargetModule(), context.getTargetModule().getHomePageContent().getContent());
         }
@@ -591,23 +592,40 @@ public class DocumentsChapterMergeService {
      * comments which refer to a merged work item. A copied comment refers to the work item which represents the source
      * one in the target document: its copy, or the same work item when that is only referenced there.
      *
-     * @param sourceWorkItemIds IDs of the work items which made it into the target document
+     * <p>
+     * A work item is matched by its project and its ID: a referenced work item of another project can have the
+     * same ID as a merged one.
+     *
+     * @param mergedSourceWorkItems the source work items which made it into the target document
      * @return ID of a source comment mapped to the ID of its copy
      */
     @VisibleForTesting
     @NotNull
-    Map<String, String> copyDocumentComments(@NotNull DocumentsChapterMergeContext context, @NotNull List<String> sourceWorkItemIds) {
+    Map<String, String> copyDocumentComments(@NotNull DocumentsChapterMergeContext context, @NotNull List<IWorkItem> mergedSourceWorkItems) {
+        List<String> sourceWorkItemIds = mergedSourceWorkItems.stream().map(IWorkItem::getId).toList();
         Set<String> commentIds = documentsContentHandler.freeContentCommentIds(context.getSourceHomePageContentSnapshot(), sourceWorkItemIds);
-        Set<String> mergedWorkItemIds = new HashSet<>(sourceWorkItemIds);
+        Set<WorkItemKey> mergedWorkItems = new HashSet<>();
+        mergedSourceWorkItems.forEach(workItem -> mergedWorkItems.add(WorkItemKey.of(workItem)));
         return commentsCopier.copyComments(context.getSourceModule(), context.getTargetModule(),
-                comment -> commentIds.contains(comment.getId()) || refersToOneOf(comment, mergedWorkItemIds),
+                comment -> commentIds.contains(comment.getId()) || refersToOneOf(comment, mergedWorkItems),
                 context.getTargetModule().getAuthor(),
-                referredWorkItem -> context.getItemMapping().get(referredWorkItem.getId()));
+                referredWorkItem -> mergedWorkItems.contains(WorkItemKey.of(referredWorkItem))
+                        ? context.getItemMapping().get(referredWorkItem.getId())
+                        : null);
     }
 
-    private boolean refersToOneOf(@NotNull IModuleComment comment, @NotNull Set<String> workItemIds) {
+    private boolean refersToOneOf(@NotNull IModuleComment comment, @NotNull Set<WorkItemKey> workItems) {
         IWorkItem referredWorkItem = comment.getReferredWorkItem();
-        return referredWorkItem != null && workItemIds.contains(referredWorkItem.getId());
+        return referredWorkItem != null && workItems.contains(WorkItemKey.of(referredWorkItem));
+    }
+
+    /**
+     * Identifies a work item across projects: a work item ID is unique only within its project.
+     */
+    private record WorkItemKey(@Nullable String projectId, @Nullable String id) {
+        static @NotNull WorkItemKey of(@NotNull IWorkItem workItem) {
+            return new WorkItemKey(workItem.getProjectId(), workItem.getId());
+        }
     }
 
     /**
