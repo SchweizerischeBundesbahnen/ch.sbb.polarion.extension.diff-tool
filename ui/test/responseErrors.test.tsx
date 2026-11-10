@@ -131,8 +131,10 @@ describe('a component handling a failed request', () => {
 describe('useDiffService on a failed request', () => {
   // The viewer reports the failure through loadingContext and attaches no .catch of its own, so the
   // returned promise must not leak its rejection either.
+  // One request per test, so it is always the latest loading
   const loadingContextStub = () => ({
-    pairsLoadingStarted: vi.fn(),
+    pairsLoadingStarted: vi.fn(() => 1),
+    isLatestLoading: (loadingId: number) => loadingId === 1,
     pairsLoadingFinished: vi.fn(),
     pairsLoadingFinishedWithError: vi.fn(),
   });
