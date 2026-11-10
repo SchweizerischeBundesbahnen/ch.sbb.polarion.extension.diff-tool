@@ -1,0 +1,29 @@
+{
+  "leftDocument": {
+    "projectId": "elibrary",
+    "projectName": "E-Library",
+    "spaceId": "Specification",
+    "locationPath": "Specification/Catalog Specification",
+    "id": "Catalog Specification",
+    "title": "Catalog Specification",
+    "revision": null,
+    "moduleXmlRevision": "6455",
+    "headRevision": "6457",
+    "authorizedForMerge": true,
+    "spaceName": "Specification"
+  },
+  "rightDocument": {
+    "projectId": "drivepilot",
+    "projectName": "Drive Pilot",
+    "spaceId": "Design",
+    "locationPath": "Design/Catalog Design",
+    "id": "Catalog Design",
+    "title": "Catalog Design",
+    "revision": null,
+    "moduleXmlRevision": "6454",
+    "headRevision": "6457",
+    "authorizedForMerge": true,
+    "spaceName": "Design"
+  },
+  "pairedWorkItems": []
+}

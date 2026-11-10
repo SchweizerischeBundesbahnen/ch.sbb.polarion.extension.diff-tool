@@ -2,6 +2,13 @@ import useRemote from "@/services/useRemote";
 import {responseError} from "@/services/responseError";
 import {CONTENT_ABOVE, CONTENT_BELOW} from "@/components/documents/ContentAnchorsDiff";
 
+// Reports the end of a loading only if no later loading superseded it. The caller still gets the response.
+const ifLatestLoading = (loadingContext, loadingId, report) => {
+  if (loadingContext.isLatestLoading(loadingId)) {
+    report();
+  }
+};
+
 export default function useDiffService() {
   const remote = useRemote();
 
@@ -9,7 +16,7 @@ export default function useDiffService() {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
 
-    loadingContext.pairsLoadingStarted(true); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
+    const loadingId = loadingContext.pairsLoadingStarted(); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
 
     return new Promise((resolve, reject) => {
       remote.sendRequest({
@@ -30,11 +37,11 @@ export default function useDiffService() {
             return handleResponse(response);
           })
           .then(data =>  {
-            loadingContext.pairsLoadingFinished(getFilteredPairs(data.pairedWorkItems.slice(), searchParams));
+            ifLatestLoading(loadingContext, loadingId, () => loadingContext.pairsLoadingFinished(getFilteredPairs(data.pairedWorkItems.slice(), searchParams)));
             resolve(data);
           })
           .catch(error => {
-            loadingContext.pairsLoadingFinishedWithError(error && error.message);
+            ifLatestLoading(loadingContext, loadingId, () => loadingContext.pairsLoadingFinishedWithError(error && error.message));
             reject(error);
           });
     });
@@ -44,7 +51,7 @@ export default function useDiffService() {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
 
-    loadingContext.fieldsDiffLoadingStarted(true); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
+    const loadingId = loadingContext.fieldsDiffLoadingStarted(); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
 
     return new Promise((resolve, reject) => {
       remote.sendRequest({
@@ -62,11 +69,11 @@ export default function useDiffService() {
             return handleResponse(response);
           })
           .then(data =>  {
-            loadingContext.fieldsDiffLoadingFinished();
+            ifLatestLoading(loadingContext, loadingId, () => loadingContext.fieldsDiffLoadingFinished());
             resolve(data);
           })
           .catch(error => {
-            loadingContext.fieldsDiffLoadingFinishedWithError(error && error.message);
+            ifLatestLoading(loadingContext, loadingId, () => loadingContext.fieldsDiffLoadingFinishedWithError(error && error.message));
             reject(error);
           });
     });
@@ -76,7 +83,7 @@ export default function useDiffService() {
     const leftDocument = getDocumentFromSearchParams(searchParams, 'source');
     const rightDocument = getDocumentFromSearchParams(searchParams, 'target');
 
-    loadingContext.pairsLoadingStarted(true); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
+    const loadingId = loadingContext.pairsLoadingStarted(); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
 
     return new Promise((resolve, reject) => {
       remote.sendRequest({
@@ -96,11 +103,11 @@ export default function useDiffService() {
             return handleResponse(response);
           })
           .then(data =>  {
-            loadingContext.contentDiffLoadingFinished();
+            ifLatestLoading(loadingContext, loadingId, () => loadingContext.contentDiffLoadingFinished());
             resolve(data);
           })
           .catch(error => {
-            loadingContext.contentDiffLoadingFinishedWithError(error && error.message);
+            ifLatestLoading(loadingContext, loadingId, () => loadingContext.contentDiffLoadingFinishedWithError(error && error.message));
             reject(error);
           });
     });
@@ -141,7 +148,7 @@ export default function useDiffService() {
   };
 
   const sendFindWorkItemsPairsRequest = (searchParams, loadingContext) => {
-    loadingContext.pairsLoadingStarted(true); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
+    const loadingId = loadingContext.pairsLoadingStarted(); // In spite the fact that initial state is "loading", user can re-initiate loading by changing search parameters
 
     return new Promise((resolve, reject) => {
       remote.sendRequest({
@@ -159,11 +166,11 @@ export default function useDiffService() {
             return handleResponse(response);
           })
           .then(data =>  {
-            loadingContext.pairsLoadingFinished(data.pairedWorkItems.slice());
+            ifLatestLoading(loadingContext, loadingId, () => loadingContext.pairsLoadingFinished(data.pairedWorkItems.slice()));
             resolve(data);
           })
           .catch(error => {
-            loadingContext.pairsLoadingFinishedWithError(error && error.message);
+            ifLatestLoading(loadingContext, loadingId, () => loadingContext.pairsLoadingFinishedWithError(error && error.message));
             reject(error);
           });
     });
