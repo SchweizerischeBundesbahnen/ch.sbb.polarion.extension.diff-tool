@@ -163,38 +163,65 @@ test.describe("page of diffing documents' WorkItems", () => {
     expect(await alertMessage).toContain('Error occurred converting diff data to PDF');
   });
 
-  test('export to PDF is disabled while diff is in progress', async ({ page, mockApi }) => {
-    await expect(page.locator(".progress span")).toHaveText("Data loaded successfully", { timeout: 10_000 });
+  test.describe('export to PDF while diff is in progress', () => {
 
-    const expandButton = page.locator('.control-pane .expand-button');
-    await expandButton.click();
-    expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
+    // Expands the control pane of a finished diff and checks that Export is enabled
+    const expandFinishedDiff = async (page) => {
+      await expect(page.locator(".progress span")).toHaveText("Data loaded successfully", { timeout: 10_000 });
+      await page.locator('.control-pane .expand-button').click();
+      await expect(page.locator('.control-pane.expanded')).toHaveCount(1);
+      await expect(page.getByTestId("export-button")).toBeEnabled();
+    };
 
-    const exportButton = page.getByTestId("export-button");
-    await expect(exportButton).toBeEnabled();
-
-    // Hold back the fields diff response, so the new diff stays in progress until it is released.
+    // Holds back the responses of an already mocked endpoint until the returned function is called.
     // Routes registered later take precedence, so the held route runs first and then falls back to the mock.
-    await mockApi.mockEndpoint({ url: '**/diff/documents-fields', fixtureFile: 'documents-fields.json' });
-    let releaseFieldsDiff;
-    const fieldsDiffReleased = new Promise(resolve => {
-      releaseFieldsDiff = resolve;
+    const holdResponses = async (page, url) => {
+      let release;
+      const released = new Promise(resolve => {
+        release = resolve;
+      });
+      await page.route(url, async route => {
+        await released;
+        await route.fallback();
+      });
+      return release;
+    };
+
+    test('new diff of another kind', async ({ page, mockApi }) => {
+      await expandFinishedDiff(page);
+
+      await mockApi.mockEndpoint({ url: '**/diff/documents-fields', fixtureFile: 'documents-fields.json' });
+      const releaseFieldsDiff = await holdResponses(page, '**/diff/documents-fields');
+
+      const fieldsDiffRequestPromise = page.waitForRequest(request => request.url().includes('/diff/documents-fields'));
+      await pickOption(page, "target-type", "Fields");
+      await fieldsDiffRequestPromise;
+
+      // The pane stays expanded when a new diff starts, so the button must refuse an export of a partial diff
+      await expect(page.locator('.control-pane.expanded')).toHaveCount(1);
+      await expect(page.getByTestId("export-button")).toBeDisabled();
+
+      releaseFieldsDiff();
+      await expect(page.getByTestId("export-button")).toBeEnabled();
     });
-    await page.route('**/diff/documents-fields', async route => {
-      await fieldsDiffReleased;
-      await route.fallback();
+
+    test('reload with another configuration', async ({ page }) => {
+      await expandFinishedDiff(page);
+
+      const releaseDocumentsDiff = await holdResponses(page, '**/diff/documents');
+
+      const documentsDiffRequestPromise = page.waitForRequest(request => request.url().includes('/diff/documents') && request.method() === "POST");
+      await pickOption(page, "configuration", "E-Library");
+      await documentsDiffRequestPromise;
+
+      // The pairs of the new configuration are not loaded yet, so the page shows no comparison to export
+      await expect(page.locator('.control-pane.expanded')).toHaveCount(1);
+      await expect(page.getByTestId("export-button")).toBeDisabled();
+
+      releaseDocumentsDiff();
+      await expect(page.locator(".progress span")).toHaveText("Data loaded successfully", { timeout: 10_000 });
+      await expect(page.getByTestId("export-button")).toBeEnabled();
     });
-
-    const fieldsDiffRequestPromise = page.waitForRequest(request => request.url().includes('/diff/documents-fields'));
-    await pickOption(page, "target-type", "Fields");
-    await fieldsDiffRequestPromise;
-
-    // The pane stays expanded when a new diff starts, so the button must refuse an export of a partial diff
-    await expect(page.locator('.control-pane.expanded')).toHaveCount(1);
-    await expect(exportButton).toBeDisabled();
-
-    releaseFieldsDiff();
-    await expect(exportButton).toBeEnabled();
   });
 
   test('expand/collapse', async ({ page }) => {

@@ -67,6 +67,7 @@ export default function useLoadingContext() {
   const pairsLoadingStarted = () => {
     setPairsLoading(true);
     appContext.state.setDiffsExist(false);
+    appContext.state.setDataLoaded(false);
   };
 
   const pairsLoadingFinished = (pairs) => {
