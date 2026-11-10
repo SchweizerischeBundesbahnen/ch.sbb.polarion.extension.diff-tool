@@ -1,4 +1,4 @@
-import {useContext, useEffect, useState} from "react";
+import {useContext, useEffect, useRef, useState} from "react";
 import AppContext from "@/components/AppContext";
 import useRemote from "@/services/useRemote";
 
@@ -28,6 +28,11 @@ export default function useLoadingContext() {
 
   const [reloadMarker, setReloadMarker] = useState(0);
 
+  // Each *LoadingStarted() returns a new loading ID. Only the latest loading may report its end,
+  // so a superseded request cannot mark the comparison as loaded while the current one is pending.
+  const latestLoadingIdRef = useRef(0);
+  const isLatestLoading = (loadingId) => loadingId === latestLoadingIdRef.current;
+
   useEffect(() => {
     remote
         .sendRequest({
@@ -53,12 +58,24 @@ export default function useLoadingContext() {
     }
   }, [chunkSize, pairs]);
 
-  useEffect(() => {
+  const diffsProgress = () => {
+    // While pairs load, the counters still describe the previous pairs, so they say nothing yet
+    if (pairsLoading || pairsLoadingError) {
+      return 0;
+    }
+    // A successful pairs request without pairs has no diffs to load, so it is complete
+    if (pairsCount === 0) {
+      return 100;
+    }
     // In case of loading errors we stop further data portions loading that's why consider process as finished (100%)
-    const progress = pairsCount > 0 ? (diffsLoadingErrors ? 100 : Math.min(100, Math.floor((loadedDiffs * 100) / pairsCount))) : 0;
+    return diffsLoadingErrors ? 100 : Math.min(100, Math.floor((loadedDiffs * 100) / pairsCount));
+  };
+  const progress = diffsProgress();
+
+  useEffect(() => {
     setDiffsLoadingProgress(progress);
     appContext.state.setDataLoaded(!diffsLoadingErrors && progress === 100);
-  }, [pairsCount, loadedDiffs, diffsLoadingErrors]);
+  }, [progress, diffsLoadingErrors]);
 
   const pairLoadingAllowed = (pairIndex) => {
     return !diffsLoadingErrors && loadingRegistry.get(pairIndex) === READY; // Release data loading if the pair is marked as ready for diffing, but not in case if loading errors happen for other pairs
@@ -67,6 +84,8 @@ export default function useLoadingContext() {
   const pairsLoadingStarted = () => {
     setPairsLoading(true);
     appContext.state.setDiffsExist(false);
+    appContext.state.setDataLoaded(false);
+    return ++latestLoadingIdRef.current;
   };
 
   const pairsLoadingFinished = (pairs) => {
@@ -109,6 +128,7 @@ export default function useLoadingContext() {
     setDiffsLoadingProgress(0);
     appContext.state.setDiffsExist(false);
     appContext.state.setDataLoaded(false);
+    return ++latestLoadingIdRef.current;
   };
 
   const fieldsDiffLoadingFinished = () => {
@@ -127,6 +147,7 @@ export default function useLoadingContext() {
     setDiffsLoadingProgress(0);
     appContext.state.setDiffsExist(false);
     appContext.state.setDataLoaded(false);
+    return ++latestLoadingIdRef.current;
   };
 
   const contentDiffLoadingFinished = () => {
@@ -165,6 +186,7 @@ export default function useLoadingContext() {
     diffsLoadingProgress,
     diffsLoadingErrors,
     reloadMarker,
+    isLatestLoading,
     pairLoadingAllowed,
     pairsLoadingStarted,
     pairsLoadingFinished,

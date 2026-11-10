@@ -163,6 +163,96 @@ test.describe("page of diffing documents' WorkItems", () => {
     expect(await alertMessage).toContain('Error occurred converting diff data to PDF');
   });
 
+  test.describe('export to PDF while diff is in progress', () => {
+
+    // Expands the control pane of a finished diff and checks that Export is enabled
+    const expandFinishedDiff = async (page) => {
+      await expect(page.locator(".progress span")).toHaveText("Data loaded successfully", { timeout: 10_000 });
+      await page.locator('.control-pane .expand-button').click();
+      await expect(page.locator('.control-pane.expanded')).toHaveCount(1);
+      await expect(page.getByTestId("export-button")).toBeEnabled();
+    };
+
+    // Holds back each response of an already mocked endpoint until it is released by its index.
+    // Routes registered later take precedence, so the held route runs first and then falls back to the mock.
+    const holdEachResponse = async (page, url) => {
+      const releases = [];
+      await page.route(url, async route => {
+        await new Promise(resolve => releases.push(resolve));
+        await route.fallback();
+      });
+      return {
+        held: async (count) => expect.poll(() => releases.length).toBe(count),
+        release: (index) => releases[index](),
+      };
+    };
+
+    test('new diff of another kind', async ({ page, mockApi }) => {
+      await expandFinishedDiff(page);
+
+      await mockApi.mockEndpoint({ url: '**/diff/documents-fields', fixtureFile: 'documents-fields.json' });
+      const fieldsDiff = await holdEachResponse(page, '**/diff/documents-fields');
+
+      await pickOption(page, "target-type", "Fields");
+      await fieldsDiff.held(1);
+
+      // The pane stays expanded when a new diff starts, so the button must refuse an export of a partial diff
+      await expect(page.locator('.control-pane.expanded')).toHaveCount(1);
+      await expect(page.getByTestId("export-button")).toBeDisabled();
+
+      fieldsDiff.release(0);
+      await expect(page.getByTestId("export-button")).toBeEnabled();
+    });
+
+    test('superseded diff of fields', async ({ page, mockApi }) => {
+      await expandFinishedDiff(page);
+
+      await mockApi.mockEndpoint({ url: '**/diff/documents-fields', fixtureFile: 'documents-fields.json' });
+      await pickOption(page, "target-type", "Fields");
+      await expect(page.getByTestId("export-button")).toBeEnabled();
+
+      // Two overlapping requests: the second one supersedes the first one before it returns
+      const fieldsDiff = await holdEachResponse(page, '**/diff/documents-fields');
+      await page.locator('#compare-enums-by-id').click();
+      await fieldsDiff.held(1);
+      await page.locator('#compare-only-mutual-fields').click();
+      await fieldsDiff.held(2);
+
+      const supersededResponse = page.waitForResponse(response => response.url().includes('/diff/documents-fields'));
+      fieldsDiff.release(0);
+      await supersededResponse;
+      await expect(page.getByTestId("export-button")).toBeDisabled();
+
+      fieldsDiff.release(1);
+      await expect(page.getByTestId("export-button")).toBeEnabled();
+    });
+
+    test('reload with another configuration', async ({ page }) => {
+      await expandFinishedDiff(page);
+
+      const documentsDiff = await holdEachResponse(page, '**/diff/documents');
+
+      await pickOption(page, "configuration", "E-Library");
+      await documentsDiff.held(1);
+
+      // The pairs of the new configuration are not loaded yet, so the page shows no comparison to export
+      await expect(page.locator('.control-pane.expanded')).toHaveCount(1);
+      await expect(page.getByTestId("export-button")).toBeDisabled();
+
+      documentsDiff.release(0);
+      await expect(page.locator(".progress span")).toHaveText("Data loaded successfully", { timeout: 10_000 });
+      await expect(page.getByTestId("export-button")).toBeEnabled();
+    });
+
+    test('comparison without pairs is complete', async ({ page, mockApi }) => {
+      // Routes registered later take precedence over the documents diff mocked in beforeEach
+      await mockApi.mockEndpoint({ url: '**/diff/documents', fixtureFile: 'documents-diff-empty.json' });
+      await page.reload();
+
+      await expandFinishedDiff(page);
+    });
+  });
+
   test('expand/collapse', async ({ page }) => {
     await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 

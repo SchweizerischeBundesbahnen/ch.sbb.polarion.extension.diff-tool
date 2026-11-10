@@ -47,7 +47,9 @@ function capturingLoadingContext() {
   return {
     rendered: rendered,
     context: {
-      pairsLoadingStarted: () => {},
+      // One request per test, so it is always the latest loading
+      pairsLoadingStarted: () => 1,
+      isLatestLoading: (loadingId: number) => loadingId === 1,
       pairsLoadingFinished: (pairs: Pair[]) => rendered.push(pairs),
       pairsLoadingFinishedWithError: () => {},
     },
