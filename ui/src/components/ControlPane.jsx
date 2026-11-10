@@ -335,7 +335,7 @@ export default function ControlPane({diff_type}) {
                                 options={[{id: "landscape", name: "Landscape"}, {id: "portrait", name: "Portrait"}]} />
             </div>
             <div className="text-end">
-              <button className="btn btn-secondary btn-sm form-button" onClick={exportToPDF} disabled={exportInProgress} data-testid="export-button">
+              <button className="btn btn-secondary btn-sm form-button" onClick={exportToPDF} disabled={exportInProgress || !context.state.dataLoaded} data-testid="export-button">
                 Export {exportInProgress && <span className="loader" style={{display: "inline-block", width: "16px", verticalAlign: "text-top", marginLeft: "5px"}}></span>}
               </button>
             </div>

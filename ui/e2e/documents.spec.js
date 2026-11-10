@@ -163,6 +163,40 @@ test.describe("page of diffing documents' WorkItems", () => {
     expect(await alertMessage).toContain('Error occurred converting diff data to PDF');
   });
 
+  test('export to PDF is disabled while diff is in progress', async ({ page, mockApi }) => {
+    await expect(page.locator(".progress span")).toHaveText("Data loaded successfully", { timeout: 10_000 });
+
+    const expandButton = page.locator('.control-pane .expand-button');
+    await expandButton.click();
+    expect(await page.locator('.control-pane.expanded').count()).toEqual(1);
+
+    const exportButton = page.getByTestId("export-button");
+    await expect(exportButton).toBeEnabled();
+
+    // Hold back the fields diff response, so the new diff stays in progress until it is released.
+    // Routes registered later take precedence, so the held route runs first and then falls back to the mock.
+    await mockApi.mockEndpoint({ url: '**/diff/documents-fields', fixtureFile: 'documents-fields.json' });
+    let releaseFieldsDiff;
+    const fieldsDiffReleased = new Promise(resolve => {
+      releaseFieldsDiff = resolve;
+    });
+    await page.route('**/diff/documents-fields', async route => {
+      await fieldsDiffReleased;
+      await route.fallback();
+    });
+
+    const fieldsDiffRequestPromise = page.waitForRequest(request => request.url().includes('/diff/documents-fields'));
+    await pickOption(page, "target-type", "Fields");
+    await fieldsDiffRequestPromise;
+
+    // The pane stays expanded when a new diff starts, so the button must refuse an export of a partial diff
+    await expect(page.locator('.control-pane.expanded')).toHaveCount(1);
+    await expect(exportButton).toBeDisabled();
+
+    releaseFieldsDiff();
+    await expect(exportButton).toBeEnabled();
+  });
+
   test('expand/collapse', async ({ page }) => {
     await page.waitForSelector('.header .merge-pane', { state: 'visible' }); // Wait until merge pane is visible before next steps
 
