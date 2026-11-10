@@ -129,6 +129,64 @@ class CommentsCopierTest {
     }
 
     @Test
+    void testACopiedDocumentCommentRefersToTheCounterpartOfItsWorkItem() {
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+        IWorkItem referredWorkItem = mock(IWorkItem.class);
+        IWorkItem counterpart = mock(IWorkItem.class);
+        IModuleComment sourceRoot = comment(IModuleComment.class, "5", "About this work item");
+        IModuleComment sourceReply = comment(IModuleComment.class, "6", "Checked");
+        when(sourceRoot.getReferredWorkItem()).thenReturn(referredWorkItem);
+        when(sourceRoot.getChildComments()).thenReturn(new PObjectListStub(List.of(sourceReply)));
+        when(sourceModule.getRootComments(true)).thenReturn(new PObjectListStub(List.of(sourceRoot)));
+        IModuleComment createdRoot = comment(IModuleComment.class, "17", "About this work item");
+        IModuleComment createdReply = comment(IModuleComment.class, "18", "Checked");
+        when(targetModule.createComment(sourceRoot.getText())).thenReturn(createdRoot);
+        when(createdRoot.createChildComment(sourceReply.getText())).thenReturn(createdReply);
+
+        commentsCopier.copyComments(sourceModule, targetModule, comment -> true, null, workItem -> workItem == referredWorkItem ? counterpart : null);
+
+        // Polarion takes it only from a root comment
+        verify(createdReply, never()).setReferredWorkItem(any());
+        InOrder order = inOrder(createdRoot);
+        order.verify(createdRoot).setReferredWorkItem(counterpart);
+        order.verify(createdRoot).save();
+    }
+
+    @Test
+    void testACommentWhoseWorkItemHasNoCounterpartRefersToNothing() {
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+        IModuleComment sourceComment = comment(IModuleComment.class, "5", "About this work item");
+        IWorkItem referredWorkItem = mock(IWorkItem.class);
+        when(sourceComment.getReferredWorkItem()).thenReturn(referredWorkItem);
+        when(sourceModule.getRootComments(true)).thenReturn(new PObjectListStub(List.of(sourceComment)));
+        IModuleComment createdComment = comment(IModuleComment.class, "17", "About this work item");
+        when(targetModule.createComment(sourceComment.getText())).thenReturn(createdComment);
+
+        commentsCopier.copyComments(sourceModule, targetModule, comment -> true, null, workItem -> null);
+
+        verify(createdComment, never()).setReferredWorkItem(any());
+        verify(createdComment).save();
+    }
+
+    @Test
+    void testACopyOfAWholeDocumentDoesNotTouchTheReferredWorkItem() {
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+        IModuleComment sourceComment = comment(IModuleComment.class, "5", "About this work item");
+        IWorkItem referredWorkItem = mock(IWorkItem.class);
+        when(sourceComment.getReferredWorkItem()).thenReturn(referredWorkItem);
+        when(sourceModule.getRootComments(true)).thenReturn(new PObjectListStub(List.of(sourceComment)));
+        IModuleComment createdComment = comment(IModuleComment.class, "17", "About this work item");
+        when(targetModule.createComment(sourceComment.getText())).thenReturn(createdComment);
+
+        commentsCopier.copyComments(sourceModule, targetModule, comment -> true, null);
+
+        verify(createdComment, never()).setReferredWorkItem(any());
+    }
+
+    @Test
     void testAnObjectWithoutCommentsGetsNone() {
         IWorkItem sourceWorkItem = mock(IWorkItem.class);
         IWorkItem targetWorkItem = mock(IWorkItem.class);

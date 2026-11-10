@@ -172,7 +172,9 @@ mvn test -Dtest=DiffServiceTest#testDiffDocuments
   themselves go in through the Polarion API
 - Copies comments through `CommentsCopier` (shared with `DocumentCopyService`): the comments of a copied work item and the
   document comments written on the copied text. Comment IDs change, so the markers which anchor a comment to a piece of
-  text are re-pointed with `CommentUtils.copyCommentMarkers`
+  text are re-pointed with `CommentUtils.remapComments`. Document comments which refer to a merged work item
+  (Polarion's `referredWorkItem`, used for a referenced work item) go along and refer to its counterpart. Comments
+  of a work item which did not make it into the target document are not copied
 - Runs in the background (`service/job/ChapterMergeJobsService`), because a big chapter does not fit into one HTTP
   request. The job mechanics are generic's `AsyncJobsService` over one static `JobsRegistry` (package
   `ch.sbb.polarion.extension.generic.jobs`, shared with the exporters and the excel-importer): running as the

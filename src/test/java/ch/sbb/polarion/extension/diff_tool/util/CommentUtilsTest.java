@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.diff_tool.util;
 
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -420,6 +421,92 @@ class CommentUtilsTest {
         String result = CommentUtils.copyCommentMarkers(source, target, map);
 
         assertEquals("completely different target", result);
+    }
+
+    @ParameterizedTest(name = "{argumentSetName}")
+    @MethodSource("markerForms")
+    void testAMarkerIsFoundInEveryFormPolarionAccepts(String marker) {
+        String content = "<p>before" + marker + "after</p>";
+
+        assertEquals(List.of("5"), CommentUtils.extractCommentIds(content));
+        assertEquals("<p>beforeafter</p>", CommentUtils.removeComments(content));
+        assertEquals("<p>before<span id=\"polarion-comment:17\"></span>after</p>", CommentUtils.remapComments(content, Map.of("5", "17")));
+    }
+
+    private static Stream<Arguments> markerForms() {
+        return Stream.of(
+                Arguments.argumentSet("plain", "<span id=\"polarion-comment:5\"></span>"),
+                Arguments.argumentSet("ID after another attribute", "<span class=\"x\" id=\"polarion-comment:5\"></span>"),
+                Arguments.argumentSet("ID between other attributes", "<span class=\"x\" id=\"polarion-comment:5\" style=\"y\"></span>"),
+                Arguments.argumentSet("upper case", "<SPAN ID=\"polarion-comment:5\"></SPAN>"),
+                Arguments.argumentSet("self-closing", "<span class=\"x\" id=\"polarion-comment:5\"/>")
+        );
+    }
+
+    @ParameterizedTest(name = "{argumentSetName}")
+    @MethodSource("notMarkers")
+    void testAnythingElseIsNotTakenForAMarker(String content) {
+        assertTrue(CommentUtils.extractCommentIds(content).isEmpty());
+        assertEquals(content, CommentUtils.removeComments(content));
+        assertEquals(content, CommentUtils.remapComments(content, Map.of("5", "17")));
+    }
+
+    private static Stream<Arguments> notMarkers() {
+        return Stream.of(
+                Arguments.argumentSet("an ordinary span", "<span class=\"x\">text</span>"),
+                Arguments.argumentSet("another attribute ending in id", "<span data-id=\"polarion-comment:5\"></span>"),
+                Arguments.argumentSet("another element", "<div id=\"polarion-comment:5\"></div>"),
+                Arguments.argumentSet("a span-like element", "<spanner id=\"polarion-comment:5\"></spanner>")
+        );
+    }
+
+    @Test
+    void testASpanNextToAMarkerIsLeftAsItIs() {
+        String content = "<span class=\"x\">a</span><span class=\"y\"></span><span id=\"polarion-comment:5\"></span><span>b</span>";
+
+        assertEquals(List.of("5"), CommentUtils.extractCommentIds(content));
+        assertEquals("<span class=\"x\">a</span><span class=\"y\"></span><span>b</span>", CommentUtils.removeComments(content));
+        assertEquals("<span class=\"x\">a</span><span class=\"y\"></span><span id=\"polarion-comment:17\"></span><span>b</span>",
+                CommentUtils.remapComments(content, Map.of("5", "17")));
+    }
+
+    @Test
+    void testTheFirstMarkerIdOfASpanIsTaken() {
+        String content = "<span id=\"polarion-comment:5\" id=\"polarion-comment:6\"></span>";
+
+        assertEquals(List.of("5"), CommentUtils.extractCommentIds(content));
+        assertEquals("<span id=\"polarion-comment:17\"></span>", CommentUtils.remapComments(content, Map.of("5", "17", "6", "18")));
+    }
+
+    @Test
+    void testAMarkerIsCopiedNextToASpanWhichIsNoMarker() {
+        String source = "<span class=\"x\">Hello</span> <span id=\"polarion-comment:5\"></span>World";
+        String target = "<span class=\"x\">Hello</span> World";
+
+        String result = CommentUtils.copyCommentMarkers(source, target, Map.of("5", "50"));
+
+        assertEquals("<span class=\"x\">Hello</span> <span id=\"polarion-comment:50\"></span>World", result);
+    }
+
+    @Test
+    @Timeout(5)
+    void testASpanWhichIsNeverClosedTakesLinearTime() {
+        String content = "<span" + " id=\"polarion-comment:5\"".repeat(50_000);
+        Map<String, String> idMapping = Map.of("5", "17");
+
+        assertTrue(CommentUtils.extractCommentIds(content).isEmpty());
+        assertEquals(content, CommentUtils.removeComments(content));
+        assertEquals(content, CommentUtils.remapComments(content, idMapping));
+        assertEquals("target", CommentUtils.copyCommentMarkers(content, "target", idMapping));
+    }
+
+    @Test
+    void testRemapComments_newIdOfOneCommentIsTheOldIdOfAnother() {
+        String content = "<span id=\"polarion-comment:5\"></span>a<span id=\"polarion-comment:6\"></span>";
+
+        // one pass over the text: a marker which was already re-numbered must not be re-numbered again
+        assertEquals("<span id=\"polarion-comment:6\"></span>a<span id=\"polarion-comment:7\"></span>",
+                CommentUtils.remapComments(content, Map.of("5", "6", "6", "7")));
     }
 
 }

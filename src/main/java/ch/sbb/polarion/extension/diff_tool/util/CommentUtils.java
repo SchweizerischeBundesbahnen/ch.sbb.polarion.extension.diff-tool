@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.diff_tool.util;
 
-import ch.sbb.polarion.extension.generic.regex.RegexMatcher;
 import com.polarion.core.util.StringUtils;
 import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
@@ -10,6 +9,8 @@ import org.jsoup.nodes.Element;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -17,8 +18,13 @@ import java.util.stream.Collectors;
 @UtilityClass
 public class CommentUtils {
 
-    private static final String COMMENT_REGEX = "<span id=[\"']polarion-comment:(?<id>\\d+)[\"'][^>]*>(?:</span>)?";
-    private static final Pattern COMMENT_PATTERN = Pattern.compile(COMMENT_REGEX);
+    /**
+     * A span start tag, with the end tag which may follow it right away. A comment marker is a span whose start tag
+     * holds {@link #MARKER_ID_PATTERN}. The two patterns are kept apart so that neither has to backtrack.
+     */
+    private static final Pattern SPAN_PATTERN = Pattern.compile("(?i)(?<tag><span\\b[^>]*>)(?:</span>)?");
+    /** Finds a marker ID the way Polarion does: in any letter case, at any position among the attributes. */
+    private static final Pattern MARKER_ID_PATTERN = Pattern.compile("(?i)\\sid=[\"']polarion-comment:(?<id>\\d+)[\"']");
     /** The ID a comment marker carries as the ID of its span element. */
     private static final Pattern COMMENT_MARKER_ID_PATTERN = Pattern.compile("polarion-comment:\\d+");
     private static final int CONTEXT_WINDOW = 50;
@@ -26,8 +32,13 @@ public class CommentUtils {
 
     public List<String> extractCommentIds(@Nullable String content) {
         List<String> commentIds = new ArrayList<>();
-        RegexMatcher.get(COMMENT_REGEX)
-                .processEntry(StringUtils.getEmptyIfNull(content), engine -> commentIds.add(engine.group("id")));
+        Matcher matcher = SPAN_PATTERN.matcher(StringUtils.getEmptyIfNull(content));
+        while (matcher.find()) {
+            String commentId = markerId(matcher);
+            if (commentId != null) {
+                commentIds.add(commentId);
+            }
+        }
         return commentIds;
     }
 
@@ -52,7 +63,7 @@ public class CommentUtils {
     }
 
     public String removeComments(String content) {
-        return RegexMatcher.get(COMMENT_REGEX).removeAll(content);
+        return replaceMarkers(content, commentId -> "");
     }
 
     /**
@@ -62,14 +73,30 @@ public class CommentUtils {
      * @param idMapping ID of a copied comment mapped to the ID of its copy
      */
     public String remapComments(@NotNull String content, @NotNull Map<String, String> idMapping) {
-        Matcher matcher = COMMENT_PATTERN.matcher(content);
-        StringBuilder remapped = new StringBuilder();
-        while (matcher.find()) {
-            String newId = idMapping.get(matcher.group("id"));
-            matcher.appendReplacement(remapped, newId == null ? "" : Matcher.quoteReplacement(POLARION_COMMENT.formatted(newId)));
-        }
-        matcher.appendTail(remapped);
-        return remapped.toString();
+        return replaceMarkers(content, commentId -> {
+            String newId = idMapping.get(commentId);
+            return newId == null ? "" : POLARION_COMMENT.formatted(newId);
+        });
+    }
+
+    /**
+     * Replaces each comment marker in one pass over the content. Spans which are not comment markers stay as they are.
+     *
+     * @param replacement gives the text which takes the place of the marker with the given comment ID
+     */
+    private String replaceMarkers(@NotNull String content, @NotNull UnaryOperator<String> replacement) {
+        return SPAN_PATTERN.matcher(content).replaceAll(span -> {
+            String commentId = markerId(span);
+            return Matcher.quoteReplacement(commentId == null ? span.group() : replacement.apply(commentId));
+        });
+    }
+
+    /**
+     * @return ID of the comment the matched span is a marker of, {@code null} if it is no comment marker
+     */
+    private @Nullable String markerId(@NotNull MatchResult span) {
+        Matcher markerId = MARKER_ID_PATTERN.matcher(span.group("tag"));
+        return markerId.find() ? markerId.group("id") : null;
     }
 
     public Element removeComments(Element element) {
@@ -91,13 +118,14 @@ public class CommentUtils {
      * in the target to insert the corresponding marker. Falls back to appending at the end if no match is found.
      */
     public String copyCommentMarkers(@NotNull String sourceHtmlWithMarkers, @NotNull String targetHtmlWithoutMarkers, @NotNull Map<String, String> oldToNewIdMap) {
-        Matcher matcher = COMMENT_PATTERN.matcher(sourceHtmlWithMarkers);
+        Matcher matcher = SPAN_PATTERN.matcher(sourceHtmlWithMarkers);
 
         List<MarkerInsert> inserts = new ArrayList<>();
         List<String> fallbackIds = new ArrayList<>();
 
         while (matcher.find()) {
-            String newId = oldToNewIdMap.get(matcher.group("id"));
+            String commentId = markerId(matcher);
+            String newId = commentId == null ? null : oldToNewIdMap.get(commentId);
             if (newId == null) {
                 continue;
             }
@@ -118,7 +146,7 @@ public class CommentUtils {
     }
 
     private String extractCleanContext(@NotNull String source, int from, int to) {
-        return COMMENT_PATTERN.matcher(source.substring(from, to)).replaceAll("");
+        return replaceMarkers(source.substring(from, to), commentId -> "");
     }
 
     /**
