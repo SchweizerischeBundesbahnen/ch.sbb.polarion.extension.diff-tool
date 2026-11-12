@@ -832,11 +832,22 @@ a.wi-tag.moved:hover {
   color: #dd6666;
 }
 
+/* A column draws its left edge inside itself, and the last column its right edge as well, so every vertical
+   line is drawn once and nothing is clipped by the work item pair. The attribute cells (.diff-leaf) draw the
+   same lines, so the lines of headers and attributes are at the same x. */
 .collapsed-border {
   box-shadow:
-    rgba(0, 0, 0, 0.1) 1px 0 0 0,
     rgba(0, 0, 0, 0.1) 0 1px 0 0,
     rgba(0, 0, 0, 0.1) 1px 0 0 0 inset,
+    rgba(0, 0, 0, 0.1) 0 1px 0 0 inset;
+}
+
+.collapsed-border.right,
+.collapsed-border.unified {
+  box-shadow:
+    rgba(0, 0, 0, 0.1) 0 1px 0 0,
+    rgba(0, 0, 0, 0.1) 1px 0 0 0 inset,
+    rgba(0, 0, 0, 0.1) -1px 0 0 0 inset,
     rgba(0, 0, 0, 0.1) 0 1px 0 0 inset;
 }
 
@@ -983,8 +994,25 @@ a.wi-tag.moved:hover {
   display: none;
 }
 
-.diff-leaf:not(:last-child) {
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+/* The vertical lines of .collapsed-border, at the same x as those of the work item headers. */
+.diff-leaf {
+  box-shadow: rgba(0, 0, 0, 0.1) 1px 0 0 0 inset;
+}
+
+.diff-leaf.right {
+  box-shadow:
+    rgba(0, 0, 0, 0.1) 1px 0 0 0 inset,
+    rgba(0, 0, 0, 0.1) -1px 0 0 0 inset;
+}
+
+/* Unified, the field name column draws the left edge (its background would cover a line of the row), the
+   value the right edge. The two have no line between them, like the one work item header above them. */
+.diff-view-unified .diff-header {
+  box-shadow: rgba(0, 0, 0, 0.1) 1px 0 0 0 inset;
+}
+
+.diff-leaf.unified {
+  box-shadow: rgba(0, 0, 0, 0.1) -1px 0 0 0 inset;
 }
 .word-diff {
   padding: 2px;
@@ -1043,6 +1071,11 @@ a.wi-tag.moved:hover {
 }
 
 @media print {
+  body {
+    --bs-body-font-family:
+      system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif;
+  }
+
   .control-pane,
   .merge-pane,
   .merge-ticker,
@@ -1097,6 +1130,12 @@ a.wi-tag.moved:hover {
 
   .diff-view-side-by-side .comparison-line > * {
     display: inline-block;
+  }
+
+  /* WeasyPrint does not hand the space a column loses to max-width over to the other column, so a moved
+     work item, padded unlike its counterpart, leaves its column half. A fixed basis needs no redistribution. */
+  .diff-view-side-by-side .wi-diff > .header.row > .wi-header.col {
+    flex: 0 0 50%;
   }
 
   /* Unified, a CSS table keeps the lines of both sides aligned. */
