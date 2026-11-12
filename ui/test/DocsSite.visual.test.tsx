@@ -13,8 +13,8 @@ import { settleBeforeCapture, settleLayout } from './visualHelpers';
 
 // The real search index is a build artifact that follows the markdown; pin it so the captures do not change
 // whenever an article does.
-vi.mock('../src/docs/search-index.json', () => ({
-  default: [
+vi.mock('../src/docs/searchIndex', () => ({
+  SEARCH_INDEX: [
     {
       doc: 'configuration',
       docTitle: 'Configuration',

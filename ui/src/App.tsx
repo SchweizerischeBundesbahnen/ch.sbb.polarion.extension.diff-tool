@@ -1,14 +1,8 @@
 import { Suspense } from 'react';
-import {
-  DocLinkInterceptor,
-  type DocSearchRecord,
-  DocsProvider,
-  FeatureRouter,
-  buildDocsConfig,
-} from '@sbb-polarion/react-sbb-polarion';
+import { DocLinkInterceptor, DocsProvider, FeatureRouter, buildDocsConfig } from '@sbb-polarion/react-sbb-polarion';
 import Landing from './admin/dev/Landing';
 import { DOC_ORDER } from './docs/manifest';
-import searchIndex from './docs/search-index.json';
+import { SEARCH_INDEX } from './docs/searchIndex';
 import { SOURCE_BASE_URL } from './docs/source';
 import { FEATURES } from './features';
 import { switchToFeatureNode } from './services/adminNav';
@@ -24,7 +18,7 @@ import { switchToFeatureNode } from './services/adminNav';
  */
 const docsConfig = buildDocsConfig({
   docs: DOC_ORDER,
-  searchIndex: searchIndex as DocSearchRecord[],
+  searchIndex: SEARCH_INDEX,
   sourceBaseUrl: SOURCE_BASE_URL,
   // The README is not a doc-site article but renders as the About page, so a relative `README.md` link in an
   // article switches to it. buildDocsConfig folds this together with each article's own source (from the

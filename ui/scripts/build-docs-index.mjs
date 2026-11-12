@@ -19,7 +19,7 @@
 //      warning and an EMPTY index is written, so a fresh clone still typechecks, runs and tests - the
 //      documentation search is then simply hidden.
 //
-// src/docs/search-index.json is a pure build artifact and is not committed (.gitignore): App.tsx imports it
+// src/docs/search-index.json is a pure build artifact and is not committed (.gitignore): src/docs/searchIndex.ts imports it
 // statically, so every entry point that needs it (build, dev, test, typecheck) generates it first.
 //
 // The article directory defaults to the shipped webapp html (src/main/resources/webapp/diff-tool-app/html,
