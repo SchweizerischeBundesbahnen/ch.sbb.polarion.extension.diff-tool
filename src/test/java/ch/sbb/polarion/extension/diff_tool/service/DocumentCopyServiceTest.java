@@ -68,6 +68,8 @@ class DocumentCopyServiceTest {
 
     private DocumentCopyService copyService;
 
+    private MergeService mergeService;
+
     @Mock
     private IProjectService projectService;
 
@@ -84,7 +86,8 @@ class DocumentCopyServiceTest {
     @BeforeEach
     void init() {
         polarionService = spy(new PolarionService(trackerService, projectService, securityService, null, null));
-        copyService = spy(new DocumentCopyService(polarionService, mock(MergeService.class)));
+        mergeService = mock(MergeService.class);
+        copyService = spy(new DocumentCopyService(polarionService, mergeService));
 
         mockModelCache = mockStatic(DiffModelCachedResource.class);
         DiffModel cachedModel = mock(DiffModel.class);
@@ -169,7 +172,7 @@ class DocumentCopyServiceTest {
         verify(copyService, times(0)).fixLinksInRichTextFields(any(), any(), nullable(String.class), any());
         verify(trackerService.getFolderManager(), times(1)).createFolder(nullable(String.class), nullable(String.class), nullable(String.class));
         // copyDocumentComments is false, so comments should not be copied
-        verify(copyService, never()).copyModuleComments(any(), any(), any());
+        verify(copyService, never()).copyModuleComments(any(), any(), any(), any());
 
         // provide link role + make it available
         duplicateParams.setLinkRoleId("linkRoleId");
@@ -181,13 +184,20 @@ class DocumentCopyServiceTest {
                 copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
         verify(copyService, times(1)).fixLinksInRichTextFields(any(), any(), nullable(String.class), any());
         // still no comment copying since copyDocumentComments is false
-        verify(copyService, never()).copyModuleComments(any(), any(), any());
+        verify(copyService, never()).copyModuleComments(any(), any(), any(), any());
 
         // now enable copying comments
         duplicateParams.setCopyDocumentComments(true);
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(mock(IWorkItem.class), mock(IWorkItem.class)));
+        doReturn(workItemCopies).when(copyService).pairWithCopies(sourceModule, module);
+        clearInvocations(mergeService);
         assertDoesNotThrow(() ->
                 copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
-        verify(copyService, times(1)).copyModuleComments(any(), any(), any());
+        verify(copyService, times(1)).copyModuleComments(any(), any(), any(), eq(workItemCopies));
+        // the work items are paired before handling the references can change the structure of the duplicate
+        InOrder order = inOrder(copyService, mergeService);
+        order.verify(copyService).pairWithCopies(sourceModule, module);
+        order.verify(mergeService).fixReferencedWorkItem(any(), eq(module), any(), any());
 
         when(module.getLastRevision()).thenReturn("42");
         DocumentIdentifier result = copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams);
@@ -280,7 +290,7 @@ class DocumentCopyServiceTest {
         when(targetModule.createComment(any(Text.class))).thenReturn(targetComment);
         List<DiffField> fields = List.of(DiffField.builder().key("description").build());
 
-        copyService.copyModuleComments(sourceModule, targetModule, fields);
+        copyService.copyModuleComments(sourceModule, targetModule, fields, List.of());
 
         verify(copyService).remapCommentMarkersInWorkItems(targetModule, Map.of("5", "50"), fields);
     }
@@ -295,11 +305,36 @@ class DocumentCopyServiceTest {
         IWorkItem commentedDuplicate = workItemWithDescription("requirement", "Same text.");
         IModule targetModule = moduleWithStructure(structureNode(uncommentedDuplicate, false, structureNode(commentedDuplicate, false)));
 
-        copyService.restoreDescriptionCommentMarkers(sourceModule, targetModule, Map.of("5", "50"));
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = copyService.pairWithCopies(sourceModule, targetModule);
+        copyService.restoreDescriptionCommentMarkers(workItemCopies, Map.of("5", "50"));
 
+        assertEquals(List.of(new DocumentCopyService.WorkItemCopy(uncommented, uncommentedDuplicate),
+                new DocumentCopyService.WorkItemCopy(commented, commentedDuplicate)), workItemCopies);
         verify(commentedDuplicate).setDescription(Text.html("Same<span id=\"polarion-comment:50\"></span> text."));
         verify(commentedDuplicate).save();
         verify(uncommentedDuplicate, never()).setDescription(any());
+    }
+
+    @Test
+    void testReferencedWorkItemsAreNotPaired() {
+        IWorkItem origin = workItemWithDescription("requirement", "Text.");
+        IWorkItem referenced = workItemWithDescription("requirement", "Referenced.");
+        IModule sourceModule = moduleWithStructure(structureNode(origin, false), structureNode(referenced, true));
+        IWorkItem duplicate = workItemWithDescription("requirement", "Text.");
+        IModule targetModule = moduleWithStructure(structureNode(duplicate, false), structureNode(referenced, true));
+
+        assertEquals(List.of(new DocumentCopyService.WorkItemCopy(origin, duplicate)), copyService.pairWithCopies(sourceModule, targetModule));
+    }
+
+    @Test
+    void testNothingIsPairedWhenTheStructuresDifferInSize() {
+        IWorkItem origin = workItemWithDescription("requirement", "Same text.");
+        IModule sourceModule = moduleWithStructure(structureNode(origin, false));
+        IWorkItem duplicate = workItemWithDescription("requirement", "Same text.");
+        IWorkItem added = workItemWithDescription("requirement", "Same text.");
+        IModule targetModule = moduleWithStructure(structureNode(duplicate, false), structureNode(added, false));
+
+        assertTrue(copyService.pairWithCopies(sourceModule, targetModule).isEmpty());
     }
 
     @Test
@@ -308,45 +343,31 @@ class DocumentCopyServiceTest {
         String text = "Vehicle registration with unique identifiers.<br/><br/>The plate number and VIN shall be unique across the system.%s<br/>"
                 + " Rationale: Duplicate records lead to wrong cost allocation.";
         IWorkItem origin = workItemWithDescription("requirement", text.formatted("<span id=\"polarion-comment:5\"></span>"));
-        IModule sourceModule = moduleWithStructure(structureNode(origin, false));
         IWorkItem duplicate = workItemWithDescription("requirement", text.formatted(""));
-        IModule targetModule = moduleWithStructure(structureNode(duplicate, false));
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(origin, duplicate));
 
-        copyService.restoreDescriptionCommentMarkers(sourceModule, targetModule, Map.of("5", "10"));
+        copyService.restoreDescriptionCommentMarkers(workItemCopies, Map.of("5", "10"));
 
         verify(duplicate).setDescription(Text.html(text.formatted("<span id=\"polarion-comment:10\"></span>")));
     }
 
     @Test
-    void testAWorkItemAtTheSamePositionWhichIsNoDuplicateKeepsItsDescription() {
+    void testACopyWhichDiffersFromItsOriginOrIsGoneKeepsItsDescription() {
         IWorkItem changedOrigin = workItemWithDescription("requirement", "Other<span id=\"polarion-comment:6\"></span> text.");
-        IWorkItem otherTypeOrigin = workItemWithDescription("requirement", "Typed<span id=\"polarion-comment:7\"></span> text.");
-        IWorkItem referencedOrigin = workItemWithDescription("requirement", "Referenced<span id=\"polarion-comment:8\"></span> text.");
-        IModule sourceModule = moduleWithStructure(structureNode(changedOrigin, false), structureNode(otherTypeOrigin, false), structureNode(referencedOrigin, true));
         IWorkItem changed = workItemWithDescription("requirement", "Other text, changed.");
+        IWorkItem otherTypeOrigin = workItemWithDescription("requirement", "Typed<span id=\"polarion-comment:7\"></span> text.");
         IWorkItem otherType = workItemWithDescription("task", "Typed text.");
-        IWorkItem referenced = workItemWithDescription("requirement", "Referenced text.");
-        IModule targetModule = moduleWithStructure(structureNode(changed, false), structureNode(otherType, false), structureNode(referenced, true));
+        IWorkItem goneOrigin = workItemWithDescription("requirement", "Gone<span id=\"polarion-comment:8\"></span> text.");
+        IWorkItem gone = workItemWithDescription("requirement", "Gone text.");
+        when(gone.isUnresolvable()).thenReturn(true);
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(changedOrigin, changed),
+                new DocumentCopyService.WorkItemCopy(otherTypeOrigin, otherType), new DocumentCopyService.WorkItemCopy(goneOrigin, gone));
 
-        copyService.restoreDescriptionCommentMarkers(sourceModule, targetModule, Map.of("6", "60", "7", "70", "8", "80"));
+        copyService.restoreDescriptionCommentMarkers(workItemCopies, Map.of("6", "60", "7", "70", "8", "80"));
 
         verify(changed, never()).setDescription(any());
         verify(otherType, never()).setDescription(any());
-        verify(referenced, never()).setDescription(any());
-    }
-
-    @Test
-    void testNothingIsRestoredWhenTheStructuresDifferInSize() {
-        IWorkItem origin = workItemWithDescription("requirement", "Same<span id=\"polarion-comment:5\"></span> text.");
-        IModule sourceModule = moduleWithStructure(structureNode(origin, false));
-        IWorkItem duplicate = workItemWithDescription("requirement", "Same text.");
-        IWorkItem added = workItemWithDescription("requirement", "Same text.");
-        IModule targetModule = moduleWithStructure(structureNode(duplicate, false), structureNode(added, false));
-
-        copyService.restoreDescriptionCommentMarkers(sourceModule, targetModule, Map.of("5", "50"));
-
-        verify(duplicate, never()).setDescription(any());
-        verify(added, never()).setDescription(any());
+        verify(gone, never()).setDescription(any());
     }
 
     @Test
@@ -364,12 +385,13 @@ class DocumentCopyServiceTest {
         when(targetComment.getId()).thenReturn("50");
         when(targetModule.createComment(any(Text.class))).thenReturn(targetComment);
         List<DiffField> fields = List.of(DiffField.builder().key("description").build());
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of();
 
-        copyService.copyModuleComments(sourceModule, targetModule, fields);
+        copyService.copyModuleComments(sourceModule, targetModule, fields, workItemCopies);
 
         InOrder order = inOrder(copyService);
         order.verify(copyService).remapCommentMarkersInWorkItems(targetModule, Map.of("5", "50"), fields);
-        order.verify(copyService).restoreDescriptionCommentMarkers(sourceModule, targetModule, Map.of("5", "50"));
+        order.verify(copyService).restoreDescriptionCommentMarkers(workItemCopies, Map.of("5", "50"));
     }
 
     private static IModule moduleWithStructure(IModule.IStructureNode... topLevelNodes) {
@@ -517,7 +539,7 @@ class DocumentCopyServiceTest {
         when(emptyComments.isEmpty()).thenReturn(true);
         when(sourceModule.getRootComments(true)).thenReturn(emptyComments);
 
-        copyService.copyModuleComments(sourceModule, targetModule, List.of());
+        copyService.copyModuleComments(sourceModule, targetModule, List.of(), List.of());
 
         verify(targetModule, never()).createComment(any());
     }
@@ -551,7 +573,7 @@ class DocumentCopyServiceTest {
         when(sourceModule.getHomePageContent()).thenReturn(Text.html("page <span id=\"polarion-comment:5\"></span> content"));
         when(targetModule.getHomePageContent()).thenReturn(Text.html("page  content"));
 
-        copyService.copyModuleComments(sourceModule, targetModule, List.of());
+        copyService.copyModuleComments(sourceModule, targetModule, List.of(), List.of());
 
         verify(targetModule).createComment(Text.plain("comment text"));
         verify(targetComment, times(1)).save(); // non-resolved root is saved only once
@@ -586,7 +608,7 @@ class DocumentCopyServiceTest {
 
         when(sourceModule.getHomePageContent()).thenReturn(null);
 
-        copyService.copyModuleComments(sourceModule, targetModule, List.of());
+        copyService.copyModuleComments(sourceModule, targetModule, List.of(), List.of());
 
         verify(targetComment).setResolvedComment(true);
         verify(targetComment, times(2)).save(); // first save during comment creation, second save to persist the resolved flag
@@ -630,7 +652,7 @@ class DocumentCopyServiceTest {
 
         when(sourceModule.getHomePageContent()).thenReturn(null);
 
-        copyService.copyModuleComments(sourceModule, targetModule, List.of());
+        copyService.copyModuleComments(sourceModule, targetModule, List.of(), List.of());
 
         verify(targetModule).createComment(Text.plain("root text"));
         verify(targetRoot).createChildComment(Text.plain("child text"));
@@ -678,7 +700,7 @@ class DocumentCopyServiceTest {
 
         when(sourceModule.getHomePageContent()).thenReturn(null);
 
-        copyService.copyModuleComments(sourceModule, targetModule, List.of());
+        copyService.copyModuleComments(sourceModule, targetModule, List.of(), List.of());
 
         // Resolved flag set on root after children exist
         verify(targetRoot).setResolvedComment(true);

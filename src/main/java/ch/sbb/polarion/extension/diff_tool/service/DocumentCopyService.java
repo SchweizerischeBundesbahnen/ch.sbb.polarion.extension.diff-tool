@@ -104,9 +104,12 @@ public class DocumentCopyService {
         // are becoming visible in Polarion's API only as soon as document's creation transaction is closed, meaning that cleaning them up
         // should be done in a separate transaction
 
+        // Taken before the references are handled, which can take referenced work items out of the duplicate's structure
+        List<WorkItemCopy> workItemCopies = new ArrayList<>();
         IModule targetModule = Objects.requireNonNull(TransactionalExecutor.executeInWriteTransaction(transaction -> {
             IModule createdModule = polarionService.getTrackerService().getModuleManager().duplicate(sourceModule, targetProject, targetLocation,
                     documentDuplicateParams.getTargetDocumentIdentifier().getName(), linkRole, null, null, null, null);
+            workItemCopies.addAll(pairWithCopies(sourceModule, createdModule));
             createdModule.setTitle(documentDuplicateParams.getTargetDocumentTitle());
             createdModule.updateTitleHeading(documentDuplicateParams.getTargetDocumentTitle());
             if (!createdModule.getExternalWorkItems().isEmpty()) {
@@ -118,7 +121,7 @@ public class DocumentCopyService {
 
         if (documentDuplicateParams.isCopyDocumentComments()) {
             TransactionalExecutor.executeInWriteTransaction(transaction -> {
-                copyModuleComments(sourceModule, targetModule, allowedFields);
+                copyModuleComments(sourceModule, targetModule, allowedFields, workItemCopies);
                 return null;
             });
         }
@@ -201,7 +204,8 @@ public class DocumentCopyService {
     }
 
     @VisibleForTesting
-    void copyModuleComments(@NotNull IModule sourceModule, @NotNull IModule targetModule, @NotNull List<DiffField> fields) {
+    void copyModuleComments(@NotNull IModule sourceModule, @NotNull IModule targetModule, @NotNull List<DiffField> fields,
+                            @NotNull List<WorkItemCopy> workItemCopies) {
         Map<String, String> oldToNewCommentIdMap = commentsCopier.copyComments(sourceModule, targetModule, c -> true, targetModule.getAuthor());
         if (oldToNewCommentIdMap.isEmpty()) {
             return;
@@ -210,50 +214,63 @@ public class DocumentCopyService {
         remapCommentMarkersInWorkItems(targetModule, oldToNewCommentIdMap, fields);
         // After the remapping: a description restored with markers which already name the copied comments
         // must not have them renumbered once more
-        restoreDescriptionCommentMarkers(sourceModule, targetModule, oldToNewCommentIdMap);
+        restoreDescriptionCommentMarkers(workItemCopies, oldToNewCommentIdMap);
+    }
+
+    /**
+     * Pairs the work items of a document with their duplicates. A duplicate is not linked to its origin, but it holds
+     * the same position in the document structure, which Polarion's duplicate keeps. Referenced work items are not
+     * paired: they are not duplicated. If the two structures differ in size, the positions do not correspond, and
+     * nothing is paired.
+     * <p>
+     * To be taken right after the duplicate is made: handling its references can take nodes out of its structure.
+     */
+    @VisibleForTesting
+    @NotNull
+    List<WorkItemCopy> pairWithCopies(@NotNull IModule sourceModule, @NotNull IModule targetModule) {
+        List<IModule.IStructureNode> sourceNodes = structureNodes(sourceModule);
+        List<IModule.IStructureNode> targetNodes = structureNodes(targetModule);
+        if (sourceNodes.size() != targetNodes.size()) {
+            logger.warn("Work items of document '%s' were not paired with their duplicates in '%s': the documents differ in structure"
+                    .formatted(sourceModule.getModuleName(), targetModule.getModuleName()));
+            return List.of();
+        }
+        List<WorkItemCopy> workItemCopies = new ArrayList<>();
+        for (int i = 0; i < sourceNodes.size(); i++) {
+            IModule.IStructureNode sourceNode = sourceNodes.get(i);
+            IModule.IStructureNode targetNode = targetNodes.get(i);
+            if (!sourceNode.isExternal() && !targetNode.isExternal() && sourceNode.getWorkItem() != null && targetNode.getWorkItem() != null) {
+                workItemCopies.add(new WorkItemCopy(sourceNode.getWorkItem(), targetNode.getWorkItem()));
+            }
+        }
+        return workItemCopies;
     }
 
     /**
      * Gives the duplicated work items back the comment markers of their descriptions. Polarion's duplicate takes every
      * comment marker out of a description ({@code HTMLCleaner.cleanWiDesc}), while the other fields keep theirs.
      * <p>
-     * A duplicate is not linked to its origin, but it holds the same position in the document structure, which the
-     * duplicate keeps. Work items are therefore paired by position, those without comments included: two work items
-     * with the same description must not swap their markers. A pair is restored only if neither is referenced, both
-     * have the same type and the cleaned description of the origin equals the duplicate's description exactly. If
-     * the two structures differ in size, the positions do not correspond, and nothing is restored.
+     * Work items with the same description must not swap their markers, so a copy takes the markers of the work item
+     * it was paired with by position ({@link #pairWithCopies}). It takes them only if both have the same type and
+     * the cleaned description of the origin equals the copy's description exactly.
      */
     @VisibleForTesting
-    void restoreDescriptionCommentMarkers(@NotNull IModule sourceModule, @NotNull IModule targetModule, @NotNull Map<String, String> oldToNewCommentIdMap) {
-        List<IModule.IStructureNode> sourceNodes = structureNodes(sourceModule);
-        List<IModule.IStructureNode> targetNodes = structureNodes(targetModule);
-        if (sourceNodes.size() != targetNodes.size()) {
-            logger.warn("Comment markers of the work item descriptions were not restored: document '%s' and its duplicate '%s' differ in structure"
-                    .formatted(sourceModule.getModuleName(), targetModule.getModuleName()));
-            return;
+    void restoreDescriptionCommentMarkers(@NotNull List<WorkItemCopy> workItemCopies, @NotNull Map<String, String> oldToNewCommentIdMap) {
+        for (WorkItemCopy workItemCopy : workItemCopies) {
+            IWorkItem origin = workItemCopy.origin();
+            IWorkItem copy = workItemCopy.copy();
+            if (origin.isUnresolvable() || copy.isUnresolvable() || !Objects.equals(typeId(origin), typeId(copy))) {
+                continue;
+            }
+            Text originDescription = origin.getDescription();
+            Text copyDescription = copy.getDescription();
+            if (originDescription == null || copyDescription == null || CommentUtils.extractCommentIds(originDescription.getContent()).isEmpty()
+                    || !HTMLCleaner.cleanWiDesc(originDescription, true, true).getContent().equals(copyDescription.getContent())) {
+                continue;
+            }
+            copy.setDescription(new Text(originDescription.getType(), CommentUtils.remapComments(originDescription.getContent(), oldToNewCommentIdMap)));
+            copy.save();
         }
-        for (int i = 0; i < sourceNodes.size(); i++) {
-            restoreDescriptionCommentMarkers(sourceNodes.get(i), targetNodes.get(i), oldToNewCommentIdMap);
-        }
-    }
-
-    private void restoreDescriptionCommentMarkers(@NotNull IModule.IStructureNode sourceNode, @NotNull IModule.IStructureNode targetNode,
-                                                  @NotNull Map<String, String> oldToNewCommentIdMap) {
-        IWorkItem sourceWorkItem = sourceNode.getWorkItem();
-        IWorkItem targetWorkItem = targetNode.getWorkItem();
-        if (sourceNode.isExternal() || targetNode.isExternal() || sourceWorkItem == null || targetWorkItem == null
-                || sourceWorkItem.isUnresolvable() || targetWorkItem.isUnresolvable()
-                || !Objects.equals(typeId(sourceWorkItem), typeId(targetWorkItem))) {
-            return;
-        }
-        Text sourceDescription = sourceWorkItem.getDescription();
-        Text targetDescription = targetWorkItem.getDescription();
-        if (sourceDescription == null || targetDescription == null || CommentUtils.extractCommentIds(sourceDescription.getContent()).isEmpty()
-                || !HTMLCleaner.cleanWiDesc(sourceDescription, true, true).getContent().equals(targetDescription.getContent())) {
-            return;
-        }
-        targetWorkItem.setDescription(new Text(sourceDescription.getType(), CommentUtils.remapComments(sourceDescription.getContent(), oldToNewCommentIdMap)));
-        targetWorkItem.save();
     }
 
     /**
@@ -329,6 +346,13 @@ public class DocumentCopyService {
         String updatedContent = CommentUtils.copyCommentMarkers(sourceModule.getHomePageContent().getContent(), targetModule.getHomePageContent().getContent(), oldToNewCommentIdMap);
         targetModule.setHomePageContent(new Text(targetModule.getHomePageContent().getType(), updatedContent));
         targetModule.save();
+    }
+
+    /**
+     * A work item of the source document and its duplicate.
+     */
+    @VisibleForTesting
+    record WorkItemCopy(@NotNull IWorkItem origin, @NotNull IWorkItem copy) {
     }
 
 }
