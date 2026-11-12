@@ -8,6 +8,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.DiffField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ReferencedItemsHandling;
+import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import com.polarion.alm.shared.api.transaction.RunnableInWriteTransaction;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.WriteTransaction;
@@ -736,16 +737,19 @@ class DocumentsChapterMergeServiceTest {
     }
 
     @Test
-    void testTheCommentsOfACopyAreThereBeforeTheTextWhichNamesThem() {
+    void testTheDocumentCommentsOnTheTextOfACopyAreThereBeforeTheTextWhichNamesThem() {
         IWorkItem sourceChapterItem = heading("SOURCE-1");
         IWorkItem createdItem = trackerProjectCreates("TARGET-100", "heading");
         chapter(sourceModule, "2", sourceChapterItem);
         chapter(targetModule, "3.1", heading("TARGET-1"));
+        withDescription(sourceChapterItem, "<p>a<span id=\"polarion-comment:5\"></span>b</p>");
+        // the work item's own comment 5 is not the one the marker names: a marker in a work item names a document comment
+        when(commentsCopier.copyComments(sourceChapterItem, createdItem)).thenReturn(Map.of("5", "99"));
+        when(commentsCopier.copyComments(eq(sourceModule), eq(targetModule), any(), any())).thenReturn(Map.of("5", "17"));
         DocumentsChapterMergeContext[] usedContext = new DocumentsChapterMergeContext[1];
-        when(commentsCopier.copyComments(sourceChapterItem, createdItem)).thenReturn(Map.of("5", "17"));
         doAnswer(invocation -> {
             usedContext[0] = invocation.getArgument(2);
-            // the fields are copied knowing which comment of the copy a marker of the source text names
+            // the fields are copied knowing which comment of the target document a marker of the source text names
             assertEquals(Map.of("5", "17"), usedContext[0].getCommentIdMapping());
             return null;
         }).when(mergeService).merge(eq(sourceChapterItem), eq(createdItem), any(), any());
@@ -753,8 +757,96 @@ class DocumentsChapterMergeServiceTest {
         inTransaction(() -> documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.COPY, ChapterInsertMode.UNDER)));
 
         InOrder order = inOrder(commentsCopier, mergeService);
-        order.verify(commentsCopier).copyComments(sourceChapterItem, createdItem);
+        order.verify(commentsCopier).copyComments(eq(sourceModule), eq(targetModule), any(), any());
         order.verify(mergeService).merge(eq(sourceChapterItem), eq(createdItem), any(), any());
+    }
+
+    @Test
+    void testOnlyTheDocumentCommentsNamedInTheCopiedFieldsAreCopied() {
+        IWorkItem sourceWorkItem = workItem("SOURCE-1", "requirement");
+        withDescription(sourceWorkItem, "<p>a<span id=\"polarion-comment:5\"></span>b<span id=\"polarion-comment:6\"></span></p>");
+        DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
+        DiffModel fields = DiffModel.builder().diffFields(List.of(DiffField.builder().key("description").build())).build();
+        when(commentsCopier.copyComments(eq(sourceModule), eq(targetModule), any(), any())).thenReturn(Map.of("5", "17", "6", "18"));
+
+        assertEquals(Map.of("5", "17", "6", "18"), documentsChapterMergeService.copyDocumentCommentsOnText(context, sourceWorkItem, fields));
+
+        ArgumentCaptor<Predicate<IModuleComment>> commentsToCopy = ArgumentCaptor.captor();
+        verify(commentsCopier).copyComments(eq(sourceModule), eq(targetModule), commentsToCopy.capture(), any());
+        assertTrue(commentsToCopy.getValue().test(documentComment("5", null)));
+        assertTrue(commentsToCopy.getValue().test(documentComment("6", null)));
+        assertFalse(commentsToCopy.getValue().test(documentComment("7", null)));
+    }
+
+    @Test
+    void testATextWithoutMarkersCopiesNoDocumentComments() {
+        IWorkItem sourceWorkItem = workItem("SOURCE-1", "requirement");
+        withDescription(sourceWorkItem, "<p>no comments here</p>");
+        DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
+        DiffModel fields = DiffModel.builder().diffFields(List.of(DiffField.builder().key("description").build())).build();
+
+        assertEquals(Map.of(), documentsChapterMergeService.copyDocumentCommentsOnText(context, sourceWorkItem, fields));
+
+        verify(commentsCopier, never()).copyComments(any(IModule.class), any(IModule.class), any(), any());
+    }
+
+    @Test
+    void testACopyOfAReferencedWorkItemTakesNoDocumentCommentsOfTheSourceDocument() {
+        IWorkItem referencedWorkItem = workItem("REFERENCED-1", "requirement");
+        // the marker names a comment of the document the referenced work item belongs to
+        withDescription(referencedWorkItem, "<p>a<span id=\"polarion-comment:5\"></span>b</p>");
+        trackerProjectCreates("TARGET-100", "requirement");
+        DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
+        DocumentsChapterMergeService.SourceNode referencedNode = new DocumentsChapterMergeService.SourceNode(referencedWorkItem, null, false, true);
+
+        documentsChapterMergeService.copyWorkItem(referencedNode, context, null, 0);
+
+        verify(context).setCommentIdMapping(Map.of());
+        verify(commentsCopier, never()).copyComments(any(IModule.class), any(IModule.class), any(), any());
+    }
+
+    @Test
+    void testACopyGetsBackTheCommentMarkersWhichPlacingItIntoTheTargetDocumentTookOutOfItsDescription() {
+        IWorkItem sourceWorkItem = workItem("SOURCE-1", "requirement");
+        IWorkItem createdItem = trackerProjectCreates("TARGET-100", "requirement");
+        Text copiedDescription = Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>");
+        // as Polarion's moveIn leaves it
+        Text cleanedDescription = Text.html("<p>ab</p>");
+        when(createdItem.getDescription()).thenReturn(copiedDescription, cleanedDescription);
+        DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
+        DocumentsChapterMergeService.SourceNode sourceNode = new DocumentsChapterMergeService.SourceNode(sourceWorkItem, null, false, false);
+
+        documentsChapterMergeService.copyWorkItem(sourceNode, context, null, 0);
+
+        InOrder order = inOrder(mergeService, createdItem);
+        order.verify(mergeService).merge(eq(sourceWorkItem), eq(createdItem), any(), any());
+        order.verify(mergeService).insertNode(createdItem, targetModule, null, 0, false);
+        order.verify(createdItem).setDescription(copiedDescription);
+        order.verify(createdItem).save();
+    }
+
+    @Test
+    void testADescriptionWhichStillHasItsCommentMarkersIsNotWrittenAgain() {
+        IWorkItem workItem = workItem("TARGET-100", "requirement");
+        Text description = Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>");
+        when(workItem.getDescription()).thenReturn(Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
+
+        documentsChapterMergeService.restoreDescriptionCommentMarkers(workItem, description);
+
+        verify(workItem, never()).setDescription(any());
+        verify(workItem, never()).save();
+    }
+
+    @Test
+    void testADescriptionWithoutCommentMarkersIsNotRestored() {
+        IWorkItem workItem = workItem("TARGET-100", "requirement");
+        Text description = Text.html("<p>a<span class=\"x\"></span>b</p>");
+
+        documentsChapterMergeService.restoreDescriptionCommentMarkers(workItem, description);
+        documentsChapterMergeService.restoreDescriptionCommentMarkers(workItem, null);
+
+        verify(workItem, never()).setDescription(any());
+        verify(workItem, never()).save();
     }
 
     @Test
@@ -1013,6 +1105,11 @@ class DocumentsChapterMergeServiceTest {
         IModule.IStructureNode createdNode = node(created, false);
         when(targetModule.getStructureNodeOfWI(created)).thenReturn(createdNode);
         return created;
+    }
+
+    private void withDescription(IWorkItem workItem, String html) {
+        when(polarionService.getDeletableFields(eq(workItem), any(), any())).thenReturn(new ArrayList<>(List.of(WorkItemField.builder().key("description").build())));
+        when(polarionService.getFieldValue(workItem, "description")).thenReturn(Text.html(html));
     }
 
     private IWorkItem workItem(String projectId, String id, String typeId) {

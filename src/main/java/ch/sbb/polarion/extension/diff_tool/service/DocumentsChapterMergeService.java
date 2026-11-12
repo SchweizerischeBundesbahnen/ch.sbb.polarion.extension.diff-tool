@@ -11,6 +11,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeWorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ReferencedItemsHandling;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
+import ch.sbb.polarion.extension.diff_tool.util.CommentUtils;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.tracker.internal.model.IInternalWorkItem;
@@ -409,7 +410,7 @@ public class DocumentsChapterMergeService {
             return processReferencedNode(sourceNode, context, parentNode, index);
         }
         if (sourceNode.heading() || context.getMode() == ChapterMergeMode.COPY) {
-            return copyWorkItem(sourceNode.workItem(), context, parentNode, index);
+            return copyWorkItem(sourceNode, context, parentNode, index);
         }
         return moveWorkItem(sourceNode.workItem(), context, parentNode, index);
     }
@@ -422,7 +423,7 @@ public class DocumentsChapterMergeService {
             return null;
         }
         if (handling == ReferencedItemsHandling.COPY_AS_NEW) {
-            return copyWorkItem(sourceNode.workItem(), context, parentNode, index);
+            return copyWorkItem(sourceNode, context, parentNode, index);
         }
         mergeService.insertNode(sourceNode.workItem(), context.getTargetModule(), parentNode, index, true);
         context.getReferencedItemsInTarget().add(sourceNode.workItem());
@@ -439,17 +440,24 @@ public class DocumentsChapterMergeService {
      */
     @VisibleForTesting
     @NotNull
-    IWorkItem copyWorkItem(@NotNull IWorkItem sourceWorkItem, @NotNull DocumentsChapterMergeContext context, @Nullable IModule.IStructureNode parentNode, int index) {
+    IWorkItem copyWorkItem(@NotNull SourceNode sourceNode, @NotNull DocumentsChapterMergeContext context, @Nullable IModule.IStructureNode parentNode, int index) {
+        IWorkItem sourceWorkItem = sourceNode.workItem();
         IWorkItem createdWorkItem = polarionService.getTrackerProject(context.getTargetModule().getProjectId())
                 .createWorkItem(resolveTargetTypeId(sourceWorkItem, context));
         createdWorkItem.setValue(IWorkItem.KEY_MODULE, context.getTargetModule());
         createdWorkItem.save();
 
-        // The comments come first: the text copied right after them names them, and it can only name the copies
-        context.setCommentIdMapping(commentsCopier.copyComments(sourceWorkItem, createdWorkItem));
-        context.setCurrentDiffModel(fieldsToCopy(sourceWorkItem, context.getSourceModule()));
+        // The comments come first: the text copied right after them names them, and it can only name the copies.
+        // The text names only document comments: the comments of the work item itself have no marker in it.
+        commentsCopier.copyComments(sourceWorkItem, createdWorkItem);
+        DiffModel fieldsToCopy = fieldsToCopy(sourceWorkItem, context.getSourceModule());
+        // The markers in a referenced work item name comments of the document it belongs to, not of the source one
+        context.setCommentIdMapping(sourceNode.external() ? Map.of() : copyDocumentCommentsOnText(context, sourceWorkItem, fieldsToCopy));
+        context.setCurrentDiffModel(fieldsToCopy);
         mergeService.merge(sourceWorkItem, createdWorkItem, context, new MergeWorkItemsPair(sourceWorkItem, createdWorkItem, List.of()));
+        Text copiedDescription = createdWorkItem.getDescription();
         mergeService.insertNode(createdWorkItem, context.getTargetModule(), parentNode, index, false);
+        restoreDescriptionCommentMarkers(createdWorkItem, copiedDescription);
 
         context.getCreatedItems().add(createdWorkItem);
         context.reportChapterEntry(CREATED, "workitem '%s' created out of workitem '%s'".formatted(createdWorkItem.getId(), sourceWorkItem.getId()));
@@ -512,6 +520,47 @@ public class DocumentsChapterMergeService {
             }
         }
         return sourceWorkItem.getType().getId();
+    }
+
+    /**
+     * Gives a copy back the comment markers of its description. Polarion takes every comment marker out of the
+     * description of a work item it moves into a document ({@code IModule.moveIn}, see {@code HTMLCleaner.cleanWiDesc}),
+     * and placing a copy into the target document is such a move. The markers name the comments copied along with
+     * the work item, so they are put back.
+     *
+     * @param copiedDescription the description of the copy before it was placed into the target document
+     */
+    @VisibleForTesting
+    void restoreDescriptionCommentMarkers(@NotNull IWorkItem workItem, @Nullable Text copiedDescription) {
+        if (copiedDescription == null || CommentUtils.extractCommentIds(copiedDescription.getContent()).isEmpty()
+                || copiedDescription.equals(workItem.getDescription())) {
+            return;
+        }
+        workItem.setDescription(copiedDescription);
+        workItem.save();
+    }
+
+    /**
+     * Copies the document comments written on the text of a work item into the target document. Polarion keeps such
+     * a comment in the document, and its marker in a field of the work item.
+     *
+     * @param fields the fields of the work item which are copied
+     * @return ID of a source comment mapped to the ID of its copy
+     */
+    @VisibleForTesting
+    @NotNull
+    Map<String, String> copyDocumentCommentsOnText(@NotNull DocumentsChapterMergeContext context, @NotNull IWorkItem sourceWorkItem, @NotNull DiffModel fields) {
+        Set<String> commentIds = new HashSet<>();
+        for (DiffField field : fields.getDiffFields()) {
+            if (polarionService.getFieldValue(sourceWorkItem, field.getKey()) instanceof Text text) {
+                commentIds.addAll(CommentUtils.extractCommentIds(text.getContent()));
+            }
+        }
+        if (commentIds.isEmpty()) {
+            return Map.of();
+        }
+        return commentsCopier.copyComments(context.getSourceModule(), context.getTargetModule(),
+                comment -> commentIds.contains(comment.getId()), context.getTargetModule().getAuthor());
     }
 
     /**
