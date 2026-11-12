@@ -1,5 +1,5 @@
 // Vitest globalSetup (vitest.config.ts). src/docs/search-index.json is a build artifact, not committed, and
-// App.tsx imports it statically - so it must exist before any test file is transformed. Generating it here
+// src/docs/searchIndex.ts imports it statically - so it must exist before any test file is transformed. Generating it here
 // covers every way the suite is started (npm test, watch, coverage, the Docker runs, an IDE runner) without a
 // pre-script per npm script. Without the Maven-rendered articles the script writes an empty index (the
 // documentation search is then hidden). Kept under scripts/ with the other node scripts, outside the
