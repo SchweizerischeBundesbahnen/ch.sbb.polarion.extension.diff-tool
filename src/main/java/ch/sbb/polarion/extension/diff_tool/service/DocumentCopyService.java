@@ -256,21 +256,23 @@ public class DocumentCopyService {
      */
     @VisibleForTesting
     void restoreDescriptionCommentMarkers(@NotNull List<WorkItemCopy> workItemCopies, @NotNull Map<String, String> oldToNewCommentIdMap) {
-        for (WorkItemCopy workItemCopy : workItemCopies) {
-            IWorkItem origin = workItemCopy.origin();
-            IWorkItem copy = workItemCopy.copy();
-            if (origin.isUnresolvable() || copy.isUnresolvable() || !Objects.equals(typeId(origin), typeId(copy))) {
-                continue;
-            }
-            Text originDescription = origin.getDescription();
-            Text copyDescription = copy.getDescription();
-            if (originDescription == null || copyDescription == null || CommentUtils.extractCommentIds(originDescription.getContent()).isEmpty()
-                    || !HTMLCleaner.cleanWiDesc(originDescription, true, true).getContent().equals(copyDescription.getContent())) {
-                continue;
-            }
-            copy.setDescription(new Text(originDescription.getType(), CommentUtils.remapComments(originDescription.getContent(), oldToNewCommentIdMap)));
-            copy.save();
+        workItemCopies.forEach(workItemCopy -> restoreDescriptionCommentMarkers(workItemCopy, oldToNewCommentIdMap));
+    }
+
+    private void restoreDescriptionCommentMarkers(@NotNull WorkItemCopy workItemCopy, @NotNull Map<String, String> oldToNewCommentIdMap) {
+        IWorkItem origin = workItemCopy.origin();
+        IWorkItem copy = workItemCopy.copy();
+        if (origin.isUnresolvable() || copy.isUnresolvable() || !Objects.equals(typeId(origin), typeId(copy))) {
+            return;
         }
+        Text originDescription = origin.getDescription();
+        Text copyDescription = copy.getDescription();
+        if (originDescription == null || copyDescription == null || CommentUtils.extractCommentIds(originDescription.getContent()).isEmpty()
+                || !HTMLCleaner.cleanWiDesc(originDescription, true, true).getContent().equals(copyDescription.getContent())) {
+            return;
+        }
+        copy.setDescription(new Text(originDescription.getType(), CommentUtils.remapComments(originDescription.getContent(), oldToNewCommentIdMap)));
+        copy.save();
     }
 
     /**
