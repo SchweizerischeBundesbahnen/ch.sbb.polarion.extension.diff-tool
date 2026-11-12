@@ -30,7 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -214,48 +214,60 @@ public class DocumentCopyService {
      * Gives the duplicated work items back the comment markers of their descriptions. Polarion's duplicate takes every
      * comment marker out of a description ({@code HTMLCleaner.cleanWiDesc}), while the other fields keep theirs.
      * <p>
-     * A duplicate is not linked to its origin, so its origin is the source work item of the same type whose cleaned
-     * description equals the duplicate's description exactly. Each source work item is the origin of one duplicate
-     * at most. A duplicate whose description differs is left as it is.
+     * A duplicate is not linked to its origin, but it holds the same position in the document structure, which the
+     * duplicate keeps. Work items are therefore paired by position, those without comments included: two work items
+     * with the same description must not swap their markers. A pair is restored only if neither is referenced, both
+     * have the same type and the cleaned description of the origin equals the duplicate's description exactly. If
+     * the two structures differ in size, the positions do not correspond, and nothing is restored.
      */
     @VisibleForTesting
     void restoreDescriptionCommentMarkers(@NotNull IModule sourceModule, @NotNull IModule targetModule, @NotNull Map<String, String> oldToNewCommentIdMap) {
-        // A source work item whose description has markers, mapped to that description the way Polarion cleans it
-        Map<IWorkItem, String> cleanedSourceDescriptions = new LinkedHashMap<>();
-        for (IWorkItem sourceWorkItem : documentOwnWorkItems(sourceModule)) {
-            Text description = sourceWorkItem.getDescription();
-            if (description != null && !CommentUtils.extractCommentIds(description.getContent()).isEmpty()) {
-                cleanedSourceDescriptions.put(sourceWorkItem, HTMLCleaner.cleanWiDesc(description, true, true).getContent());
-            }
-        }
-        if (cleanedSourceDescriptions.isEmpty()) {
+        List<IModule.IStructureNode> sourceNodes = structureNodes(sourceModule);
+        List<IModule.IStructureNode> targetNodes = structureNodes(targetModule);
+        if (sourceNodes.size() != targetNodes.size()) {
+            logger.warn("Comment markers of the work item descriptions were not restored: document '%s' and its duplicate '%s' differ in structure"
+                    .formatted(sourceModule.getModuleName(), targetModule.getModuleName()));
             return;
         }
-        for (IWorkItem targetWorkItem : documentOwnWorkItems(targetModule)) {
-            Text targetDescription = targetWorkItem.getDescription();
-            IWorkItem sourceWorkItem = targetDescription == null ? null : cleanedSourceDescriptions.entrySet().stream()
-                    .filter(entry -> Objects.equals(typeId(entry.getKey()), typeId(targetWorkItem)))
-                    .filter(entry -> entry.getValue().equals(targetDescription.getContent()))
-                    .map(Map.Entry::getKey)
-                    .findFirst()
-                    .orElse(null);
-            if (sourceWorkItem != null) {
-                cleanedSourceDescriptions.remove(sourceWorkItem);
-                Text sourceDescription = Objects.requireNonNull(sourceWorkItem.getDescription());
-                targetWorkItem.setDescription(new Text(sourceDescription.getType(), CommentUtils.remapComments(sourceDescription.getContent(), oldToNewCommentIdMap)));
-                targetWorkItem.save();
-            }
+        for (int i = 0; i < sourceNodes.size(); i++) {
+            restoreDescriptionCommentMarkers(sourceNodes.get(i), targetNodes.get(i), oldToNewCommentIdMap);
         }
     }
 
+    private void restoreDescriptionCommentMarkers(@NotNull IModule.IStructureNode sourceNode, @NotNull IModule.IStructureNode targetNode,
+                                                  @NotNull Map<String, String> oldToNewCommentIdMap) {
+        IWorkItem sourceWorkItem = sourceNode.getWorkItem();
+        IWorkItem targetWorkItem = targetNode.getWorkItem();
+        if (sourceNode.isExternal() || targetNode.isExternal() || sourceWorkItem == null || targetWorkItem == null
+                || sourceWorkItem.isUnresolvable() || targetWorkItem.isUnresolvable()
+                || !Objects.equals(typeId(sourceWorkItem), typeId(targetWorkItem))) {
+            return;
+        }
+        Text sourceDescription = sourceWorkItem.getDescription();
+        Text targetDescription = targetWorkItem.getDescription();
+        if (sourceDescription == null || targetDescription == null || CommentUtils.extractCommentIds(sourceDescription.getContent()).isEmpty()
+                || !HTMLCleaner.cleanWiDesc(sourceDescription, true, true).getContent().equals(targetDescription.getContent())) {
+            return;
+        }
+        targetWorkItem.setDescription(new Text(sourceDescription.getType(), CommentUtils.remapComments(sourceDescription.getContent(), oldToNewCommentIdMap)));
+        targetWorkItem.save();
+    }
+
     /**
-     * The work items of a document which are not referenced from another document.
+     * The nodes of a document's structure in document order.
      */
-    private @NotNull List<IWorkItem> documentOwnWorkItems(@NotNull IModule module) {
-        List<IWorkItem> externalWorkItems = module.getExternalWorkItems();
-        return module.getAllWorkItems().stream()
-                .filter(workItem -> !workItem.isUnresolvable() && !externalWorkItems.contains(workItem))
-                .toList();
+    private @NotNull List<IModule.IStructureNode> structureNodes(@NotNull IModule module) {
+        List<IModule.IStructureNode> nodes = new ArrayList<>();
+        IModule.IStructureNode rootNode = module.getRootNode();
+        if (rootNode != null) {
+            rootNode.getChildren().forEach(child -> collectStructureNodes(child, nodes));
+        }
+        return nodes;
+    }
+
+    private void collectStructureNodes(@NotNull IModule.IStructureNode node, @NotNull List<IModule.IStructureNode> nodes) {
+        nodes.add(node);
+        node.getChildren().forEach(child -> collectStructureNodes(child, nodes));
     }
 
     private static @Nullable String typeId(@NotNull IWorkItem workItem) {

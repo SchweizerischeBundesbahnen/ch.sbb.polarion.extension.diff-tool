@@ -523,15 +523,6 @@ public class DocumentsChapterMergeService {
     }
 
     /**
-     * All writable fields of a work item are copied, so the model of fields to be merged depends on the type
-     * of the item which is being copied right now. Custom fields are defined per project, hence the document
-     * the item belongs to has to be given along with it.
-     * <p>
-     * A field the source work item has no value for is not copied at all. The copy is a new work item which
-     * starts with the defaults of its type, and there is nothing to carry over - a chapter heading has no
-     * severity or priority to give, and a required field cannot be set to an empty value anyway.
-     */
-    /**
      * Gives a copy back the comment markers of its description. Polarion takes every comment marker out of the
      * description of a work item it moves into a document ({@code IModule.moveIn}, see {@code HTMLCleaner.cleanWiDesc}),
      * and placing a copy into the target document is such a move. The markers name the comments copied along with
@@ -572,6 +563,15 @@ public class DocumentsChapterMergeService {
                 comment -> commentIds.contains(comment.getId()), context.getTargetModule().getAuthor());
     }
 
+    /**
+     * All writable fields of a work item are copied, so the model of fields to be merged depends on the type
+     * of the item which is being copied right now. Custom fields are defined per project, hence the document
+     * the item belongs to has to be given along with it.
+     * <p>
+     * A field the source work item has no value for is not copied at all. The copy is a new work item which
+     * starts with the defaults of its type, and there is nothing to carry over - a chapter heading has no
+     * severity or priority to give, and a required field cannot be set to an empty value anyway.
+     */
     @VisibleForTesting
     @NotNull
     DiffModel fieldsToCopy(@NotNull IWorkItem workItem, @NotNull IModule module) {

@@ -265,42 +265,31 @@ class DocumentCopyServiceTest {
     }
 
     @Test
-    void testADuplicateGetsBackTheCommentMarkersOfTheDescriptionOfItsOrigin() {
-        IModule sourceModule = mock(IModule.class);
-        IModule targetModule = mock(IModule.class);
-        IWorkItem origin = workItemWithDescription("requirement", "The system shall<span id=\"polarion-comment:5\"></span> work.");
-        IWorkItem otherSource = workItemWithDescription("requirement", "Other<span id=\"polarion-comment:6\"></span> text.");
-        IWorkItem referencedSource = workItemWithDescription("requirement", "Referenced<span id=\"polarion-comment:7\"></span>.");
-        when(sourceModule.getAllWorkItems()).thenReturn(List.of(origin, otherSource, referencedSource));
-        when(sourceModule.getExternalWorkItems()).thenReturn(List.of(referencedSource));
-        // as Polarion's duplicate leaves them
-        IWorkItem duplicate = workItemWithDescription("requirement", "The system shall work.");
-        IWorkItem changedDuplicate = workItemWithDescription("requirement", "Other text, changed.");
-        IWorkItem otherTypeDuplicate = workItemWithDescription("task", "Referenced.");
-        when(targetModule.getAllWorkItems()).thenReturn(List.of(duplicate, changedDuplicate, otherTypeDuplicate));
-        when(targetModule.getExternalWorkItems()).thenReturn(List.of());
+    void testADuplicateGetsTheCommentMarkersOfTheWorkItemAtItsPositionNotOfAnotherWithTheSameDescription() {
+        // only the second of two work items with the same description has a comment, and it sits below the first one
+        IWorkItem uncommented = workItemWithDescription("requirement", "Same text.");
+        IWorkItem commented = workItemWithDescription("requirement", "Same<span id=\"polarion-comment:5\"></span> text.");
+        IModule sourceModule = moduleWithStructure(structureNode(uncommented, false, structureNode(commented, false)));
+        IWorkItem uncommentedDuplicate = workItemWithDescription("requirement", "Same text.");
+        IWorkItem commentedDuplicate = workItemWithDescription("requirement", "Same text.");
+        IModule targetModule = moduleWithStructure(structureNode(uncommentedDuplicate, false, structureNode(commentedDuplicate, false)));
 
-        copyService.restoreDescriptionCommentMarkers(sourceModule, targetModule, Map.of("5", "50", "6", "60", "7", "70"));
+        copyService.restoreDescriptionCommentMarkers(sourceModule, targetModule, Map.of("5", "50"));
 
-        verify(duplicate).setDescription(Text.html("The system shall<span id=\"polarion-comment:50\"></span> work."));
-        verify(duplicate).save();
-        verify(changedDuplicate, never()).setDescription(any());
-        verify(otherTypeDuplicate, never()).setDescription(any());
+        verify(commentedDuplicate).setDescription(Text.html("Same<span id=\"polarion-comment:50\"></span> text."));
+        verify(commentedDuplicate).save();
+        verify(uncommentedDuplicate, never()).setDescription(any());
     }
 
     @Test
-    void testADuplicateMadeByPolarionIsMatchedToItsOrigin() {
-        IModule sourceModule = mock(IModule.class);
-        IModule targetModule = mock(IModule.class);
+    void testADuplicateMadeByPolarionGetsBackTheCommentMarkersOfItsOrigin() {
         // a description as Polarion stores it, and as its duplicate holds it
         String text = "Vehicle registration with unique identifiers.<br/><br/>The plate number and VIN shall be unique across the system.%s<br/>"
                 + " Rationale: Duplicate records lead to wrong cost allocation.";
         IWorkItem origin = workItemWithDescription("requirement", text.formatted("<span id=\"polarion-comment:5\"></span>"));
-        when(sourceModule.getAllWorkItems()).thenReturn(List.of(origin));
-        when(sourceModule.getExternalWorkItems()).thenReturn(List.of());
+        IModule sourceModule = moduleWithStructure(structureNode(origin, false));
         IWorkItem duplicate = workItemWithDescription("requirement", text.formatted(""));
-        when(targetModule.getAllWorkItems()).thenReturn(List.of(duplicate));
-        when(targetModule.getExternalWorkItems()).thenReturn(List.of());
+        IModule targetModule = moduleWithStructure(structureNode(duplicate, false));
 
         copyService.restoreDescriptionCommentMarkers(sourceModule, targetModule, Map.of("5", "10"));
 
@@ -308,21 +297,35 @@ class DocumentCopyServiceTest {
     }
 
     @Test
-    void testAnOriginGivesItsCommentMarkersToOneDuplicateOnly() {
-        IModule sourceModule = mock(IModule.class);
-        IModule targetModule = mock(IModule.class);
+    void testAWorkItemAtTheSamePositionWhichIsNoDuplicateKeepsItsDescription() {
+        IWorkItem changedOrigin = workItemWithDescription("requirement", "Other<span id=\"polarion-comment:6\"></span> text.");
+        IWorkItem otherTypeOrigin = workItemWithDescription("requirement", "Typed<span id=\"polarion-comment:7\"></span> text.");
+        IWorkItem referencedOrigin = workItemWithDescription("requirement", "Referenced<span id=\"polarion-comment:8\"></span> text.");
+        IModule sourceModule = moduleWithStructure(structureNode(changedOrigin, false), structureNode(otherTypeOrigin, false), structureNode(referencedOrigin, true));
+        IWorkItem changed = workItemWithDescription("requirement", "Other text, changed.");
+        IWorkItem otherType = workItemWithDescription("task", "Typed text.");
+        IWorkItem referenced = workItemWithDescription("requirement", "Referenced text.");
+        IModule targetModule = moduleWithStructure(structureNode(changed, false), structureNode(otherType, false), structureNode(referenced, true));
+
+        copyService.restoreDescriptionCommentMarkers(sourceModule, targetModule, Map.of("6", "60", "7", "70", "8", "80"));
+
+        verify(changed, never()).setDescription(any());
+        verify(otherType, never()).setDescription(any());
+        verify(referenced, never()).setDescription(any());
+    }
+
+    @Test
+    void testNothingIsRestoredWhenTheStructuresDifferInSize() {
         IWorkItem origin = workItemWithDescription("requirement", "Same<span id=\"polarion-comment:5\"></span> text.");
-        when(sourceModule.getAllWorkItems()).thenReturn(List.of(origin));
-        when(sourceModule.getExternalWorkItems()).thenReturn(List.of());
-        IWorkItem firstDuplicate = workItemWithDescription("requirement", "Same text.");
-        IWorkItem secondDuplicate = workItemWithDescription("requirement", "Same text.");
-        when(targetModule.getAllWorkItems()).thenReturn(List.of(firstDuplicate, secondDuplicate));
-        when(targetModule.getExternalWorkItems()).thenReturn(List.of());
+        IModule sourceModule = moduleWithStructure(structureNode(origin, false));
+        IWorkItem duplicate = workItemWithDescription("requirement", "Same text.");
+        IWorkItem added = workItemWithDescription("requirement", "Same text.");
+        IModule targetModule = moduleWithStructure(structureNode(duplicate, false), structureNode(added, false));
 
         copyService.restoreDescriptionCommentMarkers(sourceModule, targetModule, Map.of("5", "50"));
 
-        verify(firstDuplicate).setDescription(Text.html("Same<span id=\"polarion-comment:50\"></span> text."));
-        verify(secondDuplicate, never()).setDescription(any());
+        verify(duplicate, never()).setDescription(any());
+        verify(added, never()).setDescription(any());
     }
 
     @Test
@@ -346,6 +349,21 @@ class DocumentCopyServiceTest {
         InOrder order = inOrder(copyService);
         order.verify(copyService).remapCommentMarkersInWorkItems(targetModule, Map.of("5", "50"), fields);
         order.verify(copyService).restoreDescriptionCommentMarkers(sourceModule, targetModule, Map.of("5", "50"));
+    }
+
+    private static IModule moduleWithStructure(IModule.IStructureNode... topLevelNodes) {
+        IModule module = mock(IModule.class);
+        IModule.IStructureNode rootNode = structureNode(null, false, topLevelNodes);
+        lenient().when(module.getRootNode()).thenReturn(rootNode);
+        return module;
+    }
+
+    private static IModule.IStructureNode structureNode(IWorkItem workItem, boolean external, IModule.IStructureNode... children) {
+        IModule.IStructureNode node = mock(IModule.IStructureNode.class);
+        lenient().when(node.getWorkItem()).thenReturn(workItem);
+        lenient().when(node.isExternal()).thenReturn(external);
+        lenient().when(node.getChildren()).thenReturn(List.of(children));
+        return node;
     }
 
     private static IWorkItem workItemWithDescription(String typeId, String description) {
