@@ -22,6 +22,7 @@ import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.StringUtils;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
+import com.polarion.core.util.xml.HTMLCleaner;
 import com.polarion.subterra.base.data.identification.IContextId;
 import com.polarion.subterra.base.location.ILocation;
 import com.polarion.subterra.base.location.Location;
@@ -29,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -113,7 +115,7 @@ public class DocumentCopyService {
 
         if (documentDuplicateParams.isCopyDocumentComments()) {
             TransactionalExecutor.executeInWriteTransaction(transaction -> {
-                copyModuleComments(sourceModule, targetModule);
+                copyModuleComments(sourceModule, targetModule, allowedFields);
                 return null;
             });
         }
@@ -196,12 +198,97 @@ public class DocumentCopyService {
     }
 
     @VisibleForTesting
-    void copyModuleComments(@NotNull IModule sourceModule, @NotNull IModule targetModule) {
+    void copyModuleComments(@NotNull IModule sourceModule, @NotNull IModule targetModule, @NotNull List<DiffField> fields) {
         Map<String, String> oldToNewCommentIdMap = commentsCopier.copyComments(sourceModule, targetModule, c -> true, targetModule.getAuthor());
         if (oldToNewCommentIdMap.isEmpty()) {
             return;
         }
         copyCommentMarkers(sourceModule, targetModule, oldToNewCommentIdMap);
+        remapCommentMarkersInWorkItems(targetModule, oldToNewCommentIdMap, fields);
+        // After the remapping: a description restored with markers which already name the copied comments
+        // must not have them renumbered once more
+        restoreDescriptionCommentMarkers(sourceModule, targetModule, oldToNewCommentIdMap);
+    }
+
+    /**
+     * Gives the duplicated work items back the comment markers of their descriptions. Polarion's duplicate takes every
+     * comment marker out of a description ({@code HTMLCleaner.cleanWiDesc}), while the other fields keep theirs.
+     * <p>
+     * A duplicate is not linked to its origin, so its origin is the source work item of the same type whose cleaned
+     * description equals the duplicate's description exactly. Each source work item is the origin of one duplicate
+     * at most. A duplicate whose description differs is left as it is.
+     */
+    @VisibleForTesting
+    void restoreDescriptionCommentMarkers(@NotNull IModule sourceModule, @NotNull IModule targetModule, @NotNull Map<String, String> oldToNewCommentIdMap) {
+        // A source work item whose description has markers, mapped to that description the way Polarion cleans it
+        Map<IWorkItem, String> cleanedSourceDescriptions = new LinkedHashMap<>();
+        for (IWorkItem sourceWorkItem : documentOwnWorkItems(sourceModule)) {
+            Text description = sourceWorkItem.getDescription();
+            if (description != null && !CommentUtils.extractCommentIds(description.getContent()).isEmpty()) {
+                cleanedSourceDescriptions.put(sourceWorkItem, HTMLCleaner.cleanWiDesc(description, true, true).getContent());
+            }
+        }
+        if (cleanedSourceDescriptions.isEmpty()) {
+            return;
+        }
+        for (IWorkItem targetWorkItem : documentOwnWorkItems(targetModule)) {
+            Text targetDescription = targetWorkItem.getDescription();
+            IWorkItem sourceWorkItem = targetDescription == null ? null : cleanedSourceDescriptions.entrySet().stream()
+                    .filter(entry -> Objects.equals(typeId(entry.getKey()), typeId(targetWorkItem)))
+                    .filter(entry -> entry.getValue().equals(targetDescription.getContent()))
+                    .map(Map.Entry::getKey)
+                    .findFirst()
+                    .orElse(null);
+            if (sourceWorkItem != null) {
+                cleanedSourceDescriptions.remove(sourceWorkItem);
+                Text sourceDescription = Objects.requireNonNull(sourceWorkItem.getDescription());
+                targetWorkItem.setDescription(new Text(sourceDescription.getType(), CommentUtils.remapComments(sourceDescription.getContent(), oldToNewCommentIdMap)));
+                targetWorkItem.save();
+            }
+        }
+    }
+
+    /**
+     * The work items of a document which are not referenced from another document.
+     */
+    private @NotNull List<IWorkItem> documentOwnWorkItems(@NotNull IModule module) {
+        List<IWorkItem> externalWorkItems = module.getExternalWorkItems();
+        return module.getAllWorkItems().stream()
+                .filter(workItem -> !workItem.isUnresolvable() && !externalWorkItems.contains(workItem))
+                .toList();
+    }
+
+    private static @Nullable String typeId(@NotNull IWorkItem workItem) {
+        return workItem.getType() == null ? null : workItem.getType().getId();
+    }
+
+    /**
+     * Points the comment markers in the fields of the duplicated work items at the copied comments. A comment written
+     * on the text of a work item is a document comment, with its marker in a field of that work item. A duplicated
+     * work item keeps the markers of the source document. A referenced work item is left alone: its markers name the
+     * comments of the document it belongs to.
+     */
+    @VisibleForTesting
+    void remapCommentMarkersInWorkItems(@NotNull IModule targetModule, @NotNull Map<String, String> oldToNewCommentIdMap, @NotNull List<DiffField> fields) {
+        List<IWorkItem> externalWorkItems = targetModule.getExternalWorkItems();
+        for (IWorkItem workItem : targetModule.getAllWorkItems()) {
+            if (workItem.isUnresolvable() || externalWorkItems.contains(workItem)) {
+                continue;
+            }
+            boolean modified = false;
+            for (DiffField field : fields) {
+                if (polarionService.getFieldValue(workItem, field.getKey()) instanceof Text text) {
+                    String remapped = CommentUtils.remapComments(text.getContent(), oldToNewCommentIdMap);
+                    if (!remapped.equals(text.getContent())) {
+                        polarionService.setFieldValue(workItem, field.getKey(), new Text(text.getType(), remapped));
+                        modified = true;
+                    }
+                }
+            }
+            if (modified) {
+                workItem.save();
+            }
+        }
     }
 
     private void copyCommentMarkers(@NotNull IModule sourceModule, @NotNull IModule targetModule,

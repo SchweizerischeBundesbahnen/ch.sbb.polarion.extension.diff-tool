@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jsoup.nodes.Element;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
@@ -116,27 +117,39 @@ public class CommentUtils {
      * Copies comment markers from source HTML into target HTML using surrounding context matching.
      * For each marker in the source, captures surrounding text context and finds the matching position
      * in the target to insert the corresponding marker. Falls back to appending at the end if no match is found.
+     * <p>
+     * The context is taken from the source without any of its markers: the target has none, and a context window
+     * which cut a neighboring marker in two would match nothing.
      */
     public String copyCommentMarkers(@NotNull String sourceHtmlWithMarkers, @NotNull String targetHtmlWithoutMarkers, @NotNull Map<String, String> oldToNewIdMap) {
+        StringBuilder cleanSource = new StringBuilder();
+        List<SourceMarker> sourceMarkers = new ArrayList<>();
         Matcher matcher = SPAN_PATTERN.matcher(sourceHtmlWithMarkers);
+        int copiedUpTo = 0;
+        while (matcher.find()) {
+            String commentId = markerId(matcher);
+            if (commentId != null) {
+                cleanSource.append(sourceHtmlWithMarkers, copiedUpTo, matcher.start());
+                copiedUpTo = matcher.end();
+                sourceMarkers.add(new SourceMarker(commentId, cleanSource.length()));
+            }
+        }
+        cleanSource.append(sourceHtmlWithMarkers, copiedUpTo, sourceHtmlWithMarkers.length());
 
         List<MarkerInsert> inserts = new ArrayList<>();
         List<String> fallbackIds = new ArrayList<>();
-
-        while (matcher.find()) {
-            String commentId = markerId(matcher);
-            String newId = commentId == null ? null : oldToNewIdMap.get(commentId);
+        for (SourceMarker sourceMarker : sourceMarkers) {
+            String newId = oldToNewIdMap.get(sourceMarker.commentId());
             if (newId == null) {
                 continue;
             }
+            int position = sourceMarker.position();
+            String cleanBefore = cleanSource.substring(Math.max(0, position - CONTEXT_WINDOW), position);
+            String cleanAfter = cleanSource.substring(position, Math.min(cleanSource.length(), position + CONTEXT_WINDOW));
 
-            String cleanBefore = extractCleanContext(sourceHtmlWithMarkers, Math.max(0, matcher.start() - CONTEXT_WINDOW), matcher.start());
-            String cleanAfter = extractCleanContext(sourceHtmlWithMarkers, matcher.end(), Math.min(sourceHtmlWithMarkers.length(), matcher.end() + CONTEXT_WINDOW));
-            String newMarker = POLARION_COMMENT.formatted(newId);
-
-            int position = findInsertPosition(targetHtmlWithoutMarkers, cleanBefore, cleanAfter);
-            if (position >= 0) {
-                inserts.add(new MarkerInsert(position, newMarker));
+            int insertPosition = findInsertPosition(targetHtmlWithoutMarkers, cleanBefore, cleanAfter);
+            if (insertPosition >= 0) {
+                inserts.add(new MarkerInsert(insertPosition, inserts.size(), POLARION_COMMENT.formatted(newId)));
             } else if (cleanBefore.isEmpty() && cleanAfter.isEmpty()) {
                 fallbackIds.add(newId);
             }
@@ -145,19 +158,25 @@ public class CommentUtils {
         return applyInserts(targetHtmlWithoutMarkers, inserts, fallbackIds);
     }
 
-    private String extractCleanContext(@NotNull String source, int from, int to) {
-        return replaceMarkers(source.substring(from, to), commentId -> "");
-    }
-
     /**
      * Finds the insert position in the target HTML by matching surrounding context.
-     * Tries both contexts combined first, then falls back to individual context matching.
+     * Tries both contexts combined first, then falls back to individual context matching. When both contexts exist
+     * but not together, one side may name a source work item, which the target names differently: then a single
+     * context is taken only where it occurs exactly once in the target.
      *
      * @return insert position, or -1 if no match found
      */
     private int findInsertPosition(@NotNull String target, @NotNull String cleanBefore, @NotNull String cleanAfter) {
         if (!cleanBefore.isEmpty() && !cleanAfter.isEmpty()) {
             int idx = target.indexOf(cleanBefore + cleanAfter);
+            if (idx >= 0) {
+                return idx + cleanBefore.length();
+            }
+            idx = indexOfSingleOccurrence(target, cleanAfter);
+            if (idx >= 0) {
+                return idx;
+            }
+            idx = indexOfSingleOccurrence(target, cleanBefore);
             if (idx >= 0) {
                 return idx + cleanBefore.length();
             }
@@ -175,16 +194,31 @@ public class CommentUtils {
         return -1;
     }
 
+    private int indexOfSingleOccurrence(@NotNull String target, @NotNull String text) {
+        int idx = target.indexOf(text);
+        return idx >= 0 && target.indexOf(text, idx + 1) < 0 ? idx : -1;
+    }
+
+    /**
+     * Inserts from the end of the target backwards, so that a position is not shifted by an insert before it.
+     * Markers which go to the same position keep their order in the source.
+     */
     private String applyInserts(@NotNull String target, @NotNull List<MarkerInsert> inserts, @NotNull List<String> fallbackIds) {
-        inserts.sort((a, b) -> Integer.compare(b.position, a.position));
+        inserts.sort(Comparator.comparingInt(MarkerInsert::position).thenComparingInt(MarkerInsert::order).reversed());
         StringBuilder result = new StringBuilder(target);
         for (MarkerInsert insert : inserts) {
-            result.insert(insert.position, insert.marker);
+            result.insert(insert.position(), insert.marker());
         }
         return appendComments(result.toString(), fallbackIds);
     }
 
-    private record MarkerInsert(int position, String marker) {
+    /**
+     * @param position where the marker stood in the source text without any markers
+     */
+    private record SourceMarker(String commentId, int position) {
+    }
+
+    private record MarkerInsert(int position, int order, String marker) {
     }
 
 }
