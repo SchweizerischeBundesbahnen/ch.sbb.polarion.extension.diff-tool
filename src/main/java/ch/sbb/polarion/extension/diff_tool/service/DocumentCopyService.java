@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -214,7 +215,7 @@ public class DocumentCopyService {
         remapCommentMarkersInWorkItems(targetModule, oldToNewCommentIdMap, fields);
         // After the remapping: a description restored with markers which already name the copied comments
         // must not have them renumbered once more
-        restoreDescriptionCommentMarkers(workItemCopies, oldToNewCommentIdMap);
+        restoreDescriptionCommentMarkers(targetModule, workItemCopies, oldToNewCommentIdMap);
     }
 
     /**
@@ -253,15 +254,24 @@ public class DocumentCopyService {
      * Work items with the same description must not swap their markers, so a copy takes the markers of the work item
      * it was paired with by position ({@link #pairWithCopies}). It takes them only if both have the same type and
      * the cleaned description of the origin equals the copy's description exactly.
+     * <p>
+     * A copy is written through the instance the document holds now, the one the other steps of the copy read and
+     * save as well. The instance paired in an earlier transaction would save a change that the document's own
+     * instance does not know of, and saving that one later would then fail with a change conflict.
      */
     @VisibleForTesting
-    void restoreDescriptionCommentMarkers(@NotNull List<WorkItemCopy> workItemCopies, @NotNull Map<String, String> oldToNewCommentIdMap) {
-        workItemCopies.forEach(workItemCopy -> restoreDescriptionCommentMarkers(workItemCopy, oldToNewCommentIdMap));
+    void restoreDescriptionCommentMarkers(@NotNull IModule targetModule, @NotNull List<WorkItemCopy> workItemCopies, @NotNull Map<String, String> oldToNewCommentIdMap) {
+        Map<String, IWorkItem> currentWorkItems = new HashMap<>();
+        targetModule.getAllWorkItems().forEach(workItem -> currentWorkItems.putIfAbsent(workItem.getId(), workItem));
+        for (WorkItemCopy workItemCopy : workItemCopies) {
+            IWorkItem copy = currentWorkItems.get(workItemCopy.copy().getId());
+            if (copy != null) {
+                restoreDescriptionCommentMarkers(workItemCopy.origin(), copy, oldToNewCommentIdMap);
+            }
+        }
     }
 
-    private void restoreDescriptionCommentMarkers(@NotNull WorkItemCopy workItemCopy, @NotNull Map<String, String> oldToNewCommentIdMap) {
-        IWorkItem origin = workItemCopy.origin();
-        IWorkItem copy = workItemCopy.copy();
+    private void restoreDescriptionCommentMarkers(@NotNull IWorkItem origin, @NotNull IWorkItem copy, @NotNull Map<String, String> oldToNewCommentIdMap) {
         if (origin.isUnresolvable() || copy.isUnresolvable() || !Objects.equals(typeId(origin), typeId(copy))) {
             return;
         }

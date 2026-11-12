@@ -52,6 +52,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -60,6 +61,8 @@ import static org.mockito.Mockito.eq;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentCopyServiceTest {
+
+    private static final AtomicInteger WORK_ITEM_IDS = new AtomicInteger();
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private ITrackerService trackerService;
@@ -305,8 +308,10 @@ class DocumentCopyServiceTest {
         IWorkItem commentedDuplicate = workItemWithDescription("requirement", "Same text.");
         IModule targetModule = moduleWithStructure(structureNode(uncommentedDuplicate, false, structureNode(commentedDuplicate, false)));
 
+        when(targetModule.getAllWorkItems()).thenReturn(List.of(uncommentedDuplicate, commentedDuplicate));
+
         List<DocumentCopyService.WorkItemCopy> workItemCopies = copyService.pairWithCopies(sourceModule, targetModule);
-        copyService.restoreDescriptionCommentMarkers(workItemCopies, Map.of("5", "50"));
+        copyService.restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("5", "50"));
 
         assertEquals(List.of(new DocumentCopyService.WorkItemCopy(uncommented, uncommentedDuplicate),
                 new DocumentCopyService.WorkItemCopy(commented, commentedDuplicate)), workItemCopies);
@@ -345,8 +350,9 @@ class DocumentCopyServiceTest {
         IWorkItem origin = workItemWithDescription("requirement", text.formatted("<span id=\"polarion-comment:5\"></span>"));
         IWorkItem duplicate = workItemWithDescription("requirement", text.formatted(""));
         List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(origin, duplicate));
+        IModule targetModule = moduleHolding(duplicate);
 
-        copyService.restoreDescriptionCommentMarkers(workItemCopies, Map.of("5", "10"));
+        copyService.restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("5", "10"));
 
         verify(duplicate).setDescription(Text.html(text.formatted("<span id=\"polarion-comment:10\"></span>")));
     }
@@ -359,15 +365,40 @@ class DocumentCopyServiceTest {
         IWorkItem otherType = workItemWithDescription("task", "Typed text.");
         IWorkItem goneOrigin = workItemWithDescription("requirement", "Gone<span id=\"polarion-comment:8\"></span> text.");
         IWorkItem gone = workItemWithDescription("requirement", "Gone text.");
-        when(gone.isUnresolvable()).thenReturn(true);
+        IWorkItem unresolvableOrigin = workItemWithDescription("requirement", "Lost<span id=\"polarion-comment:9\"></span> text.");
+        IWorkItem unresolvable = workItemWithDescription("requirement", "Lost text.");
+        when(unresolvable.isUnresolvable()).thenReturn(true);
         List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(changedOrigin, changed),
-                new DocumentCopyService.WorkItemCopy(otherTypeOrigin, otherType), new DocumentCopyService.WorkItemCopy(goneOrigin, gone));
+                new DocumentCopyService.WorkItemCopy(otherTypeOrigin, otherType), new DocumentCopyService.WorkItemCopy(goneOrigin, gone),
+                new DocumentCopyService.WorkItemCopy(unresolvableOrigin, unresolvable));
+        // the copy which is gone is no longer in the document
+        IModule targetModule = moduleHolding(changed, otherType, unresolvable);
 
-        copyService.restoreDescriptionCommentMarkers(workItemCopies, Map.of("6", "60", "7", "70", "8", "80"));
+        copyService.restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("6", "60", "7", "70", "8", "80", "9", "90"));
 
         verify(changed, never()).setDescription(any());
         verify(otherType, never()).setDescription(any());
         verify(gone, never()).setDescription(any());
+        verify(unresolvable, never()).setDescription(any());
+    }
+
+    @Test
+    void testACopyIsWrittenThroughTheInstanceTheDocumentHoldsNow() {
+        IWorkItem origin = workItemWithDescription("requirement", "Text<span id=\"polarion-comment:5\"></span>.");
+        IWorkItem pairedCopy = workItemWithDescription("requirement", "Text.");
+        // the same work item, read from the document in a later transaction
+        IWorkItem currentCopy = workItemWithDescription("requirement", "Text.");
+        String copyId = pairedCopy.getId();
+        when(currentCopy.getId()).thenReturn(copyId);
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(origin, pairedCopy));
+        IModule targetModule = moduleHolding(currentCopy);
+
+        copyService.restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("5", "50"));
+
+        verify(currentCopy).setDescription(Text.html("Text<span id=\"polarion-comment:50\"></span>."));
+        verify(currentCopy).save();
+        verify(pairedCopy, never()).setDescription(any());
+        verify(pairedCopy, never()).save();
     }
 
     @Test
@@ -391,7 +422,7 @@ class DocumentCopyServiceTest {
 
         InOrder order = inOrder(copyService);
         order.verify(copyService).remapCommentMarkersInWorkItems(targetModule, Map.of("5", "50"), fields);
-        order.verify(copyService).restoreDescriptionCommentMarkers(workItemCopies, Map.of("5", "50"));
+        order.verify(copyService).restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("5", "50"));
     }
 
     private static IModule moduleWithStructure(IModule.IStructureNode... topLevelNodes) {
@@ -409,8 +440,15 @@ class DocumentCopyServiceTest {
         return node;
     }
 
+    private static IModule moduleHolding(IWorkItem... workItems) {
+        IModule module = mock(IModule.class);
+        when(module.getAllWorkItems()).thenReturn(List.of(workItems));
+        return module;
+    }
+
     private static IWorkItem workItemWithDescription(String typeId, String description) {
         IWorkItem workItem = mock(IWorkItem.class);
+        lenient().when(workItem.getId()).thenReturn("WI-" + WORK_ITEM_IDS.incrementAndGet());
         ITypeOpt type = mock(ITypeOpt.class);
         lenient().when(type.getId()).thenReturn(typeId);
         lenient().when(workItem.getType()).thenReturn(type);
