@@ -426,21 +426,30 @@ class CommentUtilsTest {
     @Test
     void testCopyCommentMarkers_intoADuplicatedDocumentPage() {
         // a document page and its duplicate: Polarion's duplicate drops the markers and names the work items anew
-        String source = "<h1 id=\"polarion_wiki macro name=module-workitem;params=id=EL-3856\"></h1><p id=\"polarion_template_1\">\n"
-                + "  THIS DOCUMENT HAS NO CONTENT YET.<span id=\"polarion-comment:1\"></span>\n</p><p id=\"polarion_template_2\">\n"
-                + "  YOU CAN<span id=\"polarion-comment:2\"></span> CREATE AND SAVE<span id=\"polarion-comment:3\"></span> CONTENT NOW USING THIS EDITOR."
-                + "<span id=\"polarion-comment:4\"></span>\n</p><div id=\"polarion_wiki macro name=module-workitem;params=id=EL-3862\"></div>";
-        String target = "<h1 id=\"polarion_wiki macro name=module-workitem;params=id=WI-373\"></h1><p id=\"polarion_template_1\">\n"
-                + "  THIS DOCUMENT HAS NO CONTENT YET.\n</p><p id=\"polarion_template_2\">\n"
-                + "  YOU CAN CREATE AND SAVE CONTENT NOW USING THIS EDITOR.\n</p><div id=\"polarion_wiki macro name=module-workitem;params=id=WI-375\"></div>";
+        String source = """
+                <h1 id="polarion_wiki macro name=module-workitem;params=id=EL-3856"></h1><p id="polarion_template_1">
+                  THIS DOCUMENT HAS NO CONTENT YET.<span id="polarion-comment:1"></span>
+                </p><p id="polarion_template_2">
+                  YOU CAN<span id="polarion-comment:2"></span> CREATE AND SAVE<span id="polarion-comment:3"></span> CONTENT NOW USING THIS EDITOR.\
+                <span id="polarion-comment:4"></span>
+                </p><div id="polarion_wiki macro name=module-workitem;params=id=EL-3862"></div>""";
+        String target = """
+                <h1 id="polarion_wiki macro name=module-workitem;params=id=WI-373"></h1><p id="polarion_template_1">
+                  THIS DOCUMENT HAS NO CONTENT YET.
+                </p><p id="polarion_template_2">
+                  YOU CAN CREATE AND SAVE CONTENT NOW USING THIS EDITOR.
+                </p><div id="polarion_wiki macro name=module-workitem;params=id=WI-375"></div>""";
         Map<String, String> map = Map.of("1", "6", "2", "7", "3", "8", "4", "9");
 
         String result = CommentUtils.copyCommentMarkers(source, target, map);
 
-        assertEquals("<h1 id=\"polarion_wiki macro name=module-workitem;params=id=WI-373\"></h1><p id=\"polarion_template_1\">\n"
-                + "  THIS DOCUMENT HAS NO CONTENT YET.<span id=\"polarion-comment:6\"></span>\n</p><p id=\"polarion_template_2\">\n"
-                + "  YOU CAN<span id=\"polarion-comment:7\"></span> CREATE AND SAVE<span id=\"polarion-comment:8\"></span> CONTENT NOW USING THIS EDITOR."
-                + "<span id=\"polarion-comment:9\"></span>\n</p><div id=\"polarion_wiki macro name=module-workitem;params=id=WI-375\"></div>", result);
+        assertEquals("""
+                <h1 id="polarion_wiki macro name=module-workitem;params=id=WI-373"></h1><p id="polarion_template_1">
+                  THIS DOCUMENT HAS NO CONTENT YET.<span id="polarion-comment:6"></span>
+                </p><p id="polarion_template_2">
+                  YOU CAN<span id="polarion-comment:7"></span> CREATE AND SAVE<span id="polarion-comment:8"></span> CONTENT NOW USING THIS EDITOR.\
+                <span id="polarion-comment:9"></span>
+                </p><div id="polarion_wiki macro name=module-workitem;params=id=WI-375"></div>""", result);
     }
 
     @Test
