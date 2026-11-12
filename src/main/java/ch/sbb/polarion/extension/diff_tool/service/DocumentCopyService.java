@@ -120,14 +120,15 @@ public class DocumentCopyService {
             return createdModule;
         }));
 
-        if (documentDuplicateParams.isCopyDocumentComments()) {
-            TransactionalExecutor.executeInWriteTransaction(transaction -> {
-                copyModuleComments(sourceModule, targetModule, allowedFields, workItemCopies);
-                return null;
-            });
-        }
+        Map<String, String> oldToNewCommentIdMap = documentDuplicateParams.isCopyDocumentComments()
+                ? Objects.requireNonNull(TransactionalExecutor.executeInWriteTransaction(transaction -> copyModuleComments(sourceModule, targetModule)))
+                : Map.of();
 
         TransactionalExecutor.executeInWriteTransaction(transaction -> {
+            // The work items are written in this transaction only, which saves them all: a work item saved in a
+            // transaction of its own before would be saved here once more from a state older than that save,
+            // which Polarion refuses as a change conflict
+            copyCommentMarkersIntoWorkItems(targetModule, oldToNewCommentIdMap, allowedFields, workItemCopies);
             if (linkRole != null && !sourceProjectId.equals(documentDuplicateParams.getTargetDocumentIdentifier().getProjectId())) {
                 fixLinksInRichTextFields(targetModule, sourceProjectId, linkRole.getId(), allowedFields);
             }
@@ -204,14 +205,33 @@ public class DocumentCopyService {
         }).toList();
     }
 
+    /**
+     * Copies the comments of the source document and the markers of its page. The markers in the work items are
+     * pointed at the copied comments separately ({@link #copyCommentMarkersIntoWorkItems}).
+     *
+     * @return ID of a source comment mapped to the ID of its copy
+     */
     @VisibleForTesting
-    void copyModuleComments(@NotNull IModule sourceModule, @NotNull IModule targetModule, @NotNull List<DiffField> fields,
-                            @NotNull List<WorkItemCopy> workItemCopies) {
+    @NotNull
+    Map<String, String> copyModuleComments(@NotNull IModule sourceModule, @NotNull IModule targetModule) {
         Map<String, String> oldToNewCommentIdMap = commentsCopier.copyComments(sourceModule, targetModule, c -> true, targetModule.getAuthor());
+        if (!oldToNewCommentIdMap.isEmpty()) {
+            copyCommentMarkers(sourceModule, targetModule, oldToNewCommentIdMap);
+        }
+        return oldToNewCommentIdMap;
+    }
+
+    /**
+     * Points the comment markers in the fields of the duplicated work items at the copied comments.
+     *
+     * @param oldToNewCommentIdMap ID of a source comment mapped to the ID of its copy, empty when no comments were copied
+     */
+    @VisibleForTesting
+    void copyCommentMarkersIntoWorkItems(@NotNull IModule targetModule, @NotNull Map<String, String> oldToNewCommentIdMap,
+                                         @NotNull List<DiffField> fields, @NotNull List<WorkItemCopy> workItemCopies) {
         if (oldToNewCommentIdMap.isEmpty()) {
             return;
         }
-        copyCommentMarkers(sourceModule, targetModule, oldToNewCommentIdMap);
         remapCommentMarkersInWorkItems(targetModule, oldToNewCommentIdMap, fields);
         // After the remapping: a description restored with markers which already name the copied comments
         // must not have them renumbered once more
@@ -255,16 +275,24 @@ public class DocumentCopyService {
      * it was paired with by position ({@link #pairWithCopies}). It takes them only if both have the same type and
      * the cleaned description of the origin equals the copy's description exactly.
      * <p>
-     * A copy is written through the instance the document holds now, the one the other steps of the copy read and
-     * save as well. The instance paired in an earlier transaction would save a change that the document's own
-     * instance does not know of, and saving that one later would then fail with a change conflict.
+     * A copy is written through the instance the document holds, the one the clean-up of the copy reads and saves
+     * in the same transaction. A change made through another instance of the work item could be lost when the
+     * clean-up saves its own.
+     * <p>
+     * A copy is looked up by its project and ID among the document's own work items: a work item referenced from
+     * another project can have the same ID.
      */
     @VisibleForTesting
     void restoreDescriptionCommentMarkers(@NotNull IModule targetModule, @NotNull List<WorkItemCopy> workItemCopies, @NotNull Map<String, String> oldToNewCommentIdMap) {
-        Map<String, IWorkItem> currentWorkItems = new HashMap<>();
-        targetModule.getAllWorkItems().forEach(workItem -> currentWorkItems.putIfAbsent(workItem.getId(), workItem));
+        List<IWorkItem> externalWorkItems = targetModule.getExternalWorkItems();
+        Map<WorkItemKey, IWorkItem> currentWorkItems = new HashMap<>();
+        for (IWorkItem workItem : targetModule.getAllWorkItems()) {
+            if (!externalWorkItems.contains(workItem)) {
+                currentWorkItems.putIfAbsent(WorkItemKey.of(workItem), workItem);
+            }
+        }
         for (WorkItemCopy workItemCopy : workItemCopies) {
-            IWorkItem copy = currentWorkItems.get(workItemCopy.copy().getId());
+            IWorkItem copy = currentWorkItems.get(WorkItemKey.of(workItemCopy.copy()));
             if (copy != null) {
                 restoreDescriptionCommentMarkers(workItemCopy.origin(), copy, oldToNewCommentIdMap);
             }
@@ -365,6 +393,15 @@ public class DocumentCopyService {
      */
     @VisibleForTesting
     record WorkItemCopy(@NotNull IWorkItem origin, @NotNull IWorkItem copy) {
+    }
+
+    /**
+     * Identifies a work item across projects: a work item ID is unique only within its project.
+     */
+    private record WorkItemKey(@Nullable String projectId, @Nullable String id) {
+        static @NotNull WorkItemKey of(@NotNull IWorkItem workItem) {
+            return new WorkItemKey(workItem.getProjectId(), workItem.getId());
+        }
     }
 
 }

@@ -175,7 +175,7 @@ class DocumentCopyServiceTest {
         verify(copyService, times(0)).fixLinksInRichTextFields(any(), any(), nullable(String.class), any());
         verify(trackerService.getFolderManager(), times(1)).createFolder(nullable(String.class), nullable(String.class), nullable(String.class));
         // copyDocumentComments is false, so comments should not be copied
-        verify(copyService, never()).copyModuleComments(any(), any(), any(), any());
+        verify(copyService, never()).copyModuleComments(any(), any());
 
         // provide link role + make it available
         duplicateParams.setLinkRoleId("linkRoleId");
@@ -187,7 +187,7 @@ class DocumentCopyServiceTest {
                 copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
         verify(copyService, times(1)).fixLinksInRichTextFields(any(), any(), nullable(String.class), any());
         // still no comment copying since copyDocumentComments is false
-        verify(copyService, never()).copyModuleComments(any(), any(), any(), any());
+        verify(copyService, never()).copyModuleComments(any(), any());
 
         // now enable copying comments
         duplicateParams.setCopyDocumentComments(true);
@@ -196,11 +196,16 @@ class DocumentCopyServiceTest {
         clearInvocations(mergeService);
         assertDoesNotThrow(() ->
                 copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
-        verify(copyService, times(1)).copyModuleComments(any(), any(), any(), eq(workItemCopies));
-        // the work items are paired before handling the references can change the structure of the duplicate
+        verify(copyService, times(1)).copyModuleComments(sourceModule, module);
+        // the work items are paired before handling the references can change the structure of the duplicate,
+        // and their comment markers are written right before the clean-up, in its transaction
         InOrder order = inOrder(copyService, mergeService);
         order.verify(copyService).pairWithCopies(sourceModule, module);
         order.verify(mergeService).fixReferencedWorkItem(any(), eq(module), any(), any());
+        order.verify(copyService).copyModuleComments(sourceModule, module);
+        order.verify(copyService).copyCommentMarkersIntoWorkItems(eq(module), any(), any(), eq(workItemCopies));
+        // once for the fields which are no lists, once for the list fields
+        order.verify(copyService, times(2)).cleanUpFields(eq(module), any(), any(), any());
 
         when(module.getLastRevision()).thenReturn("42");
         DocumentIdentifier result = copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams);
@@ -278,7 +283,7 @@ class DocumentCopyServiceTest {
     }
 
     @Test
-    void testCopiedCommentsArePointedAtInTheFieldsOfTheDuplicatedWorkItems() {
+    void testCopyingTheCommentsGivesTheirMappingAndWritesNoWorkItem() {
         IModule sourceModule = mock(IModule.class);
         IModule targetModule = mock(IModule.class);
         IModuleComment sourceComment = mock(IModuleComment.class);
@@ -291,11 +296,13 @@ class DocumentCopyServiceTest {
         IModuleComment targetComment = mock(IModuleComment.class);
         when(targetComment.getId()).thenReturn("50");
         when(targetModule.createComment(any(Text.class))).thenReturn(targetComment);
-        List<DiffField> fields = List.of(DiffField.builder().key("description").build());
 
-        copyService.copyModuleComments(sourceModule, targetModule, fields, List.of());
+        assertEquals(Map.of("5", "50"), copyService.copyModuleComments(sourceModule, targetModule));
 
-        verify(copyService).remapCommentMarkersInWorkItems(targetModule, Map.of("5", "50"), fields);
+        // the work items are written in the transaction of the clean-up, which saves them all
+        verify(copyService, never()).remapCommentMarkersInWorkItems(any(), any(), any());
+        verify(copyService, never()).restoreDescriptionCommentMarkers(any(), any(), any());
+        verify(targetModule, never()).getAllWorkItems();
     }
 
     @Test
@@ -402,27 +409,61 @@ class DocumentCopyServiceTest {
     }
 
     @Test
+    void testAReferenceWithTheSameIdFromAnotherProjectIsNotTakenForTheCopy() {
+        IWorkItem origin = workItemWithDescription("requirement", "Text<span id=\"polarion-comment:5\"></span>.");
+        IWorkItem copy = workItemWithDescription("requirement", "Text.");
+        when(copy.getProjectId()).thenReturn("target");
+        IWorkItem reference = sameIdFromOtherProject(copy);
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(origin, copy));
+        IModule targetModule = moduleHolding(reference, copy);
+        when(targetModule.getExternalWorkItems()).thenReturn(List.of(reference));
+
+        copyService.restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("5", "50"));
+
+        verify(copy).setDescription(Text.html("Text<span id=\"polarion-comment:50\"></span>."));
+        verify(reference, never()).setDescription(any());
+    }
+
+    @Test
+    void testAWorkItemOfAnotherProjectIsNotTakenForTheCopyByItsIdAlone() {
+        IWorkItem origin = workItemWithDescription("requirement", "Text<span id=\"polarion-comment:5\"></span>.");
+        IWorkItem copy = workItemWithDescription("requirement", "Text.");
+        when(copy.getProjectId()).thenReturn("target");
+        IWorkItem otherProjects = sameIdFromOtherProject(copy);
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(origin, copy));
+        IModule targetModule = moduleHolding(otherProjects, copy);
+
+        copyService.restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("5", "50"));
+
+        verify(copy).setDescription(Text.html("Text<span id=\"polarion-comment:50\"></span>."));
+        verify(otherProjects, never()).setDescription(any());
+    }
+
+    @Test
     void testDescriptionsAreRestoredAfterTheOtherFieldsAreRemapped() {
-        IModule sourceModule = mock(IModule.class);
         IModule targetModule = mock(IModule.class);
-        IModuleComment sourceComment = mock(IModuleComment.class);
-        when(sourceComment.getId()).thenReturn("5");
-        when(sourceComment.getText()).thenReturn(Text.plain("comment text"));
-        IPObjectList<IModuleComment> childComments = mockCommentList(List.of());
-        when(sourceComment.getChildComments()).thenReturn(childComments);
-        IPObjectList<IModuleComment> rootComments = mockCommentList(List.of(sourceComment));
-        when(sourceModule.getRootComments(true)).thenReturn(rootComments);
-        IModuleComment targetComment = mock(IModuleComment.class);
-        when(targetComment.getId()).thenReturn("50");
-        when(targetModule.createComment(any(Text.class))).thenReturn(targetComment);
         List<DiffField> fields = List.of(DiffField.builder().key("description").build());
         List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of();
+        Map<String, String> oldToNewCommentIdMap = Map.of("5", "50");
 
-        copyService.copyModuleComments(sourceModule, targetModule, fields, workItemCopies);
+        copyService.copyCommentMarkersIntoWorkItems(targetModule, oldToNewCommentIdMap, fields, workItemCopies);
 
         InOrder order = inOrder(copyService);
-        order.verify(copyService).remapCommentMarkersInWorkItems(targetModule, Map.of("5", "50"), fields);
-        order.verify(copyService).restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("5", "50"));
+        order.verify(copyService).remapCommentMarkersInWorkItems(targetModule, oldToNewCommentIdMap, fields);
+        order.verify(copyService).restoreDescriptionCommentMarkers(targetModule, workItemCopies, oldToNewCommentIdMap);
+    }
+
+    @Test
+    void testNoWorkItemIsTouchedWhenNoCommentsWereCopied() {
+        IModule targetModule = mock(IModule.class);
+        List<DiffField> fields = List.of(DiffField.builder().key("description").build());
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of();
+        Map<String, String> noComments = Map.of();
+
+        copyService.copyCommentMarkersIntoWorkItems(targetModule, noComments, fields, workItemCopies);
+
+        verify(copyService, never()).remapCommentMarkersInWorkItems(any(), any(), any());
+        verify(copyService, never()).restoreDescriptionCommentMarkers(any(), any(), any());
     }
 
     private static IModule moduleWithStructure(IModule.IStructureNode... topLevelNodes) {
@@ -438,6 +479,14 @@ class DocumentCopyServiceTest {
         lenient().when(node.isExternal()).thenReturn(external);
         lenient().when(node.getChildren()).thenReturn(List.of(children));
         return node;
+    }
+
+    private static IWorkItem sameIdFromOtherProject(IWorkItem workItem) {
+        IWorkItem other = workItemWithDescription("requirement", "Text.");
+        String id = workItem.getId();
+        lenient().when(other.getId()).thenReturn(id);
+        lenient().when(other.getProjectId()).thenReturn("other");
+        return other;
     }
 
     private static IModule moduleHolding(IWorkItem... workItems) {
@@ -577,7 +626,7 @@ class DocumentCopyServiceTest {
         when(emptyComments.isEmpty()).thenReturn(true);
         when(sourceModule.getRootComments(true)).thenReturn(emptyComments);
 
-        copyService.copyModuleComments(sourceModule, targetModule, List.of(), List.of());
+        copyService.copyModuleComments(sourceModule, targetModule);
 
         verify(targetModule, never()).createComment(any());
     }
@@ -611,7 +660,7 @@ class DocumentCopyServiceTest {
         when(sourceModule.getHomePageContent()).thenReturn(Text.html("page <span id=\"polarion-comment:5\"></span> content"));
         when(targetModule.getHomePageContent()).thenReturn(Text.html("page  content"));
 
-        copyService.copyModuleComments(sourceModule, targetModule, List.of(), List.of());
+        copyService.copyModuleComments(sourceModule, targetModule);
 
         verify(targetModule).createComment(Text.plain("comment text"));
         verify(targetComment, times(1)).save(); // non-resolved root is saved only once
@@ -646,7 +695,7 @@ class DocumentCopyServiceTest {
 
         when(sourceModule.getHomePageContent()).thenReturn(null);
 
-        copyService.copyModuleComments(sourceModule, targetModule, List.of(), List.of());
+        copyService.copyModuleComments(sourceModule, targetModule);
 
         verify(targetComment).setResolvedComment(true);
         verify(targetComment, times(2)).save(); // first save during comment creation, second save to persist the resolved flag
@@ -690,7 +739,7 @@ class DocumentCopyServiceTest {
 
         when(sourceModule.getHomePageContent()).thenReturn(null);
 
-        copyService.copyModuleComments(sourceModule, targetModule, List.of(), List.of());
+        copyService.copyModuleComments(sourceModule, targetModule);
 
         verify(targetModule).createComment(Text.plain("root text"));
         verify(targetRoot).createChildComment(Text.plain("child text"));
@@ -738,7 +787,7 @@ class DocumentCopyServiceTest {
 
         when(sourceModule.getHomePageContent()).thenReturn(null);
 
-        copyService.copyModuleComments(sourceModule, targetModule, List.of(), List.of());
+        copyService.copyModuleComments(sourceModule, targetModule);
 
         // Resolved flag set on root after children exist
         verify(targetRoot).setResolvedComment(true);
