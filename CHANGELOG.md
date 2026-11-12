@@ -1,5 +1,14 @@
 # Changelog
 
+## [9.4.3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.2...v9.4.3) (2026-11-12)
+
+
+### Bug Fixes
+
+* correct fonts, column widths and borders of diff view in PDF ([#821](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/821)) ([c9364a0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/c9364a0d18e5224959f58a790d8c19e88f41b6af)), closes [#814](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/814)
+* disable PDF export until diff is complete ([#817](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/817)) ([6ba27f0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/6ba27f058f4d4fe144d64b0d218c6df2330a700c))
+* keep PDF export complete across page breaks ([#820](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/820)) ([9b3eedd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9b3eedd5d9a80bfdb28507f04408fc7f3852a8d6))
+
 ## [9.4.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.1...v9.4.2) (2026-11-10)
 
 
