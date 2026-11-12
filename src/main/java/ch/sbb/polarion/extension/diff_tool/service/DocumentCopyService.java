@@ -31,10 +31,13 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DocumentCopyService {
 
@@ -288,11 +291,11 @@ public class DocumentCopyService {
                 continue;
             }
             boolean modified = false;
-            for (DiffField field : fields) {
-                if (polarionService.getFieldValue(workItem, field.getKey()) instanceof Text text) {
+            for (String fieldKey : fieldKeysOf(workItem, fields)) {
+                if (polarionService.getFieldValue(workItem, fieldKey) instanceof Text text) {
                     String remapped = CommentUtils.remapComments(text.getContent(), oldToNewCommentIdMap);
                     if (!remapped.equals(text.getContent())) {
-                        polarionService.setFieldValue(workItem, field.getKey(), new Text(text.getType(), remapped));
+                        polarionService.setFieldValue(workItem, fieldKey, new Text(text.getType(), remapped));
                         modified = true;
                     }
                 }
@@ -301,6 +304,18 @@ public class DocumentCopyService {
                 workItem.save();
             }
         }
+    }
+
+    /**
+     * The keys of the fields configured for the type of a work item, each key once: the markers of a field remapped
+     * twice would be read the second time as markers of the source document, and taken out.
+     */
+    private @NotNull Set<String> fieldKeysOf(@NotNull IWorkItem workItem, @NotNull List<DiffField> fields) {
+        String typeId = typeId(workItem);
+        return fields.stream()
+                .filter(field -> field.getWiTypeId() == null || field.getWiTypeId().equals(typeId))
+                .map(DiffField::getKey)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private void copyCommentMarkers(@NotNull IModule sourceModule, @NotNull IModule targetModule,

@@ -244,6 +244,27 @@ class DocumentCopyServiceTest {
     }
 
     @Test
+    void testAFieldConfiguredForSeveralTypesIsRemappedOnceAndOnlyFieldsOfTheItemsTypeAreRemapped() {
+        IModule targetModule = mock(IModule.class);
+        IWorkItem workItem = workItemWithDescription("requirement", "");
+        when(targetModule.getExternalWorkItems()).thenReturn(List.of());
+        when(targetModule.getAllWorkItems()).thenReturn(List.of(workItem));
+        doReturn(Text.html("a<span id=\"polarion-comment:5\"></span>b")).when(polarionService).getFieldValue(workItem, "richText");
+        doNothing().when(polarionService).setFieldValue(any(), anyString(), any());
+        List<DiffField> fields = List.of(
+                DiffField.builder().key("richText").wiTypeId("requirement").build(),
+                DiffField.builder().key("richText").wiTypeId("task").build(),
+                DiffField.builder().key("richText").build(),
+                DiffField.builder().key("taskOnly").wiTypeId("task").build());
+
+        copyService.remapCommentMarkersInWorkItems(targetModule, Map.of("5", "50"), fields);
+
+        verify(polarionService, times(1)).setFieldValue(eq(workItem), eq("richText"), any());
+        verify(polarionService).setFieldValue(workItem, "richText", Text.html("a<span id=\"polarion-comment:50\"></span>b"));
+        verify(polarionService, never()).getFieldValue(workItem, "taskOnly");
+    }
+
+    @Test
     void testCopiedCommentsArePointedAtInTheFieldsOfTheDuplicatedWorkItems() {
         IModule sourceModule = mock(IModule.class);
         IModule targetModule = mock(IModule.class);
