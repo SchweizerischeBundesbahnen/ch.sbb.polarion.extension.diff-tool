@@ -1061,6 +1061,14 @@ a.wi-tag.moved:hover {
     padding-left: 0;
   }
 
+  /* A Bootstrap row is a flex container. WeasyPrint cannot continue one on the next page: the rest of a work
+     item, or of a field, which does not fit on its page is lost, and so is everything after it. As a block it
+     continues. The first holds the fields of a work item, the second one field compared as "Fields". */
+  .wi-diff > .content.row,
+  .wi-diff.row {
+    display: block;
+  }
+
   .header.row,
   .comparison-header {
     font-size: 8pt;
