@@ -48,7 +48,8 @@ class DiffInternalControllerTest {
         mockedApp.when(DiffToolRestApplication::getExecutionService).thenReturn(queue);
 
         controller = new DiffInternalController();
-        when(polarionServiceConstruction.constructed().get(0).getSecurityService()).thenReturn(mock(ISecurityService.class));
+        ISecurityService securityService = mock(ISecurityService.class);
+        when(polarionServiceConstruction.constructed().get(0).getSecurityService()).thenReturn(securityService);
 
         diffService = mock(DiffService.class);
         Field diffServiceField = DiffInternalController.class.getDeclaredField("diffService");
