@@ -119,10 +119,11 @@ class ExecutionQueueMonitorTest {
     private void runTestEndpointCall(ExecutionQueueService executionService, ExecutionQueueModel model) {
         try (MockedStatic<ExecutionQueueSettings> mockStaticSettings = mockStatic(ExecutionQueueSettings.class)) {
             mockStaticSettings.when(ExecutionQueueSettings::readAsSystemUser).thenReturn(model);
+            ISecurityService securityService = mock(ISecurityService.class);
             executionService.executeAndWait(new FeatureExecutionTask<>(Feature.DIFF_HTML, () -> {
                 await().pollDelay(1, TimeUnit.SECONDS).until(() -> true);
                 return true;
-            }, mock(ISecurityService.class)));
+            }, securityService));
         }
     }
 

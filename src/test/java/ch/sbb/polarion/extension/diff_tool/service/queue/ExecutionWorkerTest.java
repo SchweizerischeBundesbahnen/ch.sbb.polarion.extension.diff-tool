@@ -118,9 +118,10 @@ class ExecutionWorkerTest {
     }
 
     private static FeatureExecutionTask<Boolean> waitForAll(CountDownLatch latch) {
+        ISecurityService securityService = mock(ISecurityService.class);
         return new FeatureExecutionTask<>(Feature.DIFF_HTML, () -> {
             latch.countDown();
             return latch.await(5, TimeUnit.SECONDS);
-        }, mock(ISecurityService.class));
+        }, securityService);
     }
 }

@@ -27,8 +27,9 @@ class FeatureExecutionTaskTest {
         when(mockTask.call()).thenReturn(expectedResult);
 
         CountersRegistry mockRegistry = mock(CountersRegistry.class);
+        ISecurityService securityService = mock(ISecurityService.class);
 
-        FeatureExecutionTask<String> executionTask = new FeatureExecutionTask<>(feature, mockTask, mock(ISecurityService.class));
+        FeatureExecutionTask<String> executionTask = new FeatureExecutionTask<>(feature, mockTask, securityService);
         executionTask.setCountersRegistry(mockRegistry);
 
         String result = executionTask.call();
@@ -48,8 +49,9 @@ class FeatureExecutionTaskTest {
         when(mockTask.call()).thenThrow(originalException);
 
         CountersRegistry mockRegistry = mock(CountersRegistry.class);
+        ISecurityService securityService = mock(ISecurityService.class);
 
-        FeatureExecutionTask<String> executionTask = new FeatureExecutionTask<>(feature, mockTask, mock(ISecurityService.class));
+        FeatureExecutionTask<String> executionTask = new FeatureExecutionTask<>(feature, mockTask, securityService);
         executionTask.setCountersRegistry(mockRegistry);
 
         RejectedExecutionException exception = assertThrows(RejectedExecutionException.class, executionTask::call);
@@ -77,7 +79,8 @@ class FeatureExecutionTaskTest {
     void countersReturnToZeroWhenTheTaskCompletes() {
         Feature feature = Feature.DIFF_HTML;
         CountersRegistry registry = new CountersRegistry();
-        FeatureExecutionTask<String> executionTask = new FeatureExecutionTask<>(feature, () -> "ok", mock(ISecurityService.class));
+        ISecurityService securityService = mock(ISecurityService.class);
+        FeatureExecutionTask<String> executionTask = new FeatureExecutionTask<>(feature, () -> "ok", securityService);
         executionTask.setCountersRegistry(registry);
         registry.enqueue(feature);
 
@@ -91,9 +94,10 @@ class FeatureExecutionTaskTest {
     void countersReturnToZeroWhenTheTaskFails() {
         Feature feature = Feature.DIFF_TEXT;
         CountersRegistry registry = new CountersRegistry();
+        ISecurityService securityService = mock(ISecurityService.class);
         FeatureExecutionTask<String> executionTask = new FeatureExecutionTask<>(feature, () -> {
             throw new IllegalStateException("boom");
-        }, mock(ISecurityService.class));
+        }, securityService);
         executionTask.setCountersRegistry(registry);
         registry.enqueue(feature);
 
@@ -113,12 +117,13 @@ class FeatureExecutionTaskTest {
         Feature feature = Feature.DIFF_DOCUMENTS;
         Subject scheduler = new Subject();
         ISecurityService securityService = mock(ISecurityService.class);
+        CountersRegistry countersRegistry = mock(CountersRegistry.class);
         when(securityService.getCurrentSubject()).thenReturn(scheduler);
         when(securityService.doAsUser(eq(scheduler), any(PrivilegedExceptionAction.class)))
                 .thenAnswer(invocation -> ((PrivilegedExceptionAction<String>) invocation.getArgument(1)).run());
 
         FeatureExecutionTask<String> executionTask = new FeatureExecutionTask<>(feature, () -> "diff", securityService);
-        executionTask.setCountersRegistry(mock(CountersRegistry.class));
+        executionTask.setCountersRegistry(countersRegistry);
         when(securityService.getCurrentSubject()).thenReturn(null);
 
         assertEquals("diff", executionTask.call());
@@ -128,8 +133,9 @@ class FeatureExecutionTaskTest {
     @Test
     void runsAsItIsWhenScheduledWithoutSubject() throws Exception {
         ISecurityService securityService = mock(ISecurityService.class);
+        CountersRegistry countersRegistry = mock(CountersRegistry.class);
         FeatureExecutionTask<String> executionTask = new FeatureExecutionTask<>(Feature.DIFF_HTML, () -> "ok", securityService);
-        executionTask.setCountersRegistry(mock(CountersRegistry.class));
+        executionTask.setCountersRegistry(countersRegistry);
 
         assertEquals("ok", executionTask.call());
         verify(securityService, never()).doAsUser(any(), any(PrivilegedExceptionAction.class));
@@ -140,11 +146,12 @@ class FeatureExecutionTaskTest {
         Subject scheduler = new Subject();
         Exception originalException = new IllegalStateException("not found");
         ISecurityService securityService = mock(ISecurityService.class);
+        CountersRegistry countersRegistry = mock(CountersRegistry.class);
         when(securityService.getCurrentSubject()).thenReturn(scheduler);
         when(securityService.doAsUser(eq(scheduler), any(PrivilegedExceptionAction.class)))
                 .thenThrow(new PrivilegedActionException(originalException));
         FeatureExecutionTask<String> executionTask = new FeatureExecutionTask<>(Feature.DIFF_DOCUMENTS, () -> "never", securityService);
-        executionTask.setCountersRegistry(mock(CountersRegistry.class));
+        executionTask.setCountersRegistry(countersRegistry);
 
         RejectedExecutionException exception = assertThrows(RejectedExecutionException.class, executionTask::call);
         assertEquals(originalException, exception.getCause());
