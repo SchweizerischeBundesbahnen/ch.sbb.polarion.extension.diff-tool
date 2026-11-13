@@ -9,6 +9,7 @@ import ch.sbb.polarion.extension.diff_tool.service.PolarionService;
 import ch.sbb.polarion.extension.diff_tool.service.queue.ExecutionQueueService;
 import ch.sbb.polarion.extension.diff_tool.service.queue.FeatureExecutionTask;
 import ch.sbb.polarion.extension.diff_tool.util.TestUtils;
+import com.polarion.platform.security.ISecurityService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,8 @@ class DiffInternalControllerTest {
         mockedApp.when(DiffToolRestApplication::getExecutionService).thenReturn(queue);
 
         controller = new DiffInternalController();
+        ISecurityService securityService = mock(ISecurityService.class);
+        when(polarionServiceConstruction.constructed().get(0).getSecurityService()).thenReturn(securityService);
 
         diffService = mock(DiffService.class);
         Field diffServiceField = DiffInternalController.class.getDeclaredField("diffService");
