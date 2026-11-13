@@ -313,6 +313,6 @@ public class DiffInternalController {
     }
 
     public <T> T schedule(Feature feature, Callable<T> execution) {
-        return executionService.executeAndWait(new FeatureExecutionTask<>(feature, execution));
+        return executionService.executeAndWait(new FeatureExecutionTask<>(feature, execution, polarionService.getSecurityService()));
     }
 }
