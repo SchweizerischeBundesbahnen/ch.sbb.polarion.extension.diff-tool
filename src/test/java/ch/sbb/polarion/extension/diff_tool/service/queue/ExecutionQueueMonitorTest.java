@@ -7,6 +7,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.queue.StatisticsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.ExecutionQueueModel;
 import ch.sbb.polarion.extension.diff_tool.settings.ExecutionQueueSettings;
+import com.polarion.platform.security.ISecurityService;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
@@ -121,7 +122,7 @@ class ExecutionQueueMonitorTest {
             executionService.executeAndWait(new FeatureExecutionTask<>(Feature.DIFF_HTML, () -> {
                 await().pollDelay(1, TimeUnit.SECONDS).until(() -> true);
                 return true;
-            }));
+            }, mock(ISecurityService.class)));
         }
     }
 

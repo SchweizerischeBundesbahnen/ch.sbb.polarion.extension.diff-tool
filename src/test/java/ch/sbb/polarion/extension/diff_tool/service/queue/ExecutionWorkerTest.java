@@ -5,6 +5,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.queue.StatisticsParams;
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStatisticsEntry;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.ExecutionQueueModel;
 import ch.sbb.polarion.extension.diff_tool.settings.ExecutionQueueSettings;
+import com.polarion.platform.security.ISecurityService;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
@@ -21,6 +22,7 @@ import static ch.sbb.polarion.extension.diff_tool.rest.model.queue.TimeframeStat
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
 class ExecutionWorkerTest {
@@ -119,6 +121,6 @@ class ExecutionWorkerTest {
         return new FeatureExecutionTask<>(Feature.DIFF_HTML, () -> {
             latch.countDown();
             return latch.await(5, TimeUnit.SECONDS);
-        });
+        }, mock(ISecurityService.class));
     }
 }
