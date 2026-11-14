@@ -1,5 +1,14 @@
 # Changelog
 
+## [9.4.5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.4...v9.4.5) (2026-11-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency vite to v8.3.7 ([#828](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/828)) ([ed833fc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ed833fc9af147469a43ab72dc5d0c129d48026cd))
+* **deps:** update dependency vite to v8.3.8 ([#834](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/834)) ([9af6dcd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9af6dcd9a5b64f7952a4efbf4cccc19bb150227b))
+* run queued feature tasks as scheduling user ([#833](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/833)) ([42f9aec](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/42f9aecfeec230bcc5f78b1ec0198069529def38))
+
 ## [9.4.4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.3...v9.4.4) (2026-11-13)
 
 
