@@ -440,38 +440,39 @@ public class DocumentsChapterMergeService {
      */
     @VisibleForTesting
     void restoreMovedCommentMarkers(@NotNull DocumentsChapterMergeContext context) {
-        List<IWorkItem> workItemsToRestore = context.getMovedItems().stream()
-                .filter(workItem -> context.getMovedItemsCommentedTexts().containsKey(workItem.getId()))
-                .toList();
+        // Every work item moveIn took over, including one whose placement failed afterwards: it is in the target
+        // document all the same, and so are the comments its markers name
+        List<String> workItemsToRestore = List.copyOf(context.getMovedItemsCommentedTexts().keySet());
         if (workItemsToRestore.isEmpty()) {
             return;
         }
         try {
             TransactionalExecutor.executeInWriteTransaction(transaction -> {
-                workItemsToRestore.forEach(workItem -> restoreMovedCommentMarkers(context, workItem));
+                workItemsToRestore.forEach(workItemId -> restoreMovedCommentMarkers(context, workItemId));
                 return null;
             });
         } catch (Exception e) {
             logger.error("Could not restore the comment markers of the workitems moved into document '%s'".formatted(context.getTargetModule().getModuleName()), e);
             context.reportChapterEntry(WARNING, "comment markers of the moved workitems %s could not be restored: %s"
-                    .formatted(workItemsToRestore.stream().map(IWorkItem::getId).toList(), e.getMessage()));
+                    .formatted(workItemsToRestore, e.getMessage()));
         }
     }
 
     /**
      * Writes the comment markers of one moved work item, through its current instance: the one the merge moved
-     * belongs to the transaction which moved it.
+     * belongs to the transaction which moved it. A work item is moved only within its project, the one of the
+     * target document.
      * <p>
      * A field is written only while it holds the text the move left in it. A field changed after the merge was
      * committed keeps that change, and its markers are reported as not restored.
      */
     @VisibleForTesting
-    void restoreMovedCommentMarkers(@NotNull DocumentsChapterMergeContext context, @NotNull IWorkItem movedWorkItem) {
-        Map<String, MovedText> texts = context.getMovedItemsCommentedTexts().get(movedWorkItem.getId());
+    void restoreMovedCommentMarkers(@NotNull DocumentsChapterMergeContext context, @NotNull String movedWorkItemId) {
+        Map<String, MovedText> texts = context.getMovedItemsCommentedTexts().get(movedWorkItemId);
         if (texts == null || texts.isEmpty()) {
             return;
         }
-        IWorkItem workItem = polarionService.getWorkItem(movedWorkItem.getProjectId(), movedWorkItem.getId());
+        IWorkItem workItem = polarionService.getWorkItem(context.getTargetModule().getProjectId(), movedWorkItemId);
         boolean modified = false;
         for (Map.Entry<String, MovedText> entry : texts.entrySet()) {
             Object currentText = polarionService.getFieldValue(workItem, entry.getKey());
@@ -480,7 +481,7 @@ public class DocumentsChapterMergeService {
                 modified = true;
             } else if (!entry.getValue().restored().equals(currentText)) {
                 context.reportChapterEntry(WARNING, "comment markers of field '%s' of workitem '%s' were not restored: the field was changed after the merge"
-                        .formatted(entry.getKey(), movedWorkItem.getId()));
+                        .formatted(entry.getKey(), movedWorkItemId));
             }
         }
         if (modified) {

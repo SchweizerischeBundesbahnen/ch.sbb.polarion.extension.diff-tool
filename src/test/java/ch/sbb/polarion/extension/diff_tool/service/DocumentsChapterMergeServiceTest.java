@@ -583,31 +583,40 @@ class DocumentsChapterMergeServiceTest {
     }
 
     @Test
-    void testOnlyTheWorkItemsWhichWereMovedGetTheirCommentMarkersBack() {
-        MovedText description = new MovedText(Text.html("<p>ab</p>"), Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
-        DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
-        when(context.getMovedItemsCommentedTexts()).thenReturn(Map.of("SOURCE-2", Map.of("description", description)));
-        // SOURCE-2 could not be moved, so it is not among the moved items
-        IWorkItem anotherMovedItem = workItem("source", "SOURCE-3", "requirement");
-        when(context.getMovedItems()).thenReturn(List.of(anotherMovedItem));
+    void testAnItemWhosePlacementFailedAfterTheMoveGetsItsCommentMarkersBack() {
+        when(targetModule.getProjectId()).thenReturn("source"); // same project as the source document
 
-        documentsChapterMergeService.restoreMovedCommentMarkers(context);
+        IModule.IStructureNode sourceChapter = chapter(sourceModule, "2", heading("SOURCE-1"));
+        IWorkItem movedItem = workItem("source", "SOURCE-2", "requirement");
+        addChild(sourceChapter, node(movedItem, false));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "type");
+        Text description = Text.html("<p>a<span id=\"polarion-comment:5\"></span>b</p>");
+        withDescription(movedItem, description.getContent());
+        IWorkItem committedItem = workItem("source", "SOURCE-2", "requirement");
+        when(polarionService.getWorkItem("source", "SOURCE-2")).thenReturn(committedItem);
+        when(polarionService.getFieldValue(committedItem, "description")).thenReturn(HTMLCleaner.cleanWiDesc(description, true, true));
+        when(commentsCopier.copyComments(eq(sourceModule), eq(targetModule), any(), any())).thenReturn(Map.of("5", "17"));
+        // moveIn has taken it over, and only then its placement fails
+        doThrow(new IllegalStateException("cannot place")).when(mergeService).placeNode(eq(movedItem), any(), any(), anyInt(), anyBoolean());
 
-        verify(polarionService, never()).getWorkItem(anyString(), anyString());
-        verify(polarionService, never()).setFieldValue(any(), anyString(), any());
+        MergeResult result = inTransaction(() -> documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.MOVE, ChapterInsertMode.UNDER)));
+
+        assertEquals(1, result.getMergeReport().getCreationFailed().size());
+        verify(polarionService).setFieldValue(committedItem, "description", Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
+        verify(committedItem).save();
     }
 
     @Test
     void testATextOfAMovedItemWhichStillHasItsCommentMarkersIsNotWrittenAgain() {
-        IWorkItem movedItem = workItem("source", "SOURCE-2", "requirement");
-        IWorkItem committedItem = workItem("source", "SOURCE-2", "requirement");
-        when(polarionService.getWorkItem("source", "SOURCE-2")).thenReturn(committedItem);
+        IWorkItem committedItem = workItem("target", "SOURCE-2", "requirement");
+        when(polarionService.getWorkItem("target", "SOURCE-2")).thenReturn(committedItem);
         MovedText description = new MovedText(Text.html("<p>ab</p>"), Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
         when(polarionService.getFieldValue(committedItem, "description")).thenReturn(Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
         DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
         when(context.getMovedItemsCommentedTexts()).thenReturn(Map.of("SOURCE-2", Map.of("description", description)));
 
-        documentsChapterMergeService.restoreMovedCommentMarkers(context, movedItem);
+        documentsChapterMergeService.restoreMovedCommentMarkers(context, "SOURCE-2");
 
         verify(polarionService, never()).setFieldValue(any(), anyString(), any());
         verify(committedItem, never()).save();
@@ -615,16 +624,15 @@ class DocumentsChapterMergeServiceTest {
 
     @Test
     void testAFieldChangedAfterTheMergeKeepsThatChange() {
-        IWorkItem movedItem = workItem("source", "SOURCE-2", "requirement");
-        IWorkItem committedItem = workItem("source", "SOURCE-2", "requirement");
-        when(polarionService.getWorkItem("source", "SOURCE-2")).thenReturn(committedItem);
+        IWorkItem committedItem = workItem("target", "SOURCE-2", "requirement");
+        when(polarionService.getWorkItem("target", "SOURCE-2")).thenReturn(committedItem);
         MovedText description = new MovedText(Text.html("<p>ab</p>"), Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
         // somebody edited the description between the merge and the restore of its markers
         when(polarionService.getFieldValue(committedItem, "description")).thenReturn(Text.html("<p>ab, edited</p>"));
         DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
         when(context.getMovedItemsCommentedTexts()).thenReturn(Map.of("SOURCE-2", Map.of("description", description)));
 
-        documentsChapterMergeService.restoreMovedCommentMarkers(context, movedItem);
+        documentsChapterMergeService.restoreMovedCommentMarkers(context, "SOURCE-2");
 
         verify(polarionService, never()).setFieldValue(any(), anyString(), any());
         verify(committedItem, never()).save();
