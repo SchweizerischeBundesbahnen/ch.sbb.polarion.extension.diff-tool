@@ -475,16 +475,13 @@ public class DocumentsChapterMergeService {
         boolean modified = false;
         for (Map.Entry<String, MovedText> entry : texts.entrySet()) {
             Object currentText = polarionService.getFieldValue(workItem, entry.getKey());
-            if (entry.getValue().restored().equals(currentText)) {
-                continue;
-            }
-            if (!entry.getValue().afterMove().equals(currentText)) {
+            if (entry.getValue().afterMove().equals(currentText) && !entry.getValue().restored().equals(currentText)) {
+                polarionService.setFieldValue(workItem, entry.getKey(), entry.getValue().restored());
+                modified = true;
+            } else if (!entry.getValue().restored().equals(currentText)) {
                 context.reportChapterEntry(WARNING, "comment markers of field '%s' of workitem '%s' were not restored: the field was changed after the merge"
                         .formatted(entry.getKey(), movedWorkItem.getId()));
-                continue;
             }
-            polarionService.setFieldValue(workItem, entry.getKey(), entry.getValue().restored());
-            modified = true;
         }
         if (modified) {
             workItem.save();
