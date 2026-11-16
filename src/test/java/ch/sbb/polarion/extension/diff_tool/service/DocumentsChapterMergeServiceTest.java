@@ -487,6 +487,128 @@ class DocumentsChapterMergeServiceTest {
     }
 
     @Test
+    void testAMovedItemGetsItsCommentMarkersBackPointedAtTheCommentsCopiedIntoTheTargetDocument() {
+        when(targetModule.getProjectId()).thenReturn("source"); // same project as the source document
+
+        IModule.IStructureNode sourceChapter = chapter(sourceModule, "2", heading("SOURCE-1"));
+        IWorkItem movedItem = workItem("source", "SOURCE-2", "requirement");
+        addChild(sourceChapter, node(movedItem, false));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "type");
+        withTexts(movedItem, Map.of(
+                "description", "<p>a<span id=\"polarion-comment:5\"></span>b</p>",
+                "customText", "<p>c<span id=\"polarion-comment:6\"></span>d</p>"));
+        // what the work item holds once the merge is committed: moveIn took the markers out of the description only
+        IWorkItem committedItem = workItem("source", "SOURCE-2", "requirement");
+        when(polarionService.getWorkItem("source", "SOURCE-2")).thenReturn(committedItem);
+        when(polarionService.getFieldValue(committedItem, "description")).thenReturn(Text.html("<p>ab</p>"));
+        when(polarionService.getFieldValue(committedItem, "customText")).thenReturn(Text.html("<p>c<span id=\"polarion-comment:6\"></span>d</p>"));
+        when(commentsCopier.copyComments(eq(sourceModule), eq(targetModule), any(), any())).thenReturn(Map.of("5", "17", "6", "18"));
+
+        MergeResult result = inTransaction(() -> documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.MOVE, ChapterInsertMode.UNDER)));
+
+        ArgumentCaptor<Predicate<IModuleComment>> commentsToCopy = ArgumentCaptor.captor();
+        InOrder order = inOrder(commentsCopier, targetModule, committedItem);
+        // the markers are read and the comments they name copied before moveIn takes the markers out
+        order.verify(commentsCopier).copyComments(eq(sourceModule), eq(targetModule), commentsToCopy.capture(), any());
+        order.verify(targetModule).moveIn(List.of(movedItem));
+        // Polarion refuses a second write of a work item in the transaction which moved it, so the markers come after it
+        order.verify(targetModule).save();
+        order.verify(committedItem).save();
+        verify(movedItem, never()).save();
+        verify(polarionService).setFieldValue(committedItem, "description", Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
+        verify(polarionService).setFieldValue(committedItem, "customText", Text.html("<p>c<span id=\"polarion-comment:18\"></span>d</p>"));
+        assertTrue(commentsToCopy.getValue().test(documentComment("5", null)));
+        assertTrue(commentsToCopy.getValue().test(documentComment("6", null)));
+        assertFalse(commentsToCopy.getValue().test(documentComment("7", null)));
+        // the moved item is a merged one, so the text above it on the page goes along with it
+        assertEquals(List.of("SOURCE-2"), result.getChapterMergeInfo().getMovedWorkItemIds());
+        assertTrue(result.getMergeReport().getCreationFailed().isEmpty());
+    }
+
+    @Test
+    void testCommentMarkersWhichCannotBeRestoredAreReportedWithoutFailingTheMerge() {
+        when(targetModule.getProjectId()).thenReturn("source"); // same project as the source document
+
+        IModule.IStructureNode sourceChapter = chapter(sourceModule, "2", heading("SOURCE-1"));
+        IWorkItem movedItem = workItem("source", "SOURCE-2", "requirement");
+        addChild(sourceChapter, node(movedItem, false));
+        chapter(targetModule, "3.1", heading("TARGET-1"));
+        trackerProjectCreates("TARGET-100", "type");
+        withDescription(movedItem, "<p>a<span id=\"polarion-comment:5\"></span>b</p>");
+        IWorkItem committedItem = workItem("source", "SOURCE-2", "requirement");
+        when(polarionService.getWorkItem("source", "SOURCE-2")).thenReturn(committedItem);
+        doThrow(new IllegalStateException("conflict")).when(committedItem).save();
+        when(commentsCopier.copyComments(eq(sourceModule), eq(targetModule), any(), any())).thenReturn(Map.of("5", "17"));
+
+        MergeResult result = inTransaction(() -> documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.MOVE, ChapterInsertMode.UNDER)));
+
+        assertTrue(result.isSuccess());
+        assertEquals(List.of("SOURCE-2"), result.getChapterMergeInfo().getMovedWorkItemIds());
+        assertEquals(1, result.getMergeReport().getWarnings().size());
+    }
+
+    @Test
+    void testAWorkItemMovedWithinItsDocumentKeepsTheCommentsItsMarkersName() {
+        IWorkItem movedItem = workItem("SOURCE-2", "requirement");
+        withDescription(movedItem, "<p>a<span id=\"polarion-comment:5\"></span>b</p>");
+        DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
+        when(context.getSourceDocumentIdentifier()).thenReturn(SOURCE_DOCUMENT);
+        when(context.getTargetDocumentIdentifier()).thenReturn(SOURCE_DOCUMENT);
+        List<IWorkItem> movedItems = List.of(movedItem);
+
+        Map<String, Map<String, Text>> commentedTexts = documentsChapterMergeService.copyDocumentCommentsOnMovedTexts(context, movedItems);
+
+        assertEquals(Map.of("SOURCE-2", Map.of("description", Text.html("<p>a<span id=\"polarion-comment:5\"></span>b</p>"))), commentedTexts);
+        verify(commentsCopier, never()).copyComments(any(IModule.class), any(IModule.class), any(), any());
+    }
+
+    @Test
+    void testMovedWorkItemsWithoutCommentMarkersCopyNoDocumentComments() {
+        IWorkItem movedItem = workItem("SOURCE-2", "requirement");
+        withDescription(movedItem, "<p>no comments here</p>");
+        DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
+        when(context.getSourceDocumentIdentifier()).thenReturn(SOURCE_DOCUMENT);
+        when(context.getTargetDocumentIdentifier()).thenReturn(TARGET_DOCUMENT);
+        List<IWorkItem> movedItems = List.of(movedItem);
+
+        assertEquals(Map.of(), documentsChapterMergeService.copyDocumentCommentsOnMovedTexts(context, movedItems));
+
+        verify(commentsCopier, never()).copyComments(any(IModule.class), any(IModule.class), any(), any());
+    }
+
+    @Test
+    void testOnlyTheWorkItemsWhichWereMovedGetTheirCommentMarkersBack() {
+        Text description = Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>");
+        DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
+        when(context.getMovedItemsCommentedTexts()).thenReturn(Map.of("SOURCE-2", Map.of("description", description)));
+        // SOURCE-2 could not be moved, so it is not among the moved items
+        IWorkItem anotherMovedItem = workItem("source", "SOURCE-3", "requirement");
+        when(context.getMovedItems()).thenReturn(List.of(anotherMovedItem));
+
+        documentsChapterMergeService.restoreMovedCommentMarkers(context);
+
+        verify(polarionService, never()).getWorkItem(anyString(), anyString());
+        verify(polarionService, never()).setFieldValue(any(), anyString(), any());
+    }
+
+    @Test
+    void testATextOfAMovedItemWhichStillHasItsCommentMarkersIsNotWrittenAgain() {
+        IWorkItem movedItem = workItem("source", "SOURCE-2", "requirement");
+        IWorkItem committedItem = workItem("source", "SOURCE-2", "requirement");
+        when(polarionService.getWorkItem("source", "SOURCE-2")).thenReturn(committedItem);
+        Text description = Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>");
+        when(polarionService.getFieldValue(committedItem, "description")).thenReturn(Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
+        DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
+        when(context.getMovedItemsCommentedTexts()).thenReturn(Map.of("SOURCE-2", Map.of("description", description)));
+
+        documentsChapterMergeService.restoreMovedCommentMarkers(context, movedItem);
+
+        verify(polarionService, never()).setFieldValue(any(), anyString(), any());
+        verify(committedItem, never()).save();
+    }
+
+    @Test
     void testNothingIsTakenOverWhenTheChapterIsCopied() {
         chapter(sourceModule, "2", heading("SOURCE-1"));
         chapter(targetModule, "3.1", heading("TARGET-1"));
@@ -1110,6 +1232,15 @@ class DocumentsChapterMergeServiceTest {
     private void withDescription(IWorkItem workItem, String html) {
         when(polarionService.getDeletableFields(eq(workItem), any(), any())).thenReturn(new ArrayList<>(List.of(WorkItemField.builder().key("description").build())));
         when(polarionService.getFieldValue(workItem, "description")).thenReturn(Text.html(html));
+    }
+
+    private void withTexts(IWorkItem workItem, Map<String, String> htmlByFieldKey) {
+        List<WorkItemField> fields = new ArrayList<>();
+        htmlByFieldKey.forEach((key, html) -> {
+            fields.add(WorkItemField.builder().key(key).build());
+            when(polarionService.getFieldValue(workItem, key)).thenReturn(Text.html(html));
+        });
+        when(polarionService.getDeletableFields(eq(workItem), any(), any())).thenReturn(fields);
     }
 
     private IWorkItem workItem(String projectId, String id, String typeId) {

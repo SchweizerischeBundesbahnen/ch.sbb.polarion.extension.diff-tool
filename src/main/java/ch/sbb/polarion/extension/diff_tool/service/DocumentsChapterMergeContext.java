@@ -13,6 +13,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ReferencedItemsHandli
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
 import com.polarion.alm.tracker.model.IModule;
 import com.polarion.alm.tracker.model.IWorkItem;
+import com.polarion.core.util.types.Text;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -81,6 +82,13 @@ public final class DocumentsChapterMergeContext extends SettingsAwareMergeContex
     @Setter
     @Getter(AccessLevel.NONE)
     private Map<String, String> commentIdMapping = Map.of();
+
+    /**
+     * The rich text fields of the moved work items which hold comment markers, by work item ID and field key. Each
+     * value is the text as it was before the move, with its markers pointed at the comments of the target document.
+     */
+    @Setter
+    private Map<String, Map<String, Text>> movedItemsCommentedTexts = Map.of();
 
     public DocumentsChapterMergeContext(@NotNull PolarionService polarionService, @NotNull ChapterMergeParams params) {
         super(MergeDirection.LEFT_TO_RIGHT, "", LinkRoleDirection.DIRECT, DiffModel.builder().build(), true);
