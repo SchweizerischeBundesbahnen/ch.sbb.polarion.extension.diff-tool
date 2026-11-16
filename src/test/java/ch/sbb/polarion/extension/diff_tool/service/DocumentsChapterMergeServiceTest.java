@@ -9,6 +9,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ReferencedItemsHandling;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
+import ch.sbb.polarion.extension.diff_tool.service.DocumentsChapterMergeContext.MovedText;
 import com.polarion.alm.shared.api.transaction.RunnableInWriteTransaction;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import com.polarion.alm.shared.api.transaction.WriteTransaction;
@@ -19,6 +20,7 @@ import com.polarion.alm.tracker.model.ITrackerProject;
 import com.polarion.alm.tracker.model.ITypeOpt;
 import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.core.util.types.Text;
+import com.polarion.core.util.xml.HTMLCleaner;
 import com.polarion.subterra.base.data.identification.IContextId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +41,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
+import static ch.sbb.polarion.extension.diff_tool.report.MergeReport.OperationResultType.WARNING;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -501,7 +504,8 @@ class DocumentsChapterMergeServiceTest {
         // what the work item holds once the merge is committed: moveIn took the markers out of the description only
         IWorkItem committedItem = workItem("source", "SOURCE-2", "requirement");
         when(polarionService.getWorkItem("source", "SOURCE-2")).thenReturn(committedItem);
-        when(polarionService.getFieldValue(committedItem, "description")).thenReturn(Text.html("<p>ab</p>"));
+        when(polarionService.getFieldValue(committedItem, "description"))
+                .thenReturn(HTMLCleaner.cleanWiDesc(Text.html("<p>a<span id=\"polarion-comment:5\"></span>b</p>"), true, true));
         when(polarionService.getFieldValue(committedItem, "customText")).thenReturn(Text.html("<p>c<span id=\"polarion-comment:6\"></span>d</p>"));
         when(commentsCopier.copyComments(eq(sourceModule), eq(targetModule), any(), any())).thenReturn(Map.of("5", "17", "6", "18"));
 
@@ -557,9 +561,10 @@ class DocumentsChapterMergeServiceTest {
         when(context.getTargetDocumentIdentifier()).thenReturn(SOURCE_DOCUMENT);
         List<IWorkItem> movedItems = List.of(movedItem);
 
-        Map<String, Map<String, Text>> commentedTexts = documentsChapterMergeService.copyDocumentCommentsOnMovedTexts(context, movedItems);
+        Map<String, Map<String, MovedText>> commentedTexts = documentsChapterMergeService.copyDocumentCommentsOnMovedTexts(context, movedItems);
 
-        assertEquals(Map.of("SOURCE-2", Map.of("description", Text.html("<p>a<span id=\"polarion-comment:5\"></span>b</p>"))), commentedTexts);
+        Text description = Text.html("<p>a<span id=\"polarion-comment:5\"></span>b</p>");
+        assertEquals(Map.of("SOURCE-2", Map.of("description", new MovedText(HTMLCleaner.cleanWiDesc(description, true, true), description))), commentedTexts);
         verify(commentsCopier, never()).copyComments(any(IModule.class), any(IModule.class), any(), any());
     }
 
@@ -579,7 +584,7 @@ class DocumentsChapterMergeServiceTest {
 
     @Test
     void testOnlyTheWorkItemsWhichWereMovedGetTheirCommentMarkersBack() {
-        Text description = Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>");
+        MovedText description = new MovedText(Text.html("<p>ab</p>"), Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
         DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
         when(context.getMovedItemsCommentedTexts()).thenReturn(Map.of("SOURCE-2", Map.of("description", description)));
         // SOURCE-2 could not be moved, so it is not among the moved items
@@ -597,7 +602,7 @@ class DocumentsChapterMergeServiceTest {
         IWorkItem movedItem = workItem("source", "SOURCE-2", "requirement");
         IWorkItem committedItem = workItem("source", "SOURCE-2", "requirement");
         when(polarionService.getWorkItem("source", "SOURCE-2")).thenReturn(committedItem);
-        Text description = Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>");
+        MovedText description = new MovedText(Text.html("<p>ab</p>"), Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
         when(polarionService.getFieldValue(committedItem, "description")).thenReturn(Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
         DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
         when(context.getMovedItemsCommentedTexts()).thenReturn(Map.of("SOURCE-2", Map.of("description", description)));
@@ -606,6 +611,24 @@ class DocumentsChapterMergeServiceTest {
 
         verify(polarionService, never()).setFieldValue(any(), anyString(), any());
         verify(committedItem, never()).save();
+    }
+
+    @Test
+    void testAFieldChangedAfterTheMergeKeepsThatChange() {
+        IWorkItem movedItem = workItem("source", "SOURCE-2", "requirement");
+        IWorkItem committedItem = workItem("source", "SOURCE-2", "requirement");
+        when(polarionService.getWorkItem("source", "SOURCE-2")).thenReturn(committedItem);
+        MovedText description = new MovedText(Text.html("<p>ab</p>"), Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
+        // somebody edited the description between the merge and the restore of its markers
+        when(polarionService.getFieldValue(committedItem, "description")).thenReturn(Text.html("<p>ab, edited</p>"));
+        DocumentsChapterMergeContext context = documentCommentsContext(Map.of());
+        when(context.getMovedItemsCommentedTexts()).thenReturn(Map.of("SOURCE-2", Map.of("description", description)));
+
+        documentsChapterMergeService.restoreMovedCommentMarkers(context, movedItem);
+
+        verify(polarionService, never()).setFieldValue(any(), anyString(), any());
+        verify(committedItem, never()).save();
+        verify(context).reportChapterEntry(eq(WARNING), anyString());
     }
 
     @Test

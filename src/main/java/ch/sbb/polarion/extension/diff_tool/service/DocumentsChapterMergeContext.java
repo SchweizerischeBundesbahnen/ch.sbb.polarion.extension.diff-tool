@@ -84,11 +84,19 @@ public final class DocumentsChapterMergeContext extends SettingsAwareMergeContex
     private Map<String, String> commentIdMapping = Map.of();
 
     /**
-     * The rich text fields of the moved work items which hold comment markers, by work item ID and field key. Each
-     * value is the text as it was before the move, with its markers pointed at the comments of the target document.
+     * The rich text fields of the moved work items which hold comment markers, by work item ID and field key.
      */
     @Setter
-    private Map<String, Map<String, Text>> movedItemsCommentedTexts = Map.of();
+    private Map<String, Map<String, MovedText>> movedItemsCommentedTexts = Map.of();
+
+    /**
+     * A rich text field of a moved work item which holds comment markers.
+     *
+     * @param afterMove the text the move leaves in the field
+     * @param restored  the text before the move, with its markers pointed at the comments of the target document
+     */
+    public record MovedText(@NotNull Text afterMove, @NotNull Text restored) {
+    }
 
     public DocumentsChapterMergeContext(@NotNull PolarionService polarionService, @NotNull ChapterMergeParams params) {
         super(MergeDirection.LEFT_TO_RIGHT, "", LinkRoleDirection.DIRECT, DiffModel.builder().build(), true);
