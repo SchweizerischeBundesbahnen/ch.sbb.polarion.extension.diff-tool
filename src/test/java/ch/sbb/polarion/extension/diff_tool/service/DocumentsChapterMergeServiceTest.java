@@ -539,17 +539,24 @@ class DocumentsChapterMergeServiceTest {
         addChild(sourceChapter, node(movedItem, false));
         chapter(targetModule, "3.1", heading("TARGET-1"));
         trackerProjectCreates("TARGET-100", "type");
-        withDescription(movedItem, "<p>a<span id=\"polarion-comment:5\"></span>b</p>");
+        Text description = Text.html("<p>a<span id=\"polarion-comment:5\"></span>b</p>");
+        withDescription(movedItem, description.getContent());
         IWorkItem committedItem = workItem("source", "SOURCE-2", "requirement");
         when(polarionService.getWorkItem("source", "SOURCE-2")).thenReturn(committedItem);
+        // the description as the move left it, so the markers are written and it is the save which fails
+        when(polarionService.getFieldValue(committedItem, "description")).thenReturn(HTMLCleaner.cleanWiDesc(description, true, true));
         doThrow(new IllegalStateException("conflict")).when(committedItem).save();
         when(commentsCopier.copyComments(eq(sourceModule), eq(targetModule), any(), any())).thenReturn(Map.of("5", "17"));
 
         MergeResult result = inTransaction(() -> documentsChapterMergeService.mergeChapter(params(ChapterMergeMode.MOVE, ChapterInsertMode.UNDER)));
 
+        verify(polarionService).setFieldValue(committedItem, "description", Text.html("<p>a<span id=\"polarion-comment:17\"></span>b</p>"));
+        verify(committedItem).save();
         assertTrue(result.isSuccess());
         assertEquals(List.of("SOURCE-2"), result.getChapterMergeInfo().getMovedWorkItemIds());
         assertEquals(1, result.getMergeReport().getWarnings().size());
+        assertEquals("comment markers of the moved workitems [SOURCE-2] could not be restored: conflict",
+                result.getMergeReport().getWarnings().getFirst().getDescription());
     }
 
     @Test
