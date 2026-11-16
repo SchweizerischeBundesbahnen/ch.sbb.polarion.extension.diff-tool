@@ -11,6 +11,7 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.diff.MergeWorkItemsPair;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.ReferencedItemsHandling;
 import ch.sbb.polarion.extension.diff_tool.rest.model.diff.WorkItemField;
 import ch.sbb.polarion.extension.diff_tool.rest.model.settings.DiffModel;
+import ch.sbb.polarion.extension.diff_tool.service.DocumentsChapterMergeContext.MovedText;
 import ch.sbb.polarion.extension.diff_tool.util.CommentUtils;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
@@ -22,6 +23,7 @@ import com.polarion.alm.tracker.model.IWorkItem;
 import com.polarion.alm.tracker.model.IWorkflowObject;
 import com.polarion.core.util.logging.Logger;
 import com.polarion.core.util.types.Text;
+import com.polarion.core.util.xml.HTMLCleaner;
 import com.polarion.subterra.base.data.identification.IContextId;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,6 +31,7 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -125,7 +128,8 @@ public class DocumentsChapterMergeService {
     /**
      * Merges a chapter, as one write transaction: either the target document holds the whole chapter afterwards, or
      * it holds none of it. A single work item which cannot be merged is reported and passed over - that is a result,
-     * not a failure of the merge.
+     * not a failure of the merge. The comment markers of moved work items are written back afterwards, in a
+     * transaction of their own ({@link #restoreMovedCommentMarkers(DocumentsChapterMergeContext)}).
      * <p>
      * The documents cache is not evicted here: it is keyed by the user of the request, which a merge running in the
      * background no longer has - the caller evicts it (see {@code ChapterMergeJobsService.startJob}).
@@ -177,6 +181,7 @@ public class DocumentsChapterMergeService {
             context.getTargetModule().save();
             return null;
         });
+        restoreMovedCommentMarkers(context);
 
         return result(context, true);
     }
@@ -365,8 +370,122 @@ public class DocumentsChapterMergeService {
                 .map(SourceNode::workItem)
                 .toList();
         if (!itemsToMove.isEmpty()) {
+            // Read before the move: moveIn takes the comment markers out of a description
+            context.setMovedItemsCommentedTexts(copyDocumentCommentsOnMovedTexts(context, itemsToMove));
             context.getTargetModule().moveIn(itemsToMove);
             mergeService.reloadModule(context.getTargetModule());
+        }
+    }
+
+    /**
+     * Gives the target document the document comments written on the text of the moved work items. Such a comment
+     * stays in the source document, and its marker moves along in a field of the work item.
+     * <p>
+     * A work item moved within its own document keeps the comments it names, so nothing is copied then.
+     *
+     * @return the texts of the moved work items which hold comment markers, by work item ID and field key
+     */
+    @VisibleForTesting
+    @NotNull
+    Map<String, Map<String, MovedText>> copyDocumentCommentsOnMovedTexts(@NotNull DocumentsChapterMergeContext context, @NotNull List<IWorkItem> movedWorkItems) {
+        Map<String, Map<String, Text>> commentedTexts = new LinkedHashMap<>();
+        Set<String> commentIds = new HashSet<>();
+        for (IWorkItem workItem : movedWorkItems) {
+            Map<String, Text> texts = new LinkedHashMap<>();
+            for (DiffField field : fieldsToCopy(workItem, context.getSourceModule()).getDiffFields()) {
+                if (polarionService.getFieldValue(workItem, field.getKey()) instanceof Text text) {
+                    List<String> fieldCommentIds = CommentUtils.extractCommentIds(text.getContent());
+                    if (!fieldCommentIds.isEmpty()) {
+                        texts.put(field.getKey(), text);
+                        commentIds.addAll(fieldCommentIds);
+                    }
+                }
+            }
+            if (!texts.isEmpty()) {
+                commentedTexts.put(workItem.getId(), texts);
+            }
+        }
+        if (commentIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, String> commentIdMapping = context.getSourceDocumentIdentifier().pointsToSameDocumentAs(context.getTargetDocumentIdentifier())
+                ? commentIds.stream().collect(Collectors.toMap(id -> id, id -> id))
+                : commentsCopier.copyComments(context.getSourceModule(), context.getTargetModule(),
+                comment -> commentIds.contains(comment.getId()), context.getTargetModule().getAuthor());
+        Map<String, Map<String, MovedText>> movedTexts = new LinkedHashMap<>();
+        commentedTexts.forEach((workItemId, texts) -> {
+            Map<String, MovedText> workItemTexts = new LinkedHashMap<>();
+            texts.forEach((fieldKey, text) -> workItemTexts.put(fieldKey, new MovedText(textAfterMove(fieldKey, text),
+                    new Text(text.getType(), CommentUtils.remapComments(text.getContent(), commentIdMapping)))));
+            movedTexts.put(workItemId, workItemTexts);
+        });
+        return movedTexts;
+    }
+
+    /**
+     * The text {@link IModule#moveIn} leaves in a field: it takes the comment markers out of a description
+     * ({@code HTMLCleaner.cleanWiDesc}) and leaves the other fields as they are.
+     */
+    private @NotNull Text textAfterMove(@NotNull String fieldKey, @NotNull Text text) {
+        return IWorkItem.KEY_DESCRIPTION.equals(fieldKey) ? HTMLCleaner.cleanWiDesc(text, true, true) : text;
+    }
+
+    /**
+     * Gives the moved work items back the comment markers of their texts, pointed at the comments of the target
+     * document ({@link #copyDocumentCommentsOnMovedTexts}).
+     * <p>
+     * This runs in a transaction of its own, after the merge is committed. Polarion refuses to write a work item again
+     * in the transaction which moved it ("The resource located inside the previously copied (moved) resources").
+     * The merge is complete without the markers, so markers which cannot be written are reported, not thrown.
+     */
+    @VisibleForTesting
+    void restoreMovedCommentMarkers(@NotNull DocumentsChapterMergeContext context) {
+        // Every work item moveIn took over, including one whose placement failed afterwards: it is in the target
+        // document all the same, and so are the comments its markers name
+        List<String> workItemsToRestore = List.copyOf(context.getMovedItemsCommentedTexts().keySet());
+        if (workItemsToRestore.isEmpty()) {
+            return;
+        }
+        try {
+            TransactionalExecutor.executeInWriteTransaction(transaction -> {
+                workItemsToRestore.forEach(workItemId -> restoreMovedCommentMarkers(context, workItemId));
+                return null;
+            });
+        } catch (Exception e) {
+            logger.error("Could not restore the comment markers of the workitems moved into document '%s'".formatted(context.getTargetModule().getModuleName()), e);
+            context.reportChapterEntry(WARNING, "comment markers of the moved workitems %s could not be restored: %s"
+                    .formatted(workItemsToRestore, e.getMessage()));
+        }
+    }
+
+    /**
+     * Writes the comment markers of one moved work item, through its current instance: the one the merge moved
+     * belongs to the transaction which moved it. A work item is moved only within its project, the one of the
+     * target document.
+     * <p>
+     * A field is written only while it holds the text the move left in it. A field changed after the merge was
+     * committed keeps that change, and its markers are reported as not restored.
+     */
+    @VisibleForTesting
+    void restoreMovedCommentMarkers(@NotNull DocumentsChapterMergeContext context, @NotNull String movedWorkItemId) {
+        Map<String, MovedText> texts = context.getMovedItemsCommentedTexts().get(movedWorkItemId);
+        if (texts == null || texts.isEmpty()) {
+            return;
+        }
+        IWorkItem workItem = polarionService.getWorkItem(context.getTargetModule().getProjectId(), movedWorkItemId);
+        boolean modified = false;
+        for (Map.Entry<String, MovedText> entry : texts.entrySet()) {
+            Object currentText = polarionService.getFieldValue(workItem, entry.getKey());
+            if (entry.getValue().afterMove().equals(currentText) && !entry.getValue().restored().equals(currentText)) {
+                polarionService.setFieldValue(workItem, entry.getKey(), entry.getValue().restored());
+                modified = true;
+            } else if (!entry.getValue().restored().equals(currentText)) {
+                context.reportChapterEntry(WARNING, "comment markers of field '%s' of workitem '%s' were not restored: the field was changed after the merge"
+                        .formatted(entry.getKey(), movedWorkItemId));
+            }
+        }
+        if (modified) {
+            workItem.save();
         }
     }
 
