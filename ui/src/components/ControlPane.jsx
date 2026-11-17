@@ -5,7 +5,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {usePathname, useRouter, useSearchParams} from "@/router/navigation";
 import useRemote from "@/services/useRemote";
 import {responseError} from "@/services/responseError";
-import usePdf from "@/services/usePdf";
+import {buildPdfHtml, convertHtmlToPdf, downloadBlob, SessionExpiredError} from "@/services/pdfExport";
 import * as DiffTypes from "@/DiffTypes";
 import * as DiffViewModes from "@/DiffViewModes";
 import Modal from "@/components/Modal";
@@ -18,7 +18,6 @@ export default function ControlPane({diff_type}) {
   const router = useRouter();
   const pathname = usePathname();
   const remote = useRemote();
-  const pdf = usePdf();
   const [swapColors, setSwapColors] = useSwapColors();
   // Derived from the query string, not frozen in state: navigation re-renders this pane without remounting it,
   // so back/forward and swapping the documents must show up here too.
@@ -117,36 +116,18 @@ export default function ControlPane({diff_type}) {
   };
 
   const exportToPDF = () => {
-    let body = pdf.preProcess(document.documentElement.innerHTML, paperSize, orientation);
+    const options = {paperSize: paperSize, orientation: orientation};
+    const html = buildPdfHtml(document, options);
     setExportInProgress(true);
-    remote.sendRequest({
-      method: "POST",
-      url: `/conversion/html-to-pdf?orientation=${orientation}&paperSize=${paperSize}`,
-      body: `<html lang='en'>${body}</html>`,
-      contentType: "text/html"
-    }).then(async response => {
-      if (response.headers?.get("x-com-ibm-team-repository-web-auth-msg") === "authrequired") {
-        alert("Your session has expired. Please refresh the page to log in. Note that any unsaved changes will be lost.");
-        return Promise.resolve();
-      }
-      if (!response.ok) {
-        throw await responseError(response);
-      }
-      return response.blob();
-    }).then(data => {
-      if (!data) return;
-      const objectURL = (window.URL ? window.URL : window.webkitURL).createObjectURL(data);
-      const anchorElement = document.createElement("a");
-      anchorElement.href = objectURL;
-      anchorElement.download = "DiffResult.pdf";
-      anchorElement.target = "_blank";
-      anchorElement.click();
-      anchorElement.remove();
-      setTimeout(() => URL.revokeObjectURL(objectURL), 100);
-    })
-    .catch(error => {
-      alert("Error occurred converting diff data to PDF" + (error && error.message ? ": " + error.message : ""));
-    }).finally(() => {
+    convertHtmlToPdf(remote.sendRequest, html, options)
+      .then(blob => downloadBlob(blob, "DiffResult.pdf"))
+      .catch(error => {
+        if (error instanceof SessionExpiredError) {
+          alert("Your session has expired. Please refresh the page to log in. Note that any unsaved changes will be lost.");
+        } else {
+          alert("Error occurred converting diff data to PDF" + (error && error.message ? ": " + error.message : ""));
+        }
+      }).finally(() => {
       setExportInProgress(false);
     });
   };

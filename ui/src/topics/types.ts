@@ -40,6 +40,33 @@ export interface SearchCollection {
   unavailableMessage?: string | null;
 }
 
+/** One row of the document table (ch...rest.model.search.SearchDocument). `id` is the document name. */
+export interface SearchDocument {
+  id: string;
+  projectId: string;
+  spaceId?: string | null;
+  /** The title of the space, its ID if it has none. */
+  spaceTitle?: string | null;
+  title?: string | null;
+  type?: EnumOption | null;
+  status?: EnumOption | null;
+  /** Epoch milliseconds. */
+  updated?: number | null;
+  readable: boolean;
+  unavailableMessage?: string | null;
+}
+
+/** Whether a document exists in a project (ch...rest.model.search.ResolvedDocument). */
+export interface ResolvedDocument {
+  spaceId: string;
+  /** The title of the space, its ID if it has none; missing when the document was not found. */
+  spaceTitle?: string | null;
+  name: string;
+  found: boolean;
+  title?: string | null;
+  unavailableMessage?: string | null;
+}
+
 /** One page of a search (ch...rest.model.search.SearchResult). */
 export interface SearchResult<T> {
   totalCount: number;

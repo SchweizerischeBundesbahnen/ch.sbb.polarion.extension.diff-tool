@@ -32,8 +32,11 @@ ids match the extender ids in `META-INF/hivemodule.xml` - see `src/features.tsx`
 `<body class="sbb-ui">` plus `<div class="app standard-admin-page">`; both are a cross-extension
 contract, not a local choice.
 
-**The navigation topics** (`topics.html`, `src/topics/`) are the three Diff Tool entries in a project's
-navigation: the root topic and the two pickers that choose what to compare. The page is chosen by
+**The navigation topics** (`topics.html`, `src/topics/`) are the four Diff Tool entries in a project's
+navigation: the root topic, the two pickers that choose what to compare, and the batch PDF export of
+documents diffs (`DocumentsBatchPage.tsx`, `batch/`). The batch export renders each pair in the viewer itself,
+embedded in a hidden frame (`documents.html?embed=pdf-export`, see `src/embed/`), so its PDF is exactly what the
+viewer exports. The page is chosen by
 `?topic=<id>`, where the ids are the node ids of `ch.sbb.polarion.extension.diff_tool.navigation` - see
 `src/topics/topics.tsx`. They replaced the nav-topic JSPs and the Java widget renderers, so their tables are
 built from the plain values `/projects/{id}/{workitems,collections}/search` returns rather than from
@@ -201,7 +204,8 @@ src/components/  the diff/merge UI
 src/services/    REST access (useRemote), diff/merge orchestration, PDF export
 src/router/      navigation.ts - the useSearchParams/usePathname/useRouter shim
 src/admin/       the RSP admin pages (pages/, components/, dev/ scaffolding)
-src/topics/      the three navigation topics: the ?topic=<id> registry, the two pickers and their table
+src/topics/      the navigation topics: the ?topic=<id> registry, the two pickers, their table, the batch PDF export
+src/embed/       the viewer embedded for the batch PDF export: URL options and the postMessage contract
 src/formext/     the three Document Properties panels, their shared row layout and their entry points
 src/features.tsx the ?feature=<id> registry, ids matching hivemodule.xml
 src/styles/      globals.css

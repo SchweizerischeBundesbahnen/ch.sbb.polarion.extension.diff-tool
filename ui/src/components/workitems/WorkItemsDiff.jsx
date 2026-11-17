@@ -19,6 +19,7 @@ import Modal from "@/components/Modal";
 import MergePane from "@/components/merge/MergePane";
 import MergeResultModal from "@/components/merge/MergeResultModal";
 import * as DiffTypes from "@/DiffTypes";
+import NoDifferences from "@/components/NoDifferences";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'targetProjectId', 'linkRole', 'ids'];
 
@@ -117,6 +118,7 @@ export default function WorkItemsDiff() {
                  mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
     </div>
 
+    <NoDifferences visible={context.state.dataLoaded && !context.state.diffsExist} />
     <ErrorsOverlay loadingContext={loadingContext} />
     <MergeInProgressOverlay mergeInProgress={mergeInProgress} />
 

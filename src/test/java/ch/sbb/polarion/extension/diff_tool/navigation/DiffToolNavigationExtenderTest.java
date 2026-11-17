@@ -22,9 +22,10 @@ class DiffToolNavigationExtenderTest {
         assertEquals("/polarion/diff-tool-app/ui/app/topics.html?topic=diff-tool&sourceProjectId=&buildId=null",
                 navigationExtender.getPageUrl(contextId));
         List<NavigationExtenderNode> rootNodes = navigationExtender.getRootNodes(contextId);
-        assertEquals(2, rootNodes.size());
-        assertTrue(allowedRootNode(rootNodes.get(0)));
-        assertTrue(allowedRootNode(rootNodes.get(1)));
+        assertEquals(3, rootNodes.size());
+        assertTrue(rootNodes.get(0) instanceof MultipleWorkItemsNode);
+        assertTrue(rootNodes.get(1) instanceof CollectionsNode);
+        assertTrue(rootNodes.get(2) instanceof DocumentsNode);
         assertFalse(navigationExtender.requiresToken());
     }
 
@@ -41,9 +42,5 @@ class DiffToolNavigationExtenderTest {
         IContextId contextId = mock(IContextId.class);
         when(contextId.getContextName()).thenReturn(contextName);
         return contextId;
-    }
-
-    private boolean allowedRootNode(NavigationExtenderNode node) {
-        return node instanceof MultipleWorkItemsNode || node instanceof CollectionsNode;
     }
 }

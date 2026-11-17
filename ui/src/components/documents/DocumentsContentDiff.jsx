@@ -4,6 +4,7 @@ import {useDataSearchParams} from "@/router/navigation";
 import useDiffBodyClassName from "@/utils/useDiffBodyClassName";
 import useDiffService from "@/services/useDiffService";
 import useLoadingContext from "@/components/loading/useLoadingContext";
+import useEmbedReporter from "@/embed/useEmbedReporter";
 import CollectionHeader from "@/components/collections/CollectionHeader";
 import DocumentProjectHeader from "@/components/documents/DocumentProjectHeader";
 import {DocumentSpaceHeader, DocumentTitleHeader} from "@/components/documents/DocumentHeader";
@@ -22,6 +23,7 @@ import useSwapDocuments from "@/utils/useSwapDocuments";
 import ComparisonHeader from "@/components/ComparisonHeader";
 import SwapDocumentsButton from "@/components/SwapDocumentsButton";
 import * as DiffTypes from "@/DiffTypes";
+import NoDifferences from "@/components/NoDifferences";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument'];
 
@@ -33,6 +35,7 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
   const swapDocuments = useSwapDocuments();
 
   const loadingContext = useLoadingContext();
+  useEmbedReporter(loadingContext);
   const mergingContext = useMergingContext({contentDiffing: true});
 
   const [docsData, setDocsData] = useState(null);
@@ -150,6 +153,7 @@ export default function DocumentsContentDiff({ enclosingCollections }) {
                  mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
     </div>
 
+    <NoDifferences visible={context.state.dataLoaded && !docsData.pairedContentAnchors.some(containsDiff)} />
     <ErrorsOverlay loadingContext={loadingContext}/>
     <MergeInProgressOverlay mergeInProgress={mergeInProgress}/>
 

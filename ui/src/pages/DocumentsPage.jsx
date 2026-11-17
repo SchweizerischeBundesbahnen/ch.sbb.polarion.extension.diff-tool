@@ -6,6 +6,7 @@ import DocumentsContentDiff from "@/components/documents/DocumentsContentDiff";
 import ExtensionInfo from "@/components/ExtensionInfo";
 import * as DiffTypes from "@/DiffTypes";
 import {useMemo} from "react";
+import {isPdfExportEmbed} from "@/embed/exportMode";
 
 export default function DocumentsPage() {
   const searchParams = useSearchParams();
@@ -22,9 +23,9 @@ export default function DocumentsPage() {
       </div>
       <ExtensionInfo />
     </div>
-    <ControlPane diff_type={compareAsWorkItems
+    {!isPdfExportEmbed() && <ControlPane diff_type={compareAsWorkItems
         ? DiffTypes.DOCUMENTS_DIFF
-        : (compareAsFields ? DiffTypes.DOCUMENTS_FIELDS_DIFF : DiffTypes.DOCUMENTS_CONTENT_DIFF)}/>
+        : (compareAsFields ? DiffTypes.DOCUMENTS_FIELDS_DIFF : DiffTypes.DOCUMENTS_CONTENT_DIFF)}/>}
     {compareAsWorkItems && <DocumentsDiff/>}
     {compareAsFields && <DocumentsFieldsDiff/>}
     {compareAsContent && <DocumentsContentDiff />}

@@ -9,6 +9,7 @@ import {DocumentSpaceHeader, DocumentTitleHeader} from "@/components/documents/D
 import ProgressBar from "@/components/loading/ProgressBar";
 import ErrorsOverlay from "@/components/ErrorsOverlay";
 import useLoadingContext from "@/components/loading/useLoadingContext";
+import useEmbedReporter from "@/embed/useEmbedReporter";
 import {useMergingContext} from "@/components/merge/useMergingContext";
 import MergePane from "@/components/merge/MergePane";
 import useDiffService from "@/services/useDiffService";
@@ -22,6 +23,7 @@ import useSwapDocuments from "@/utils/useSwapDocuments";
 import ComparisonHeader from "@/components/ComparisonHeader";
 import SwapDocumentsButton from "@/components/SwapDocumentsButton";
 import * as DiffTypes from "@/DiffTypes";
+import NoDifferences from "@/components/NoDifferences";
 
 const REQUIRED_PARAMS = ['sourceProjectId', 'sourceSpaceId', 'sourceDocument', 'targetProjectId', 'targetSpaceId', 'targetDocument'];
 
@@ -33,6 +35,7 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
   const swapDocuments = useSwapDocuments();
 
   const loadingContext = useLoadingContext();
+  useEmbedReporter(loadingContext);
   const mergingContext = useMergingContext({});
 
   const [fieldsData, setFieldsData] = useState(null);
@@ -162,6 +165,7 @@ export default function DocumentsFieldsDiff({ enclosingCollections }) {
                  mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext}/>
     </div>
 
+    <NoDifferences visible={context.state.dataLoaded && !context.state.diffsExist} />
     <ErrorsOverlay loadingContext={loadingContext}/>
     <MergeInProgressOverlay mergeInProgress={mergeInProgress}/>
 

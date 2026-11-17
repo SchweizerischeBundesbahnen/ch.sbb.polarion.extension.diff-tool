@@ -1066,6 +1066,24 @@ a.wi-tag.moved:hover {
   text-overflow: ellipsis;
 }
 
+/* The notice of a diff without differences, right below the comparison header */
+.no-differences {
+  margin: 40px 0 12px;
+  text-align: center;
+}
+
+.no-differences span {
+  display: inline-block;
+  padding: 3px 14px;
+  border: 1px solid #e0b100;
+  border-left-width: 3px;
+  border-radius: 4px;
+  background-color: #fff4ce;
+  color: #5c4400;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 @page {
   margin: 10mm;
 }

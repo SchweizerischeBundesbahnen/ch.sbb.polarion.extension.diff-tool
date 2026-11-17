@@ -914,6 +914,117 @@
         ]
       }
     },
+    "/api/projects/{projectId}/documents/resolve": {
+      "post": {
+        "operationId": "resolveDocuments",
+        "parameters": [
+          {
+            "description": "Project to look in",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/DocumentReference"
+                },
+                "type": "array"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ResolvedDocument"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "One entry per given document, in the same order"
+          },
+          "400": {
+            "description": "Missing project ID or documents"
+          }
+        },
+        "summary": "Tells for each given space and name whether such a document exists in the project and may be read",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/documents/search": {
+      "get": {
+        "operationId": "searchDocuments",
+        "parameters": [
+          {
+            "description": "Project to search in",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Lucene query, empty for all documents",
+            "in": "query",
+            "name": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "1-based page number",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "in": "query",
+            "name": "recordsPerPage",
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResultSearchDocument"
+                }
+              }
+            },
+            "description": "One page of matching documents"
+          },
+          "400": {
+            "description": "Missing project ID or malformed query"
+          }
+        },
+        "summary": "Searches documents of a project by a Lucene query and returns one page of them, ordered by space and name",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
     "/api/projects/{projectId}/hyperlink-roles": {
       "get": {
         "operationId": "getAllHyperlinkRoles",
@@ -2258,6 +2369,20 @@
         },
         "type": "object"
       },
+      "DocumentReference": {
+        "description": "A document of a project, named by its space and name",
+        "properties": {
+          "name": {
+            "description": "Name of the document",
+            "type": "string"
+          },
+          "spaceId": {
+            "description": "Space (folder) of the document",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "DocumentRevision": {
         "description": "Revision details",
         "properties": {
@@ -3157,6 +3282,36 @@
         },
         "type": "object"
       },
+      "ResolvedDocument": {
+        "description": "Whether a document exists in a project and the user may read it",
+        "properties": {
+          "found": {
+            "description": "True when the document exists and the user may read it",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Name of the document, as asked for",
+            "type": "string"
+          },
+          "spaceId": {
+            "description": "Space (folder) of the document, as asked for",
+            "type": "string"
+          },
+          "spaceTitle": {
+            "description": "Title of the space, its ID if it has no title; null when not found",
+            "type": "string"
+          },
+          "title": {
+            "description": "Title of the document, its name if it has no title; null when not found",
+            "type": "string"
+          },
+          "unavailableMessage": {
+            "description": "Reason why the document cannot be used, null when found",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Revision": {
         "description": "Revision details",
         "properties": {
@@ -3249,6 +3404,51 @@
         },
         "type": "object"
       },
+      "SearchDocument": {
+        "description": "One row of the document selection table",
+        "properties": {
+          "id": {
+            "description": "Name of the document, unique in its space",
+            "type": "string"
+          },
+          "projectId": {
+            "description": "Project ID of the document",
+            "type": "string"
+          },
+          "readable": {
+            "description": "False when the document is unresolvable or the user may not read it",
+            "type": "boolean"
+          },
+          "spaceId": {
+            "description": "Space (folder) of the document",
+            "type": "string"
+          },
+          "spaceTitle": {
+            "description": "Title of the space, its ID if it has no title",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EnumOption"
+          },
+          "title": {
+            "description": "Title of the document, its name if it has no title",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/EnumOption"
+          },
+          "unavailableMessage": {
+            "description": "Reason why the document is not readable, null otherwise",
+            "type": "string"
+          },
+          "updated": {
+            "description": "Last update time in epoch milliseconds",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "SearchResultSearchCollection": {
         "description": "One page of a search result",
         "properties": {
@@ -3256,6 +3456,38 @@
             "description": "Items of the requested page",
             "items": {
               "$ref": "#/components/schemas/SearchCollection"
+            },
+            "type": "array"
+          },
+          "lastPage": {
+            "description": "Number of the last available page, at least 1",
+            "format": "int32",
+            "type": "integer"
+          },
+          "page": {
+            "description": "Number of the returned page, 1-based and clamped to the available pages",
+            "format": "int32",
+            "type": "integer"
+          },
+          "query": {
+            "description": "The Lucene query which produced this result, as executed",
+            "type": "string"
+          },
+          "totalCount": {
+            "description": "Size of the whole result set, not of this page",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "SearchResultSearchDocument": {
+        "description": "One page of a search result",
+        "properties": {
+          "items": {
+            "description": "Items of the requested page",
+            "items": {
+              "$ref": "#/components/schemas/SearchDocument"
             },
             "type": "array"
           },

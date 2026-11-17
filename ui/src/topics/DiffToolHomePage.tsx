@@ -1,7 +1,7 @@
-import { COMPARE_COLLECTIONS, COMPARE_WORK_ITEMS } from './topics';
+import { COMPARE_COLLECTIONS, COMPARE_WORK_ITEMS, DOCUMENTS_DIFF_TO_PDF } from './topics';
 
 /**
- * The Diff Tool root navigation topic: two links into its sub-topics.
+ * The Diff Tool root navigation topic: links into its sub-topics.
  *
  * React port of `webapp/diff-tool/pages/diff-tool.jsp`. The links still work by appending the node id to the
  * top frame's URL and reloading it: that URL is Polarion's own topic path, and appending to it is what makes
@@ -33,6 +33,11 @@ export default function DiffToolHomePage() {
         <li>
           <button type="button" className="link-button" onClick={() => openSubTopic(COMPARE_COLLECTIONS)}>
             Compare Collections
+          </button>
+        </li>
+        <li>
+          <button type="button" className="link-button" onClick={() => openSubTopic(DOCUMENTS_DIFF_TO_PDF)}>
+            Export diffs of documents to PDF
           </button>
         </li>
       </ul>

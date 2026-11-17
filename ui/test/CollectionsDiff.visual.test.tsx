@@ -2,6 +2,7 @@ import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from 'vitest-browser-react';
 import CollectionsPage from '../src/pages/CollectionsPage';
+import { jsonResponse } from './mockFetch';
 import {
   SERVER_RENDERED,
   fixture,
@@ -36,13 +37,13 @@ const UNPAIRED_URL =
   '&linkRole=relates_to&config=Default&compareAs=Workitems&sourceSpaceId=Testing&sourceDocument=Test+Specification' +
   '&targetSpaceId=Testing&targetDocument=Test+Specification';
 
-function renderCollections(url: string, collections: unknown, documents: unknown) {
+function renderCollections(url: string, collections: unknown, documents: unknown, workItemsDiff = pairDiff) {
   renderViewer(
     url,
     [
       { method: 'POST', match: /\/diff\/collections$/, json: collections },
       { method: 'POST', match: /\/diff\/documents$/, json: documents },
-      { method: 'POST', match: /\/diff\/document-workitems$/, respond: pairDiff },
+      { method: 'POST', match: /\/diff\/document-workitems$/, respond: workItemsDiff },
       { method: 'POST', match: /\/duplicate$/, json: fixture('duplicate.json') ?? {} },
     ],
     <CollectionsPage />,
@@ -52,6 +53,16 @@ function renderCollections(url: string, collections: unknown, documents: unknown
 function renderPaired() {
   renderCollections(PAIRED_URL, fixture('collection-merge.json'), fixture('documents-from-collection-diff.json'));
 }
+
+/** A paired document whose work items do not differ, so the documents viewer shows "No differences". */
+function renderPairedWithoutDifferences() {
+  renderCollections(PAIRED_URL, fixture('collection-merge.json'), fixture('documents-from-collection-diff.json'), () =>
+    jsonResponse({ fieldDiffs: [] }),
+  );
+}
+
+const noDifferencesShown = () =>
+  vi.waitFor(() => expect(document.querySelector('.no-differences')).not.toBeNull(), { timeout: 10000 });
 
 async function headerLoaded() {
   await vi.waitFor(() => expect(document.querySelector('[data-testid="LEFT-collection"]')).not.toBeNull(), {
@@ -90,6 +101,12 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Collections diff viewer visual', () => {
     await pairsLoaded();
     await openControlPane();
     await shoot('collections-diff-control-pane');
+  });
+
+  it('a paired document without differences, with the "No differences" notice', async () => {
+    renderPairedWithoutDifferences();
+    await noDifferencesShown();
+    await shoot('collections-diff-no-differences');
   });
 
   it('a document with no counterpart, offering to create one', async () => {
@@ -190,6 +207,12 @@ describe('Collections diff viewer, accessibility', () => {
     await headerLoaded();
     await pairsLoaded();
     await switchToUnified();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the "No differences" notice', async () => {
+    renderPairedWithoutDifferences();
+    await noDifferencesShown();
     expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
 

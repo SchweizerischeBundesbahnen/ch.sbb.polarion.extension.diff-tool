@@ -1,11 +1,16 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.search.DocumentReference;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.EnumOption;
+import ch.sbb.polarion.extension.diff_tool.rest.model.search.ResolvedDocument;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchCollection;
+import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchDocument;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchWorkItem;
 import ch.sbb.polarion.extension.generic.util.EnumUtils;
 import ch.sbb.polarion.extension.generic.util.LuceneUtils;
+import com.polarion.alm.projects.model.IFolder;
+import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.tracker.model.IModule;
@@ -17,18 +22,22 @@ import com.polarion.platform.i18n.Localization;
 import com.polarion.platform.persistence.IEnumOption;
 import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.IPObjectList;
+import com.polarion.subterra.base.location.Location;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Backs the two selection tables of the Diff Tool navigation topics: it runs a Lucene query in a project
+ * Backs the selection tables of the Diff Tool navigation topics: it runs a Lucene query in a project
  * and returns one page of plain values, which the React tables render themselves.
  * <p>
  * This replaces the former {@code widgets/} renderers, which reached Polarion's rich page query engine
@@ -48,6 +57,15 @@ public class ItemsSearchService {
     /** The icon Polarion ships for a document heading, which the heading type option does not point at. */
     @VisibleForTesting
     static final String HEADING_TYPE_ICON_URL = "/polarion/ria/images/enums/type_heading.png";
+
+    @VisibleForTesting
+    static final String DOCUMENT_NOT_FOUND_MESSAGE = "Document not found";
+
+    @VisibleForTesting
+    static final String MISSING_DOCUMENT_MESSAGE = "Space and name of the document should be provided";
+
+    /** Sorts after any space and name. */
+    private static final String LAST = "\uffff";
 
     private final PolarionService polarionService;
 
@@ -75,6 +93,120 @@ public class ItemsSearchService {
         List<IBaselineCollection> found = polarionService.getTrackerService().getDataService()
                 .searchInstances(IBaselineCollection.PROTO, luceneQuery, IBaselineCollection.KEY_NAME);
         return toPage(found, luceneQuery, page, recordsPerPage, this::toSearchCollection);
+    }
+
+    /**
+     * Documents of a project, ordered by space and name. Like the collections search, this one is repository wide,
+     * so the project restriction travels as a Lucene term.
+     */
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public SearchResult<SearchDocument> searchDocuments(@NotNull String projectId, @Nullable String query, int page, int recordsPerPage) {
+        String luceneQuery = effectiveQuery(projectId, StringUtils.defaultString(query));
+        List<IModule> found = polarionService.getTrackerService().getDataService()
+                .searchInstances(IModule.PROTO, luceneQuery, IModule.KEY_MODULENAME);
+        List<IModule> ordered = found.stream().sorted(Comparator.comparing(this::sortKey)).toList();
+        Map<String, String> spaceTitles = new HashMap<>();
+        return toPage(ordered, luceneQuery, page, recordsPerPage, module -> toSearchDocument(module, spaceTitles));
+    }
+
+    /**
+     * Whether each of the documents exists in the project and the user may read it. The batch export pairs a
+     * source document with the document of the same space and name in the target project, and asks this once per
+     * page of the table instead of once per row.
+     */
+    @NotNull
+    public List<ResolvedDocument> resolveDocuments(@NotNull String projectId, @NotNull List<DocumentReference> documents) {
+        IProject project = polarionService.getProject(projectId);
+        Map<String, String> spaceTitles = new HashMap<>();
+        return documents.stream().map(document -> resolveDocument(project, document, spaceTitles)).toList();
+    }
+
+    @VisibleForTesting
+    @NotNull
+    ResolvedDocument resolveDocument(@NotNull IProject project, @NotNull DocumentReference document) {
+        return resolveDocument(project, document, new HashMap<>());
+    }
+
+    @NotNull
+    private ResolvedDocument resolveDocument(@NotNull IProject project, @NotNull DocumentReference document, @NotNull Map<String, String> spaceTitles) {
+        ResolvedDocument.ResolvedDocumentBuilder builder = ResolvedDocument.builder()
+                .spaceId(document.getSpaceId())
+                .name(document.getName());
+        if (StringUtils.isBlank(document.getSpaceId()) || StringUtils.isBlank(document.getName())) {
+            return builder.found(false).unavailableMessage(MISSING_DOCUMENT_MESSAGE).build();
+        }
+        IModule module = polarionService.getModule(project, Location.getLocation(document.getSpaceId() + "/" + document.getName()));
+        if (module == null || module.isUnresolvable()) {
+            return builder.found(false).unavailableMessage(DOCUMENT_NOT_FOUND_MESSAGE).build();
+        }
+        if (!module.can().read()) {
+            return builder.found(false).unavailableMessage(Localization.getString("security.cannotread")).build();
+        }
+        return builder.found(true)
+                .spaceTitle(spaceTitle(project.getId(), document.getSpaceId(), spaceTitles))
+                .title(module.getTitleOrName())
+                .build();
+    }
+
+    /**
+     * The title of a space, its ID when it has none or cannot be read. Remembered in the given map, because
+     * the documents of one page of results usually share a few spaces.
+     */
+    @NotNull
+    private String spaceTitle(@NotNull String projectId, @NotNull String spaceId, @NotNull Map<String, String> spaceTitles) {
+        return spaceTitles.computeIfAbsent(projectId + "/" + spaceId, key -> readSpaceTitle(projectId, spaceId));
+    }
+
+    @VisibleForTesting
+    @NotNull
+    String readSpaceTitle(@NotNull String projectId, @NotNull String spaceId) {
+        try {
+            IFolder folder = polarionService.getTrackerService().getFolderManager().getFolder(projectId, spaceId);
+            String title = folder == null ? null : folder.getTitleOrName();
+            return StringUtils.isBlank(title) ? spaceId : title;
+        } catch (RuntimeException e) {
+            logger.warn("Could not read the title of space " + projectId + "/" + spaceId, e);
+            return spaceId;
+        }
+    }
+
+    /** Space and name of a document, for its order in the table. A document which cannot be read sorts last. */
+    @NotNull
+    private String sortKey(@NotNull IModule module) {
+        try {
+            return module.isUnresolvable() ? LAST : module.getModuleFolder() + "/" + module.getModuleName();
+        } catch (RuntimeException e) {
+            // The index may return a document the repository no longer holds, and then any getter can fail
+            return LAST;
+        }
+    }
+
+    @VisibleForTesting
+    @NotNull
+    SearchDocument toSearchDocument(@NotNull IModule module) {
+        return toSearchDocument(module, new HashMap<>());
+    }
+
+    @NotNull
+    private SearchDocument toSearchDocument(@NotNull IModule module, @NotNull Map<String, String> spaceTitles) {
+        String id = safeId(module);
+        SearchDocument.SearchDocumentBuilder builder = SearchDocument.builder().id(id);
+
+        String unavailableMessage = unavailableMessage(module, id);
+        if (unavailableMessage != null) {
+            return builder.readable(false).unavailableMessage(unavailableMessage).build();
+        }
+        return builder.readable(true)
+                .id(module.getModuleName())
+                .projectId(module.getProjectId())
+                .spaceId(module.getModuleFolder())
+                .spaceTitle(spaceTitle(module.getProjectId(), module.getModuleFolder(), spaceTitles))
+                .title(module.getTitleOrName())
+                .type(toEnumOption(module.getType()))
+                .status(toEnumOption(module.getStatus()))
+                .updated(toEpochMillis(module.getUpdated()))
+                .build();
     }
 
     /**

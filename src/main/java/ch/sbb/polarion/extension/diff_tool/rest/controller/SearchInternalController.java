@@ -1,6 +1,9 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.search.DocumentReference;
+import ch.sbb.polarion.extension.diff_tool.rest.model.search.ResolvedDocument;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchCollection;
+import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchDocument;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchWorkItem;
 import ch.sbb.polarion.extension.diff_tool.service.ItemsSearchService;
@@ -12,7 +15,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -23,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 @Singleton
@@ -32,6 +38,7 @@ import java.util.function.Supplier;
 public class SearchInternalController {
 
     private static final String MISSING_PROJECT_ID_MESSAGE = "'projectId' should be provided";
+    private static final String MISSING_DOCUMENTS_MESSAGE = "Documents to resolve should be provided";
 
     protected final PolarionService polarionService;
     protected final ItemsSearchService itemsSearchService;
@@ -90,6 +97,50 @@ public class SearchInternalController {
                                                             @Parameter(description = "Page size") @QueryParam("recordsPerPage") Integer recordsPerPage) {
         requireProjectId(projectId);
         return searchSafely(() -> itemsSearchService.searchCollections(projectId, query, pageOrFirst(page), sizeOrDefault(recordsPerPage)));
+    }
+
+    @GET
+    @Path("/projects/{projectId}/documents/search")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Searches documents of a project by a Lucene query and returns one page of them, ordered by space and name",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "One page of matching documents",
+                            useReturnTypeSchema = true
+                    ),
+                    @ApiResponse(responseCode = "400", description = "Missing project ID or malformed query")
+            }
+    )
+    public SearchResult<SearchDocument> searchDocuments(@Parameter(description = "Project to search in") @PathParam("projectId") String projectId,
+                                                        @Parameter(description = "Lucene query, empty for all documents") @QueryParam("query") String query,
+                                                        @Parameter(description = "1-based page number") @QueryParam("page") Integer page,
+                                                        @Parameter(description = "Page size") @QueryParam("recordsPerPage") Integer recordsPerPage) {
+        requireProjectId(projectId);
+        return searchSafely(() -> itemsSearchService.searchDocuments(projectId, query, pageOrFirst(page), sizeOrDefault(recordsPerPage)));
+    }
+
+    @POST
+    @Path("/projects/{projectId}/documents/resolve")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Tells for each given space and name whether such a document exists in the project and may be read",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "One entry per given document, in the same order",
+                            useReturnTypeSchema = true
+                    ),
+                    @ApiResponse(responseCode = "400", description = "Missing project ID or documents")
+            }
+    )
+    public List<ResolvedDocument> resolveDocuments(@Parameter(description = "Project to look in") @PathParam("projectId") String projectId,
+                                                   List<DocumentReference> documents) {
+        requireProjectId(projectId);
+        if (documents == null) {
+            throw new BadRequestException(MISSING_DOCUMENTS_MESSAGE);
+        }
+        return itemsSearchService.resolveDocuments(projectId, documents);
     }
 
     private void requireProjectId(String projectId) {

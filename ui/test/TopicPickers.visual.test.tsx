@@ -130,7 +130,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('navigation topics visual', () => {
 
   it('root topic', async () => {
     await renderTopic('diff-tool');
-    await vi.waitFor(() => expect(document.querySelectorAll('.link-button').length).toBe(2));
+    await vi.waitFor(() => expect(document.querySelectorAll('.link-button').length).toBe(3));
 
     await snapshot('root-topic');
   });

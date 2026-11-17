@@ -60,6 +60,6 @@ public class DiffToolNavigationExtender extends NavigationExtender {
     @NotNull
     @Override
     public List<NavigationExtenderNode> getRootNodes(@NotNull IContextId contextId) {
-        return List.of(new MultipleWorkItemsNode(), new CollectionsNode());
+        return List.of(new MultipleWorkItemsNode(), new CollectionsNode(), new DocumentsNode());
     }
 }
