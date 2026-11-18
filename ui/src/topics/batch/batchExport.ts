@@ -29,6 +29,12 @@ export type CompareAs = 'Workitems' | 'Fields' | 'Content';
 export type DiffView = 'side-by-side' | 'unified';
 
 /** What applies to every pair of the batch. */
+/**
+ * Whether a comparison pairs the work items of the two documents, which takes a link role unless both sides are
+ * the same document. The content comparison does too: the text between work items is anchored to them.
+ */
+export const needsLinkRole = (compareAs: CompareAs): boolean => compareAs !== 'Fields';
+
 export interface BatchSettings {
   linkRole: string;
   config: string;

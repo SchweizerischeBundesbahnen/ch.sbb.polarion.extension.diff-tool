@@ -23,10 +23,13 @@ export default function useResolvedTargets(
   const [error, setError] = useState<string | null>(null);
   const requested = useRef<Set<string>>(new Set());
   const project = useRef(targetProjectId);
+  // Counts the changes of the target project. An answer is applied only if no change came after its request.
+  const generation = useRef(0);
 
   if (project.current !== targetProjectId) {
     project.current = targetProjectId;
     requested.current = new Set();
+    generation.current += 1;
   }
 
   useEffect(() => {
@@ -37,26 +40,31 @@ export default function useResolvedTargets(
   const unknown = documents.filter((document) => !requested.current.has(documentKey(document.spaceId, document.name)));
   const unknownKey = unknown.map((document) => documentKey(document.spaceId, document.name)).join('\n');
 
+  // A request is not cancelled when the table renders again: a render while it runs, a row selected for
+  // example, would otherwise drop its answer and leave its documents marked as asked for, never to be asked again.
   useEffect(() => {
-    if (!targetProjectId || unknown.length === 0) {
-      return undefined;
+    // Asked for again here, not only at render: an effect can run twice for one render
+    const toAsk = unknown.filter((document) => !requested.current.has(documentKey(document.spaceId, document.name)));
+    if (!targetProjectId || toAsk.length === 0) {
+      return;
     }
-    unknown.forEach((document) => requested.current.add(documentKey(document.spaceId, document.name)));
-    let cancelled = false;
+    toAsk.forEach((document) => requested.current.add(documentKey(document.spaceId, document.name)));
+    const askedIn = generation.current;
+    const stillTarget = () => generation.current === askedIn;
 
     (async () => {
       try {
         const response = await sendRequest({
           method: 'POST',
           url: `/projects/${encodeURIComponent(targetProjectId)}/documents/resolve`,
-          body: JSON.stringify(unknown.map((document) => ({ spaceId: document.spaceId, name: document.name }))),
+          body: JSON.stringify(toAsk.map((document) => ({ spaceId: document.spaceId, name: document.name }))),
           contentType: 'application/json',
         });
         if (!response.ok) {
           throw await responseError(response);
         }
         const found = (await response.json()) as ResolvedDocument[];
-        if (!cancelled) {
+        if (stillTarget()) {
           setResolved((previous) => {
             const next = new Map(previous);
             found.forEach((document) => next.set(documentKey(document.spaceId, document.name), document));
@@ -64,19 +72,15 @@ export default function useResolvedTargets(
           });
         }
       } catch (lookupError) {
-        if (!cancelled) {
+        if (stillTarget()) {
           // Asked again on the next change, rather than never
-          unknown.forEach((document) => requested.current.delete(documentKey(document.spaceId, document.name)));
+          toAsk.forEach((document) => requested.current.delete(documentKey(document.spaceId, document.name)));
           setError(
             `Error occurred looking up target documents${lookupError instanceof Error ? `: ${lookupError.message}` : ''}`,
           );
         }
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
     // `unknownKey` names exactly the documents of `unknown`
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetProjectId, unknownKey]);

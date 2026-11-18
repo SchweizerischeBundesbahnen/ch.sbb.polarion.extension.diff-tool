@@ -56,8 +56,8 @@ Export the diffs of several document pairs to PDF at once, one file per pair.
 4. Check the `Target document` column. Each document is paired with the document of the same space and name in the
    target project. Click ✎ to pick another target document.
 5. Optionally choose a source and a target revision for each pair. `HEAD` is the latest revision.
-6. In `Export options`, choose what to compare and the diff configuration. To compare work items, also choose the
-   link role. Optionally change the diff view, the paper size and the orientation.
+6. In `Export options`, choose what to compare and the diff configuration. To compare work items or the content
+   between them, also choose the link role. Optionally change the diff view, the paper size and the orientation.
 7. Click `Export diffs to PDF`.
 
 A dialog lists the pairs and shows the progress of each one:
@@ -65,7 +65,7 @@ A dialog lists the pairs and shows the progress of each one:
 - The diff is converted to PDF, and the file is downloaded.
 - A pair which fails shows its error. The export continues with the next pair.
 
-Click `Stop` to stop the export after the current pair.
+Click `Stop` to interrupt the current pair and stop the export. Its PDF is not downloaded.
 
 > [!NOTE]
 > The browser can ask once to allow the download of multiple files. Allow it, or only the first PDF is saved.

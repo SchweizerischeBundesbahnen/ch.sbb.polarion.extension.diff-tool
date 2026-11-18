@@ -16,7 +16,7 @@ import TargetDocumentCell, { documentKey } from './batch/TargetDocumentCell';
 import type { TargetResolution } from './batch/TargetDocumentCell';
 import TitleWithId from './batch/TitleWithId';
 import './batch/batch.css';
-import { isSameDocument } from './batch/batchExport';
+import { isSameDocument, needsLinkRole } from './batch/batchExport';
 import type { DocumentPair, DocumentRef } from './batch/batchExport';
 import useBatchDiffExport from './batch/useBatchDiffExport';
 import type { BatchDiffExport } from './batch/useBatchDiffExport';
@@ -170,8 +170,7 @@ export default function DocumentsBatchPage({ batch: givenBatch }: Readonly<Props
       ];
     });
   const unpaired = selected.size - pairs.length;
-  // Only the work items comparison pairs work items, the fields and content comparisons need no link role
-  const linkRoleMissing = options.compareAs === 'Workitems' && !linkRole && pairs.some((pair) => !isSameDocument(pair));
+  const linkRoleMissing = needsLinkRole(options.compareAs) && !linkRole && pairs.some((pair) => !isSameDocument(pair));
 
   const exportDisabledReason = (() => {
     if (selected.size === 0) {

@@ -93,13 +93,24 @@ const WORKITEMS =
   '/workitems?sourceProjectId=elibrary&targetProjectId=elibrary&linkRole=relates_to&configuration=Default' +
   '&sourceRecordsPerPage=20&sourcePage=1&config=Default&ids=1';
 
-/** The work items viewer, its pair answered with the given field differences. */
-function renderWorkItems(fieldDiffs?: unknown[]) {
+/**
+ * The work items viewer, its pair answered with the given field differences. `redundant` are the selected work
+ * items left out of the comparison for having several counterparts; `paired` false leaves no pair at all.
+ */
+function renderWorkItems(fieldDiffs?: unknown[], { redundant = [] as string[], paired = true } = {}) {
   const pairDiff = fixture('detached-workitems.json') as object;
+  const pairs = structuredClone(fixture('workItems-pairs.json')) as {
+    pairedWorkItems: unknown[];
+    leftWorkItemIdsWithRedundancy: string[];
+  };
+  pairs.leftWorkItemIdsWithRedundancy = redundant;
+  if (!paired) {
+    pairs.pairedWorkItems = [];
+  }
   renderViewer(
     WORKITEMS,
     [
-      { method: 'POST', match: /\/diff\/workitems-pairs$/, json: fixture('workItems-pairs.json') ?? {} },
+      { method: 'POST', match: /\/diff\/workitems-pairs$/, json: pairs },
       {
         method: 'POST',
         match: /\/diff\/detached-workitems$/,
@@ -186,6 +197,24 @@ describe('No differences notice', () => {
     renderWorkItems([]);
 
     await vi.waitFor(() => expect(notice()?.textContent).toBe('No differences'), { timeout: 10000 });
+  });
+
+  it('does not show in the work items viewer when every selected work item was left out', async () => {
+    renderWorkItems([], { redundant: ['EL-16'], paired: false });
+
+    await vi.waitFor(() => expect(document.querySelector('[data-testid="redundancy-modal"]')).not.toBeNull(), {
+      timeout: 10000,
+    });
+    await loaded();
+    expect(notice()).toBeNull();
+  });
+
+  it('does not show in the work items viewer when some selected work items were left out', async () => {
+    renderWorkItems([], { redundant: ['EL-17'] });
+
+    await vi.waitFor(() => expect(document.querySelector('.wi-diff')).not.toBeNull(), { timeout: 10000 });
+    await loaded();
+    expect(notice()).toBeNull();
   });
 
   it('does not show in the work items viewer when a pair differs', async () => {

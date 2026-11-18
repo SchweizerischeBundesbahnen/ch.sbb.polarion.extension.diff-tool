@@ -389,6 +389,15 @@ describe('DocumentsBatchPage', () => {
       ),
     );
 
+    // The content comparison anchors the text to work items, so it pairs them too
+    setFieldValue(document.querySelector<HTMLSelectElement>('#batch-compare-as')!, 'Content');
+    await vi.waitFor(() =>
+      expect(exportButton().title).toBe(
+        'Please, select the link role which pairs the work items of different documents',
+      ),
+    );
+    expect(exportButton().disabled).toBe(true);
+
     // The fields comparison pairs no work items
     setFieldValue(document.querySelector<HTMLSelectElement>('#batch-compare-as')!, 'Fields');
     await vi.waitFor(() => expect(exportButton().disabled).toBe(false));
@@ -460,8 +469,14 @@ describe('DocumentsBatchPage', () => {
     );
   });
 
-  it('offers the link role only to the work items comparison', async () => {
+  it('offers the link role to the comparisons which pair work items', async () => {
     await renderPage();
+
+    setFieldValue(document.querySelector<HTMLSelectElement>('#batch-compare-as')!, 'Fields');
+    await vi.waitFor(() => expect(document.querySelector('#batch-link-role')).toBeNull());
+
+    setFieldValue(document.querySelector<HTMLSelectElement>('#batch-compare-as')!, 'Content');
+    await vi.waitFor(() => expect(document.querySelector('#batch-link-role')).not.toBeNull());
 
     setFieldValue(document.querySelector<HTMLSelectElement>('#batch-compare-as')!, 'Fields');
     await vi.waitFor(() => expect(document.querySelector('#batch-link-role')).toBeNull());

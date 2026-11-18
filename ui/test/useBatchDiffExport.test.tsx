@@ -183,6 +183,65 @@ describe('useBatchDiffExport', () => {
     );
   });
 
+  it('leaves a new run alone when the conversion of a closed run ends', async () => {
+    const oldConversion = deferred<Blob>();
+    const newConversion = deferred<Blob>();
+    const convert = vi
+      .fn<BatchDependencies['convert']>()
+      .mockReturnValueOnce(oldConversion.promise)
+      .mockReturnValueOnce(newConversion.promise);
+    const deps = dependencies({ convert: convert });
+    const result = await renderRunner(deps);
+
+    // Stop and close while the server converts the first pair, then export again
+    result.current.start([pair('A')], SETTINGS);
+    await vi.waitFor(() => expect(result.current.state.rows[0].state).toBe('converting'));
+    result.current.stop();
+    result.current.close();
+    await vi.waitFor(() => expect(result.current.state.status).toBe('closed'));
+    result.current.start([pair('B')], SETTINGS);
+    await vi.waitFor(() => expect(result.current.state.rows[0].state).toBe('converting'));
+
+    oldConversion.resolve(PDF);
+    // Give the old run the chance to report, then check it did not
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(result.current.state.status).toBe('running');
+    expect(result.current.state.rows[0].state).toBe('converting');
+
+    // The new run is still the one Stop acts on
+    result.current.stop();
+    await vi.waitFor(() => expect(result.current.state.status).toBe('interrupted'));
+    newConversion.resolve(PDF);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(deps.download).not.toHaveBeenCalled();
+  });
+
+  it('finishes a new run whose old run ended while it ran', async () => {
+    const oldConversion = deferred<Blob>();
+    const newConversion = deferred<Blob>();
+    const convert = vi
+      .fn<BatchDependencies['convert']>()
+      .mockReturnValueOnce(oldConversion.promise)
+      .mockReturnValueOnce(newConversion.promise);
+    const deps = dependencies({ convert: convert });
+    const result = await renderRunner(deps);
+
+    result.current.start([pair('A')], SETTINGS);
+    await vi.waitFor(() => expect(result.current.state.rows[0].state).toBe('converting'));
+    result.current.stop();
+    result.current.close();
+    await vi.waitFor(() => expect(result.current.state.status).toBe('closed'));
+    result.current.start([pair('B')], SETTINGS);
+    await vi.waitFor(() => expect(result.current.state.rows[0].state).toBe('converting'));
+    oldConversion.resolve(PDF);
+    newConversion.resolve(PDF);
+
+    await vi.waitFor(() => expect(result.current.state.status).toBe('finished'));
+    expect(result.current.state.rows[0].state).toBe('finished');
+    expect(deps.download).toHaveBeenCalledTimes(1);
+    expect(deps.download).toHaveBeenCalledWith(PDF, expect.stringContaining('B'));
+  });
+
   it('starts nothing without pairs', async () => {
     const deps = dependencies();
     const result = await renderRunner(deps);

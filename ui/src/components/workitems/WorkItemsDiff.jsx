@@ -118,7 +118,8 @@ export default function WorkItemsDiff() {
                  mergingContext={mergingContext} mergeCallback={mergeCallback} loadingContext={loadingContext} />
     </div>
 
-    <NoDifferences visible={context.state.dataLoaded && !context.state.diffsExist} />
+    {/* Work items with several counterparts are left out of the comparison, so their result is unknown */}
+    <NoDifferences visible={context.state.dataLoaded && !context.state.diffsExist && !workItemsData.leftWorkItemIdsWithRedundancy?.length} />
     <ErrorsOverlay loadingContext={loadingContext} />
     <MergeInProgressOverlay mergeInProgress={mergeInProgress} />
 

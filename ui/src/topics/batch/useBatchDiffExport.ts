@@ -83,13 +83,19 @@ export default function useBatchDiffExport(dependencies: BatchDependencies = DEF
   }, []);
 
   const exportPair = useCallback(
-    async (row: BatchRow, index: number, settings: BatchSettings, signal: AbortSignal) => {
-      updateRow(index, { state: 'diffing' });
+    async (
+      row: BatchRow,
+      index: number,
+      settings: BatchSettings,
+      signal: AbortSignal,
+      update: (index: number, update: Partial<BatchRow>) => void,
+    ) => {
+      update(index, { state: 'diffing' });
       const rendered = await dependencies.renderDiff(dependencies.viewerUrl(row.pair, settings), settings.pdf, {
-        onProgress: (loaded, total) => updateRow(index, { progress: { loaded: loaded, total: total } }),
+        onProgress: (loaded, total) => update(index, { progress: { loaded: loaded, total: total } }),
         signal: signal,
       });
-      updateRow(index, { state: 'converting' });
+      update(index, { state: 'converting' });
       const pdf = await dependencies.convert(rendered.html, settings.pdf);
       // A conversion cannot be recalled once the server has it, but a stopped run downloads nothing more
       if (signal.aborted) {
@@ -97,7 +103,7 @@ export default function useBatchDiffExport(dependencies: BatchDependencies = DEF
       }
       dependencies.download(pdf, row.fileName);
     },
-    [dependencies, updateRow],
+    [dependencies],
   );
 
   const start = useCallback(
@@ -115,21 +121,38 @@ export default function useBatchDiffExport(dependencies: BatchDependencies = DEF
       }));
       setState({ status: 'running', rows: rows, processed: 0, errors: false });
 
+      // A conversion cannot be recalled, so a closed run can still be busy when the next one starts. It reports
+      // only while it owns the dialog: otherwise it would write into the rows and the status of the new run.
+      const owns = () => run.current === controller;
+      const update = (index: number, rowUpdate: Partial<BatchRow>) => {
+        if (owns()) {
+          updateRow(index, rowUpdate);
+        }
+      };
+      const finish = (index: number, rowUpdate: Partial<BatchRow>, failed: boolean) => {
+        if (owns()) {
+          finishRow(index, rowUpdate, failed);
+        }
+      };
+
       (async () => {
         for (let index = 0; index < rows.length; index++) {
           if (controller.signal.aborted) {
             break;
           }
           try {
-            await exportPair(rows[index], index, settings, controller.signal);
-            finishRow(index, { state: 'finished' }, false);
+            await exportPair(rows[index], index, settings, controller.signal, update);
+            finish(index, { state: 'finished' }, false);
           } catch (error) {
             if (isAbortError(error)) {
-              updateRow(index, { state: 'interrupted' });
+              update(index, { state: 'interrupted' });
               break;
             }
-            finishRow(index, { state: 'error', error: failureOf(error) }, true);
+            finish(index, { state: 'error', error: failureOf(error) }, true);
           }
+        }
+        if (!owns()) {
+          return;
         }
         run.current = null;
         setState((previous) =>

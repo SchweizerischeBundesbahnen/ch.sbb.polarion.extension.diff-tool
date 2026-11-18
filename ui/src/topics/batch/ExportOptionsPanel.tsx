@@ -4,6 +4,7 @@ import type { EmbedViewOptions } from '../../embed/exportMode';
 import type { Orientation, PaperSize } from '../../services/pdfExport';
 import { linkRoleOptions } from '../PickerControls';
 import type { LinkRoleOption } from '../types';
+import { needsLinkRole } from './batchExport';
 import type { BatchSettings, CompareAs, DiffView } from './batchExport';
 
 /** The options of a batch which this panel edits: everything but the link role and the configuration. */
@@ -110,7 +111,7 @@ export default function ExportOptionsPanel({
               searchable={false}
             />
           </div>
-          {value.compareAs === 'Workitems' ? (
+          {needsLinkRole(value.compareAs) ? (
             <div className="option-row">
               <label htmlFor="batch-link-role">Link role</label>
               <SearchableSelect
