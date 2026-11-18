@@ -569,13 +569,15 @@ class ItemsSearchServiceTest {
     void testReadSpaceTitle() {
         IFolder titled = folder("Default Space");
         IFolder untitled = folder(" ");
+        IFolder withoutTitle = folder(null);
         when(folderManager.getFolder("elibrary", "_default")).thenReturn(titled);
         when(folderManager.getFolder("elibrary", "Untitled")).thenReturn(untitled);
+        when(folderManager.getFolder("elibrary", "WithoutTitle")).thenReturn(withoutTitle);
         when(folderManager.getFolder("elibrary", "Broken")).thenThrow(new UnresolvableObjectException("gone"));
 
         assertEquals("Default Space", service.readSpaceTitle("elibrary", "_default"));
         assertEquals("Untitled", service.readSpaceTitle("elibrary", "Untitled"));
-        assertEquals("Missing", service.readSpaceTitle("elibrary", "Missing"));
+        assertEquals("WithoutTitle", service.readSpaceTitle("elibrary", "WithoutTitle"));
         assertEquals("Broken", service.readSpaceTitle("elibrary", "Broken"));
     }
 

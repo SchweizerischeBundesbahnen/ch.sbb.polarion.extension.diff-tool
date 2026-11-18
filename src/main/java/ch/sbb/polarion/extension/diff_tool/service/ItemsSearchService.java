@@ -9,7 +9,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchWorkItem;
 import ch.sbb.polarion.extension.generic.util.EnumUtils;
 import ch.sbb.polarion.extension.generic.util.LuceneUtils;
-import com.polarion.alm.projects.model.IFolder;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.projects.model.IUniqueObject;
 import com.polarion.alm.projects.model.IUser;
@@ -162,8 +161,7 @@ public class ItemsSearchService {
     @NotNull
     String readSpaceTitle(@NotNull String projectId, @NotNull String spaceId) {
         try {
-            IFolder folder = polarionService.getTrackerService().getFolderManager().getFolder(projectId, spaceId);
-            String title = folder == null ? null : folder.getTitleOrName();
+            String title = polarionService.getTrackerService().getFolderManager().getFolder(projectId, spaceId).getTitleOrName();
             return StringUtils.isBlank(title) ? spaceId : title;
         } catch (RuntimeException e) {
             logger.warn("Could not read the title of space " + projectId + "/" + spaceId, e);
