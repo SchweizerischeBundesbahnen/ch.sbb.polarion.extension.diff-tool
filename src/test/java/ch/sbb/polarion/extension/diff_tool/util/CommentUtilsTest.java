@@ -423,6 +423,65 @@ class CommentUtilsTest {
         assertEquals("completely different target", result);
     }
 
+    @Test
+    void testCopyCommentMarkers_intoADuplicatedDocumentPage() {
+        // a document page and its duplicate: Polarion's duplicate drops the markers and names the work items anew
+        String source = """
+                <h1 id="polarion_wiki macro name=module-workitem;params=id=EL-3856"></h1><p id="polarion_template_1">
+                  THIS DOCUMENT HAS NO CONTENT YET.<span id="polarion-comment:1"></span>
+                </p><p id="polarion_template_2">
+                  YOU CAN<span id="polarion-comment:2"></span> CREATE AND SAVE<span id="polarion-comment:3"></span> CONTENT NOW USING THIS EDITOR.\
+                <span id="polarion-comment:4"></span>
+                </p><div id="polarion_wiki macro name=module-workitem;params=id=EL-3862"></div>""";
+        String target = """
+                <h1 id="polarion_wiki macro name=module-workitem;params=id=WI-373"></h1><p id="polarion_template_1">
+                  THIS DOCUMENT HAS NO CONTENT YET.
+                </p><p id="polarion_template_2">
+                  YOU CAN CREATE AND SAVE CONTENT NOW USING THIS EDITOR.
+                </p><div id="polarion_wiki macro name=module-workitem;params=id=WI-375"></div>""";
+        Map<String, String> map = Map.of("1", "6", "2", "7", "3", "8", "4", "9");
+
+        String result = CommentUtils.copyCommentMarkers(source, target, map);
+
+        assertEquals("""
+                <h1 id="polarion_wiki macro name=module-workitem;params=id=WI-373"></h1><p id="polarion_template_1">
+                  THIS DOCUMENT HAS NO CONTENT YET.<span id="polarion-comment:6"></span>
+                </p><p id="polarion_template_2">
+                  YOU CAN<span id="polarion-comment:7"></span> CREATE AND SAVE<span id="polarion-comment:8"></span> CONTENT NOW USING THIS EDITOR.\
+                <span id="polarion-comment:9"></span>
+                </p><div id="polarion_wiki macro name=module-workitem;params=id=WI-375"></div>""", result);
+    }
+
+    @Test
+    void testCopyCommentMarkers_nextToAWorkItemWhichTheTargetNamesDifferently() {
+        String source = "<div id=\"polarion_wiki macro name=module-workitem;params=id=EL-1\"></div><span id=\"polarion-comment:1\"></span><p>Text after the work item</p>";
+        String target = "<div id=\"polarion_wiki macro name=module-workitem;params=id=WI-9\"></div><p>Text after the work item</p>";
+
+        String result = CommentUtils.copyCommentMarkers(source, target, Map.of("1", "10"));
+
+        assertEquals("<div id=\"polarion_wiki macro name=module-workitem;params=id=WI-9\"></div><span id=\"polarion-comment:10\"></span><p>Text after the work item</p>", result);
+    }
+
+    @Test
+    void testCopyCommentMarkers_aContextWhichOccursTwiceInTheTargetPlacesNothing() {
+        String source = "<div id=\"polarion_wiki macro name=module-workitem;params=id=EL-1\"></div><span id=\"polarion-comment:1\"></span><p>Same</p>";
+        String target = "<div id=\"polarion_wiki macro name=module-workitem;params=id=WI-9\"></div><p>Same</p><p>Same</p>";
+
+        String result = CommentUtils.copyCommentMarkers(source, target, Map.of("1", "10"));
+
+        assertEquals(target, result);
+    }
+
+    @Test
+    void testCopyCommentMarkers_adjacentMarkersKeepTheirOrder() {
+        String source = "AAA<span id=\"polarion-comment:1\"></span><span id=\"polarion-comment:2\"></span>BBB";
+        String target = "AAABBB";
+
+        String result = CommentUtils.copyCommentMarkers(source, target, Map.of("1", "10", "2", "20"));
+
+        assertEquals("AAA<span id=\"polarion-comment:10\"></span><span id=\"polarion-comment:20\"></span>BBB", result);
+    }
+
     @ParameterizedTest(name = "{argumentSetName}")
     @MethodSource("markerForms")
     void testAMarkerIsFoundInEveryFormPolarionAccepts(String marker) {

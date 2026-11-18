@@ -40,6 +40,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -50,6 +51,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -59,12 +62,16 @@ import static org.mockito.Mockito.eq;
 @ExtendWith(MockitoExtension.class)
 class DocumentCopyServiceTest {
 
+    private static final AtomicInteger WORK_ITEM_IDS = new AtomicInteger();
+
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private ITrackerService trackerService;
 
     private PolarionService polarionService;
 
     private DocumentCopyService copyService;
+
+    private MergeService mergeService;
 
     @Mock
     private IProjectService projectService;
@@ -82,7 +89,8 @@ class DocumentCopyServiceTest {
     @BeforeEach
     void init() {
         polarionService = spy(new PolarionService(trackerService, projectService, securityService, null, null));
-        copyService = spy(new DocumentCopyService(polarionService, mock(MergeService.class)));
+        mergeService = mock(MergeService.class);
+        copyService = spy(new DocumentCopyService(polarionService, mergeService));
 
         mockModelCache = mockStatic(DiffModelCachedResource.class);
         DiffModel cachedModel = mock(DiffModel.class);
@@ -183,9 +191,21 @@ class DocumentCopyServiceTest {
 
         // now enable copying comments
         duplicateParams.setCopyDocumentComments(true);
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(mock(IWorkItem.class), mock(IWorkItem.class)));
+        doReturn(workItemCopies).when(copyService).pairWithCopies(sourceModule, module);
+        clearInvocations(mergeService);
         assertDoesNotThrow(() ->
                 copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams));
-        verify(copyService, times(1)).copyModuleComments(any(), any());
+        verify(copyService, times(1)).copyModuleComments(sourceModule, module);
+        // the work items are paired before handling the references can change the structure of the duplicate,
+        // and their comment markers are written right before the clean-up, in its transaction
+        InOrder order = inOrder(copyService, mergeService);
+        order.verify(copyService).pairWithCopies(sourceModule, module);
+        order.verify(mergeService).fixReferencedWorkItem(any(), eq(module), any(), any());
+        order.verify(copyService).copyModuleComments(sourceModule, module);
+        order.verify(copyService).copyCommentMarkersIntoWorkItems(eq(module), any(), any(), eq(workItemCopies));
+        // once for the fields which are no lists, once for the list fields
+        order.verify(copyService, times(2)).cleanUpFields(eq(module), any(), any(), any());
 
         when(module.getLastRevision()).thenReturn("42");
         DocumentIdentifier result = copyService.createDocumentDuplicate("srcProj", "srcSpace", "srcDocName", "123", duplicateParams);
@@ -216,6 +236,281 @@ class DocumentCopyServiceTest {
         copyService.fixLinksInRichTextFields(targetModule, "sourceProject", "linkRole", List.of(diffField));
 
         verify(polarionService).setFieldValue(workItem, "richTextField", Text.html("richTextField"));
+    }
+
+    @Test
+    void testCommentMarkersInTheFieldsOfDuplicatedWorkItemsArePointedAtTheCopiedComments() {
+        IModule targetModule = mock(IModule.class);
+        IWorkItem commentedWorkItem = mock(IWorkItem.class);
+        IWorkItem uncommentedWorkItem = mock(IWorkItem.class);
+        IWorkItem referencedWorkItem = mock(IWorkItem.class);
+        when(targetModule.getExternalWorkItems()).thenReturn(List.of(referencedWorkItem));
+        when(targetModule.getAllWorkItems()).thenReturn(List.of(commentedWorkItem, uncommentedWorkItem, referencedWorkItem));
+        doReturn(Text.html("<p>a<span id=\"polarion-comment:5\"></span>b</p>")).when(polarionService).getFieldValue(commentedWorkItem, "description");
+        doReturn(Text.html("<p>no comments</p>")).when(polarionService).getFieldValue(uncommentedWorkItem, "description");
+        doNothing().when(polarionService).setFieldValue(any(), anyString(), any());
+        List<DiffField> fields = List.of(DiffField.builder().key("description").build());
+
+        copyService.remapCommentMarkersInWorkItems(targetModule, Map.of("5", "50"), fields);
+
+        verify(polarionService).setFieldValue(commentedWorkItem, "description", Text.html("<p>a<span id=\"polarion-comment:50\"></span>b</p>"));
+        verify(commentedWorkItem).save();
+        verify(uncommentedWorkItem, never()).save();
+        // its markers name the comments of the document it belongs to
+        verify(polarionService, never()).getFieldValue(eq(referencedWorkItem), anyString());
+        verify(referencedWorkItem, never()).save();
+    }
+
+    @Test
+    void testAFieldConfiguredForSeveralTypesIsRemappedOnceAndOnlyFieldsOfTheItemsTypeAreRemapped() {
+        IModule targetModule = mock(IModule.class);
+        IWorkItem workItem = workItemWithDescription("requirement", "");
+        when(targetModule.getExternalWorkItems()).thenReturn(List.of());
+        when(targetModule.getAllWorkItems()).thenReturn(List.of(workItem));
+        doReturn(Text.html("a<span id=\"polarion-comment:5\"></span>b")).when(polarionService).getFieldValue(workItem, "richText");
+        doNothing().when(polarionService).setFieldValue(any(), anyString(), any());
+        List<DiffField> fields = List.of(
+                DiffField.builder().key("richText").wiTypeId("requirement").build(),
+                DiffField.builder().key("richText").wiTypeId("task").build(),
+                DiffField.builder().key("richText").build(),
+                DiffField.builder().key("taskOnly").wiTypeId("task").build());
+
+        copyService.remapCommentMarkersInWorkItems(targetModule, Map.of("5", "50"), fields);
+
+        verify(polarionService, times(1)).setFieldValue(eq(workItem), eq("richText"), any());
+        verify(polarionService).setFieldValue(workItem, "richText", Text.html("a<span id=\"polarion-comment:50\"></span>b"));
+        verify(polarionService, never()).getFieldValue(workItem, "taskOnly");
+    }
+
+    @Test
+    void testCopyingTheCommentsGivesTheirMappingAndWritesNoWorkItem() {
+        IModule sourceModule = mock(IModule.class);
+        IModule targetModule = mock(IModule.class);
+        IModuleComment sourceComment = mock(IModuleComment.class);
+        when(sourceComment.getId()).thenReturn("5");
+        when(sourceComment.getText()).thenReturn(Text.plain("comment text"));
+        IPObjectList<IModuleComment> childComments = mockCommentList(List.of());
+        when(sourceComment.getChildComments()).thenReturn(childComments);
+        IPObjectList<IModuleComment> rootComments = mockCommentList(List.of(sourceComment));
+        when(sourceModule.getRootComments(true)).thenReturn(rootComments);
+        IModuleComment targetComment = mock(IModuleComment.class);
+        when(targetComment.getId()).thenReturn("50");
+        when(targetModule.createComment(any(Text.class))).thenReturn(targetComment);
+
+        assertEquals(Map.of("5", "50"), copyService.copyModuleComments(sourceModule, targetModule));
+
+        // the work items are written in the transaction of the clean-up, which saves them all
+        verify(copyService, never()).remapCommentMarkersInWorkItems(any(), any(), any());
+        verify(copyService, never()).restoreDescriptionCommentMarkers(any(), any(), any());
+        verify(targetModule, never()).getAllWorkItems();
+    }
+
+    @Test
+    void testADuplicateGetsTheCommentMarkersOfTheWorkItemAtItsPositionNotOfAnotherWithTheSameDescription() {
+        // only the second of two work items with the same description has a comment, and it sits below the first one
+        IWorkItem uncommented = workItemWithDescription("requirement", "Same text.");
+        IWorkItem commented = workItemWithDescription("requirement", "Same<span id=\"polarion-comment:5\"></span> text.");
+        IModule sourceModule = moduleWithStructure(structureNode(uncommented, false, structureNode(commented, false)));
+        IWorkItem uncommentedDuplicate = workItemWithDescription("requirement", "Same text.");
+        IWorkItem commentedDuplicate = workItemWithDescription("requirement", "Same text.");
+        IModule targetModule = moduleWithStructure(structureNode(uncommentedDuplicate, false, structureNode(commentedDuplicate, false)));
+
+        when(targetModule.getAllWorkItems()).thenReturn(List.of(uncommentedDuplicate, commentedDuplicate));
+
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = copyService.pairWithCopies(sourceModule, targetModule);
+        copyService.restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("5", "50"));
+
+        assertEquals(List.of(new DocumentCopyService.WorkItemCopy(uncommented, uncommentedDuplicate),
+                new DocumentCopyService.WorkItemCopy(commented, commentedDuplicate)), workItemCopies);
+        verify(commentedDuplicate).setDescription(Text.html("Same<span id=\"polarion-comment:50\"></span> text."));
+        verify(commentedDuplicate).save();
+        verify(uncommentedDuplicate, never()).setDescription(any());
+    }
+
+    @Test
+    void testReferencedWorkItemsAreNotPaired() {
+        IWorkItem origin = workItemWithDescription("requirement", "Text.");
+        IWorkItem referenced = workItemWithDescription("requirement", "Referenced.");
+        IModule sourceModule = moduleWithStructure(structureNode(origin, false), structureNode(referenced, true));
+        IWorkItem duplicate = workItemWithDescription("requirement", "Text.");
+        IModule targetModule = moduleWithStructure(structureNode(duplicate, false), structureNode(referenced, true));
+
+        assertEquals(List.of(new DocumentCopyService.WorkItemCopy(origin, duplicate)), copyService.pairWithCopies(sourceModule, targetModule));
+    }
+
+    @Test
+    void testNothingIsPairedWhenTheStructuresDifferInSize() {
+        IWorkItem origin = workItemWithDescription("requirement", "Same text.");
+        IModule sourceModule = moduleWithStructure(structureNode(origin, false));
+        IWorkItem duplicate = workItemWithDescription("requirement", "Same text.");
+        IWorkItem added = workItemWithDescription("requirement", "Same text.");
+        IModule targetModule = moduleWithStructure(structureNode(duplicate, false), structureNode(added, false));
+
+        assertTrue(copyService.pairWithCopies(sourceModule, targetModule).isEmpty());
+    }
+
+    @Test
+    void testADuplicateMadeByPolarionGetsBackTheCommentMarkersOfItsOrigin() {
+        // a description as Polarion stores it, and as its duplicate holds it
+        String text = "Vehicle registration with unique identifiers.<br/><br/>The plate number and VIN shall be unique across the system.%s<br/>"
+                + " Rationale: Duplicate records lead to wrong cost allocation.";
+        IWorkItem origin = workItemWithDescription("requirement", text.formatted("<span id=\"polarion-comment:5\"></span>"));
+        IWorkItem duplicate = workItemWithDescription("requirement", text.formatted(""));
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(origin, duplicate));
+        IModule targetModule = moduleHolding(duplicate);
+
+        copyService.restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("5", "10"));
+
+        verify(duplicate).setDescription(Text.html(text.formatted("<span id=\"polarion-comment:10\"></span>")));
+    }
+
+    @Test
+    void testACopyWhichDiffersFromItsOriginOrIsGoneKeepsItsDescription() {
+        IWorkItem changedOrigin = workItemWithDescription("requirement", "Other<span id=\"polarion-comment:6\"></span> text.");
+        IWorkItem changed = workItemWithDescription("requirement", "Other text, changed.");
+        IWorkItem otherTypeOrigin = workItemWithDescription("requirement", "Typed<span id=\"polarion-comment:7\"></span> text.");
+        IWorkItem otherType = workItemWithDescription("task", "Typed text.");
+        IWorkItem goneOrigin = workItemWithDescription("requirement", "Gone<span id=\"polarion-comment:8\"></span> text.");
+        IWorkItem gone = workItemWithDescription("requirement", "Gone text.");
+        IWorkItem unresolvableOrigin = workItemWithDescription("requirement", "Lost<span id=\"polarion-comment:9\"></span> text.");
+        IWorkItem unresolvable = workItemWithDescription("requirement", "Lost text.");
+        when(unresolvable.isUnresolvable()).thenReturn(true);
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(changedOrigin, changed),
+                new DocumentCopyService.WorkItemCopy(otherTypeOrigin, otherType), new DocumentCopyService.WorkItemCopy(goneOrigin, gone),
+                new DocumentCopyService.WorkItemCopy(unresolvableOrigin, unresolvable));
+        // the copy which is gone is no longer in the document
+        IModule targetModule = moduleHolding(changed, otherType, unresolvable);
+
+        copyService.restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("6", "60", "7", "70", "8", "80", "9", "90"));
+
+        verify(changed, never()).setDescription(any());
+        verify(otherType, never()).setDescription(any());
+        verify(gone, never()).setDescription(any());
+        verify(unresolvable, never()).setDescription(any());
+    }
+
+    @Test
+    void testACopyIsWrittenThroughTheInstanceTheDocumentHoldsNow() {
+        IWorkItem origin = workItemWithDescription("requirement", "Text<span id=\"polarion-comment:5\"></span>.");
+        IWorkItem pairedCopy = workItemWithDescription("requirement", "Text.");
+        // the same work item, read from the document in a later transaction
+        IWorkItem currentCopy = workItemWithDescription("requirement", "Text.");
+        String copyId = pairedCopy.getId();
+        when(currentCopy.getId()).thenReturn(copyId);
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(origin, pairedCopy));
+        IModule targetModule = moduleHolding(currentCopy);
+
+        copyService.restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("5", "50"));
+
+        verify(currentCopy).setDescription(Text.html("Text<span id=\"polarion-comment:50\"></span>."));
+        verify(currentCopy).save();
+        verify(pairedCopy, never()).setDescription(any());
+        verify(pairedCopy, never()).save();
+    }
+
+    @Test
+    void testAReferenceWithTheSameIdFromAnotherProjectIsNotTakenForTheCopy() {
+        IWorkItem origin = workItemWithDescription("requirement", "Text<span id=\"polarion-comment:5\"></span>.");
+        IWorkItem copy = workItemWithDescription("requirement", "Text.");
+        when(copy.getProjectId()).thenReturn("target");
+        IWorkItem reference = sameIdFromOtherProject(copy);
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(origin, copy));
+        IModule targetModule = moduleHolding(reference, copy);
+        when(targetModule.getExternalWorkItems()).thenReturn(List.of(reference));
+
+        copyService.restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("5", "50"));
+
+        verify(copy).setDescription(Text.html("Text<span id=\"polarion-comment:50\"></span>."));
+        verify(reference, never()).setDescription(any());
+    }
+
+    @Test
+    void testAWorkItemOfAnotherProjectIsNotTakenForTheCopyByItsIdAlone() {
+        IWorkItem origin = workItemWithDescription("requirement", "Text<span id=\"polarion-comment:5\"></span>.");
+        IWorkItem copy = workItemWithDescription("requirement", "Text.");
+        when(copy.getProjectId()).thenReturn("target");
+        IWorkItem otherProjects = sameIdFromOtherProject(copy);
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of(new DocumentCopyService.WorkItemCopy(origin, copy));
+        IModule targetModule = moduleHolding(otherProjects, copy);
+
+        copyService.restoreDescriptionCommentMarkers(targetModule, workItemCopies, Map.of("5", "50"));
+
+        verify(copy).setDescription(Text.html("Text<span id=\"polarion-comment:50\"></span>."));
+        verify(otherProjects, never()).setDescription(any());
+    }
+
+    @Test
+    void testDescriptionsAreRestoredAfterTheOtherFieldsAreRemapped() {
+        IModule targetModule = mock(IModule.class);
+        List<DiffField> fields = List.of(DiffField.builder().key("description").build());
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of();
+        Map<String, String> oldToNewCommentIdMap = Map.of("5", "50");
+
+        copyService.copyCommentMarkersIntoWorkItems(targetModule, oldToNewCommentIdMap, fields, workItemCopies);
+
+        InOrder order = inOrder(copyService);
+        order.verify(copyService).remapCommentMarkersInWorkItems(targetModule, oldToNewCommentIdMap, fields);
+        order.verify(copyService).restoreDescriptionCommentMarkers(targetModule, workItemCopies, oldToNewCommentIdMap);
+    }
+
+    @Test
+    void testNoWorkItemIsTouchedWhenNoCommentsWereCopied() {
+        IModule targetModule = mock(IModule.class);
+        List<DiffField> fields = List.of(DiffField.builder().key("description").build());
+        List<DocumentCopyService.WorkItemCopy> workItemCopies = List.of();
+        Map<String, String> noComments = Map.of();
+
+        copyService.copyCommentMarkersIntoWorkItems(targetModule, noComments, fields, workItemCopies);
+
+        verify(copyService, never()).remapCommentMarkersInWorkItems(any(), any(), any());
+        verify(copyService, never()).restoreDescriptionCommentMarkers(any(), any(), any());
+    }
+
+    private static IModule moduleWithStructure(IModule.IStructureNode... topLevelNodes) {
+        IModule module = mock(IModule.class);
+        IModule.IStructureNode rootNode = structureNode(null, false, topLevelNodes);
+        lenient().when(module.getRootNode()).thenReturn(rootNode);
+        return module;
+    }
+
+    private static IModule.IStructureNode structureNode(IWorkItem workItem, boolean external, IModule.IStructureNode... children) {
+        IModule.IStructureNode node = mock(IModule.IStructureNode.class);
+        lenient().when(node.getWorkItem()).thenReturn(workItem);
+        lenient().when(node.isExternal()).thenReturn(external);
+        lenient().when(node.getChildren()).thenReturn(List.of(children));
+        return node;
+    }
+
+    private static IWorkItem sameIdFromOtherProject(IWorkItem workItem) {
+        IWorkItem other = workItemWithDescription("requirement", "Text.");
+        String id = workItem.getId();
+        lenient().when(other.getId()).thenReturn(id);
+        lenient().when(other.getProjectId()).thenReturn("other");
+        return other;
+    }
+
+    private static IModule moduleHolding(IWorkItem... workItems) {
+        IModule module = mock(IModule.class);
+        when(module.getAllWorkItems()).thenReturn(List.of(workItems));
+        return module;
+    }
+
+    private static IWorkItem workItemWithDescription(String typeId, String description) {
+        IWorkItem workItem = mock(IWorkItem.class);
+        lenient().when(workItem.getId()).thenReturn("WI-" + WORK_ITEM_IDS.incrementAndGet());
+        ITypeOpt type = mock(ITypeOpt.class);
+        lenient().when(type.getId()).thenReturn(typeId);
+        lenient().when(workItem.getType()).thenReturn(type);
+        lenient().when(workItem.getDescription()).thenReturn(Text.html(description));
+        return workItem;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static IPObjectList<IModuleComment> mockCommentList(List<IModuleComment> items) {
+        IPObjectList<IModuleComment> list = mock(IPObjectList.class);
+        lenient().when(list.isEmpty()).thenReturn(items.isEmpty());
+        lenient().when(list.iterator()).thenAnswer(invocation -> items.iterator());
+        return list;
     }
 
     @Test

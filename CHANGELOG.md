@@ -1,5 +1,27 @@
 # Changelog
 
+## [9.4.5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.4...v9.4.5) (2026-11-16)
+
+
+### Bug Fixes
+
+* **deps:** update dependency prettier to v3.10.0 ([#835](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/835)) ([99e75d1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/99e75d1c35aec9f333878be3ea8f3d90b50f1589))
+* **deps:** update dependency prettier to v3.10.1 ([#838](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/838)) ([f0d9129](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/f0d9129b6b235f47816b470291fd3ea42a876cbd))
+* **deps:** update dependency vite to v8.3.7 ([#828](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/828)) ([ed833fc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/ed833fc9af147469a43ab72dc5d0c129d48026cd))
+* **deps:** update dependency vite to v8.3.8 ([#834](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/834)) ([9af6dcd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9af6dcd9a5b64f7952a4efbf4cccc19bb150227b))
+* fix logic of comments moving when chapter is moved (not just copied) ([#839](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/839)) ([71ca8aa](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/71ca8aa21b5f1a5ab0c5496084830ef12ae5404d))
+* run queued feature tasks as scheduling user ([#833](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/833)) ([42f9aec](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/42f9aecfeec230bcc5f78b1ec0198069529def38))
+
+## [9.4.4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.3...v9.4.4) (2026-11-13)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @vitejs/plugin-react to v6.3.0 ([#829](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/829)) ([4aea167](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/4aea167a734ecee6c2457dd47cccfa9b714bdf9f))
+* **deps:** update dependency typescript-eslint to v8.72.2 ([#827](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/827)) ([1c31b14](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/1c31b142f2bdc3001210da8e17294d55c2c6f1ea))
+* **deps:** update vitest monorepo to v5.1.0 ([#806](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/806)) ([b79102b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/b79102b49d704c416a7ec560d07241b2ad34ca93))
+* Preserve document comment markers in copied work items ([#826](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/826)) ([45be222](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/45be22264e62c42eec24fc1067154fab5b3ae72a))
+
 ## [9.4.3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.2...v9.4.3) (2026-11-12)
 
 

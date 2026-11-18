@@ -2,11 +2,17 @@ package ch.sbb.polarion.extension.diff_tool.service.queue;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
 import com.polarion.core.util.logging.Logger;
+import com.polarion.platform.security.ISecurityService;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
+import javax.security.auth.Subject;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.Callable;
 import java.util.concurrent.RejectedExecutionException;
 
@@ -17,13 +23,21 @@ public class FeatureExecutionTask<T> implements Callable<T> {
     private final Feature feature;
     private final Callable<T> task;
     private final RequestAttributes requestAttributes;
+    private final ISecurityService securityService;
+    /**
+     * Subject of the user who scheduled the task. A worker thread carries no subject of its own, and Polarion
+     * answers a call of nobody with unresolvable objects: an existing project then reads as "Project '...' not found".
+     */
+    private final @Nullable Subject subject;
     @Setter
     private CountersRegistry countersRegistry;
 
-    public FeatureExecutionTask(Feature feature, Callable<T> task) {
+    public FeatureExecutionTask(Feature feature, Callable<T> task, @NotNull ISecurityService securityService) {
         this.feature = feature;
         this.task = task;
         this.requestAttributes = RequestContextHolder.getRequestAttributes();
+        this.securityService = securityService;
+        this.subject = securityService.getCurrentSubject();
     }
 
     @Override
@@ -33,7 +47,7 @@ public class FeatureExecutionTask<T> implements Callable<T> {
 
         RequestContextHolder.setRequestAttributes(requestAttributes);
         try {
-            return task.call();
+            return callAsScheduler();
         } catch (Exception e) {
             logger.error("Execution failed", e);
             throw new RejectedExecutionException(e.getMessage(), e);
@@ -46,6 +60,21 @@ public class FeatureExecutionTask<T> implements Callable<T> {
             // submitter got around to decrementing. The monitor could then sample two concurrent
             // executions on a single-threaded worker, which is what the admin page charts.
             countersRegistry.completeExecution(feature);
+        }
+    }
+
+    /**
+     * Runs the task as the user who scheduled it. A task scheduled without a subject runs as it is, the way it
+     * would run on the request thread.
+     */
+    private T callAsScheduler() throws Exception {
+        if (subject == null) {
+            return task.call();
+        }
+        try {
+            return securityService.doAsUser(subject, (PrivilegedExceptionAction<T>) task::call);
+        } catch (PrivilegedActionException e) {
+            throw e.getException();
         }
     }
 
