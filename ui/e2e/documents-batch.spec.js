@@ -91,10 +91,15 @@ test.describe('documents batch PDF export topic', () => {
     expect(convertedHtml[0]).toContain('--pdf-elem-max-width');
     expect(convertedHtml[0]).not.toContain('class="control-pane');
     await expect.poll(() => downloads.length).toBe(2);
-    expect(downloads).toEqual([
-      'Design_Catalog Design__drivepilot_Design_Catalog Design.pdf',
-      'Specification_Catalog Specification__drivepilot_Specification_Catalog Specification.pdf',
-    ]);
+    // WebKit on Linux saves a download with its spaces replaced by underscores, so they are compared as equal.
+    // The exact names the page asks for are checked in test/batchExport.test.ts.
+    const sanitized = (/** @type {string} */ name) => name.replaceAll(' ', '_');
+    expect(downloads.map(sanitized)).toEqual(
+      [
+        'Design_Catalog Design__drivepilot_Design_Catalog Design.pdf',
+        'Specification_Catalog Specification__drivepilot_Specification_Catalog Specification.pdf',
+      ].map(sanitized),
+    );
     // No frame is left behind
     await expect(page.locator('iframe.batch-diff-frame')).toHaveCount(0);
 
