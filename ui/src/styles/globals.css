@@ -479,6 +479,14 @@ a:hover {
   display: inline-block;
 }
 
+/* The ID of a space after its title (SpaceName.tsx): muted, so it reads as secondary on any background. */
+.space-name .space-id {
+  margin-left: 0.4em;
+  font-size: 0.85em;
+  font-style: italic;
+  opacity: 0.75;
+}
+
 .doc-title {
   font-size: 1.2em;
 }

@@ -80,6 +80,27 @@ function renderDocumentsWithoutDifferences() {
   );
 }
 
+/**
+ * The same diff with spaces which have a title of their own, so the header shows the title with the ID muted
+ * after it. The fixtures in e2e/fixtures give every space its ID as its title, which shows the ID alone.
+ */
+function renderDocumentsWithSpaceTitles() {
+  const diff = structuredClone(fixture('documents-diff.json')) as {
+    leftDocument: { spaceTitle: string };
+    rightDocument: { spaceTitle: string };
+  };
+  diff.leftDocument.spaceTitle = 'Requirements Specification';
+  diff.rightDocument.spaceTitle = 'Design Documents';
+  renderViewer(
+    DOCUMENTS_URL,
+    [
+      { method: 'POST', match: /\/diff\/documents$/, json: diff },
+      { method: 'POST', match: /\/diff\/document-workitems$/, respond: pairDiff },
+    ],
+    <DocumentsPage />,
+  );
+}
+
 const noDifferencesShown = () =>
   vi.waitFor(() => expect(document.querySelector('.no-differences')).not.toBeNull(), { timeout: 10000 });
 
@@ -154,6 +175,13 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents diff viewer visual', () => {
     renderDocuments();
     await loaded();
     await shoot('documents-diff');
+  });
+
+  it('header with space titles, each followed by its muted ID', async () => {
+    renderDocumentsWithSpaceTitles();
+    await loaded();
+    await vi.waitFor(() => expect(document.querySelectorAll('.path .space-name .space-id')).toHaveLength(2));
+    await shoot('documents-diff-space-titles');
   });
 
   it('configuration pane expanded, over the diff', async () => {

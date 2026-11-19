@@ -10,8 +10,9 @@ import { clearToasts, toasted } from './toasts';
 // into a shadow root on a div carrying `data-props`.
 
 const SPACES = [
-  { id: 'design', name: 'Design' },
-  { id: '_default', name: 'Default' },
+  { id: 'design', name: 'design', title: 'Design' },
+  { id: 'specification', name: 'specification', title: 'specification' },
+  { id: '_default', name: 'Default Space', title: 'Default Space' },
 ];
 
 function routes(overrides: Route[] = []): Route[] {
@@ -122,6 +123,24 @@ describe('CopyToolPanel', () => {
       Array.from($<HTMLSelectElement>(shadow, '#copy-config-selector').options).map((option) => option.value),
     ).toEqual(expect.arrayContaining(['Default', 'Strict']));
     expect($<HTMLSelectElement>(shadow, '#copy-config-selector').value).toBe('Default');
+  });
+
+  it('shows each space by its title, with its ID as the hint', async () => {
+    const { shadow } = await open();
+
+    await selectOption(shadow, 'copy-project-selector', 'drivepilot');
+
+    await vi.waitFor(() =>
+      expect(
+        Array.from($<HTMLSelectElement>(shadow, '#copy-space-selector').options)
+          .filter((option) => option.value)
+          .map((option) => [option.textContent, option.dataset.hint]),
+      ).toEqual([
+        ['Design', 'design'],
+        ['specification', undefined],
+        ['Default Space', undefined],
+      ]),
+    );
   });
 
   it('reloads the configurations from the target project once one is chosen', async () => {

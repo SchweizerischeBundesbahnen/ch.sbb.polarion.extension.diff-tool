@@ -18,7 +18,9 @@ afterEach(() => {
 
 describe.skipIf(!__PIXEL_REFERENCES__)('Documents Copy panel visual', () => {
   it('loaded', async () => {
-    installFetchMock([{ method: 'GET', match: /\/spaces$/, json: [{ id: 'design', name: 'Design' }] }]);
+    installFetchMock([
+      { method: 'GET', match: /\/spaces$/, json: [{ id: 'design', name: 'design', title: 'Design' }] },
+    ]);
     panel = mountPanel(mountCopyToolPanel, 'copy-tool-panel', {
       linkRoles: [
         { id: '', name: 'none' },

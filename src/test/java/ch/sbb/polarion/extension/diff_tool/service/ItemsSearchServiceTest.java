@@ -7,8 +7,6 @@ import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchDocument;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchWorkItem;
 import ch.sbb.polarion.extension.generic.util.EnumUtils;
-import com.polarion.alm.projects.model.IFolder;
-import com.polarion.alm.projects.model.IFolderManager;
 import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.tracker.ITrackerService;
@@ -70,9 +68,6 @@ class ItemsSearchServiceTest {
     @Mock
     private IDataService dataService;
 
-    @Mock
-    private IFolderManager folderManager;
-
     private ItemsSearchService service;
 
     @BeforeEach
@@ -81,7 +76,6 @@ class ItemsSearchServiceTest {
         when(polarionService.getTrackerProject(any())).thenReturn(trackerProject);
         when(polarionService.getTrackerService()).thenReturn(trackerService);
         when(trackerService.getDataService()).thenReturn(dataService);
-        when(trackerService.getFolderManager()).thenReturn(folderManager);
     }
 
     @Test
@@ -552,40 +546,23 @@ class ItemsSearchServiceTest {
         IModule design = document("Design", "Z");
         IPObjectList<IModule> found = objectList(List.of(specA, specB, design));
         when(dataService.searchInstances(IModule.PROTO, "project.id:elibrary", IModule.KEY_MODULENAME)).thenReturn(found);
-        IFolder specification = folder("Specifications");
-        when(folderManager.getFolder("elibrary", "Specification")).thenReturn(specification);
+        when(polarionService.getSpaceTitle("elibrary", "Specification")).thenReturn("Specifications");
+        when(polarionService.getSpaceTitle("elibrary", "Design")).thenReturn("Design");
 
         try (MockedStatic<EnumUtils> enumUtils = mockStatic(EnumUtils.class)) {
             SearchResult<SearchDocument> result = service.searchDocuments("elibrary", null, 1, 20);
 
             assertEquals(List.of("Design", "Specifications", "Specifications"),
                     result.getItems().stream().map(SearchDocument::getSpaceTitle).toList());
-            verify(folderManager, times(1)).getFolder("elibrary", "Specification");
-            verify(folderManager, times(1)).getFolder("elibrary", "Design");
+            verify(polarionService, times(1)).getSpaceTitle("elibrary", "Specification");
+            verify(polarionService, times(1)).getSpaceTitle("elibrary", "Design");
         }
-    }
-
-    @Test
-    void testReadSpaceTitle() {
-        IFolder titled = folder("Default Space");
-        IFolder untitled = folder(" ");
-        IFolder withoutTitle = folder(null);
-        when(folderManager.getFolder("elibrary", "_default")).thenReturn(titled);
-        when(folderManager.getFolder("elibrary", "Untitled")).thenReturn(untitled);
-        when(folderManager.getFolder("elibrary", "WithoutTitle")).thenReturn(withoutTitle);
-        when(folderManager.getFolder("elibrary", "Broken")).thenThrow(new UnresolvableObjectException("gone"));
-
-        assertEquals("Default Space", service.readSpaceTitle("elibrary", "_default"));
-        assertEquals("Untitled", service.readSpaceTitle("elibrary", "Untitled"));
-        assertEquals("WithoutTitle", service.readSpaceTitle("elibrary", "WithoutTitle"));
-        assertEquals("Broken", service.readSpaceTitle("elibrary", "Broken"));
     }
 
     @Test
     void testToSearchDocumentMapsFields() {
         IModule module = document("Specification", "Catalog");
-        IFolder specification = folder("Specifications");
-        when(folderManager.getFolder("elibrary", "Specification")).thenReturn(specification);
+        when(polarionService.getSpaceTitle("elibrary", "Specification")).thenReturn("Specifications");
 
         try (MockedStatic<EnumUtils> enumUtils = mockStatic(EnumUtils.class)) {
             enumUtils.when(() -> EnumUtils.getIconUrl(any())).thenReturn("/polarion/icons/type.svg");
@@ -648,14 +625,13 @@ class ItemsSearchServiceTest {
         when(polarionService.getProject("drivepilot")).thenReturn(project);
         IModule catalog = document("Design", "Catalog");
         when(polarionService.getModule(eq(project), any(ILocation.class))).thenReturn(catalog);
-        IFolder design = folder("Design Documents");
-        when(folderManager.getFolder("drivepilot", "Design")).thenReturn(design);
+        when(polarionService.getSpaceTitle("drivepilot", "Design")).thenReturn("Design Documents");
         List<DocumentReference> documents = List.of(reference("Design", "Catalog"), reference("Design", "Glossary"));
 
         List<ResolvedDocument> resolved = service.resolveDocuments("drivepilot", documents);
 
         assertEquals(List.of("Design Documents", "Design Documents"), resolved.stream().map(ResolvedDocument::getSpaceTitle).toList());
-        verify(folderManager, times(1)).getFolder("drivepilot", "Design");
+        verify(polarionService, times(1)).getSpaceTitle("drivepilot", "Design");
     }
 
     @Test
@@ -664,8 +640,7 @@ class ItemsSearchServiceTest {
         when(project.getId()).thenReturn("drivepilot");
         IModule catalog = document("Design", "Catalog");
         when(polarionService.getModule(eq(project), any(ILocation.class))).thenReturn(catalog);
-        IFolder design = folder("Design Documents");
-        when(folderManager.getFolder("drivepilot", "Design")).thenReturn(design);
+        when(polarionService.getSpaceTitle("drivepilot", "Design")).thenReturn("Design Documents");
 
         ResolvedDocument resolved = service.resolveDocument(project, reference("Design", "Catalog"));
 
@@ -738,12 +713,6 @@ class ItemsSearchServiceTest {
 
     private static DocumentReference reference(String spaceId, String name) {
         return DocumentReference.builder().spaceId(spaceId).name(name).build();
-    }
-
-    private IFolder folder(String title) {
-        IFolder folder = mock(IFolder.class);
-        when(folder.getTitleOrName()).thenReturn(title);
-        return folder;
     }
 
     private IModule document(String spaceId, String name) {

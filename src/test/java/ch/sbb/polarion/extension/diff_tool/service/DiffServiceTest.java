@@ -1437,6 +1437,7 @@ class DiffServiceTest {
 
         when(polarionService.getCollection(projectId, "left")).thenReturn(leftCollection);
         when(polarionService.getCollection(projectId, "right")).thenReturn(rightCollection);
+        when(polarionService.getSpaceTitle(projectId, "folder1")).thenReturn("Folder One");
 
         CollectionsDiffParams params = new CollectionsDiffParams(
                 DocumentsCollection.builder().projectId(projectId).id("left").build(),
@@ -1448,7 +1449,7 @@ class DiffServiceTest {
         assertNotNull(result);
         assertEquals(1, result.getPairedDocuments().size());
         // Left doc has no counterpart
-        assertNotNull(result.getPairedDocuments().iterator().next().getLeftDocument());
+        assertEquals("Folder One", result.getPairedDocuments().iterator().next().getLeftDocument().getSpaceTitle());
         assertNull(result.getPairedDocuments().iterator().next().getRightDocument());
     }
 
@@ -1507,6 +1508,7 @@ class DiffServiceTest {
         when(polarionService.getFieldValue(any(), anyString(), any())).thenReturn("value");
         when(polarionService.renderField(any(IModule.class), anyString())).thenReturn("<div>value</div>");
         when(polarionService.userAuthorizedForMerge("project1")).thenReturn(true);
+        when(polarionService.getSpaceTitle(any(), any())).thenReturn("Space Title");
 
         DocumentIdentifier leftDocIdentifier = DocumentIdentifier.builder()
                 .projectId("project1").spaceId("space1").name("left").revision("rev1").build();
@@ -1518,6 +1520,8 @@ class DiffServiceTest {
         assertNotNull(result);
         assertNotNull(result.getLeftDocument());
         assertNotNull(result.getRightDocument());
+        assertEquals("Space Title", result.getLeftDocument().getSpaceTitle());
+        assertEquals("Space Title", result.getRightDocument().getSpaceTitle());
         assertNotNull(result.getPairedFields());
         assertEquals(2, result.getPairedFields().size());
     }

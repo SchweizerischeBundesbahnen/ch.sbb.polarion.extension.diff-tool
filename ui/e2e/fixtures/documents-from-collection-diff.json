@@ -10,6 +10,7 @@
     "moduleXmlRevision": "9430",
     "headRevision": "9491",
     "authorizedForMerge": true,
+    "spaceTitle": "Specification",
     "spaceName": "Specification"
   },
   "rightDocument": {
@@ -23,6 +24,7 @@
     "moduleXmlRevision": "9489",
     "headRevision": "9491",
     "authorizedForMerge": true,
+    "spaceTitle": "Specification",
     "spaceName": "Specification"
   },
   "pairedWorkItems": [

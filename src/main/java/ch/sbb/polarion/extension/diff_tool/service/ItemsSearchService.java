@@ -154,19 +154,7 @@ public class ItemsSearchService {
      */
     @NotNull
     private String spaceTitle(@NotNull String projectId, @NotNull String spaceId, @NotNull Map<String, String> spaceTitles) {
-        return spaceTitles.computeIfAbsent(projectId + "/" + spaceId, key -> readSpaceTitle(projectId, spaceId));
-    }
-
-    @VisibleForTesting
-    @NotNull
-    String readSpaceTitle(@NotNull String projectId, @NotNull String spaceId) {
-        try {
-            String title = polarionService.getTrackerService().getFolderManager().getFolder(projectId, spaceId).getTitleOrName();
-            return StringUtils.isBlank(title) ? spaceId : title;
-        } catch (RuntimeException e) {
-            logger.warn("Could not read the title of space " + projectId + "/" + spaceId, e);
-            return spaceId;
-        }
+        return spaceTitles.computeIfAbsent(projectId + "/" + spaceId, key -> polarionService.getSpaceTitle(projectId, spaceId));
     }
 
     /** Space and name of a document, for its order in the table. A document which cannot be read sorts last. */

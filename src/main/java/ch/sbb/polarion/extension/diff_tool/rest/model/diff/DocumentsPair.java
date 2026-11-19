@@ -1,6 +1,5 @@
 package ch.sbb.polarion.extension.diff_tool.rest.model.diff;
 
-import com.polarion.alm.tracker.model.IModule;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,8 +20,8 @@ public class DocumentsPair {
     @Schema(description = "The right document in the pair", implementation = Document.class)
     private Document rightDocument;
 
-    public static DocumentsPair of(@NotNull IModule leftDocument, @Nullable IModule rightDocument) {
-        return DocumentsPair.builder().leftDocument(Document.from(leftDocument)).rightDocument(rightDocument != null ? Document.from(rightDocument) : null).build();
+    public static DocumentsPair of(@NotNull Document leftDocument, @Nullable Document rightDocument) {
+        return DocumentsPair.builder().leftDocument(leftDocument).rightDocument(rightDocument).build();
     }
 
 }

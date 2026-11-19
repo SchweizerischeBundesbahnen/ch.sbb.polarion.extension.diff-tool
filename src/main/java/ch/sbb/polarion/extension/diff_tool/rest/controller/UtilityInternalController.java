@@ -67,7 +67,7 @@ public class UtilityInternalController {
         if (StringUtils.isBlank(projectId)) {
             throw new BadRequestException(MISSING_PROJECT_ID_MESSAGE);
         }
-        return polarionService.getSpaces(projectId).stream().map(space -> new Space(space.getName())).toList();
+        return polarionService.getSpaces(projectId).stream().map(Space::from).toList();
     }
 
     @GET
