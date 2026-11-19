@@ -332,11 +332,11 @@
 /* The tooltip carrier next to a feature name; the text itself lives in its title attribute. */
 .more-info {
   display: inline-block;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   margin-left: 6px;
-  border-radius: 50%;
-  background: #e6e6e6;
+  /* --sbb-info-icon comes from react-sbb-polarion, the same icon pdf-exporter shows. */
+  background: var(--sbb-info-icon) no-repeat;
   cursor: help;
   vertical-align: middle;
 }
