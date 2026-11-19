@@ -54,6 +54,8 @@ Repeat the instructions above except that on the step 5 use the following line:
    ```
 6. Save changes by clicking 💾 Save
 
+The `diff-tool` topic also contains the `Documents diff to PDF` node, for the batch PDF export of documents diffs.
+
 ## Fine-tuning the communication between Polarion and Diff Tool extension
 
 The Diff Tool UI makes numerous requests to Polarion using the REST API to retrieve information about documents and their workitems. These requests can be processed in parallel to improve performance.

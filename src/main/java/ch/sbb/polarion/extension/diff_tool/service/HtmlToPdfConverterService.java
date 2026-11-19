@@ -9,16 +9,25 @@ import ch.sbb.polarion.extension.pdf_exporter.rest.model.conversion.PaperSize;
 import com.polarion.core.util.exceptions.UserFriendlyRuntimeException;
 
 public class HtmlToPdfConverterService {
+    static final PrintOrientation DEFAULT_ORIENTATION = PrintOrientation.LANDSCAPE;
+    static final PrintPaperSize DEFAULT_PAPER_SIZE = PrintPaperSize.A4;
+
     @SuppressWarnings("squid:S1166") // Initial exception swallowed intentionally
     public byte[] convertHtmlToPdf(String html, PrintOrientation printOrientation, PrintPaperSize printPaperSize) {
         try {
-            return new HtmlToPdfConverter().convert(html,
-                    ConversionParams.builder()
-                            .orientation(Orientation.valueOf(printOrientation.name()))
-                            .paperSize(PaperSize.valueOf(printPaperSize.name()))
-                            .build());
+            return new HtmlToPdfConverter().convert(html, conversionParams(printOrientation, printPaperSize));
         } catch (NoClassDefFoundError e) {
             throw new UserFriendlyRuntimeException("No ch.sbb.polarion.extension.pdf-exporter extension found.");
         }
+    }
+
+    /** A parameter which is not given takes its documented default: landscape, A4. */
+    static ConversionParams conversionParams(PrintOrientation printOrientation, PrintPaperSize printPaperSize) {
+        PrintOrientation orientation = printOrientation != null ? printOrientation : DEFAULT_ORIENTATION;
+        PrintPaperSize paperSize = printPaperSize != null ? printPaperSize : DEFAULT_PAPER_SIZE;
+        return ConversionParams.builder()
+                .orientation(Orientation.valueOf(orientation.name()))
+                .paperSize(PaperSize.valueOf(paperSize.name()))
+                .build();
     }
 }

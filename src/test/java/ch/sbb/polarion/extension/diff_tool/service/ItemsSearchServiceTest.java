@@ -1,11 +1,18 @@
 package ch.sbb.polarion.extension.diff_tool.service;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.search.DocumentReference;
+import ch.sbb.polarion.extension.diff_tool.rest.model.search.ResolvedDocument;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchCollection;
+import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchDocument;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchWorkItem;
 import ch.sbb.polarion.extension.generic.util.EnumUtils;
+import com.polarion.alm.projects.model.IFolder;
+import com.polarion.alm.projects.model.IFolderManager;
+import com.polarion.alm.projects.model.IProject;
 import com.polarion.alm.projects.model.IUser;
 import com.polarion.alm.tracker.ITrackerService;
+import com.polarion.alm.tracker.model.IDocumentPermissions;
 import com.polarion.alm.tracker.model.ISeverityOpt;
 import com.polarion.alm.tracker.model.IStatusOpt;
 import com.polarion.alm.tracker.model.IModule;
@@ -21,6 +28,7 @@ import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.platform.persistence.model.IPObjectPermissions;
 import com.polarion.subterra.base.SubterraURI;
+import com.polarion.subterra.base.location.ILocation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +50,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,6 +70,9 @@ class ItemsSearchServiceTest {
     @Mock
     private IDataService dataService;
 
+    @Mock
+    private IFolderManager folderManager;
+
     private ItemsSearchService service;
 
     @BeforeEach
@@ -68,6 +81,7 @@ class ItemsSearchServiceTest {
         when(polarionService.getTrackerProject(any())).thenReturn(trackerProject);
         when(polarionService.getTrackerService()).thenReturn(trackerService);
         when(trackerService.getDataService()).thenReturn(dataService);
+        when(trackerService.getFolderManager()).thenReturn(folderManager);
     }
 
     @Test
@@ -492,6 +506,270 @@ class ItemsSearchServiceTest {
         when(collection.getAuthor()).thenReturn(author);
 
         return collection;
+    }
+
+    @Test
+    void testSearchDocumentsRestrictsTheQueryToTheProjectAndOrdersBySpaceAndName() {
+        IModule specB = document("Specification", "B");
+        IModule design = document("Design", "Z");
+        IModule specA = document("Specification", "A");
+        IPObjectList<IModule> found = objectList(List.of(specB, design, specA));
+        when(dataService.searchInstances(IModule.PROTO, "(project.id:elibrary) AND (type:req)", IModule.KEY_MODULENAME)).thenReturn(found);
+
+        try (MockedStatic<EnumUtils> enumUtils = mockStatic(EnumUtils.class)) {
+            SearchResult<SearchDocument> result = service.searchDocuments("elibrary", "type:req", 1, 20);
+
+            assertEquals(3, result.getTotalCount());
+            assertEquals("(project.id:elibrary) AND (type:req)", result.getQuery());
+            assertEquals(List.of("Design/Z", "Specification/A", "Specification/B"),
+                    result.getItems().stream().map(document -> document.getSpaceId() + "/" + document.getId()).toList());
+        }
+    }
+
+    @Test
+    void testSearchDocumentsPutsUnresolvableDocumentsLast() {
+        IModule unresolvable = document("Design", "Gone");
+        when(unresolvable.isUnresolvable()).thenReturn(true);
+        IModule failing = document("Design", "Broken");
+        when(failing.getModuleFolder()).thenThrow(new UnresolvableObjectException("gone"));
+        IModule readable = document("Specification", "A");
+        IPObjectList<IModule> found = objectList(List.of(unresolvable, failing, readable));
+        when(dataService.searchInstances(IModule.PROTO, "project.id:elibrary", IModule.KEY_MODULENAME)).thenReturn(found);
+
+        try (MockedStatic<EnumUtils> enumUtils = mockStatic(EnumUtils.class)) {
+            // One row per page: only the first row is mapped, the order is what is checked
+            SearchResult<SearchDocument> result = service.searchDocuments("elibrary", null, 1, 1);
+
+            assertEquals(3, result.getTotalCount());
+            assertEquals(List.of("A"), result.getItems().stream().map(SearchDocument::getId).toList());
+        }
+    }
+
+    @Test
+    void testSearchDocumentsReadsEachSpaceOnce() {
+        IModule specA = document("Specification", "A");
+        IModule specB = document("Specification", "B");
+        IModule design = document("Design", "Z");
+        IPObjectList<IModule> found = objectList(List.of(specA, specB, design));
+        when(dataService.searchInstances(IModule.PROTO, "project.id:elibrary", IModule.KEY_MODULENAME)).thenReturn(found);
+        IFolder specification = folder("Specifications");
+        when(folderManager.getFolder("elibrary", "Specification")).thenReturn(specification);
+
+        try (MockedStatic<EnumUtils> enumUtils = mockStatic(EnumUtils.class)) {
+            SearchResult<SearchDocument> result = service.searchDocuments("elibrary", null, 1, 20);
+
+            assertEquals(List.of("Design", "Specifications", "Specifications"),
+                    result.getItems().stream().map(SearchDocument::getSpaceTitle).toList());
+            verify(folderManager, times(1)).getFolder("elibrary", "Specification");
+            verify(folderManager, times(1)).getFolder("elibrary", "Design");
+        }
+    }
+
+    @Test
+    void testReadSpaceTitle() {
+        IFolder titled = folder("Default Space");
+        IFolder untitled = folder(" ");
+        IFolder withoutTitle = folder(null);
+        when(folderManager.getFolder("elibrary", "_default")).thenReturn(titled);
+        when(folderManager.getFolder("elibrary", "Untitled")).thenReturn(untitled);
+        when(folderManager.getFolder("elibrary", "WithoutTitle")).thenReturn(withoutTitle);
+        when(folderManager.getFolder("elibrary", "Broken")).thenThrow(new UnresolvableObjectException("gone"));
+
+        assertEquals("Default Space", service.readSpaceTitle("elibrary", "_default"));
+        assertEquals("Untitled", service.readSpaceTitle("elibrary", "Untitled"));
+        assertEquals("WithoutTitle", service.readSpaceTitle("elibrary", "WithoutTitle"));
+        assertEquals("Broken", service.readSpaceTitle("elibrary", "Broken"));
+    }
+
+    @Test
+    void testToSearchDocumentMapsFields() {
+        IModule module = document("Specification", "Catalog");
+        IFolder specification = folder("Specifications");
+        when(folderManager.getFolder("elibrary", "Specification")).thenReturn(specification);
+
+        try (MockedStatic<EnumUtils> enumUtils = mockStatic(EnumUtils.class)) {
+            enumUtils.when(() -> EnumUtils.getIconUrl(any())).thenReturn("/polarion/icons/type.svg");
+
+            SearchDocument mapped = service.toSearchDocument(module);
+
+            assertTrue(mapped.isReadable());
+            assertNull(mapped.getUnavailableMessage());
+            assertEquals("Catalog", mapped.getId());
+            assertEquals("elibrary", mapped.getProjectId());
+            assertEquals("Specification", mapped.getSpaceId());
+            assertEquals("Specifications", mapped.getSpaceTitle());
+            assertEquals("Title of Catalog", mapped.getTitle());
+            assertEquals("req_specification", mapped.getType().getId());
+            assertEquals("Requirements Specification", mapped.getType().getName());
+            assertEquals("/polarion/icons/type.svg", mapped.getType().getIconUrl());
+            assertEquals("Draft", mapped.getStatus().getName());
+            assertEquals(3000L, mapped.getUpdated());
+        }
+    }
+
+    @Test
+    void testToSearchDocumentOfADocumentWhichCannotBeRead() {
+        IModule module = document("Specification", "Secret");
+        IDocumentPermissions permissions = mock(IDocumentPermissions.class);
+        when(permissions.read()).thenReturn(false);
+        when(module.can()).thenReturn(permissions);
+
+        try (MockedStatic<Localization> localization = mockStatic(Localization.class)) {
+            localization.when(() -> Localization.getString("security.cannotread")).thenReturn("You cannot read this item");
+
+            SearchDocument mapped = service.toSearchDocument(module);
+
+            assertFalse(mapped.isReadable());
+            assertEquals("You cannot read this item", mapped.getUnavailableMessage());
+            assertNull(mapped.getSpaceId());
+            assertNull(mapped.getTitle());
+        }
+    }
+
+    @Test
+    void testResolveDocumentsLooksUpTheProjectOnce() {
+        IProject project = mock(IProject.class);
+        when(polarionService.getProject("drivepilot")).thenReturn(project);
+        IModule catalog = document("Design", "Catalog");
+        when(polarionService.getModule(eq(project), any(ILocation.class))).thenReturn(catalog);
+        List<DocumentReference> documents = List.of(reference("Design", "Catalog"), reference("Design", "Catalog"));
+
+        List<ResolvedDocument> resolved = service.resolveDocuments("drivepilot", documents);
+
+        assertEquals(2, resolved.size());
+        verify(polarionService, times(1)).getProject("drivepilot");
+        verify(polarionService, times(2)).getModule(eq(project), any(ILocation.class));
+    }
+
+    @Test
+    void testResolveDocumentsReadsEachSpaceOnce() {
+        IProject project = mock(IProject.class);
+        when(project.getId()).thenReturn("drivepilot");
+        when(polarionService.getProject("drivepilot")).thenReturn(project);
+        IModule catalog = document("Design", "Catalog");
+        when(polarionService.getModule(eq(project), any(ILocation.class))).thenReturn(catalog);
+        IFolder design = folder("Design Documents");
+        when(folderManager.getFolder("drivepilot", "Design")).thenReturn(design);
+        List<DocumentReference> documents = List.of(reference("Design", "Catalog"), reference("Design", "Glossary"));
+
+        List<ResolvedDocument> resolved = service.resolveDocuments("drivepilot", documents);
+
+        assertEquals(List.of("Design Documents", "Design Documents"), resolved.stream().map(ResolvedDocument::getSpaceTitle).toList());
+        verify(folderManager, times(1)).getFolder("drivepilot", "Design");
+    }
+
+    @Test
+    void testResolveDocumentFound() {
+        IProject project = mock(IProject.class);
+        when(project.getId()).thenReturn("drivepilot");
+        IModule catalog = document("Design", "Catalog");
+        when(polarionService.getModule(eq(project), any(ILocation.class))).thenReturn(catalog);
+        IFolder design = folder("Design Documents");
+        when(folderManager.getFolder("drivepilot", "Design")).thenReturn(design);
+
+        ResolvedDocument resolved = service.resolveDocument(project, reference("Design", "Catalog"));
+
+        assertTrue(resolved.isFound());
+        assertEquals("Design", resolved.getSpaceId());
+        assertEquals("Catalog", resolved.getName());
+        assertEquals("Design Documents", resolved.getSpaceTitle());
+        assertEquals("Title of Catalog", resolved.getTitle());
+        assertNull(resolved.getUnavailableMessage());
+    }
+
+    @Test
+    void testResolveDocumentNotFound() {
+        IProject project = mock(IProject.class);
+        IModule unresolvable = document("Design", "Missing");
+        when(unresolvable.isUnresolvable()).thenReturn(true);
+        when(polarionService.getModule(eq(project), any(ILocation.class))).thenReturn(unresolvable);
+
+        ResolvedDocument resolved = service.resolveDocument(project, reference("Design", "Missing"));
+
+        assertFalse(resolved.isFound());
+        assertNull(resolved.getTitle());
+        assertNull(resolved.getSpaceTitle());
+        assertEquals(ItemsSearchService.DOCUMENT_NOT_FOUND_MESSAGE, resolved.getUnavailableMessage());
+    }
+
+    @Test
+    void testResolveDocumentWithoutModule() {
+        IProject project = mock(IProject.class);
+        when(polarionService.getModule(eq(project), any(ILocation.class))).thenReturn(null);
+
+        ResolvedDocument resolved = service.resolveDocument(project, reference("Design", "Missing"));
+
+        assertFalse(resolved.isFound());
+        assertEquals(ItemsSearchService.DOCUMENT_NOT_FOUND_MESSAGE, resolved.getUnavailableMessage());
+    }
+
+    @Test
+    void testResolveDocumentWhichCannotBeRead() {
+        IProject project = mock(IProject.class);
+        IModule secret = document("Design", "Secret");
+        IDocumentPermissions permissions = mock(IDocumentPermissions.class);
+        when(permissions.read()).thenReturn(false);
+        when(secret.can()).thenReturn(permissions);
+        when(polarionService.getModule(eq(project), any(ILocation.class))).thenReturn(secret);
+
+        try (MockedStatic<Localization> localization = mockStatic(Localization.class)) {
+            localization.when(() -> Localization.getString("security.cannotread")).thenReturn("You cannot read this item");
+
+            ResolvedDocument resolved = service.resolveDocument(project, reference("Design", "Secret"));
+
+            assertFalse(resolved.isFound());
+            assertNull(resolved.getTitle());
+            assertEquals("You cannot read this item", resolved.getUnavailableMessage());
+        }
+    }
+
+    @Test
+    void testResolveDocumentWithoutSpaceOrName() {
+        IProject project = mock(IProject.class);
+
+        ResolvedDocument withoutSpace = service.resolveDocument(project, reference(" ", "Catalog"));
+        ResolvedDocument withoutName = service.resolveDocument(project, reference("Design", null));
+
+        assertFalse(withoutSpace.isFound());
+        assertEquals(ItemsSearchService.MISSING_DOCUMENT_MESSAGE, withoutSpace.getUnavailableMessage());
+        assertFalse(withoutName.isFound());
+        assertEquals(ItemsSearchService.MISSING_DOCUMENT_MESSAGE, withoutName.getUnavailableMessage());
+    }
+
+    private static DocumentReference reference(String spaceId, String name) {
+        return DocumentReference.builder().spaceId(spaceId).name(name).build();
+    }
+
+    private IFolder folder(String title) {
+        IFolder folder = mock(IFolder.class);
+        when(folder.getTitleOrName()).thenReturn(title);
+        return folder;
+    }
+
+    private IModule document(String spaceId, String name) {
+        IModule module = mock(IModule.class);
+        IDocumentPermissions permissions = mock(IDocumentPermissions.class);
+        when(permissions.read()).thenReturn(true);
+        when(module.can()).thenReturn(permissions);
+        when(module.isUnresolvable()).thenReturn(false);
+        when(module.getId()).thenReturn(name);
+        when(module.getModuleName()).thenReturn(name);
+        when(module.getModuleFolder()).thenReturn(spaceId);
+        when(module.getProjectId()).thenReturn("elibrary");
+        when(module.getTitleOrName()).thenReturn("Title of " + name);
+        when(module.getUpdated()).thenReturn(new Date(3000L));
+
+        ITypeOpt type = mock(ITypeOpt.class);
+        when(type.getId()).thenReturn("req_specification");
+        when(type.getName()).thenReturn("Requirements Specification");
+        when(module.getType()).thenReturn(type);
+
+        IStatusOpt status = mock(IStatusOpt.class);
+        when(status.getId()).thenReturn("draft");
+        when(status.getName()).thenReturn("Draft");
+        when(module.getStatus()).thenReturn(status);
+
+        return module;
     }
 
     /**

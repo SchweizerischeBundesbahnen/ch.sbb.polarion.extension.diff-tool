@@ -65,7 +65,7 @@ export default function useItemsSearch<T>(url: string | null): ItemsSearch<T> {
 /** Builds a search URL, leaving out the parameters the backend defaults anyway. */
 export function searchUrl(
   projectId: string,
-  what: 'workitems' | 'collections',
+  what: 'workitems' | 'collections' | 'documents',
   query: string,
   page: number,
   recordsPerPage: number,

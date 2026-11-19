@@ -31,6 +31,24 @@ function renderWorkItems() {
   );
 }
 
+/** Work items whose pair does not differ, and no source work item with redundant counterparts. */
+function renderWorkItemsWithoutDifferences() {
+  const pairs = structuredClone(fixture('workItems-pairs.json')) as { leftWorkItemIdsWithRedundancy: string[] };
+  pairs.leftWorkItemIdsWithRedundancy = [];
+  const pairDiff = { ...(fixture('detached-workitems.json') as object), fieldDiffs: [] };
+  renderViewer(
+    WORKITEMS_URL,
+    [
+      { method: 'POST', match: /\/diff\/workitems-pairs$/, json: pairs },
+      { method: 'POST', match: /\/diff\/detached-workitems$/, json: pairDiff },
+    ],
+    <WorkItemsPage />,
+  );
+}
+
+const noDifferencesShown = () =>
+  vi.waitFor(() => expect(document.querySelector('.no-differences')).not.toBeNull(), { timeout: 10000 });
+
 async function loaded() {
   await vi.waitFor(() => expect(document.querySelector('.header .merge-pane')).not.toBeNull(), { timeout: 10000 });
   await vi.waitFor(() => expect(document.querySelectorAll('.wi-diff').length).toBeGreaterThan(0));
@@ -76,6 +94,12 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Work items diff viewer visual', () => {
     await shoot('workitems-diff-control-pane');
   });
 
+  it('the "No differences" notice of work items which do not differ', async () => {
+    renderWorkItemsWithoutDifferences();
+    await noDifferencesShown();
+    await shoot('workitems-diff-no-differences');
+  });
+
   it('unified view', async () => {
     renderWorkItems();
     await loaded();
@@ -97,6 +121,12 @@ describe('Work items diff viewer, accessibility', () => {
   it('has no WCAG A/AA violations with the paired work items shown', async () => {
     renderWorkItems();
     await loaded();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the "No differences" notice', async () => {
+    renderWorkItemsWithoutDifferences();
+    await noDifferencesShown();
     expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
 

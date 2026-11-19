@@ -68,6 +68,21 @@ function renderDocumentsWithFieldIssues() {
   );
 }
 
+/** The same two documents with no work item pair differing, so the viewer shows its "No differences" notice. */
+function renderDocumentsWithoutDifferences() {
+  renderViewer(
+    DOCUMENTS_URL,
+    [
+      { method: 'POST', match: /\/diff\/documents$/, json: fixture('documents-diff.json') ?? {} },
+      { method: 'POST', match: /\/diff\/document-workitems$/, respond: () => jsonResponse({ fieldDiffs: [] }) },
+    ],
+    <DocumentsPage />,
+  );
+}
+
+const noDifferencesShown = () =>
+  vi.waitFor(() => expect(document.querySelector('.no-differences')).not.toBeNull(), { timeout: 10000 });
+
 /** The same two documents compared by their document fields, or by their content (`compareAs`). */
 function renderDocumentsAs(compareAs: 'Fields' | 'Content') {
   const endpoint = compareAs === 'Fields' ? 'documents-fields' : 'documents-content';
@@ -279,6 +294,12 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Documents diff viewer visual', () => {
     await shoot('documents-diff-unified-field-issues');
   });
 
+  it('the "No differences" notice below the header of a diff without differences', async () => {
+    renderDocumentsWithoutDifferences();
+    await noDifferencesShown();
+    await shoot('documents-diff-no-differences');
+  });
+
   // The "Swap documents" dialog is deliberately not covered. DocumentsDiff only raises it above
   // PAIRS_COUNT_TO_ASK_SWAP_CONFIRMATION, which is 200, and documents-diff.json holds 19 pairs, so the
   // swap button goes straight through. Reaching it would mean a 200-pair fixture invented for one
@@ -290,6 +311,12 @@ describe('Documents diff viewer, accessibility', () => {
   it('has no WCAG A/AA violations as loaded', async () => {
     renderDocuments();
     await loaded();
+    expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the "No differences" notice', async () => {
+    renderDocumentsWithoutDifferences();
+    await noDifferencesShown();
     expect(await pageViolations({ exclude: SERVER_RENDERED })).toEqual([]);
   });
 

@@ -1,20 +1,25 @@
 import {useEffect, useState} from "react";
 import useDiffViewMode from "@/utils/useDiffViewMode";
+import {isPdfExportEmbed, readEmbedViewOptions} from "@/embed/exportMode";
 
 export function useAppContext(){
+  // Embedded for a PDF export, the page which embeds the viewer chooses the view options. Elsewhere this is empty.
+  const [embedOptions] = useState(() => readEmbedViewOptions());
   const [headerPinned, setHeaderPinned] = useState(false);
   const [controlPaneAccessible, setControlPaneAccessible] = useState(false);
-  const [controlPaneExpanded, setControlPaneExpanded] = useState(false);
+  // A PDF is exported from the open control pane, and the print styles of the diff body depend on that.
+  // Embedded, the viewer has no control pane, so it starts as if the pane were open: its PDF looks the same.
+  const [controlPaneExpanded, setControlPaneExpanded] = useState(() => isPdfExportEmbed());
   const [pairedDocuments, setPairedDocuments] = useState([]);
   // In the query string rather than here, so the reload after a merge keeps it.
   const [diffViewMode, setDiffViewMode] = useDiffViewMode();
-  const [showOutlineNumbersDiff, setShowOutlineNumbersDiff] = useState(false);
+  const [showOutlineNumbersDiff, setShowOutlineNumbersDiff] = useState(embedOptions.showOutlineNumbersDiff ?? false);
   const [syncStructure, setSyncStructure] = useState(true);
-  const [counterpartWorkItemsDiffer, setCounterpartWorkItemsDiffer] = useState(false);
-  const [compareOnlyMutualFields, setCompareOnlyMutualFields] = useState(true);
-  const [compareEnumsById, setCompareEnumsById] = useState(false);
+  const [counterpartWorkItemsDiffer, setCounterpartWorkItemsDiffer] = useState(embedOptions.counterpartWorkItemsDiffer ?? false);
+  const [compareOnlyMutualFields, setCompareOnlyMutualFields] = useState(embedOptions.compareOnlyMutualFields ?? true);
+  const [compareEnumsById, setCompareEnumsById] = useState(embedOptions.compareEnumsById ?? false);
   const [allowReferencedWorkItemMerge, setAllowReferencedWorkItemMerge] = useState(false);
-  const [hideChaptersIfNoDifference, setHideChaptersIfNoDifference] = useState(true);
+  const [hideChaptersIfNoDifference, setHideChaptersIfNoDifference] = useState(embedOptions.hideChaptersIfNoDifference ?? true);
   const [preserveComments, setPreserveComments] = useState(false);
   const [copyMissingDocumentAttachments, setCopyMissingDocumentAttachments] = useState(true);
   const [updateAttachmentReferences, setUpdateAttachmentReferences] = useState(true);

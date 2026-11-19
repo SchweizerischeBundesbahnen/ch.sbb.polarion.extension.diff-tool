@@ -170,10 +170,14 @@ test.describe('collections picker topic', () => {
 });
 
 test.describe('diff tool root topic', () => {
-  test('offers both sub-topics', async ({ page }) => {
+  test('offers every sub-topic', async ({ page }) => {
     await page.goto('/topics?topic=diff-tool');
 
     await expect(page.locator('.diff-topics .header h3')).toHaveText('Diff Tool');
-    await expect(page.locator('.link-button')).toHaveText(['Compare multiple Work Items', 'Compare Collections']);
+    await expect(page.locator('.link-button')).toHaveText([
+      'Compare multiple Work Items',
+      'Compare Collections',
+      'Export diffs of documents to PDF',
+    ]);
   });
 });

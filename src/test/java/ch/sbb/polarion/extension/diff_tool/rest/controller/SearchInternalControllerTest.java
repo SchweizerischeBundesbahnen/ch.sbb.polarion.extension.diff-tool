@@ -1,6 +1,9 @@
 package ch.sbb.polarion.extension.diff_tool.rest.controller;
 
+import ch.sbb.polarion.extension.diff_tool.rest.model.search.DocumentReference;
+import ch.sbb.polarion.extension.diff_tool.rest.model.search.ResolvedDocument;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchCollection;
+import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchDocument;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchResult;
 import ch.sbb.polarion.extension.diff_tool.rest.model.search.SearchWorkItem;
 import ch.sbb.polarion.extension.diff_tool.service.ItemsSearchService;
@@ -47,6 +50,44 @@ class SearchInternalControllerTest {
     void testSearchCollectionsRequiresAProject() {
         assertThrows(BadRequestException.class, () -> controller.searchCollections(null, null, null, null));
         assertThrows(BadRequestException.class, () -> controller.searchCollections("  ", null, null, null));
+    }
+
+    @Test
+    void testSearchDocumentsRequiresAProject() {
+        assertThrows(BadRequestException.class, () -> controller.searchDocuments(null, null, null, null));
+        assertThrows(BadRequestException.class, () -> controller.searchDocuments("  ", null, null, null));
+    }
+
+    @Test
+    void testSearchDocumentsPassesTheParametersThrough() {
+        SearchResult<SearchDocument> expected = SearchResult.<SearchDocument>builder().items(List.of()).build();
+        when(itemsSearchService.searchDocuments("elibrary", "type:req", 2, 10)).thenReturn(expected);
+
+        assertEquals(expected, controller.searchDocuments("elibrary", "type:req", 2, 10));
+    }
+
+    @Test
+    void testSearchDocumentsDefaultsThePage() {
+        controller.searchDocuments("elibrary", null, null, null);
+
+        verify(itemsSearchService).searchDocuments("elibrary", null, 1, 0);
+    }
+
+    @Test
+    void testResolveDocumentsRequiresAProjectAndDocuments() {
+        List<DocumentReference> documents = List.of();
+
+        assertThrows(BadRequestException.class, () -> controller.resolveDocuments(null, documents));
+        assertThrows(BadRequestException.class, () -> controller.resolveDocuments("drivepilot", null));
+    }
+
+    @Test
+    void testResolveDocumentsPassesTheDocumentsThrough() {
+        List<DocumentReference> documents = List.of(DocumentReference.builder().spaceId("Design").name("Catalog").build());
+        List<ResolvedDocument> expected = List.of(ResolvedDocument.builder().spaceId("Design").name("Catalog").found(true).build());
+        when(itemsSearchService.resolveDocuments("drivepilot", documents)).thenReturn(expected);
+
+        assertEquals(expected, controller.resolveDocuments("drivepilot", documents));
     }
 
     @Test

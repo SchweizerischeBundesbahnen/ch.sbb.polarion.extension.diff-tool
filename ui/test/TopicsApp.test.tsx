@@ -3,7 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { subTopicHref } from '../src/topics/DiffToolHomePage';
 import TopicsApp from '../src/topics/TopicsApp';
-import { COMPARE_COLLECTIONS, COMPARE_WORK_ITEMS, DIFF_TOOL, TOPICS, findTopic } from '../src/topics/topics';
+import {
+  COMPARE_COLLECTIONS,
+  COMPARE_WORK_ITEMS,
+  DIFF_TOOL,
+  DOCUMENTS_DIFF_TO_PDF,
+  TOPICS,
+  findTopic,
+} from '../src/topics/topics';
 import { installFetchMock } from './mockFetch';
 
 // The ?topic= router behind topics.html, and the root topic that replaced diff-tool.jsp.
@@ -29,8 +36,13 @@ afterEach(() => {
 });
 
 describe('topic registry', () => {
-  it('carries the three navigation node ids of the Java side', () => {
-    expect(TOPICS.map((topic) => topic.id)).toEqual([DIFF_TOOL, COMPARE_WORK_ITEMS, COMPARE_COLLECTIONS]);
+  it('carries the navigation node ids of the Java side', () => {
+    expect(TOPICS.map((topic) => topic.id)).toEqual([
+      DIFF_TOOL,
+      COMPARE_WORK_ITEMS,
+      COMPARE_COLLECTIONS,
+      DOCUMENTS_DIFF_TO_PDF,
+    ]);
   });
 
   it('finds a topic by id and nothing else', () => {
@@ -110,6 +122,15 @@ describe('TopicsApp', () => {
     await vi.waitFor(() => expect(document.querySelector('.header h3')!.textContent).toBe('Compare Collections'));
   });
 
+  it('renders the documents batch export for its topic id', async () => {
+    openTopic(DOCUMENTS_DIFF_TO_PDF);
+    render(<TopicsApp />);
+
+    await vi.waitFor(() =>
+      expect(document.querySelector('.header h3')!.textContent).toBe('Export diffs of documents to PDF'),
+    );
+  });
+
   it('falls back to the root topic for an unknown one', async () => {
     openTopic('nonexistent');
     render(<TopicsApp />);
@@ -124,13 +145,17 @@ describe('TopicsApp', () => {
     await vi.waitFor(() => expect(document.querySelector('.header h3')!.textContent).toBe('Diff Tool'));
   });
 
-  it('offers both sub-topics on the root topic', async () => {
+  it('offers every sub-topic on the root topic', async () => {
     openTopic(DIFF_TOOL);
     render(<TopicsApp />);
 
-    await vi.waitFor(() => expect(document.querySelectorAll('.link-button').length).toBe(2));
+    await vi.waitFor(() => expect(document.querySelectorAll('.link-button').length).toBe(3));
     const links = Array.from(document.querySelectorAll<HTMLButtonElement>('.link-button'));
-    expect(links.map((link) => link.textContent)).toEqual(['Compare multiple Work Items', 'Compare Collections']);
+    expect(links.map((link) => link.textContent)).toEqual([
+      'Compare multiple Work Items',
+      'Compare Collections',
+      'Export diffs of documents to PDF',
+    ]);
   });
 
   it('points a sub-topic link at the topic path plus the node id', () => {
@@ -146,7 +171,7 @@ describe('TopicsApp, accessibility', () => {
   it('has no WCAG A/AA violations on the root topic', async () => {
     openTopic(DIFF_TOOL);
     render(<TopicsApp />);
-    await vi.waitFor(() => expect(document.querySelectorAll('.link-button').length).toBe(2));
+    await vi.waitFor(() => expect(document.querySelectorAll('.link-button').length).toBe(3));
     expect(await pageViolations()).toEqual([]);
   });
 });

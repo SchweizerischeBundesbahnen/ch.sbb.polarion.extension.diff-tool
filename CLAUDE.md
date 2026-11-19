@@ -65,7 +65,7 @@ npm run e2e:headless
 ```
 
 The UI is a **Vite** multi-page app (not Next.js). Each Polarion entry point is its own HTML entry:
-`index.html` (the admin pages, chosen by `?feature=<id>`), `topics.html` (the three Diff Tool navigation
+`index.html` (the admin pages, chosen by `?feature=<id>`), `topics.html` (the four Diff Tool navigation
 topics, chosen by `?topic=<id>`), plus `documents.html`, `collections.html` and `workitems.html` for the
 diff/merge viewer. The three viewer filenames are a public contract: `src/formext/openDocumentsDiff.ts`
 and `src/topics/open{WorkItems,Collections}Diff.ts` open them by literal URL. Do not rename them.
@@ -113,10 +113,20 @@ mounted `Toaster` and this extension puts several panels on one page, `ToastHost
 the only one that renders, and empties the queue when the reporting changes hands so one panel's report
 cannot be replayed into another.
 
-The three navigation topics are React too, since `topics.html` replaced the nav-topic JSPs and the Java
+The navigation topics are React too, since `topics.html` replaced the nav-topic JSPs and the Java
 widget renderers that rendered their tables (`widgets/`, deleted). `ch.sbb.polarion.extension.diff_tool.
 navigation` points each node at `topics.html?topic=<node id>`, and the tables are built in
-`src/topics/` from the plain values `/projects/{id}/{workitems,collections}/search` return. The legacy
+`src/topics/` from the plain values `/projects/{id}/{workitems,collections,documents}/search` return.
+
+The **Documents diff to PDF** topic (`documents-diff-to-pdf`, `src/topics/DocumentsBatchPage.tsx`) exports the diffs of several
+document pairs to PDF, one file per pair. It renders each pair in the real viewer, in a hidden same-origin
+frame (`src/topics/batch/hiddenDiffFrame.ts`): `documents.html?embed=pdf-export` renders without its control
+pane, takes its view options from the query string (`src/embed/exportMode.ts`) and reports progress, errors and
+readiness with `postMessage` (`src/embed/messages.ts`, `useEmbedReporter.ts`). The page then serializes the
+frame exactly as the viewer's own Export does (`src/services/pdfExport.ts`, shared with `ControlPane`), posts
+it to `/conversion/html-to-pdf` and downloads the PDF. One pair at a time, by design. A pair's target is the
+document of the same space and name in the target project, looked up with `POST
+/projects/{id}/documents/resolve`; the user can override it and choose a revision per side. The legacy
 `webapp/diff-tool/{css/common.css,js/*}` went with them; that context now serves only the REST API and the
 three Document Properties fragments.
 

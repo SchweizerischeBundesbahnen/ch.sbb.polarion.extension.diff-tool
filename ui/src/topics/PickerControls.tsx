@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
 import type { SettingName } from '@sbb-polarion/react-sbb-polarion';
 // The same icon the Document Properties panel's Compare button uses.
@@ -9,17 +10,22 @@ interface PickerControlsProps {
   /** The tooltip explaining what still has to be selected; the widget showed it unconditionally. */
   compareTitle: string;
   onCompare: () => void;
+  /** The label of the action button; "Compare" by default. */
+  compareLabel?: string;
+  /** The icon of the action button; the compare icon by default. */
+  compareIconElement?: ReactNode;
   hint: string;
   /** Omitted by the collections picker, which shows the target project above its target table instead. */
   projects?: ProjectInfo[] | null;
   targetProjectId?: string;
   onTargetProjectChange?: (value: string) => void;
-  linkRoles: LinkRoleOption[];
-  linkRole: string;
-  onLinkRoleChange: (value: string) => void;
-  configurations: SettingName[];
-  configuration: string;
-  onConfigurationChange: (value: string) => void;
+  /** The link role and configuration selects. Omitted by the batch export, which shows them in its options. */
+  linkRoles?: LinkRoleOption[];
+  linkRole?: string;
+  onLinkRoleChange?: (value: string) => void;
+  configurations?: SettingName[];
+  configuration?: string;
+  onConfigurationChange?: (value: string) => void;
   error?: string | null;
 }
 
@@ -58,6 +64,8 @@ export default function PickerControls({
   compareDisabled,
   compareTitle,
   onCompare,
+  compareLabel = 'Compare',
+  compareIconElement = <img src={compareIcon} alt="" />,
   hint,
   projects,
   targetProjectId,
@@ -81,8 +89,8 @@ export default function PickerControls({
           disabled={compareDisabled}
           onClick={onCompare}
         >
-          <img src={compareIcon} alt="" />
-          Compare
+          {compareIconElement}
+          {compareLabel}
         </button>
         <p>{hint}</p>
       </div>
@@ -93,28 +101,32 @@ export default function PickerControls({
         <TargetProjectSelect projects={projects} value={targetProjectId ?? ''} onChange={onTargetProjectChange} />
       ) : null}
 
-      <div className="link-role">
-        <label htmlFor="link-role-selector">Link role:</label>
-        <SearchableSelect
-          id="link-role-selector"
-          value={linkRole}
-          onChange={onLinkRoleChange}
-          options={linkRoleOptions(linkRoles)}
-          placeholder="Select Link Role..."
-          allowEmpty
-        />
-      </div>
+      {onLinkRoleChange ? (
+        <div className="link-role">
+          <label htmlFor="link-role-selector">Link role:</label>
+          <SearchableSelect
+            id="link-role-selector"
+            value={linkRole ?? ''}
+            onChange={onLinkRoleChange}
+            options={linkRoleOptions(linkRoles ?? [])}
+            placeholder="Select Link Role..."
+            allowEmpty
+          />
+        </div>
+      ) : null}
 
-      <div className="configuration">
-        <label htmlFor="config-selector">Configuration:</label>
-        <SearchableSelect
-          id="config-selector"
-          value={configuration}
-          onChange={onConfigurationChange}
-          options={configurations.map((setting) => ({ id: setting.name, name: setting.name }))}
-          placeholder="Select Configuration..."
-        />
-      </div>
+      {onConfigurationChange ? (
+        <div className="configuration">
+          <label htmlFor="config-selector">Configuration:</label>
+          <SearchableSelect
+            id="config-selector"
+            value={configuration ?? ''}
+            onChange={onConfigurationChange}
+            options={(configurations ?? []).map((setting) => ({ id: setting.name, name: setting.name }))}
+            placeholder="Select Configuration..."
+          />
+        </div>
+      ) : null}
     </>
   );
 }

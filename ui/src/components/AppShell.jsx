@@ -2,6 +2,7 @@ import {useEffect} from "react";
 import AppContext from "./AppContext";
 import useSessionRenewal from '../services/useSessionRenewal';
 import {useAppContext} from "@/useAppContext";
+import {readEmbedViewOptions} from "@/embed/exportMode";
 
 export default function AppShell({ children }) {
   const appContext = useAppContext();
@@ -20,7 +21,9 @@ export default function AppShell({ children }) {
   useEffect(() => {
     appContext.setControlPaneAccessible(appContext.dataLoaded);
     if (appContext.dataLoaded) {
-      setTimeout(() => appContext.setHideChaptersIfNoDifference(true), 200);
+      // Embedded for a PDF export, the embedding page has chosen this option, so it is kept.
+      const hideChapters = readEmbedViewOptions().hideChaptersIfNoDifference ?? true;
+      setTimeout(() => appContext.setHideChaptersIfNoDifference(hideChapters), 200);
     }
   }, [appContext.dataLoaded]);
 

@@ -1,0 +1,335 @@
+/* The batch PDF export of the Documents topic: its options and its progress dialog.
+
+   The progress dialog follows the one of pdf-exporter's Bulk PDF Export (ui/src/widget/widget.css there), so
+   both exports look alike. Icons are FontAwesome SVGs rather than font glyphs: this page has no icon font. */
+
+/* --- Export options ------------------------------------------------------------------------------ */
+
+.diff-topics .export-options {
+  border: 1px solid #dedede;
+  border-radius: 2px;
+}
+
+.diff-topics .export-options > summary {
+  padding: 8px 10px;
+  background: #f5f5f5;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.diff-topics .export-options-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 10px 30px;
+  padding: 12px 10px;
+}
+
+.diff-topics .export-options fieldset {
+  display: flex;
+  flex-direction: column;
+  row-gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.diff-topics .export-options legend {
+  margin-bottom: 4px;
+  padding: 0;
+  color: grey;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.diff-topics .export-options .option-row {
+  display: flex;
+  column-gap: 10px;
+  align-items: center;
+}
+
+.diff-topics .export-options .option-row > label:first-child {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+/* Narrower than the 260px of topics.css, so a row stays inside its column. The options have short labels. */
+.diff-topics .export-options .searchable-dropdown {
+  width: 220px !important;
+}
+
+.diff-topics .export-options .checkbox-row {
+  display: flex;
+  column-gap: 8px;
+  align-items: center;
+}
+
+.diff-topics .export-options .checkbox-row label {
+  width: auto;
+}
+
+/* --- The pairs table ----------------------------------------------------------------------------- */
+
+.diff-topics .selection-summary {
+  display: flex;
+  column-gap: 12px;
+  align-items: center;
+  color: grey;
+}
+
+.diff-topics .selection-summary .count {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--sbb-accent, #006e87);
+  color: white;
+  font-weight: 600;
+}
+
+.diff-topics .title-with-id .secondary-id {
+  color: grey;
+  font-size: 12px;
+}
+
+.diff-topics .target-cell {
+  display: flex;
+  column-gap: 6px;
+  align-items: center;
+}
+
+.diff-topics .target-cell .not-found {
+  color: #c60018;
+}
+
+.diff-topics .target-cell .unselected,
+.diff-topics .revision-cell .unselected {
+  color: grey;
+}
+
+.diff-topics .items-table .searchable-dropdown {
+  width: 200px !important;
+}
+
+.diff-topics .icon-button {
+  display: inline-flex;
+  align-items: center;
+  height: auto;
+  min-width: 0;
+  padding: 2px;
+  border: 0;
+  background: none;
+  color: var(--diff-topics-link);
+  cursor: pointer;
+}
+
+/* --- Progress dialog ----------------------------------------------------------------------------- */
+
+/* Sized like the bulk export dialog. The list is the only scroller, so Stop never leaves the screen. */
+.rsp-modal:has(.batch-export-progress) {
+  width: min(720px, 100vw - 32px);
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rsp-modal:has(.batch-export-progress) .rsp-modal-content {
+  overflow: auto;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.batch-export-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.batch-export-row {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  row-gap: 4px;
+  padding: 8px 5px;
+  border-bottom: 1px solid #ddd;
+}
+
+.batch-export-row > :not(.icon) {
+  grid-column: 2;
+}
+
+.batch-export-row .icon {
+  grid-row: 1 / span 3;
+  font-size: 18px;
+}
+
+.batch-export-row .icon .sbb-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+}
+
+.batch-export-row .pair {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  align-items: center;
+}
+
+.batch-export-row .pair .name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.batch-export-row .pair .arrow {
+  color: grey;
+}
+
+.batch-export-row .row-status {
+  display: flex;
+  column-gap: 10px;
+  align-items: center;
+  color: grey;
+  font-size: 12px;
+}
+
+.batch-export-row .row-status.file-name {
+  font-family: monospace;
+}
+
+.batch-export-row.waiting {
+  color: #888;
+}
+
+.batch-export-row.finished .icon {
+  color: green;
+}
+
+.batch-export-row.error .icon,
+.batch-export-row.interrupted .icon {
+  color: #c60018;
+}
+
+.batch-export-row .error-message {
+  color: rgb(198 0 24 / 85%);
+  font-size: 11px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.batch-export-row .mini-progress {
+  position: relative;
+  flex: 0 0 160px;
+  height: 6px;
+  border-radius: 3px;
+  background: #eeeeee;
+  overflow: hidden;
+}
+
+.batch-export-row .mini-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--sbb-accent, #006e87);
+  transition: width 0.3s;
+}
+
+/* Fields and Content diffs load in one request: the bar says something happens, not how much. */
+.batch-export-row .mini-progress.indeterminate > span {
+  width: 30%;
+  animation: batch-indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes batch-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(340%);
+  }
+}
+
+/* Sticky, so the overall progress stays in view while the list scrolls. */
+.batch-export-outcome {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  margin: 0 -16px;
+  padding: 10px 16px;
+  min-height: 24px;
+  background: #fff;
+  border-top: 1px solid #aaa;
+}
+
+.batch-export-outcome .result {
+  flex-grow: 1;
+}
+
+.batch-export-outcome .result.finished {
+  color: green;
+}
+
+.batch-export-outcome .result.interrupted,
+.batch-export-outcome .result.finished.with-errors {
+  color: #c60018;
+}
+
+.batch-export-outcome .progress-bar {
+  position: relative;
+  flex-grow: 1;
+  height: 24px;
+  border-radius: 4px;
+  background: #eeeeee;
+  overflow: hidden;
+}
+
+.batch-export-outcome .progress-bar > span:first-child {
+  display: block;
+  height: 100%;
+  background-color: var(--sbb-accent, #006e87);
+  background-image: linear-gradient(
+    -45deg,
+    rgb(255 255 255 / 20%) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgb(255 255 255 / 20%) 50%,
+    rgb(255 255 255 / 20%) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 50px 50px;
+  animation: batch-stripes 2s linear infinite;
+  transition: width 0.3s;
+}
+
+.batch-export-outcome .progress-label {
+  position: absolute;
+  inset: 0;
+  line-height: 24px;
+  text-align: center;
+  color: #1a1a1a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@keyframes batch-stripes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 50px 50px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .batch-export-outcome .progress-bar > span:first-child,
+  .batch-export-row .mini-progress.indeterminate > span {
+    animation: none;
+  }
+}
+
+/* One action at a time: Stop while the run goes on, Close once it is over. */
+.rsp-modal:has(.batch-export-progress.running) .rsp-modal-footer .sbb-btn--secondary,
+.rsp-modal:has(.batch-export-progress.done) .rsp-modal-footer .sbb-btn--primary {
+  display: none;
+}

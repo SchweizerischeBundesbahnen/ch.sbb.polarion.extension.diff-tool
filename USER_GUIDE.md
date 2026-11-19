@@ -47,6 +47,33 @@ the project first, see [Configuration](CONFIGURATION.md).
 4. Choose link role by which work items to be linked, then click Compare button.
 5. Another tab will be opened in browser listing documents differences. You can change documents from collections to be compared in side pane. Later you can select certain differences and merge them from left to right document.
 
+## Batch PDF export of documents diffs
+Export the diffs of several document pairs to PDF at once, one file per pair.
+
+1. In Polarion navigation tree choose Diff Tool ➙ Documents diff to PDF.
+2. Choose the target project.
+3. Select the documents of the current project in the table below. The selection is kept across pages and queries.
+4. Check the `Target document` column. Each document is paired with the document of the same space and name in the
+   target project. Click ✎ to pick another target document.
+5. Optionally choose a source and a target revision for each pair. `HEAD` is the latest revision.
+6. In `Export options`, choose what to compare and the diff configuration. To compare work items or the content
+   between them, also choose the link role. Optionally change the diff view, the paper size and the orientation.
+7. Click `Export diffs to PDF`.
+
+A dialog lists the pairs and shows the progress of each one:
+- The diff of a pair is loaded in the background, as the diff view shows it.
+- The diff is converted to PDF, and the file is downloaded.
+- A pair which fails shows its error. The export continues with the next pair.
+
+Click `Stop` to interrupt the current pair and stop the export. Its PDF is not downloaded.
+
+> [!NOTE]
+> The browser can ask once to allow the download of multiple files. Allow it, or only the first PDF is saved.
+> The PDF export needs the [PDF-Exporter](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.pdf-exporter) extension.
+
+A document compared with an earlier revision of itself needs no link role:
+choose the current project as the target project and set a source or a target revision.
+
 ## Diff views
 The diff view shows the differences in one of two views:
 - `Side by side`: the source on the left, the target on the right. This is the default.
