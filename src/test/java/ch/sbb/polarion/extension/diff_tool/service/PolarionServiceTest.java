@@ -36,6 +36,7 @@ import com.polarion.platform.persistence.ICustomFieldsService;
 import com.polarion.platform.persistence.IDataService;
 import com.polarion.platform.persistence.IEnumOption;
 import com.polarion.platform.persistence.IEnumeration;
+import com.polarion.platform.persistence.UnresolvableObjectException;
 import com.polarion.platform.persistence.model.IPObject;
 import com.polarion.platform.persistence.model.IPObjectList;
 import com.polarion.platform.persistence.model.IPrototype;
@@ -942,6 +943,25 @@ class PolarionServiceTest {
         assertTrue(result.contains(folder1));
         assertTrue(result.contains(folder3));
         assertFalse(result.contains(folder2));
+    }
+
+    @Test
+    void testGetSpaceTitle() {
+        IFolder titled = mock(IFolder.class);
+        when(titled.getTitleOrName()).thenReturn("Specifications");
+        IFolder untitled = mock(IFolder.class);
+        when(untitled.getTitleOrName()).thenReturn(" ");
+        IFolder withoutTitle = mock(IFolder.class);
+        when(withoutTitle.getTitleOrName()).thenReturn(null);
+        when(trackerService.getFolderManager().getFolder(PROJECT_ID, "Specification")).thenReturn(titled);
+        when(trackerService.getFolderManager().getFolder(PROJECT_ID, "Untitled")).thenReturn(untitled);
+        when(trackerService.getFolderManager().getFolder(PROJECT_ID, "WithoutTitle")).thenReturn(withoutTitle);
+        when(trackerService.getFolderManager().getFolder(PROJECT_ID, "Broken")).thenThrow(new UnresolvableObjectException("gone"));
+
+        assertEquals("Specifications", polarionService.getSpaceTitle(PROJECT_ID, "Specification"));
+        assertEquals("Untitled", polarionService.getSpaceTitle(PROJECT_ID, "Untitled"));
+        assertEquals("WithoutTitle", polarionService.getSpaceTitle(PROJECT_ID, "WithoutTitle"));
+        assertEquals("Broken", polarionService.getSpaceTitle(PROJECT_ID, "Broken"));
     }
 
     @Test

@@ -22,7 +22,7 @@ afterEach(() => {
 
 async function open() {
   installFetchMock([
-    { method: 'GET', match: /\/spaces$/, json: [{ id: 'design', name: 'Design' }] },
+    { method: 'GET', match: /\/spaces$/, json: [{ id: 'design', name: 'design', title: 'Design' }] },
     { method: 'GET', match: /\/documents$/, json: [{ id: 'Design Spec', title: 'Design Specification' }] },
     {
       method: 'GET',

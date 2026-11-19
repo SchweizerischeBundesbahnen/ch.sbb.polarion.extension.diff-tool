@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -77,6 +78,16 @@ class DocumentTest {
 
         Document document = Document.from(moduleMock);
         assertEquals("Default Space", document.getSpaceName());
+    }
+
+    @Test
+    void testSpaceTitle() {
+        Document document = Document.builder().spaceId("Specification").build();
+
+        Document returned = document.spaceTitle("Specifications");
+
+        assertSame(document, returned);
+        assertEquals("Specifications", document.getSpaceTitle());
     }
 
     @Test

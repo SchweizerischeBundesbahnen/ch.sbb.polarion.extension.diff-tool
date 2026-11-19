@@ -18,14 +18,15 @@ import { type FetchMock, type Route, installFetchMock, jsonResponse } from './mo
 // parsing and the shadow-root arrangement.
 
 const SPACES = [
-  { id: 'design', name: 'Design' },
-  { id: '_default', name: 'Default' },
+  { id: 'design', name: 'design', title: 'Design' },
+  { id: 'specification', name: 'specification', title: 'specification' },
+  { id: '_default', name: 'Default Space', title: 'Default Space' },
 ];
 const DOCUMENTS = [
   { id: 'Design Spec', title: 'Design Specification' },
   { id: 'Test Plan', title: 'Test Plan' },
 ];
-const OTHER_SPACE = { id: 'other', name: 'Other' };
+const OTHER_SPACE = { id: 'other', name: 'other', title: 'Other' };
 const REVISIONS = [
   { name: '300', baselineName: 'Release 2' },
   { name: '200', baselineName: null },
@@ -150,6 +151,24 @@ describe('DiffToolPanel', () => {
     const { shadow } = await open();
 
     expect($<HTMLSelectElement>(shadow, '#comparison-config-selector').value).toBe('Default');
+  });
+
+  it('shows each space by its title, with its ID as the hint', async () => {
+    const { shadow } = await open();
+
+    await selectOption(shadow, 'comparison-project-selector', 'drivepilot');
+
+    await vi.waitFor(() =>
+      expect(
+        Array.from($<HTMLSelectElement>(shadow, '#comparison-space-selector').options)
+          .filter((option) => option.value)
+          .map((option) => [option.textContent, option.dataset.hint]),
+      ).toEqual([
+        ['Design', 'design'],
+        ['specification', undefined],
+        ['Default Space', undefined],
+      ]),
+    );
   });
 
   it('loads the spaces of the chosen project, then the documents of the chosen space', async () => {

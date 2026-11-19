@@ -12,8 +12,9 @@ vi.mock('../src/formext/documentReload', () => ({ reloadDocument: vi.fn() }));
 const { reloadDocument } = await import('../src/formext/documentReload');
 
 const SPACES = [
-  { id: 'design', name: 'Design' },
-  { id: '_default', name: 'Default' },
+  { id: 'design', name: 'design', title: 'Design' },
+  { id: 'specification', name: 'specification', title: 'specification' },
+  { id: '_default', name: 'Default Space', title: 'Default Space' },
 ];
 
 const DOCUMENTS = [
@@ -121,6 +122,24 @@ describe('mountMergeToolPanel', () => {
 });
 
 describe('MergeToolPanel', () => {
+  it('shows each space by its title, with its ID as the hint', async () => {
+    const { shadow } = await open();
+
+    await selectOption(shadow, 'merge-project-selector', 'drivepilot');
+
+    await vi.waitFor(() =>
+      expect(
+        Array.from($<HTMLSelectElement>(shadow, '#merge-space-selector').options)
+          .filter((option) => option.value)
+          .map((option) => [option.textContent, option.dataset.hint]),
+      ).toEqual([
+        ['Design', 'design'],
+        ['specification', undefined],
+        ['Default Space', undefined],
+      ]),
+    );
+  });
+
   it('requires the source document and both chapters before Merge is available', async () => {
     const { shadow } = await open();
     expect(mergeButton(shadow).disabled).toBe(true);
@@ -193,6 +212,9 @@ describe('MergeToolPanel', () => {
     expect(confirmationText(shadow)).toContain('under');
     expect(confirmationText(shadow)).toContain('chapter 3.1 of Product Specification');
     expect(confirmationText(shadow)).toContain('Do you want to proceed?');
+    // the source project by its name, the source space by its title alone
+    expect(confirmationText(shadow)).toContain('Chapter 2 of Requirements in Drive Pilot / Design will be');
+    expect(confirmationText(shadow)).not.toContain('design');
     // nothing happens until it is confirmed
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false);
   });

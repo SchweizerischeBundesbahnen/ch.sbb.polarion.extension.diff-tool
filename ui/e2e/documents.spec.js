@@ -1,5 +1,9 @@
 import { expect } from '@playwright/test';
 import { test, normalizeHtml, swapDocuments, pickOption } from './test-utils';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const fixturesDir = fileURLToPath(new URL('./fixtures/', import.meta.url));
 
 test.describe("page of diffing documents' WorkItems", () => {
 
@@ -40,6 +44,19 @@ test.describe("page of diffing documents' WorkItems", () => {
       expect(postData.configName).toBe(null);
     }
 
+  });
+
+  test('page header shows the space title before its ID', async ({ page }) => {
+    const diff = JSON.parse(fs.readFileSync(fixturesDir + 'documents-diff.json', 'utf8'));
+    diff.leftDocument.spaceTitle = 'Requirements';
+    diff.rightDocument.spaceId = '_default';
+    diff.rightDocument.spaceTitle = '_default';
+    await page.route('**/diff/documents', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(diff) }));
+    await page.reload();
+
+    await expect(page.getByTestId('LEFT-space').locator('.path-value .space-name')).toHaveText('RequirementsSpecification');
+    await expect(page.getByTestId('LEFT-space').locator('.path-value .space-id')).toHaveText('Specification');
+    await expect(page.getByTestId('RIGHT-space').locator('.path-value')).toHaveText('Default Space');
   });
 
   test('page header', async ({ page }) => {

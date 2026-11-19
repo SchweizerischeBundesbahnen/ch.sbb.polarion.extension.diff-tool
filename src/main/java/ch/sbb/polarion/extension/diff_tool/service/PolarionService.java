@@ -135,6 +135,20 @@ public class PolarionService extends ch.sbb.polarion.extension.generic.service.P
                 .toList();
     }
 
+    /**
+     * The title of a space, its ID when it has none or cannot be read.
+     */
+    @NotNull
+    public String getSpaceTitle(@NotNull String projectId, @NotNull String spaceId) {
+        try {
+            String title = getTrackerService().getFolderManager().getFolder(projectId, spaceId).getTitleOrName();
+            return StringUtils.isEmptyTrimmed(title) ? spaceId : title;
+        } catch (RuntimeException e) {
+            logger.warn("Could not read the title of space " + projectId + "/" + spaceId, e);
+            return spaceId;
+        }
+    }
+
     @NotNull
     public List<IModule> getDocuments(@NotNull String projectId, @NotNull String spaceId) {
         return getTrackerService().getModuleManager().getModules(getProject(projectId), Location.getLocation(spaceId)).stream()

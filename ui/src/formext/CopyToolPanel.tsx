@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
 import { sendRequest } from '../services/useRemote';
+import { type SpaceInfo, spaceOption } from '../utils/spaceLabel';
 import PanelShell from './PanelShell';
 import { FieldCell, FieldRow, SwitchRow } from './formRows';
 import type { PanelProps } from './panelProps';
 import { rememberedIfOffered, useAdoptRemembered, useRemembering } from './rememberedSelection';
 import { clearReports, reportFailure } from './reporting';
 import useRemoteList, { firstError, firstLoading } from './useRemoteList';
-
-interface SpaceInfo {
-  id: string;
-  name: string;
-}
 
 interface SettingNameInfo {
   name: string;
@@ -116,6 +112,7 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
   // ...and once the target project's spaces have loaded, the remembered one is re-applied, as the legacy
   // spaceDropdown.refresh() did. `_default` is offered by almost every project, so this usually hits.
   const spaceIds = useMemo(() => spaces.items.map((space) => space.id), [spaces.items]);
+  const spaceOptions = useMemo(() => spaces.items.map(spaceOption), [spaces.items]);
   useAdoptRemembered(SPACE_SELECT, spaceIds, setSpaceId);
 
   // Keep the selection if the new project still offers it, then prefer the remembered one, then its
@@ -204,7 +201,7 @@ export default function CopyToolPanel({ props }: { props: PanelProps }) {
               id={SPACE_SELECT}
               value={spaceId}
               onChange={chooseSpace}
-              options={spaces.items}
+              options={spaceOptions}
               placeholder="Select Space..."
               allowEmpty
             />

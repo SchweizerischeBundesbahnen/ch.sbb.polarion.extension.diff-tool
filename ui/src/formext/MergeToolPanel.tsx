@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
 import { sendAbsoluteRequest, sendRequest } from '../services/useRemote';
+import { type SpaceInfo, spaceLabelParts, spaceOption } from '../utils/spaceLabel';
 import ChapterMergeDialog, { type MergeOutcome, type MergeStage } from './ChapterMergeDialog';
 import PanelShell from './PanelShell';
 import { reloadDocument } from './documentReload';
@@ -9,11 +10,6 @@ import type { PanelProps } from './panelProps';
 import { rememberedIfOffered, useAdoptRemembered, useRemembering } from './rememberedSelection';
 import { clearReports } from './reporting';
 import useRemoteList, { firstError, firstLoading } from './useRemoteList';
-
-interface SpaceInfo {
-  id: string;
-  name: string;
-}
 
 interface DocumentInfo {
   id: string;
@@ -144,11 +140,15 @@ export default function MergeToolPanel({ props }: { props: PanelProps }) {
   useEffect(() => setSpaceId(''), [projectId]);
   useEffect(() => setDocumentId(''), [projectId, spaceId]);
   const spaceIds = useMemo(() => spaces.items.map((space) => space.id), [spaces.items]);
+  const spaceOptions = useMemo(() => spaces.items.map(spaceOption), [spaces.items]);
   const documentIds = useMemo(() => documents.items.map((document) => document.id), [documents.items]);
   useAdoptRemembered(SPACE_SELECT, spaceIds, setSpaceId);
   useAdoptRemembered(DOCUMENT_SELECT, documentIds, setDocumentId);
 
   const sourceDocumentTitle = documents.items.find((document) => document.id === documentId)?.title ?? documentId;
+  const projectName = props.projects.find((project) => project.id === projectId)?.name || projectId;
+  // The dialog names the space by its title alone: next to the project name and the document, the ID adds nothing.
+  const spaceTitle = spaceLabelParts(spaces.items.find((space) => space.id === spaceId)?.title, spaceId).title;
 
   // The merge has a progress of its own, inside its dialog: this is the overlay of the lists the form offers.
   const busy = firstLoading(spaces, documents);
@@ -271,7 +271,7 @@ export default function MergeToolPanel({ props }: { props: PanelProps }) {
               id={SPACE_SELECT}
               value={spaceId}
               onChange={chooseSpace}
-              options={spaces.items}
+              options={spaceOptions}
               placeholder="Select Space..."
               allowEmpty
             />
@@ -380,8 +380,11 @@ export default function MergeToolPanel({ props }: { props: PanelProps }) {
         summary={
           <>
             <p>
-              Chapter <strong>{sourceChapter.trim()}</strong> of <strong>{sourceDocumentTitle}</strong> ({projectId} /{' '}
-              {spaceId}) will be <strong>{mode === 'MOVE' ? 'moved' : 'copied'}</strong>{' '}
+              Chapter <strong>{sourceChapter.trim()}</strong> of <strong>{sourceDocumentTitle}</strong> in{' '}
+              <strong>
+                {projectName} / {spaceTitle}
+              </strong>{' '}
+              will be <strong>{mode === 'MOVE' ? 'moved' : 'copied'}</strong>{' '}
               <strong>{insertMode === 'AFTER' ? 'after' : 'under'}</strong> chapter{' '}
               <strong>{targetChapter.trim()}</strong> of <strong>{props.sourceDocumentTitle}</strong>.
             </p>

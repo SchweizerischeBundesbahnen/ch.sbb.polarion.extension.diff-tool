@@ -2252,6 +2252,10 @@
           "spaceName": {
             "type": "string"
           },
+          "spaceTitle": {
+            "description": "The title of the space where the document is located, its ID when it has none",
+            "type": "string"
+          },
           "title": {
             "description": "The title of the document",
             "type": "string"
@@ -3612,6 +3616,10 @@
           },
           "name": {
             "description": "The name of the space",
+            "type": "string"
+          },
+          "title": {
+            "description": "The title of the space, its ID when it has none",
             "type": "string"
           }
         },

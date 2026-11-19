@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SearchableSelect } from '@sbb-polarion/react-sbb-polarion';
+import { type SpaceInfo, spaceOption } from '../utils/spaceLabel';
 import NumericSpinner from './NumericSpinner';
 import PanelShell from './PanelShell';
 import compareIcon from './compare.svg';
@@ -8,11 +9,6 @@ import { openDocumentsDiff } from './openDocumentsDiff';
 import type { PanelProps } from './panelProps';
 import { rememberedIfOffered, useAdoptRemembered, useRemembering } from './rememberedSelection';
 import useRemoteList, { firstError, firstLoading } from './useRemoteList';
-
-interface SpaceInfo {
-  id: string;
-  name: string;
-}
 
 interface DocumentInfo {
   id: string;
@@ -126,6 +122,7 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
   // ...and once the dependent list has loaded, the remembered choice is re-applied - the legacy
   // spaceDropdown.refresh() / documentDropdown.refresh() did this, since refresh() restores too.
   const spaceIds = useMemo(() => spaces.items.map((space) => space.id), [spaces.items]);
+  const spaceOptions = useMemo(() => spaces.items.map(spaceOption), [spaces.items]);
   const documentIds = useMemo(() => documents.items.map((document) => document.id), [documents.items]);
   useAdoptRemembered(SPACE_SELECT, spaceIds, setSpaceId);
   useAdoptRemembered(DOCUMENT_SELECT, documentIds, setDocumentId);
@@ -223,7 +220,7 @@ export default function DiffToolPanel({ props }: { props: PanelProps }) {
               id={SPACE_SELECT}
               value={spaceId}
               onChange={chooseSpace}
-              options={spaces.items}
+              options={spaceOptions}
               placeholder="Select Space..."
               allowEmpty
             />

@@ -1,8 +1,9 @@
 import PathPart from "@/components/PathPart";
+import SpaceName from "@/components/SpaceName";
 
 export function DocumentSpaceHeader({document, side}) {
   return <div className="path" data-testid={`${side}-space`}>
-    <PathPart label="space" value={document.spaceName}/>
+    <PathPart label="space" value={<SpaceName title={document.spaceTitle} id={document.spaceId}/>}/>
   </div>;
 }
 

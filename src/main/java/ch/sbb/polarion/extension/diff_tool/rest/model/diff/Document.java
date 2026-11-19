@@ -29,6 +29,9 @@ public class Document {
     @Schema(description = "The ID of the space where the document is located")
     private String spaceId;
 
+    @Schema(description = "The title of the space where the document is located, its ID when it has none")
+    private String spaceTitle;
+
     @Schema(description = "The location path of the document")
     private String locationPath;
 
@@ -53,6 +56,11 @@ public class Document {
     @JsonGetter
     public String getSpaceName() {
         return DEFAULT_SPACE_ID.equals(spaceId) ? DEFAULT_SPACE_NAME : spaceId;
+    }
+
+    public Document spaceTitle(String spaceTitle) {
+        this.spaceTitle = spaceTitle;
+        return this;
     }
 
     public Document authorizedForMerge(boolean authorizedForMerge) {
