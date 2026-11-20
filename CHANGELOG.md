@@ -1,5 +1,20 @@
 # Changelog
 
+## [9.5.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.5...v9.5.0) (2026-11-20)
+
+
+### Features
+
+* Documents diff to PDF batch export ([#845](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/845)) ([158f08f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/158f08f01a668540e3957b97c69ad1fdf16e182c))
+* show space title with ID in panels and diff view header ([#847](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/847)) ([d118674](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d118674cb300de2223a0472cb1ddcc7d312180ee))
+
+
+### Bug Fixes
+
+* **deps:** update dependency axe-core to v4.14.1 ([#848](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/848)) ([6a4b378](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/6a4b378f1c96aed5434bfb2645ed83d9627b3bac))
+* **deps:** update dependency eslint to v10.15.0 ([#842](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/842)) ([0ceab5d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/0ceab5da97b0624542c8d141686957753a0d059a))
+* **deps:** update playwright monorepo to v1.65.1 ([#841](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/841)) ([416cbf3](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/416cbf310f58441580c3fdcf36121675505cb097))
+
 ## [9.4.5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.4...v9.4.5) (2026-11-16)
 
 
