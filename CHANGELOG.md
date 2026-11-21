@@ -1,5 +1,13 @@
 # Changelog
 
+## [9.5.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.5.0...v9.5.1) (2026-11-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency typescript-eslint to v8.73.0 ([#850](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/850)) ([0aa419e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/0aa419e7ea26a7f3f1e88e4094d819bce6b24cf2))
+* **deps:** update npm to v12.2.3 ([#853](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/853)) ([9fd9b14](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9fd9b141aa22375f7106cb5bbb181ba1aea6f0da))
+
 ## [9.5.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.5...v9.5.0) (2026-11-20)
 
 
