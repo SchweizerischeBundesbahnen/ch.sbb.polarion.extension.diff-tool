@@ -45,6 +45,7 @@ public class FeatureExecutionTask<T> implements Callable<T> {
         countersRegistry.dequeue(feature);
         countersRegistry.registerExecution(feature);
 
+        RequestAttributes previousRequestAttributes = RequestContextHolder.getRequestAttributes();
         RequestContextHolder.setRequestAttributes(requestAttributes);
         try {
             return callAsScheduler();
@@ -52,6 +53,8 @@ public class FeatureExecutionTask<T> implements Callable<T> {
             logger.error("Execution failed", e);
             throw new RejectedExecutionException(e.getMessage(), e);
         } finally {
+            // A pooled thread must not keep the request of a finished task.
+            restoreRequestAttributes(previousRequestAttributes);
             // Decremented here, on the thread that incremented it, so the counter is symmetric and can
             // never exceed the worker's thread count. It used to be decremented by the submitting thread
             // in ExecutionWorker.executeAndWait's finally block, after future.get() returned: with the
@@ -60,6 +63,14 @@ public class FeatureExecutionTask<T> implements Callable<T> {
             // submitter got around to decrementing. The monitor could then sample two concurrent
             // executions on a single-threaded worker, which is what the admin page charts.
             countersRegistry.completeExecution(feature);
+        }
+    }
+
+    private static void restoreRequestAttributes(@Nullable RequestAttributes previousRequestAttributes) {
+        if (previousRequestAttributes == null) {
+            RequestContextHolder.resetRequestAttributes();
+        } else {
+            RequestContextHolder.setRequestAttributes(previousRequestAttributes);
         }
     }
 

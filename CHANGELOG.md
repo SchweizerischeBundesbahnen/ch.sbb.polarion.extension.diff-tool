@@ -279,7 +279,7 @@
 
 ### Bug Fixes
 
-* upgrade generic to fix brake of diff application ([#467](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/467)) ([e9716b5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/e9716b54535822a25a1a0b0d3a986a6682b779aa))
+* upgrade generic to fix break of diff application ([#467](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/467)) ([e9716b5](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/e9716b54535822a25a1a0b0d3a986a6682b779aa))
 
 ## [8.3.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v8.3.0...v8.3.1) (2026-06-01)
 
@@ -705,7 +705,7 @@
 
 ### Bug Fixes
 
-* deprication in openapi-validation action ([#198](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/198)) ([d852e5d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d852e5dabd186ce34517d11eb1116a23f1c2c66a))
+* deprecation in openapi-validation action ([#198](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/198)) ([d852e5d](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/d852e5dabd186ce34517d11eb1116a23f1c2c66a))
 * **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v7.4.0 ([c5a6023](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/c5a60236e7c12ec4ea14e89e80d03a58eff359d5))
 * **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.pdf-exporter to v7.5.0 ([3ece84e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/3ece84e5c5acb34599da90ae15a53efc8be55fb3))
 * **deps:** update dependency uuid to v11.0.4 ([da7c3c2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/da7c3c2df92bb1f4b4075cd8aa460e3c1b2fc4b9))

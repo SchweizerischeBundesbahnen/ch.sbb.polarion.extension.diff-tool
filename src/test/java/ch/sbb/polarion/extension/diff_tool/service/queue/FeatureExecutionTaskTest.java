@@ -2,7 +2,10 @@ package ch.sbb.polarion.extension.diff_tool.service.queue;
 
 import ch.sbb.polarion.extension.diff_tool.rest.model.queue.Feature;
 import com.polarion.platform.security.ISecurityService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.security.auth.Subject;
 import java.security.PrivilegedActionException;
@@ -18,6 +21,11 @@ import static org.mockito.Mockito.*;
 
 @SuppressWarnings("unchecked")
 class FeatureExecutionTaskTest {
+
+    @AfterEach
+    void resetRequestContext() {
+        RequestContextHolder.resetRequestAttributes();
+    }
 
     @Test
     void testTaskExecutionCompletesSuccessfully() throws Exception {
@@ -155,6 +163,53 @@ class FeatureExecutionTaskTest {
 
         RejectedExecutionException exception = assertThrows(RejectedExecutionException.class, executionTask::call);
         assertEquals(originalException, exception.getCause());
+    }
+
+    @Test
+    void exposesSchedulerRequestAttributesWhileRunningAndResetsThemAfterwards() {
+        RequestAttributes schedulerAttributes = mock(RequestAttributes.class);
+        ISecurityService securityService = mock(ISecurityService.class);
+        CountersRegistry countersRegistry = mock(CountersRegistry.class);
+        RequestContextHolder.setRequestAttributes(schedulerAttributes);
+        FeatureExecutionTask<RequestAttributes> executionTask =
+                new FeatureExecutionTask<>(Feature.DIFF_HTML, RequestContextHolder::getRequestAttributes, securityService);
+        executionTask.setCountersRegistry(countersRegistry);
+        RequestContextHolder.resetRequestAttributes();
+
+        assertSame(schedulerAttributes, executionTask.call());
+        assertNull(RequestContextHolder.getRequestAttributes());
+    }
+
+    @Test
+    void resetsRequestAttributesWhenTheTaskFails() {
+        RequestAttributes schedulerAttributes = mock(RequestAttributes.class);
+        ISecurityService securityService = mock(ISecurityService.class);
+        CountersRegistry countersRegistry = mock(CountersRegistry.class);
+        RequestContextHolder.setRequestAttributes(schedulerAttributes);
+        FeatureExecutionTask<String> executionTask = new FeatureExecutionTask<>(Feature.DIFF_HTML, () -> {
+            throw new IllegalStateException("boom");
+        }, securityService);
+        executionTask.setCountersRegistry(countersRegistry);
+        RequestContextHolder.resetRequestAttributes();
+
+        assertThrows(RejectedExecutionException.class, executionTask::call);
+        assertNull(RequestContextHolder.getRequestAttributes());
+    }
+
+    @Test
+    void restoresPreviousRequestAttributesOfTheThread() {
+        RequestAttributes schedulerAttributes = mock(RequestAttributes.class);
+        RequestAttributes threadAttributes = mock(RequestAttributes.class);
+        ISecurityService securityService = mock(ISecurityService.class);
+        CountersRegistry countersRegistry = mock(CountersRegistry.class);
+        RequestContextHolder.setRequestAttributes(schedulerAttributes);
+        FeatureExecutionTask<RequestAttributes> executionTask =
+                new FeatureExecutionTask<>(Feature.DIFF_HTML, RequestContextHolder::getRequestAttributes, securityService);
+        executionTask.setCountersRegistry(countersRegistry);
+        RequestContextHolder.setRequestAttributes(threadAttributes);
+
+        assertSame(schedulerAttributes, executionTask.call());
+        assertSame(threadAttributes, RequestContextHolder.getRequestAttributes());
     }
 
 }

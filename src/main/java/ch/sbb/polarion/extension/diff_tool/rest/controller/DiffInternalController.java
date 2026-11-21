@@ -188,7 +188,7 @@ public class DiffInternalController {
                     @Parameter(
                             description = "Parameters for getting differences of two WorkItems",
                             required = true,
-                            schema = @Schema(implementation = DocumentWorkItemsPairDiffParams.class)
+                            schema = @Schema(implementation = DetachedWorkItemsPairDiffParams.class)
                     )
             },
             responses = {

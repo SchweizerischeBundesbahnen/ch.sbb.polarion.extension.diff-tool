@@ -48,39 +48,42 @@ class ExecutionQueueMonitorTest {
             mockStaticSettings.when(ExecutionQueueSettings::readAsSystemUser).thenReturn(model);
 
             ExecutionQueueService executionService = new ExecutionQueueService();
-            ExecutionQueueMonitor monitor = new ExecutionQueueMonitor(executionService);
+            Map<String, Map<Feature, List<TimeframeStatisticsEntry>>> recentHistory;
+            List<EndpointCallEntry> diffEntries;
+            try (ExecutionQueueMonitor monitor = new ExecutionQueueMonitor(executionService)) {
 
-            // emulate 2 endpoint calls - they must run sequentially because worker 1 has only 1 thread
-            Executors.defaultThreadFactory().newThread(() -> runTestEndpointCall(executionService, model)).start();
-            Executors.defaultThreadFactory().newThread(() -> runTestEndpointCall(executionService, model)).start();
+                // emulate 2 endpoint calls - they must run sequentially because worker 1 has only 1 thread
+                Executors.defaultThreadFactory().newThread(() -> runTestEndpointCall(executionService, model)).start();
+                Executors.defaultThreadFactory().newThread(() -> runTestEndpointCall(executionService, model)).start();
 
-            await().pollDelay(2500, TimeUnit.MILLISECONDS).until(() -> true);
+                await().pollDelay(2500, TimeUnit.MILLISECONDS).until(() -> true);
 
-            Map<String, Map<Feature, List<TimeframeStatisticsEntry>>> recentHistory = monitor.getHistory(new StatisticsParams());
+                recentHistory = monitor.getHistory(new StatisticsParams());
 
-            List<EndpointCallEntry> diffEntries = recentHistory.get("1").get(Feature.DIFF_HTML).stream().map(s -> (EndpointCallEntry) s).toList();
-            assertTrue(diffEntries.stream().anyMatch(e -> e.getQueued() == 1));
-            assertTrue(diffEntries.stream().anyMatch(e -> e.getExecuting() == 1));
-            assertTrue(diffEntries.stream().noneMatch(e -> e.getExecuting() == 2));
+                diffEntries = recentHistory.get("1").get(Feature.DIFF_HTML).stream().map(s -> (EndpointCallEntry) s).toList();
+                assertTrue(diffEntries.stream().anyMatch(e -> e.getQueued() == 1));
+                assertTrue(diffEntries.stream().anyMatch(e -> e.getExecuting() == 1));
+                assertTrue(diffEntries.stream().noneMatch(e -> e.getExecuting() == 2));
 
-            // also, there must be at least 2 CPU Load records logged
-            List<TimeframeStatisticsEntry> cpuLoadHistory = recentHistory.get("COMMON").get(Feature.CPU_LOAD);
-            assertTrue(cpuLoadHistory.size() > 1);
-            // experimental, probably there are some cases when all of them will be 0
-            assertTrue(cpuLoadHistory.stream().anyMatch(e -> ((CpuLoadEntry) e).getValue() > 0));
+                // also, there must be at least 2 CPU Load records logged
+                List<TimeframeStatisticsEntry> cpuLoadHistory = recentHistory.get("COMMON").get(Feature.CPU_LOAD);
+                assertTrue(cpuLoadHistory.size() > 1);
+                // experimental, probably there are some cases when all of them will be 0
+                assertTrue(cpuLoadHistory.stream().anyMatch(e -> ((CpuLoadEntry) e).getValue() > 0));
 
-            model.getWorkers().put(Feature.DIFF_HTML, 2);
-            model.getThreads().put(2, 2);
-            monitor.refreshConfiguration();
-            monitor.clearHistory();
+                model.getWorkers().put(Feature.DIFF_HTML, 2);
+                model.getThreads().put(2, 2);
+                monitor.refreshConfiguration();
+                monitor.clearHistory();
 
-            // emulate again but this time with 2 threads worker - they must be run simultaneously
-            Executors.defaultThreadFactory().newThread(() -> runTestEndpointCall(executionService, model)).start();
-            Executors.defaultThreadFactory().newThread(() -> runTestEndpointCall(executionService, model)).start();
+                // emulate again but this time with 2 threads worker - they must be run simultaneously
+                Executors.defaultThreadFactory().newThread(() -> runTestEndpointCall(executionService, model)).start();
+                Executors.defaultThreadFactory().newThread(() -> runTestEndpointCall(executionService, model)).start();
 
-            await().pollDelay(1500, TimeUnit.MILLISECONDS).until(() -> true);
+                await().pollDelay(1500, TimeUnit.MILLISECONDS).until(() -> true);
 
-            recentHistory = monitor.getHistory(new StatisticsParams());
+                recentHistory = monitor.getHistory(new StatisticsParams());
+            }
             diffEntries = recentHistory.get("2").get(Feature.DIFF_HTML).stream().map(s -> (EndpointCallEntry) s).toList();
             assertTrue(diffEntries.stream().anyMatch(e -> e.getExecuting() == 2));
             assertTrue(diffEntries.stream().noneMatch(e -> e.getQueued() > 0));

@@ -13,18 +13,24 @@ import com.polarion.platform.security.ISecurityService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 
 import jakarta.ws.rs.BadRequestException;
 import java.lang.reflect.Field;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class DiffInternalControllerTest {
@@ -97,7 +103,15 @@ class DiffInternalControllerTest {
         DocumentsDiff expected = DocumentsDiff.builder().build();
         when(diffService.getDocumentsDiff(any())).thenReturn(expected);
 
-        assertNotNull(controller.getDocumentsDiff(params));
+        assertSame(expected, controller.getDocumentsDiff(params));
+
+        ArgumentCaptor<DocumentsDiffParams> captor = ArgumentCaptor.forClass(DocumentsDiffParams.class);
+        verify(diffService).getDocumentsDiff(captor.capture());
+        DocumentsDiffParams passed = captor.getValue();
+        assertSame(left, passed.getLeftDocument());
+        assertSame(right, passed.getRightDocument());
+        assertFalse(passed.isBranchedDocuments());
+        assertNull(passed.getLinkRole());
     }
 
     @Test
@@ -110,7 +124,15 @@ class DiffInternalControllerTest {
         DocumentsDiff expected = DocumentsDiff.builder().build();
         when(diffService.getDocumentsDiff(any())).thenReturn(expected);
 
-        assertNotNull(controller.getDocumentsDiff(params));
+        assertSame(expected, controller.getDocumentsDiff(params));
+
+        ArgumentCaptor<DocumentsDiffParams> captor = ArgumentCaptor.forClass(DocumentsDiffParams.class);
+        verify(diffService).getDocumentsDiff(captor.capture());
+        DocumentsDiffParams passed = captor.getValue();
+        assertSame(left, passed.getLeftDocument());
+        assertSame(right, passed.getRightDocument());
+        assertTrue(passed.isBranchedDocuments());
+        assertNull(passed.getLinkRole());
     }
 
     @Test
@@ -122,6 +144,13 @@ class DiffInternalControllerTest {
         DocumentsDiff expected = DocumentsDiff.builder().build();
         when(diffService.getDocumentsDiff(any())).thenReturn(expected);
 
-        assertNotNull(controller.getDocumentsDiff(params));
+        assertSame(expected, controller.getDocumentsDiff(params));
+
+        ArgumentCaptor<DocumentsDiffParams> captor = ArgumentCaptor.forClass(DocumentsDiffParams.class);
+        verify(diffService).getDocumentsDiff(captor.capture());
+        DocumentsDiffParams passed = captor.getValue();
+        assertSame(left, passed.getLeftDocument());
+        assertSame(right, passed.getRightDocument());
+        assertEquals("relates-to", passed.getLinkRole());
     }
 }
