@@ -209,6 +209,34 @@ jobs:
             -Dmaven.wagon.http.connectionTimeout=3600000 \
             -Dmaven.wagon.http.readTimeout=3600000 \
             -Dcentral-publishing-maven-plugin.autoPublish=${{ github.event.repository.visibility == 'public' }}
+  deploy-jfrog:
+    needs: [build, e2e]
+    if: ${{ needs.build.outputs.is_release == 'true' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release-v')) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      IO_JFROG_SBB_POLARION_TOKEN: ${{ secrets.IO_JFROG_SBB_POLARION_TOKEN }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: 📄 Checkout the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: 🧱 Set up JDK and Maven
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78  # v6.2.0
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+      - name: 📦 Deploy to JFrog
+        run: |
+          mvn --batch-mode -s "${SETTINGS_XML}" clean deploy \
+            -Dmaven.test.skip=true \
+            -DskipJsTests=true \
+            -DaltDeploymentRepository=jfrog_io::https://sbb.jfrog.io/artifactory/polarion-mvn
   # Deploy to GitHub Packages (snapshots from main only) and upload release assets to GitHub Release
   # LTS branches (release-v*) only upload release assets, no snapshot deployment
   deploy-github-packages:

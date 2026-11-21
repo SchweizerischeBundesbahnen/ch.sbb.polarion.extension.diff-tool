@@ -49,19 +49,19 @@ The `release-v*` pattern in the workflow automatically recognizes new LTS branch
 3. Merge the release PR - this triggers:
    - Tag creation (e.g., `v6.4.3`)
    - GitHub Release with artifacts
-   - Maven Central deployment
+   - Maven Central and JFrog deployment
 
 ### Deployment Matrix
 
-| Branch | Version Type | Maven Central | GitHub Packages | GitHub Release |
-|--------|--------------|---------------|-----------------|----------------|
-| `main` | SNAPSHOT | - | ✓ | - |
-| `main` | Release | ✓ | - | ✓ |
-| `release-v*` | SNAPSHOT | - | - | - |
-| `release-v*` | Release | ✓ | - | ✓ |
+| Branch | Version Type | Maven Central | JFrog | GitHub Packages | GitHub Release |
+|--------|--------------|---------------|-------|-----------------|----------------|
+| `main` | SNAPSHOT | - | - | ✓ | - |
+| `main` | Release | ✓ | ✓ | - | ✓ |
+| `release-v*` | SNAPSHOT | - | - | - | - |
+| `release-v*` | Release | ✓ | ✓ | - | ✓ |
 
 ### Notes
 
 - SNAPSHOT versions from LTS branches are NOT deployed to GitHub Packages
-- Only release versions from LTS branches are deployed to Maven Central
+- Only release versions from LTS branches are deployed to Maven Central and JFrog
 - Each LTS branch operates independently with its own release PR
