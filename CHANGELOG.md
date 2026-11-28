@@ -1,5 +1,19 @@
 # Changelog
 
+## [9.5.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.5.0...v9.5.1) (2026-11-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @testing-library/jest-dom to v8 ([#856](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/856)) ([007d3ce](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/007d3cefaebde23b478852e3806d9258900c8a09))
+* **deps:** update dependency @types/node to v26.6.7 ([#866](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/866)) ([764a233](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/764a23300c223264fa8e3cdd483df86d0b34be85))
+* **deps:** update dependency @types/react to v19.3.1 ([#867](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/867)) ([545fa22](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/545fa2268b6189e30ced0ecd9448aae31c036e06))
+* **deps:** update dependency chartjs-plugin-zoom to v3 ([#859](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/859)) ([e8fc99a](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/e8fc99a0a898b69a2ee688e555048515565a404d))
+* **deps:** update dependency typescript-eslint to v8.73.0 ([#850](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/850)) ([0aa419e](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/0aa419e7ea26a7f3f1e88e4094d819bce6b24cf2))
+* **deps:** update dependency typescript-eslint to v8.74.0 ([#865](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/865)) ([becf473](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/becf4737ad454971a89ecd466a12f693af2a3452))
+* **deps:** update npm to v12.2.3 ([#853](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/853)) ([9fd9b14](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/9fd9b141aa22375f7106cb5bbb181ba1aea6f0da))
+* **deps:** update vitest monorepo to v5.1.1 ([#855](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/issues/855)) ([58a5ade](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/commit/58a5ade1c03787dbffa25a7a5d40e45162df1f71))
+
 ## [9.5.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.diff-tool/compare/v9.4.5...v9.5.0) (2026-11-20)
 
 
